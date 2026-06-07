@@ -48,6 +48,9 @@ class VideoInstance:
     monster_left_idle: str = ""
     monster_right_idle: str = ""
     environment_desc: str = ""
+    # Subtitles with timestamps
+    character_subtitles: List[dict] = field(default_factory=list)
+    narrator_subtitles: List[dict] = field(default_factory=list)
 
 # --- LOGGING UTILITY ---
 def log_terminal(level, message):
@@ -55,6 +58,28 @@ def log_terminal(level, message):
     colors = {"INFO": "\033[94m", "SUCCESS": "\033[92m", "WARNING": "\033[93m", "ERROR": "\033[91m", "RESET": "\033[0m"}
     color = colors.get(level, colors["RESET"])
     print(f"{color}[{timestamp}] [{level}] {message}{colors['RESET']}")
+
+def get_whisper_subtitles(file_path, client):
+    if not client or not os.path.exists(file_path): return []
+    try:
+        with open(file_path, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio_file, 
+                response_format="verbose_json",
+                timestamp_granularities=["segment"]
+            )
+        subs = []
+        for segment in transcript.segments:
+            subs.append({
+                "text": segment.text.strip(),
+                "start": segment.start,
+                "end": segment.end
+            })
+        return subs
+    except Exception as e:
+        log_terminal("ERROR", f"Whisper failed for {file_path}: {e}")
+        return []
 
 def download_file(url, folder, filename):
     if not url: return None
