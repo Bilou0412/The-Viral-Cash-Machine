@@ -161,10 +161,19 @@ with st.sidebar:
     mode = st.radio("Choose Mode", ["📦 Instance", "📁 Projects", "📝 Script", "🎬 Video", "🖼️ Image", "🎙️ Voice"], key="navigation_mode")
     
     st.divider()
-    st.header("⚙️ Eco-Optimization")
-    video_draft = st.checkbox("Draft Mode (4x Cheaper Video)", value=True, help="Uses Draft mode for prunaai/p-video. $0.005/sec instead of $0.02/sec.")
-    video_res = st.selectbox("Video Resolution", ["720p", "1080p"], index=0, help="720p is 2x cheaper than 1080p.")
-    image_size = st.selectbox("Image Size", ["2K", "4K"], index=0, help="2K is the baseline and most cost-effective.")
+    st.header("⚙️ Quality Engine")
+    quality_mode = st.radio("Production Mode", ["🟢 ECO / DRAFT", "💎 FULL QUALITY MAX"], index=0, help="Switch between fast/cheap testing and high-quality final production.")
+    
+    if quality_mode == "🟢 ECO / DRAFT":
+        video_draft = True
+        video_res = "720p"
+        image_size = "2K"
+        st.caption("🚀 Speed: Ultra-Fast | Cost: $0.005/sec")
+    else:
+        video_draft = False
+        video_res = "1080p"
+        image_size = "4K"
+        st.caption("✨ Quality: Viral Max | Cost: $0.04/sec")
 
     if mode == "🎬 Video": model_name = st.selectbox("Select Model", ["prunaai/p-video"], key="video_model_select")
     elif mode == "🖼️ Image": model_name = st.selectbox("Select Model", ["bytedance/seedream-4.5"], key="image_model_select")
