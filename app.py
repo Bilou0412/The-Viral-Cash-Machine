@@ -51,6 +51,11 @@ class VideoInstance:
     # Subtitles with timestamps
     character_subtitles: List[dict] = field(default_factory=list)
     narrator_subtitles: List[dict] = field(default_factory=list)
+    # Head detection coordinates (normalized 0-1)
+    head_l_x: float = 0.25
+    head_l_y: float = 0.40
+    head_r_x: float = 0.75
+    head_r_y: float = 0.40
 
 # --- LOGGING UTILITY ---
 def log_terminal(level, message):
@@ -144,6 +149,10 @@ st.title("🚀 ViralCashMachine_V2 - Dashboard")
 # Initialize API Keys
 init_replicate_token = os.getenv("REPLICATE_API_TOKEN", "")
 init_openai_token = os.getenv("OPENAI_API_KEY", "")
+
+# FORCE ENVIRONMENT PERSISTENCE
+if init_replicate_token: os.environ["REPLICATE_API_TOKEN"] = init_replicate_token
+if init_openai_token: os.environ["OPENAI_API_KEY"] = init_openai_token
 openai_models = ["gpt-5.4-mini", "gpt-5.5-flagship", "gpt-5.4-thinking", "gpt-5.3-instant", "gpt-5-mini"]
 
 if "main_replicate_token" not in st.session_state:
