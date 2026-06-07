@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
+from compiler import compile_video
 
 # Load environment variables
 load_dotenv()
@@ -120,6 +121,11 @@ init_replicate_token = os.getenv("REPLICATE_API_TOKEN", "")
 init_openai_token = os.getenv("OPENAI_API_KEY", "")
 openai_models = ["gpt-5.4-mini", "gpt-5.5-flagship", "gpt-5.4-thinking", "gpt-5.3-instant", "gpt-5-mini"]
 
+if "main_replicate_token" not in st.session_state:
+    st.session_state["main_replicate_token"] = init_replicate_token
+if "main_openai_key" not in st.session_state:
+    st.session_state["main_openai_key"] = init_openai_token
+
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown("""
@@ -139,10 +145,10 @@ with st.sidebar:
     project_name = st.text_input("Project Name", value="default_project", help="Folder name where assets will be saved.")
     
     st.header("🔑 Authentication")
-    replicate_api_token = st.text_input("Replicate Token", type="password", value=init_replicate_token, key="main_replicate_token")
+    replicate_api_token = st.text_input("Replicate Token", type="password", key="main_replicate_token")
     if replicate_api_token != init_replicate_token: save_key_to_env("REPLICATE_API_TOKEN", replicate_api_token)
     
-    openai_api_key_input = st.text_input("OpenAI Key", type="password", value=init_openai_token, key="main_openai_key")
+    openai_api_key_input = st.text_input("OpenAI Key", type="password", key="main_openai_key")
     if openai_api_key_input != init_openai_token: save_key_to_env("OPENAI_API_KEY", openai_api_key_input)
     openai_api_key = openai_api_key_input
 
@@ -188,6 +194,7 @@ if "shared_prompt" not in st.session_state:
     st.session_state.shared_prompt = {"decor": "", "chars": "", "env": "", "actions": "", "speech": ""}
 if "current_instance" not in st.session_state:
     st.session_state.current_instance = VideoInstance()
+    sync_instance_to_widgets(st.session_state.current_instance)
 
 # --- MAIN CONTENT ---
 if replicate_api_token:
@@ -231,7 +238,7 @@ if replicate_api_token:
             else:
                 placeholder_text = "Enter your script idea..."
             
-            gen_script = st.text_area("Script Idea", value=inst.general_script, placeholder=placeholder_text, height=150, key="inst_gen_script")
+            gen_script = st.text_area("Script Idea", placeholder=placeholder_text, height=150, key="inst_gen_script")
             
             # --- CHARACTER SETUP UI ---
             st.divider()
@@ -239,18 +246,18 @@ if replicate_api_token:
             c_col1, c_col2 = st.columns(2)
             with c_col1:
                 st.write("**Monster Left (Speaker)**")
-                inst.char_left_name = st.text_input("Name L", value=inst.char_left_name, key="c_l_n")
+                inst.char_left_name = st.text_input("Name L", key="c_l_n")
                 l_genders = ["Male", "Female", "Alien", "Unknown"]
                 l_persos = ["Aggressive", "Deceptive", "Terrified", "Crazed"]
-                inst.char_left_gender = st.selectbox("Gender L", l_genders, index=l_genders.index(inst.char_left_gender) if inst.char_left_gender in l_genders else 0, key="c_l_g")
-                inst.char_left_personality = st.selectbox("Personality L", l_persos, index=l_persos.index(inst.char_left_personality) if inst.char_left_personality in l_persos else 0, key="c_l_p")
+                inst.char_left_gender = st.selectbox("Gender L", l_genders, key="c_l_g")
+                inst.char_left_personality = st.selectbox("Personality L", l_persos, key="c_l_p")
             with c_col2:
                 st.write("**Monster Right (Target)**")
-                inst.char_right_name = st.text_input("Name R", value=inst.char_right_name, key="c_r_n")
+                inst.char_right_name = st.text_input("Name R", key="c_r_n")
                 r_genders = ["Male", "Female", "Alien", "Unknown"]
                 r_persos = ["Stoic", "Twitchy", "Menacing", "Feral", "Crazed"]
-                inst.char_right_gender = st.selectbox("Gender R", r_genders, index=r_genders.index(inst.char_right_gender) if inst.char_right_gender in r_genders else 0, key="c_r_g")
-                inst.char_right_personality = st.selectbox("Personality R", r_persos, index=r_persos.index(inst.char_right_personality) if inst.char_right_personality in r_persos else 0, key="c_r_p")
+                inst.char_right_gender = st.selectbox("Gender R", r_genders, key="c_r_g")
+                inst.char_right_personality = st.selectbox("Personality R", r_persos, key="c_r_p")
 
             if st.button("🧙 Decompose into Instance Elements", use_container_width=True):
                 if not client: st.error("OpenAI Key required.")
@@ -388,7 +395,7 @@ if replicate_api_token:
 
         st.divider()
         st.subheader("3. Production Control")
-        p_col1, p_col2 = st.columns(2)
+        p_col1, p_col2, p_col3 = st.columns(3)
         
         if p_col1.button("🎬 Generate All Assets (9:16)", use_container_width=True):
             try:
@@ -459,6 +466,12 @@ if replicate_api_token:
             
         if p_col2.button("💾 Save Config", use_container_width=True):
             st.download_button("Download JSON", data=json.dumps(asdict(inst), indent=4), file_name=f"instance_{inst.id}.json")
+
+        if p_col3.button("🎞️ Compile Final Video", use_container_width=True):
+            with st.spinner("🎬 Compiling Final Video..."):
+                out_path = compile_video(project_name, inst.id)
+                if "Error" in out_path: st.error(out_path)
+                else: st.success(f"✅ Video ready: {out_path}")
 
         if inst.video_url or inst.freeze_image_url:
             st.divider()
@@ -531,8 +544,14 @@ if replicate_api_token:
                         st.divider()
                         st.info(f"**Options:** A: {meta_data.get('choice_a')} | B: {meta_data.get('choice_b')}")
                         
-                        if st.button("♻️ Load into Editor", on_click=load_into_editor, args=(meta_data,)):
+                        p_col_1, p_col_2 = st.columns(2)
+                        if p_col_1.button("♻️ Load into Editor", on_click=load_into_editor, args=(meta_data,), use_container_width=True):
                             st.rerun()
+                        if p_col_2.button("🎞️ Compile Final Video", use_container_width=True):
+                            with st.spinner("🎬 Compiling..."):
+                                out_path = compile_video(sel_proj, sel_inst)
+                                if "Error" in out_path: st.error(out_path)
+                                else: st.success(f"✅ Video ready: {out_path}")
 
     # Simplified other modes
     elif mode == "📝 Script":

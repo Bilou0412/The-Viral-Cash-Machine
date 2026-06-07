@@ -3,3 +3,4 @@ replicate
 python-dotenv
 requests
 openai
+moviepy
