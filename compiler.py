@@ -10,9 +10,7 @@ from openai import OpenAI
 
 def get_whisper_subtitles(file_path):
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or not os.path.exists(file_path): 
-        print(f"Whisper skipped: API Key? {bool(api_key)}, File? {os.path.exists(file_path)}")
-        return []
+    if not api_key or not os.path.exists(file_path): return []
     try:
         client = OpenAI(api_key=api_key)
         with open(file_path, "rb") as audio_file:
@@ -23,261 +21,173 @@ def get_whisper_subtitles(file_path):
                 timestamp_granularities=["word"]
             )
         subs = []
-        # We strictly want words for the TikTok effect
-        raw_words = []
         if hasattr(transcript, 'words') and transcript.words:
             raw_words = transcript.words
         elif hasattr(transcript, 'segments') and transcript.segments:
-            # If for some reason word-level is missing, we simulate it by splitting segments
-            # This ensures we always have the dynamic effect requested
             for seg in transcript.segments:
                 words_in_seg = seg.text.strip().split()
                 if not words_in_seg: continue
                 dur = seg.end - seg.start
                 word_dur = dur / len(words_in_seg)
                 for i, w in enumerate(words_in_seg):
-                    subs.append({
-                        "text": w.strip(),
-                        "start": seg.start + (i * word_dur),
-                        "end": seg.start + ((i + 1) * word_dur)
-                    })
-            print(f"Whisper: Simulated {len(subs)} words from segments.")
+                    subs.append({"text": w.strip(), "start": seg.start + (i * word_dur), "end": seg.start + ((i + 1) * word_dur)})
             return subs
-            
+        else: return []
         for item in raw_words:
             text_val = item.word if hasattr(item, 'word') else getattr(item, 'text', "")
-            if text_val:
-                subs.append({
-                    "text": text_val.strip(),
-                    "start": item.start,
-                    "end": item.end
-                })
-        print(f"Whisper success: {len(subs)} words found for {file_path}")
+            if text_val: subs.append({"text": text_val.strip(), "start": item.start, "end": item.end})
         return subs
     except Exception as e:
         print(f"Whisper failed for {file_path}: {e}")
         return []
 
 def format_timestamp(seconds):
-    """Convertit des secondes en format SRT HH:MM:SS,mmm"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    millis = int((seconds % 1) * 1000)
-    return f"{hours:02}:{minutes:02}:{secs:02},{millis:03}"
+    h, m, s = int(seconds // 3600), int((seconds % 3600) // 60), int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02}:{m:02}:{s:02},{ms:03}"
 
 def save_srt(subs_data, output_path):
-    """Enregistre les données Whisper au format .srt"""
     if not subs_data: return
     with open(output_path, "w", encoding="utf-8") as f:
         for i, s in enumerate(subs_data, 1):
-            f.write(f"{i}\n")
-            f.write(f"{format_timestamp(s['start'])} --> {format_timestamp(s['end'])}\n")
-            f.write(f"{s['text']}\n\n")
-    print(f"SRT saved to {output_path}")
+            f.write(f"{i}\n{format_timestamp(s['start'])} --> {format_timestamp(s['end'])}\n{s['text']}\n\n")
 
-def create_text_clip_pil(
-    text, fontsize, color, size,
-    font_path="C:\\Windows\\Fonts\\arial.ttf",
-    bg_color=(0, 0, 0, 0),
-    duration=5,
-    stroke_width=2,
-    stroke_color="black"
-):
-    """Crée un clip texte via PIL quand ImageMagick est indisponible."""
-    img = Image.new("RGBA", size, bg_color)
-    draw = ImageDraw.Draw(img)
-
+def create_styled_subtitle_pil(text, fontsize, duration, font_path="assets/montserrat.bold.ttf"):
+    """Crée un petit badge texte englobé par un fond noir arrondi (55% opacité)."""
     try:
-        font = ImageFont.truetype(font_path, fontsize)
-    except OSError:
+        font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
+    except:
         font = ImageFont.load_default()
-
-    bbox = draw.textbbox((0, 0), text, font=font)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    pos = ((size[0] - tw) / 2, (size[1] - th) / 2)
-
-    if stroke_width > 0:
-        offsets = [
-            (stroke_width, stroke_width), (stroke_width, -stroke_width),
-            (-stroke_width, stroke_width), (-stroke_width, -stroke_width),
-        ]
-        for dx, dy in offsets:
-            draw.text((pos[0] + dx, pos[1] + dy), text, font=font, fill=stroke_color)
-
-    draw.text(pos, text, font=font, fill=color)
+        
+    # Mesure précise du texte pour créer une boîte à la bonne taille
+    # On utilise getmask().getbbox() pour ignorer les espaces vides inutiles
+    left, top, right, bottom = font.getbbox(text)
+    tw = right - left
+    th = bottom - top
+    
+    # Padding dynamique
+    px, py = int(fontsize * 0.35), int(fontsize * 0.2)
+    
+    # Taille de l'image finale (badge)
+    img_w, img_h = tw + 2 * px, th + 2 * py
+    img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    
+    # Fond noir arrondi (55% opacité = 140)
+    draw.rounded_rectangle([0, 0, img_w, img_h], radius=int(fontsize*0.2), fill=(0, 0, 0, 140))
+    
+    # Position du texte centrée dans son badge
+    # On compense l'offset 'top' et 'left' renvoyé par getbbox
+    tx, ty = px - left, py - top
+    
+    # Contour noir 4px (méthode robuste)
+    sw = 4
+    for dx in range(-sw, sw + 1):
+        for dy in range(-sw, sw + 1):
+            if dx**2 + dy**2 <= sw**2:
+                draw.text((tx + dx, ty + dy), text, font=font, fill=(0, 0, 0, 255))
+    
+    # Texte blanc final
+    draw.text((tx, ty), text, font=font, fill=(255, 255, 255, 255))
+    
     return ImageClip(np.array(img)).with_duration(duration)
 
-
-def _make_text_clip(text, fsize, color, box_size, duration, stroke_w=3, font="Arial", fade_in=0):
-    """Essaie TextClip (MoviePy/ImageMagick), retombe sur PIL en cas d'échec."""
-    # Mapping for common font names to paths for PIL
-    font_map = {
-        "Arial": "C:\\Windows\\Fonts\\arial.ttf",
-        "Courier": "C:\\Windows\\Fonts\\courbd.ttf" # Use bold version
-    }
-    font_path = font_map.get(font, font_map["Arial"])
-    
+def _make_text_clip(text, fsize, color, box_size, duration, stroke_w=3, font="Minecraft", fade_in=0):
+    font_p = "assets/Minecraft.ttf" if font in ["Pixel", "Minecraft"] else "C:\\Windows\\Fonts\\arial.ttf"
+    if font == "Minecraft" and not os.path.exists(font_p): font_p = "assets/KiwiSoda.ttf"
     try:
-        clip = (
-            TextClip(
-                text=text, font_size=fsize, color=color,
-                size=box_size, font=font,
-                stroke_color="black", stroke_width=stroke_w,
-            ).with_duration(duration)
-        )
-    except Exception:
-        clip = create_text_clip_pil(text, fsize, color, box_size, font_path=font_path, duration=duration, stroke_width=stroke_w)
+        clip = TextClip(text=text, font_size=int(fsize), color=color, size=(int(box_size[0]), int(box_size[1])), font=os.path.abspath(font_p), stroke_color="black", stroke_width=int(stroke_w)).with_duration(duration)
+    except:
+        # Fallback PIL manuel (redimensionnement en entier pour éviter TypeError)
+        bs = (int(box_size[0]), int(box_size[1]))
+        img = Image.new("RGBA", bs, (0,0,0,0))
+        draw = ImageDraw.Draw(img)
+        try: f = ImageFont.truetype(os.path.abspath(font_p), int(fsize))
+        except: f = ImageFont.load_default()
+        bl, bt, br, bb = draw.textbbox((0,0), text, font=f)
+        txt_x, txt_y = (bs[0]-(br-bl))//2, (bs[1]-(bb-bt))//2
+        if stroke_w > 0:
+            for dx, dy in [(-1,-1),(-1,1),(1,-1),(1,1)]: draw.text((txt_x+dx*stroke_w, txt_y+dy*stroke_w), text, font=f, fill="black")
+        draw.text((txt_x, txt_y), text, font=f, fill=color)
+        clip = ImageClip(np.array(img)).with_duration(duration)
     
     if fade_in > 0:
-        clip = clip.with_effects([lambda c: c.mask.with_effects([lambda m: m.multiply(lambda t: min(1, t/fade_in))])])
-        # Note: MoviePy 2.0 effects syntax can be tricky, using crossfadein as more standard if available
         try:
             from moviepy.video.fx import CrossFadeIn
             clip = clip.with_effects([CrossFadeIn(fade_in)])
         except:
-            pass # Fallback to linear opacity if CrossFadeIn fails
-            
+            clip = clip.with_effects([lambda c: c.with_mask(c.mask.multiply(lambda t: min(1, t/fade_in)))])
     return clip
 
 def compile_video(project_name: str, instance_id: str) -> str:
-    """
-    Compile les assets d'un projet en une vidéo finale avec sous-titres synchronisés via Whisper.
-    Génère les sous-titres à la volée pendant la compilation.
-    """
     project_dir = os.path.join("exports", project_name, instance_id)
-    paths = {
-        "video":    os.path.join(project_dir, "video.mp4"),
-        "image":    os.path.join(project_dir, "base_image.png"),
-        "narrator": os.path.join(project_dir, "narrator.mp3"),
-        "metadata": os.path.join(project_dir, "metadata.json"),
-        "output":   os.path.join(project_dir, "final_video.mp4"),
-        "tick":     os.path.join("assets", "tick.wav"),
-        "beep":     os.path.join("assets", "final.wav"),
-    }
+    paths = {"video": os.path.join(project_dir, "video.mp4"), "image": os.path.join(project_dir, "base_image.png"), "narrator": os.path.join(project_dir, "narrator.mp3"), "metadata": os.path.join(project_dir, "metadata.json"), "output": os.path.join(project_dir, "final_video.mp4"), "tick": os.path.join("assets", "tick.wav"), "beep": os.path.join("assets", "final.wav")}
+    if not os.path.exists(paths["video"]) or not os.path.exists(paths["metadata"]): raise FileNotFoundError("Assets manquants.")
+    with open(paths["metadata"], "r", encoding="utf-8") as f: meta = json.load(f)
 
-    # Validation
-    for key in ("video", "metadata"):
-        if not os.path.exists(paths[key]):
-            raise FileNotFoundError(f"Fichier requis manquant : {paths[key]}")
-
-    with open(paths["metadata"], "r", encoding="utf-8") as f:
-        meta = json.load(f)
-
-    # Extraction des données (Stricte conformité aux métadonnées)
-    name_l = meta.get("char_left_name", "")
-    name_r = meta.get("char_right_name", "")
-    choice_a = meta.get("choice_a", name_l)
-    choice_b = meta.get("choice_b", name_r)
-    
-    # Generate Subtitles on-the-fly during compilation
-    print("✍️ Transcribing audio for synced subtitles...")
-    # intro video usually contains the character speech
-    # other parts might have character.mp3
-    char_audio_path = os.path.join(project_dir, "character.mp3")
-    if not os.path.exists(char_audio_path):
-        char_audio_path = paths["video"]
-        
-    char_subs_data = get_whisper_subtitles(char_audio_path)
-    narr_subs_data = get_whisper_subtitles(paths["narrator"]) if os.path.exists(paths["narrator"]) else []
-
-    # Exportation physique des fichiers SRT
-    save_srt(char_subs_data, os.path.join(project_dir, "character.srt"))
-    save_srt(narr_subs_data, os.path.join(project_dir, "narrator.srt"))
+    name_l, name_r = meta.get("char_left_name", ""), meta.get("char_right_name", "")
+    char_audio = os.path.join(project_dir, "character.mp3")
+    if not os.path.exists(char_audio): char_audio = paths["video"]
+    char_subs_raw = get_whisper_subtitles(char_audio)
+    narr_subs_raw = get_whisper_subtitles(paths["narrator"]) if os.path.exists(paths["narrator"]) else []
+    save_srt(char_subs_raw, os.path.join(project_dir, "character.srt"))
+    save_srt(narr_subs_raw, os.path.join(project_dir, "narrator.srt"))
 
     video_clip = VideoFileClip(paths["video"])
-    narrator_audio = None
+    w, h = video_clip.size
+    POS_L, POS_R, BOX_NAME = (0.02 * w, 0.7 * h), (0.48 * w, 0.7 * h), (w // 2, 200)
 
-    try:
-        w, h = video_clip.size
+    if os.path.exists(paths["image"]):
+        img_p = Image.open(paths["image"]).convert("RGB").resize((w, h), Image.Resampling.LANCZOS)
+        base_img = ImageClip(np.array(img_p))
+    else: base_img = ColorClip(size=(w, h), color=(50, 50, 50))
 
-        # --- PREPARATION DE L'IMAGE ---
-        if os.path.exists(paths["image"]):
-            img_pil = Image.open(paths["image"]).convert("RGB").resize((w, h), Image.Resampling.LANCZOS)
-            base_image_clip = ImageClip(np.array(img_pil))
-        else:
-            base_image_clip = ColorClip(size=(w, h), color=(50, 50, 50))
+    # PHASE 1 : INTRO
+    INTRO_DUR, EYE_DUR = 2.0, 0.8
+    bar_top = ColorClip(size=(w, h // 2), color=(0,0,0)).with_duration(EYE_DUR).with_position(lambda t: ("center", -(t/EYE_DUR)*(h//2)))
+    bar_bot = ColorClip(size=(w, h // 2), color=(0,0,0)).with_duration(EYE_DUR).with_position(lambda t: ("center", (h//2)+(t/EYE_DUR)*(h//2)))
+    lbl_l_intro = _make_text_clip(name_l, 100, "white", BOX_NAME, INTRO_DUR, font="Minecraft", fade_in=1.8).with_position(POS_L)
+    lbl_r_intro = _make_text_clip(name_r, 100, "white", BOX_NAME, INTRO_DUR, font="Minecraft", fade_in=1.8).with_position(POS_R)
+    intro_part = CompositeVideoClip([base_img.with_duration(INTRO_DUR), bar_top, bar_bot, lbl_l_intro, lbl_r_intro], size=(w, h))
 
-        # ── PHASE 1 : OUVERTURE DES YEUX (2.0s) ──────────────────
-        INTRO_DURATION = 2.0
-        EYE_DURATION   = 0.8
-        bar_top = (ColorClip(size=(w, h // 2), color=(0, 0, 0)).with_duration(EYE_DURATION).with_position(lambda t: ("center", -(t / EYE_DURATION) * (h // 2))))
-        bar_bot = (ColorClip(size=(w, h // 2), color=(0, 0, 0)).with_duration(EYE_DURATION).with_position(lambda t: ("center", (h // 2) + (t / EYE_DURATION) * (h // 2))))
-        lbl_l_intro = _make_text_clip(name_l, 80, "white", (w // 2.5, 150), INTRO_DURATION, font="Courier", fade_in=1.0).with_position((0.05 * w, 0.7 * h))
-        lbl_r_intro = _make_text_clip(name_r, 80, "white", (w // 2.5, 150), INTRO_DURATION, font="Courier", fade_in=1.0).with_position((0.55 * w, 0.7 * h))
-        intro_part = CompositeVideoClip([base_image_clip.with_duration(INTRO_DURATION), bar_top, bar_bot, lbl_l_intro, lbl_r_intro], size=(w, h))
-
-        # ── PHASE 2 : VIDÉO PRINCIPALE AVEC SOUS-TITRES SYNCHROS ──────────────────────
-        vid_dur = video_clip.duration
-        lbl_l_vid = _make_text_clip(name_l, 80, "white", (w // 2.5, 150), vid_dur, font="Courier").with_position((0.05 * w, 0.7 * h))
-        lbl_r_vid = _make_text_clip(name_r, 80, "white", (w // 2.5, 150), vid_dur, font="Courier").with_position((0.55 * w, 0.7 * h))
-        
-        # Build synced subtitles list
-        char_subs = []
-        if char_subs_data:
-            for s in char_subs_data:
-                txt = s['text'].upper()
-                if s['start'] < vid_dur:
-                    end_time = min(s['end'], vid_dur)
-                    char_subs.append(
-                        _make_text_clip(txt, 55, "yellow", (int(w * 0.9), 250), end_time - s['start'], stroke_w=4)
-                        .with_start(s['start'])
-                        .with_position(("center", 0.75 * h))
-                    )
-        else:
-            speech = meta.get("character_speech", "")
-            char_subs.append(_make_text_clip(speech.upper(), 55, "yellow", (int(w * 0.9), 250), vid_dur, stroke_w=4).with_position(("center", 0.75 * h)))
-
-        video_part = CompositeVideoClip([video_clip, lbl_l_vid, lbl_r_vid, *char_subs], size=(w, h))
-
-        # ── PHASE 3 : IMAGE FIGÉE + NARRATION SYNCHRONISÉE ────────────────────────
-        if os.path.exists(paths["narrator"]):
-            narrator_audio = AudioFileClip(paths["narrator"])
-            freeze_dur = narrator_audio.duration
-            choice_a = meta.get("choice_a", name_l).upper()
-            choice_b = meta.get("choice_b", name_r).upper()
-            btn_a = _make_text_clip(choice_a, 60, "white", (int(w * 0.45), 150), freeze_dur).with_position((0.02 * w, 0.5 * h))
-            btn_b = _make_text_clip(choice_b, 60, "white", (int(w * 0.45), 150), freeze_dur).with_position((0.53 * w, 0.5 * h))
-
-            narr_subs = []
-            for s in narr_subs_data:
-                txt = s['text'].upper()
-                if s['start'] < freeze_dur:
-                    end_time = min(s['end'], freeze_dur)
-                    narr_subs.append(
-                        _make_text_clip(txt, 50, "white", (int(w * 0.8), 200), end_time - s['start'], stroke_w=3)
-                        .with_start(s['start'])
-                        .with_position(("center", 0.85 * h))
-                    )
-
-            T_STEP = 0.5
-            timer_start = max(0.0, freeze_dur - T_STEP * 4)
-            countdown = [
-                _make_text_clip(label, 250, color, (300, 300), T_STEP).with_start(timer_start + i * T_STEP).with_position(("center", "center"))
-                for i, (label, color) in enumerate([("3", "red"), ("2", "orange"), ("1", "green")])
-            ]
-
-            audio_elements = [narrator_audio]
-            tick_path, beep_path = paths["tick"], paths["beep"]
-            if os.path.exists(tick_path):
-                audio_elements.append(AudioFileClip(tick_path).with_start(timer_start))
-                audio_elements.append(AudioFileClip(tick_path).with_start(timer_start + T_STEP))
-            if os.path.exists(beep_path):
-                audio_elements.append(AudioFileClip(beep_path).with_start(timer_start + 2 * T_STEP))
-
-            freeze_part = CompositeVideoClip(
-                [base_image_clip.with_duration(freeze_dur), btn_a, btn_b, *narr_subs, *countdown],
-                size=(w, h)
-            ).with_audio(CompositeAudioClip(audio_elements))
+    # PHASE 2 : VIDEO (Sous-titres "Badges" Montserrat)
+    vid_dur = video_clip.duration
+    lbl_l_vid = _make_text_clip(name_l, 100, "white", BOX_NAME, vid_dur, font="Minecraft").with_position(POS_L)
+    lbl_r_vid = _make_text_clip(name_r, 100, "white", BOX_NAME, vid_dur, font="Minecraft").with_position(POS_R)
+    
+    char_subs = []
+    for s in char_subs_raw:
+        if s['start'] < vid_dur:
+            badge = create_styled_subtitle_pil(s['text'].upper(), 72, min(s['end'], vid_dur)-s['start'])
+            char_subs.append(badge.with_start(s['start']).with_position(("center", 0.68 * h)))
             
-            final_video = concatenate_videoclips([intro_part, video_part, freeze_part], method="compose")
-        else:
-            final_video = concatenate_videoclips([intro_part, video_part], method="compose")
+    video_part = CompositeVideoClip([video_clip, lbl_l_vid, lbl_r_vid, *char_subs], size=(w, h))
 
-        final_video.write_videofile(paths["output"], fps=24, codec="libx264", audio_codec="aac", temp_audiofile=os.path.join(project_dir, "temp-audio.m4a"), remove_temp=True)
+    # PHASE 3 : FREEZE
+    if os.path.exists(paths["narrator"]):
+        narrator_audio = AudioFileClip(paths["narrator"])
+        freeze_dur = narrator_audio.duration
+        btn_a = _make_text_clip(meta.get("choice_a", "").upper(), 70, "white", (int(w*0.48), 180), freeze_dur, font="Minecraft").with_position((0.01*w, 0.5*h))
+        btn_b = _make_text_clip(meta.get("choice_b", "").upper(), 70, "white", (int(w*0.48), 180), freeze_dur, font="Minecraft").with_position((0.51*w, 0.5*h))
+        
+        narr_subs = []
+        for s in narr_subs_raw:
+            if s['start'] < freeze_dur:
+                badge = create_styled_subtitle_pil(s['text'].upper(), 72, min(s['end'], freeze_dur)-s['start'])
+                narr_subs.append(badge.with_start(s['start']).with_position(("center", 0.68 * h)))
+        
+        t_start = max(0.0, freeze_dur - 2.0)
+        countdown = [_make_text_clip(l, 250, c, (300, 300), 0.5, font="Minecraft").with_start(t_start + i*0.5).with_position(("center", "center")) for i, (l, c) in enumerate([("3","red"), ("2","orange"), ("1","green")])]
+        audio_el = [narrator_audio]
+        if os.path.exists(paths["tick"]): audio_el.extend([AudioFileClip(paths["tick"]).with_start(t_start), AudioFileClip(paths["tick"]).with_start(t_start + 0.5)])
+        if os.path.exists(paths["beep"]): audio_el.append(AudioFileClip(paths["beep"]).with_start(t_start + 1.0))
+        
+        freeze_part = CompositeVideoClip([base_img.with_duration(freeze_dur), btn_a, btn_b, *narr_subs, *countdown], size=(w,h)).with_audio(CompositeAudioClip(audio_el))
+        final_video = concatenate_videoclips([intro_part, video_part, freeze_part], method="compose")
+    else:
+        final_video = concatenate_videoclips([intro_part, video_part], method="compose")
 
-    finally:
-        video_clip.close()
-        if narrator_audio: narrator_audio.close()
-
+    final_video.write_videofile(paths["output"], fps=24, codec="libx264", audio_codec="aac", temp_audiofile=os.path.join(project_dir, "temp-audio.m4a"), remove_temp=True)
+    video_clip.close()
+    if 'narrator_audio' in locals(): narrator_audio.close()
     return paths["output"]

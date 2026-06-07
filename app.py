@@ -343,13 +343,16 @@ if replicate_api_token:
                             )
                             data = json.loads(resp.choices[0].message.content)
                             
-                            # Update Instance Slots
-                            new_left_name = data.get("char_left_name", inst.char_left_name)
-                            new_right_name = data.get("char_right_name", inst.char_right_name)
+                            # Update Instance Slots with strict cleanup
+                            new_left_name = data.get("char_left_name", "Pierre")
+                            new_right_name = data.get("char_right_name", "Julie")
                             
-                            # Clean up placeholders if AI failed
-                            if "Monster" in new_left_name or "Character" in new_left_name: new_left_name = "Pierre"
-                            if "Monster" in new_right_name or "Character" in new_right_name: new_right_name = "Jacques"
+                            # EXTREME PLACEHOLDER CLEANUP (Anti-Monster logic)
+                            bad_tokens = ["monster", "character", "creature", "subject", "entity", "left", "right", "name", "unknown", "placeholder"]
+                            if not new_left_name or any(t in new_left_name.lower() for t in bad_tokens):
+                                new_left_name = "Pierre" if inst.char_left_gender == "Male" else "Marie"
+                            if not new_right_name or any(t in new_right_name.lower() for t in bad_tokens):
+                                new_right_name = "Jacques" if inst.char_right_gender == "Male" else "Julie"
                             
                             inst.char_left_name = new_left_name
                             inst.char_right_name = new_right_name
@@ -359,7 +362,7 @@ if replicate_api_token:
                             inst.monster_right_idle = data.get("monster_right_idle", "")
                             inst.environment_desc = data.get("environment_desc", "")
                             
-                            # MANDATORY SPEECH - LOCKED
+                            # MANDATORY SPEECH - LOCKED SYNC
                             inst.character_speech = "Choisi moi. Ne lui fais pas confiance, je sais ce dont il est capable."
                             inst.narration_script = f"Choisi ton compagnon pour la nuit, {inst.char_left_name} ou {inst.char_right_name} ?"
                             inst.choice_a = inst.char_left_name
