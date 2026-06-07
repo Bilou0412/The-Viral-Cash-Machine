@@ -109,19 +109,36 @@ def create_text_clip_pil(
     return ImageClip(np.array(img)).with_duration(duration)
 
 
-def _make_text_clip(text, fsize, color, box_size, duration, stroke_w=3):
+def _make_text_clip(text, fsize, color, box_size, duration, stroke_w=3, font="Arial", fade_in=0):
     """Essaie TextClip (MoviePy/ImageMagick), retombe sur PIL en cas d'échec."""
+    # Mapping for common font names to paths for PIL
+    font_map = {
+        "Arial": "C:\\Windows\\Fonts\\arial.ttf",
+        "Courier": "C:\\Windows\\Fonts\\courbd.ttf" # Use bold version
+    }
+    font_path = font_map.get(font, font_map["Arial"])
+    
     try:
-        return (
+        clip = (
             TextClip(
                 text=text, font_size=fsize, color=color,
-                size=box_size, font="Arial",
+                size=box_size, font=font,
                 stroke_color="black", stroke_width=stroke_w,
             ).with_duration(duration)
         )
     except Exception:
-        return create_text_clip_pil(text, fsize, color, box_size, duration=duration, stroke_width=stroke_w)
-
+        clip = create_text_clip_pil(text, fsize, color, box_size, font_path=font_path, duration=duration, stroke_width=stroke_w)
+    
+    if fade_in > 0:
+        clip = clip.with_effects([lambda c: c.mask.with_effects([lambda m: m.multiply(lambda t: min(1, t/fade_in))])])
+        # Note: MoviePy 2.0 effects syntax can be tricky, using crossfadein as more standard if available
+        try:
+            from moviepy.video.fx import CrossFadeIn
+            clip = clip.with_effects([CrossFadeIn(fade_in)])
+        except:
+            pass # Fallback to linear opacity if CrossFadeIn fails
+            
+    return clip
 
 def compile_video(project_name: str, instance_id: str) -> str:
     """
@@ -186,14 +203,14 @@ def compile_video(project_name: str, instance_id: str) -> str:
         EYE_DURATION   = 0.8
         bar_top = (ColorClip(size=(w, h // 2), color=(0, 0, 0)).with_duration(EYE_DURATION).with_position(lambda t: ("center", -(t / EYE_DURATION) * (h // 2))))
         bar_bot = (ColorClip(size=(w, h // 2), color=(0, 0, 0)).with_duration(EYE_DURATION).with_position(lambda t: ("center", (h // 2) + (t / EYE_DURATION) * (h // 2))))
-        lbl_l_intro = _make_text_clip(name_l, 70, "white", (w // 3, 120), INTRO_DURATION).with_position((0.05 * w, 0.7 * h))
-        lbl_r_intro = _make_text_clip(name_r, 70, "white", (w // 3, 120), INTRO_DURATION).with_position((0.60 * w, 0.7 * h))
+        lbl_l_intro = _make_text_clip(name_l, 80, "white", (w // 2.5, 150), INTRO_DURATION, font="Courier", fade_in=1.0).with_position((0.05 * w, 0.7 * h))
+        lbl_r_intro = _make_text_clip(name_r, 80, "white", (w // 2.5, 150), INTRO_DURATION, font="Courier", fade_in=1.0).with_position((0.55 * w, 0.7 * h))
         intro_part = CompositeVideoClip([base_image_clip.with_duration(INTRO_DURATION), bar_top, bar_bot, lbl_l_intro, lbl_r_intro], size=(w, h))
 
         # ── PHASE 2 : VIDÉO PRINCIPALE AVEC SOUS-TITRES SYNCHROS ──────────────────────
         vid_dur = video_clip.duration
-        lbl_l_vid = _make_text_clip(name_l, 70, "white", (w // 3, 120), vid_dur).with_position((0.05 * w, 0.7 * h))
-        lbl_r_vid = _make_text_clip(name_r, 70, "white", (w // 3, 120), vid_dur).with_position((0.60 * w, 0.7 * h))
+        lbl_l_vid = _make_text_clip(name_l, 80, "white", (w // 2.5, 150), vid_dur, font="Courier").with_position((0.05 * w, 0.7 * h))
+        lbl_r_vid = _make_text_clip(name_r, 80, "white", (w // 2.5, 150), vid_dur, font="Courier").with_position((0.55 * w, 0.7 * h))
         
         # Build synced subtitles list
         char_subs = []
