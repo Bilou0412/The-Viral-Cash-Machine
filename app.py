@@ -336,21 +336,26 @@ if replicate_api_token:
                             # --- MASTER ARBITER ASSEMBLY ---
                             # 1. Video Prompt Assembly (ULTRA-FORCED FPS)
                             inst.video_prompt = (
-                                f"[CAMERA] 9:16 vertical. Photorealistic cinematic horror. Locked static tripod shot. Camera IS the eyes, adult eye-level (1.7m). ZERO camera drift. "
-                                f"[FOREGROUND_POV] VIDEO GAME FIRST-PERSON PERSPECTIVE. Like a first-person shooter game. The camera IS the eyes. ONLY two ungloved human hands visible, cut off at the wrist. NO forearms. NO sleeves. NO clothing. Skin is pale, ashen, weathered, rough textured. NO accessories of any kind. Hands at hip height, palms slightly inward, angled down. STANDING UPRIGHT POSE ONLY. Subtle breathing motion. "
+                                f"[CAMERA] 9:16 vertical. Photorealistic cinematic horror. ABSOLUTE STATIC CAMERA. ZERO movement. ZERO drift. ZERO shake. ZERO pan. ZERO tilt. ZERO zoom. Camera IS frozen in place like a security camera. Adult eye-level (1.7m). Fixed forever. "
+                                f"[FOREGROUND_POV] VIDEO GAME FIRST-PERSON PERSPECTIVE. Like a first-person shooter game. The camera IS the eyes. ONLY two ungloved human hands visible, cut off at the wrist. NO forearms. NO sleeves. NO clothing. Skin is pale, ashen, weathered, rough textured. NO accessories of any kind. Pure bare skin only. Hands at hip height, palms slightly inward, angled down. STANDING UPRIGHT POSE ONLY. Subtle breathing motion. "
                                 f"[ENV] {inst.environment_desc}. COMPLETELY STATIC BACKGROUND. No environmental animation. STATIC lighting. NO dynamic lights. NO flashlight. NO spotlight. Both characters fully lit and visible at all times. "
-                                f"[MIDGROUND_LEFT] {inst.monster_left_desc}. FACING CAMERA. NOT moving toward camera. ABSOLUTE FIXED POSITION. Root locked to floor. ZERO translation. ZERO steps. NO advancing. ONLY upper body and head animate. Returns to neutral pose between actions. IDLE: {inst.monster_left_idle}. ACTION: Direct eye-contact, talking with EXTREME jaw articulation and lip-sync, aggressively pointing right. "
+                                f"[MIDGROUND_LEFT] {inst.monster_left_desc}. FACING CAMERA. NOT moving toward camera. ABSOLUTE FIXED POSITION. Root locked to floor. ZERO translation. ZERO steps. NO advancing. ONLY upper body and head animate. Returns to neutral pose between actions. IDLE: {inst.monster_left_idle}. "
+                                f"ACTION: Speaks directly to camera with intense eye-contact and full lip-sync. "
+                                f"BEAT 1 - 'Choisi moi': aggressively taps own chest with fist, leaning forward. "
+                                f"BEAT 2 - 'Ne lui fais pas confiance': NEVER breaks eye contact with camera, extends arm pointing accusingly to the right WITHOUT looking away, shakes head slowly while staring into camera. "
+                                f"BEAT 3 - 'je sais ce dont il est capable': locks eyes back on camera, leans slightly forward with a slow threatening nod, expression darkens. "
+                                f"Extreme facial articulation throughout. Returns to neutral idle after speech ends. "
                                 f"[MIDGROUND_RIGHT] {inst.monster_right_desc}. FACING CAMERA. NOT moving toward camera. ABSOLUTE FIXED POSITION. Root locked to floor. ZERO translation. ZERO steps. NO advancing. ONLY upper body and head animate. Returns to neutral pose between actions. IDLE: {inst.monster_right_idle}."
                             )
                             
                             # 2. Freeze Image Prompt Assembly (ULTRA-FORCED FPS - UNIFORM)
                             inst.freeze_image_prompt = (
-                                f"[CAMERA] 9:16 vertical. Photorealistic masterpiece. Camera IS the eyes, positioned at adult eye-level height (1.7m), horizontal gaze. "
-                                f"[FOREGROUND_POV] VIDEO GAME FIRST-PERSON PERSPECTIVE. Like a first-person shooter game. ONLY two ungloved human hands visible, cut off at the wrist. NO forearms. NO sleeves. NO clothing. Skin is pale, ashen, weathered, rough textured. NO accessories of any kind. Hands at hip height, palms slightly inward, angled down. STANDING UPRIGHT POSE ONLY. "
+                                f"[CAMERA] 9:16 vertical. Photorealistic masterpiece. ABSOLUTE STATIC CAMERA. Camera IS the eyes, positioned at adult eye-level height (1.7m), horizontal gaze. "
+                                f"[FOREGROUND_POV] VIDEO GAME FIRST-PERSON PERSPECTIVE. Like a first-person shooter game. ONLY two ungloved human hands visible, cut off at the wrist. NO forearms. NO sleeves. NO clothing. Skin is pale, ashen, weathered, rough textured. NO accessories of any kind. Pure bare skin only. Hands at hip height, palms slightly inward, angled down. STANDING UPRIGHT POSE ONLY. "
                                 f"[ENV] {inst.environment_desc}. COMPLETELY STATIC BACKGROUND. STATIC lighting. NO flashlight. NO character occluded by shadow. "
                                 f"[MIDGROUND_LEFT] {inst.monster_left_desc}. FACING CAMERA. NOT moving toward camera. Standing upright, ABSOLUTE FIXED POSITION. Root locked to floor. "
                                 f"[MIDGROUND_RIGHT] {inst.monster_right_desc}. FACING CAMERA. NOT moving toward camera. Standing upright, ABSOLUTE FIXED POSITION. Root locked to floor. "
-                                f"CLEAN IMAGE, NO TEXT. --NO third-person body, NO lying down, NO floor hands, NO crawling, NO walking, NO approaching camera, NO weapons, NO flashlight, NO accessories, NO gloves, NO watches, NO jewelry."
+                                f"CLEAN IMAGE, NO TEXT. --NO third-person body, NO lying down, NO floor hands, NO crawling, NO walking, NO approaching camera, NO weapons, NO flashlight, NO accessories, NO gloves, NO watches, NO jewelry, NO camera movement."
                             )
 
                             st.session_state["inst_v_p"] = inst.video_prompt
@@ -418,7 +423,7 @@ if replicate_api_token:
                         "resolution": video_res,
                         "draft": video_draft,
                         "save_audio": True,
-                        "negative_prompt": "lying down, floor hands, crawling, walking, approaching camera, full body third-person view, camera movement, zoom, pan, tilt, rotation, drifting, camera shake, weapons, guns, items in hands, flat palms, palms up, text, deformed fingers, watches, bracelets, rings, gloves, sleeves, cuffs, wristbands, jewelry"
+                        "negative_prompt": "lying down, floor hands, crawling, walking, approaching camera, full body third-person view, camera movement, handheld shake, pan, tilt, zoom, dolly, drift, rotation, drifting, camera shake, moving background, weapons, guns, items in hands, flat palms, palms up, text, deformed fingers, watches, bracelets, rings, gloves, sleeves, cuffs, wristbands, jewelry"
                     }
                     # Inject audio for lip-sync if available
                     if inst.character_audio_url:
