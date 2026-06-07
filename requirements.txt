@@ -4,3 +4,5 @@ python-dotenv
 requests
 openai
 moviepy
+numpy
+pillow
