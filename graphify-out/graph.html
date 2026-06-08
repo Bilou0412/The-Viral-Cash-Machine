@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>graphify - /home/b/The-Viral-Cash-Machine/graphify-out/graph.html</title>
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"
+        integrity="sha384-Ux6phic9PEHJ38YtrijhkzyJ8yQlH8i/+buBR8s3mAZOJrP1gwyvAcIYl3GWtpX1"
+        crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f1a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  #graph { flex: 1; }
+  #sidebar { width: 280px; background: #1a1a2e; border-left: 1px solid #2a2a4e; display: flex; flex-direction: column; overflow: hidden; }
+  #search-wrap { padding: 12px; border-bottom: 1px solid #2a2a4e; }
+  #search { width: 100%; background: #0f0f1a; border: 1px solid #3a3a5e; color: #e0e0e0; padding: 7px 10px; border-radius: 6px; font-size: 13px; outline: none; }
+  #search:focus { border-color: #4E79A7; }
+  #search-results { max-height: 140px; overflow-y: auto; padding: 4px 12px; border-bottom: 1px solid #2a2a4e; display: none; }
+  .search-item { padding: 4px 6px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-item:hover { background: #2a2a4e; }
+  #info-panel { padding: 14px; border-bottom: 1px solid #2a2a4e; min-height: 140px; }
+  #info-panel h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #info-content { font-size: 13px; color: #ccc; line-height: 1.6; }
+  #info-content .field { margin-bottom: 5px; }
+  #info-content .field b { color: #e0e0e0; }
+  #info-content .empty { color: #555; font-style: italic; }
+  .neighbor-link { display: block; padding: 2px 6px; margin: 2px 0; border-radius: 3px; cursor: pointer; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid #333; }
+  .neighbor-link:hover { background: #2a2a4e; }
+  #neighbors-list { max-height: 160px; overflow-y: auto; margin-top: 4px; }
+  #legend-wrap { flex: 1; overflow-y: auto; padding: 12px; }
+  #legend-wrap h3 { font-size: 13px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; border-radius: 4px; font-size: 12px; }
+  .legend-item:hover { background: #2a2a4e; padding-left: 4px; }
+  .legend-item.dimmed { opacity: 0.35; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .legend-count { color: #666; font-size: 11px; }
+  #stats { padding: 10px 14px; border-top: 1px solid #2a2a4e; font-size: 11px; color: #555; }
+  #legend-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 4px 0; }
+  #legend-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #aaa; user-select: none; }
+  #legend-controls label:hover { color: #e0e0e0; }
+  .legend-cb, #select-all-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid #3a3a5e; border-radius: 3px; background: #0f0f1a; cursor: pointer; position: relative; flex-shrink: 0; }
+  .legend-cb:checked, #select-all-cb:checked { background: #4E79A7; border-color: #4E79A7; }
+  .legend-cb:checked::after, #select-all-cb:checked::after { content: ''; position: absolute; left: 3.5px; top: 1px; width: 4px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  #select-all-cb:indeterminate { background: #4E79A7; border-color: #4E79A7; }
+  #select-all-cb:indeterminate::after { content: ''; position: absolute; left: 2px; top: 5px; width: 8px; height: 2px; background: #fff; border: none; transform: none; }
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="sidebar">
+  <div id="search-wrap">
+    <input id="search" type="text" placeholder="Search nodes..." autocomplete="off">
+    <div id="search-results"></div>
+  </div>
+  <div id="info-panel">
+    <h3>Node Info</h3>
+    <div id="info-content"><span class="empty">Click a node to inspect it</span></div>
+  </div>
+  <div id="legend-wrap">
+    <h3>Communities</h3>
+    <div id="legend-controls">
+      <label><input type="checkbox" id="select-all-cb" checked onchange="toggleAllCommunities(!this.checked)">Select All</label>
+    </div>
+    <div id="legend"></div>
+  </div>
+  <div id="stats">55 nodes &middot; 72 edges &middot; 9 communities</div>
+</div>
+<script>
+const RAW_NODES = [{"id": "architecture_plan", "label": "ARCHITECTURE_PLAN.md", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "ARCHITECTURE_PLAN.md", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "label": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 26.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 7}, {"id": "architecture_plan_contexte", "label": "Contexte", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Contexte", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur", "label": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l'utilisateur)", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l&#x27;utilisateur)", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9", "label": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert", "label": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s", "label": "Fichiers cl\u00e9s touch\u00e9s", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Fichiers cl\u00e9s touch\u00e9s", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "architecture_plan_v\u00e9rification", "label": "V\u00e9rification", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "V\u00e9rification", "community": 8, "community_name": "Community 8", "source_file": "ARCHITECTURE_PLAN.md", "file_type": "document", "degree": 1}, {"id": "app", "label": "app.py", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 35.4, "font": {"size": 12, "color": "#ffffff"}, "title": "app.py", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 11}, {"id": "app_videoinstance", "label": "VideoInstance", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 23.8, "font": {"size": 12, "color": "#ffffff"}, "title": "VideoInstance", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 6}, {"id": "app_log_terminal", "label": "log_terminal()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 19.2, "font": {"size": 12, "color": "#ffffff"}, "title": "log_terminal()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 4}, {"id": "app_get_whisper_subtitles", "label": "get_whisper_subtitles()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "get_whisper_subtitles()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 2}, {"id": "app_download_file", "label": "download_file()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "download_file()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 2}, {"id": "app_save_key_to_env", "label": "save_key_to_env()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "save_key_to_env()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 2}, {"id": "app_sync_instance_to_widgets", "label": "sync_instance_to_widgets()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "sync_instance_to_widgets()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 2}, {"id": "app_load_into_editor", "label": "load_into_editor()", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 16.9, "font": {"size": 12, "color": "#ffffff"}, "title": "load_into_editor()", "community": 1, "community_name": "App State & Instance Management", "source_file": "app.py", "file_type": "code", "degree": 3}, {"id": "compiler", "label": "compiler.py", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "compiler.py", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 13}, {"id": "compiler_get_whisper_subtitles", "label": "get_whisper_subtitles()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "get_whisper_subtitles()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_format_timestamp", "label": "format_timestamp()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "format_timestamp()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_save_srt", "label": "save_srt()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 16.9, "font": {"size": 12, "color": "#ffffff"}, "title": "save_srt()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 3}, {"id": "compiler_create_styled_subtitle_pil", "label": "create_styled_subtitle_pil()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "create_styled_subtitle_pil()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_create_circular_timer_pil", "label": "create_circular_timer_pil()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "create_circular_timer_pil()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_create_dark_fantasy_gauge", "label": "create_dark_fantasy_gauge()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "create_dark_fantasy_gauge()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_make_text_clip_exact", "label": "_make_text_clip_exact()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "_make_text_clip_exact()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 2}, {"id": "compiler_detect_side_entity", "label": "detect_side_entity()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "detect_side_entity()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 1}, {"id": "compiler_get_ai_head_positions_split", "label": "get_ai_head_positions_split()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 19.2, "font": {"size": 12, "color": "#ffffff"}, "title": "get_ai_head_positions_split()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 4}, {"id": "compiler_ai_upscale", "label": "ai_upscale()", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 23.8, "font": {"size": 12, "color": "#ffffff"}, "title": "ai_upscale()", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "compiler.py", "file_type": "code", "degree": 6}, {"id": "compiler_color_grade_tiktok", "label": "color_grade_tiktok()", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 21.5, "font": {"size": 12, "color": "#ffffff"}, "title": "color_grade_tiktok()", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "compiler.py", "file_type": "code", "degree": 5}, {"id": "compiler_compile_video_raw", "label": "compile_video_raw()", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "compile_video_raw()", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "compiler.py", "file_type": "code", "degree": 13}, {"id": "compiler_rationale_179", "label": "Upscale IA avec Real-ESRGAN (NCNN Vulkan) - Pipeline par images pour support vid", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Upscale IA avec Real-ESRGAN (NCNN Vulkan) - Pipeline par images pour support vid", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "compiler.py", "file_type": "rationale", "degree": 1}, {"id": "compiler_rationale_236", "label": "Color grading AMV Premium post-upscale IA.", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Color grading AMV Premium post-upscale IA.", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "compiler.py", "file_type": "rationale", "degree": 1}, {"id": "generate_assets", "label": "generate_assets.py", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "generate_assets.py", "community": 5, "community_name": "Sound Effect Generation", "source_file": "generate_assets.py", "file_type": "code", "degree": 1}, {"id": "generate_assets_generate_beep", "label": "generate_beep()", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "generate_beep()", "community": 5, "community_name": "Sound Effect Generation", "source_file": "generate_assets.py", "file_type": "code", "degree": 1}, {"id": "claude_production_pipeline", "label": "3-Step Production Pipeline", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 10.0, "font": {"size": 0, "color": "#ffffff"}, "title": "3-Step Production Pipeline", "community": 6, "community_name": "Production Pipeline", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 0}, {"id": "claude_step1_asset_generation", "label": "Step 1 - Asset Generation", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 23.8, "font": {"size": 12, "color": "#ffffff"}, "title": "Step 1 - Asset Generation", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 6}, {"id": "claude_step2_raw_compilation", "label": "Step 2 - Raw Compilation", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Step 2 - Raw Compilation", "community": 4, "community_name": "OpenAI & Transcription", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 2}, {"id": "claude_step3_ai_upscale", "label": "Step 3 - AI Upscale", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Step 3 - AI Upscale", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "app_app", "label": "app.py (Streamlit UI)", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 21.5, "font": {"size": 12, "color": "#ffffff"}, "title": "app.py (Streamlit UI)", "community": 4, "community_name": "OpenAI & Transcription", "source_file": "app.py", "file_type": "code", "degree": 5}, {"id": "compiler_compiler", "label": "compiler.py (post-processing)", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 10.0, "font": {"size": 0, "color": "#ffffff"}, "title": "compiler.py (post-processing)", "community": 7, "community_name": "Post-Processing Module", "source_file": "compiler.py", "file_type": "code", "degree": 0}, {"id": "claude_replicate_api", "label": "Replicate API", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Replicate API", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 2}, {"id": "claude_openai_api", "label": "OpenAI API", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 16.9, "font": {"size": 12, "color": "#ffffff"}, "title": "OpenAI API", "community": 4, "community_name": "OpenAI & Transcription", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 3}, {"id": "claude_real_esrgan", "label": "Real-ESRGAN (NCNN Vulkan)", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Real-ESRGAN (NCNN Vulkan)", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_ffmpeg", "label": "FFmpeg", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "FFmpeg", "community": 3, "community_name": "Upscaling & Color Grading", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_whisper", "label": "Whisper (word-level subtitles)", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 16.9, "font": {"size": 12, "color": "#ffffff"}, "title": "Whisper (word-level subtitles)", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 3}, {"id": "claude_grounding_dino", "label": "Grounding DINO (head detection)", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Grounding DINO (head detection)", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 2}, {"id": "claude_moviepy", "label": "MoviePy", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "MoviePy", "community": 0, "community_name": "Video Compilation & Subtitles", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_metadata_json", "label": "metadata.json (serialized state)", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "metadata.json (serialized state)", "community": 1, "community_name": "App State & Instance Management", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_prunaai_p_video", "label": "prunaai/p-video (video model)", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 14.6, "font": {"size": 12, "color": "#ffffff"}, "title": "prunaai/p-video (video model)", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 2}, {"id": "claude_seedream", "label": "bytedance/seedream-4.5 (image model)", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "bytedance/seedream-4.5 (image model)", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_minimax_speech", "label": "minimax/speech-2.8-turbo (voice model)", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "minimax/speech-2.8-turbo (voice model)", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "concept", "degree": 1}, {"id": "claude_static_camera_rule", "label": "Static camera prompt rule", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Static camera prompt rule", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "rationale", "degree": 1}, {"id": "claude_prompt_language_convention", "label": "English-visual / French-dialogue convention", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "English-visual / French-dialogue convention", "community": 2, "community_name": "AI Asset Generation", "source_file": "CLAUDE.md", "file_type": "rationale", "degree": 1}, {"id": "readme_instance_based_generation", "label": "Instance-Based Generation", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "Instance-Based Generation", "community": 1, "community_name": "App State & Instance Management", "source_file": "README.md", "file_type": "concept", "degree": 1}, {"id": "gemini_log_terminal", "label": "log_terminal", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "log_terminal", "community": 4, "community_name": "OpenAI & Transcription", "source_file": "app.py", "file_type": "code", "degree": 1}, {"id": "gemini_save_key_to_env", "label": "save_key_to_env", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 12.3, "font": {"size": 0, "color": "#ffffff"}, "title": "save_key_to_env", "community": 4, "community_name": "OpenAI & Transcription", "source_file": "app.py", "file_type": "code", "degree": 1}];
+const RAW_EDGES = [{"from": "architecture_plan", "to": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_contexte", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol", "to": "architecture_plan_v\u00e9rification", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_download_file", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_get_whisper_subtitles", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_load_into_editor", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_log_terminal", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_save_key_to_env", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_sync_instance_to_widgets", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "app_videoinstance", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "compiler", "label": "imports_from", "title": "imports_from [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "compiler_ai_upscale", "label": "imports", "title": "imports [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "compiler_color_grade_tiktok", "label": "imports", "title": "imports [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app", "to": "compiler_compile_video_raw", "label": "imports", "title": "imports [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_app", "to": "app_videoinstance", "label": "shares_data_with", "title": "shares_data_with [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_load_into_editor", "to": "app_videoinstance", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_videoinstance", "to": "claude_metadata_json", "label": "shares_data_with", "title": "shares_data_with [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "app_videoinstance", "label": "shares_data_with", "title": "shares_data_with [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "readme_instance_based_generation", "to": "app_videoinstance", "label": "references", "title": "references [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "app_download_file", "to": "app_log_terminal", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_get_whisper_subtitles", "to": "app_log_terminal", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_save_key_to_env", "to": "app_log_terminal", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_load_into_editor", "to": "app_sync_instance_to_widgets", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_ai_upscale", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_color_grade_tiktok", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_compile_video_raw", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_create_circular_timer_pil", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_create_dark_fantasy_gauge", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_create_styled_subtitle_pil", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_detect_side_entity", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_format_timestamp", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_get_ai_head_positions_split", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_get_whisper_subtitles", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_make_text_clip_exact", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler", "to": "compiler_save_srt", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_get_whisper_subtitles", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_save_srt", "to": "compiler_format_timestamp", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_save_srt", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_create_styled_subtitle_pil", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_create_circular_timer_pil", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_create_dark_fantasy_gauge", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_make_text_clip_exact", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "compiler_get_ai_head_positions_split", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_get_ai_head_positions_split", "to": "claude_grounding_dino", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_get_ai_head_positions_split", "to": "claude_whisper", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "claude_step3_ai_upscale", "to": "compiler_ai_upscale", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_ai_upscale", "to": "claude_real_esrgan", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_ai_upscale", "to": "compiler_color_grade_tiktok", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_rationale_179", "to": "compiler_ai_upscale", "label": "rationale_for", "title": "rationale_for [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_color_grade_tiktok", "to": "claude_ffmpeg", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_rationale_236", "to": "compiler_color_grade_tiktok", "label": "rationale_for", "title": "rationale_for [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step2_raw_compilation", "to": "compiler_compile_video_raw", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "claude_moviepy", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "compiler_compile_video_raw", "to": "claude_whisper", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "generate_assets", "to": "generate_assets_generate_beep", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_prompt_language_convention", "to": "claude_step1_asset_generation", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "claude_step1_asset_generation", "to": "app_app", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step1_asset_generation", "to": "claude_minimax_speech", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step1_asset_generation", "to": "claude_prunaai_p_video", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step1_asset_generation", "to": "claude_replicate_api", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step1_asset_generation", "to": "claude_seedream", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_step2_raw_compilation", "to": "claude_openai_api", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "app_app", "to": "claude_openai_api", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "gemini_log_terminal", "to": "app_app", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "gemini_save_key_to_env", "to": "app_app", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_grounding_dino", "to": "claude_replicate_api", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_whisper", "to": "claude_openai_api", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_static_camera_rule", "to": "claude_prunaai_p_video", "label": "rationale_for", "title": "rationale_for [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}];
+const LEGEND = [{"cid": 0, "color": "#4E79A7", "label": "Video Compilation &amp; Subtitles", "count": 13}, {"cid": 1, "color": "#F28E2B", "label": "App State &amp; Instance Management", "count": 10}, {"cid": 2, "color": "#E15759", "label": "AI Asset Generation", "count": 8}, {"cid": 3, "color": "#76B7B2", "label": "Upscaling &amp; Color Grading", "count": 7}, {"cid": 4, "color": "#59A14F", "label": "OpenAI &amp; Transcription", "count": 5}, {"cid": 5, "color": "#EDC948", "label": "Sound Effect Generation", "count": 2}, {"cid": 6, "color": "#B07AA1", "label": "Production Pipeline", "count": 1}, {"cid": 7, "color": "#FF9DA7", "label": "Post-Processing Module", "count": 1}, {"cid": 8, "color": "#9C755F", "label": "Community 8", "count": 8}];
+
+// HTML-escape helper — prevents XSS when injecting graph data into innerHTML
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Build vis datasets
+const nodesDS = new vis.DataSet(RAW_NODES.map(n => ({
+  id: n.id, label: n.label, color: n.color, size: n.size,
+  font: n.font, title: n.title,
+  _community: n.community, _community_name: n.community_name,
+  _source_file: n.source_file, _file_type: n.file_type, _degree: n.degree,
+})));
+
+const edgesDS = new vis.DataSet(RAW_EDGES.map((e, i) => ({
+  id: i, from: e.from, to: e.to,
+  label: '',
+  title: e.title,
+  dashes: e.dashes,
+  width: e.width,
+  color: e.color,
+  arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+})));
+
+const container = document.getElementById('graph');
+const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+  physics: {
+    enabled: true,
+    solver: 'forceAtlas2Based',
+    forceAtlas2Based: {
+      gravitationalConstant: -60,
+      centralGravity: 0.005,
+      springLength: 120,
+      springConstant: 0.08,
+      damping: 0.4,
+      avoidOverlap: 0.8,
+    },
+    stabilization: { iterations: 200, fit: true },
+  },
+  interaction: {
+    hover: true,
+    tooltipDelay: 100,
+    hideEdgesOnDrag: true,
+    navigationButtons: false,
+    keyboard: false,
+  },
+  nodes: { shape: 'dot', borderWidth: 1.5 },
+  edges: { smooth: { type: 'continuous', roundness: 0.2 }, selectionWidth: 3 },
+});
+
+network.once('stabilizationIterationsDone', () => {
+  network.setOptions({ physics: { enabled: false } });
+});
+
+function showInfo(nodeId) {
+  const n = nodesDS.get(nodeId);
+  if (!n) return;
+  const neighborIds = network.getConnectedNodes(nodeId);
+  const neighborItems = neighborIds.map(nid => {
+    const nb = nodesDS.get(nid);
+    const color = nb ? nb.color.background : '#555';
+    return `<span class="neighbor-link" style="border-left-color:${esc(color)}" onclick="focusNode(${JSON.stringify(nid)})">${esc(nb ? nb.label : nid)}</span>`;
+  }).join('');
+  document.getElementById('info-content').innerHTML = `
+    <div class="field"><b>${esc(n.label)}</b></div>
+    <div class="field">Type: ${esc(n._file_type || 'unknown')}</div>
+    <div class="field">Community: ${esc(n._community_name)}</div>
+    <div class="field">Source: ${esc(n._source_file || '-')}</div>
+    <div class="field">Degree: ${n._degree}</div>
+    ${neighborIds.length ? `<div class="field" style="margin-top:8px;color:#aaa;font-size:11px">Neighbors (${neighborIds.length})</div><div id="neighbors-list">${neighborItems}</div>` : ''}
+  `;
+}
+
+function focusNode(nodeId) {
+  network.focus(nodeId, { scale: 1.4, animation: true });
+  network.selectNodes([nodeId]);
+  showInfo(nodeId);
+}
+
+// Track hovered node — hover detection is more reliable than click params
+let hoveredNodeId = null;
+network.on('hoverNode', params => {
+  hoveredNodeId = params.node;
+  container.style.cursor = 'pointer';
+});
+network.on('blurNode', () => {
+  hoveredNodeId = null;
+  container.style.cursor = 'default';
+});
+container.addEventListener('click', () => {
+  if (hoveredNodeId !== null) {
+    showInfo(hoveredNodeId);
+    network.selectNodes([hoveredNodeId]);
+  }
+});
+network.on('click', params => {
+  if (params.nodes.length > 0) {
+    showInfo(params.nodes[0]);
+  } else if (hoveredNodeId === null) {
+    document.getElementById('info-content').innerHTML = '<span class="empty">Click a node to inspect it</span>';
+  }
+});
+
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  searchResults.innerHTML = '';
+  if (!q) { searchResults.style.display = 'none'; return; }
+  const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q)).slice(0, 20);
+  if (!matches.length) { searchResults.style.display = 'none'; return; }
+  searchResults.style.display = 'block';
+  matches.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'search-item';
+    el.textContent = n.label;
+    el.style.borderLeft = `3px solid ${n.color.background}`;
+    el.style.paddingLeft = '8px';
+    el.onclick = () => {
+      network.focus(n.id, { scale: 1.5, animation: true });
+      network.selectNodes([n.id]);
+      showInfo(n.id);
+      searchResults.style.display = 'none';
+      searchInput.value = '';
+    };
+    searchResults.appendChild(el);
+  });
+});
+document.addEventListener('click', e => {
+  if (!searchResults.contains(e.target) && e.target !== searchInput)
+    searchResults.style.display = 'none';
+});
+
+const hiddenCommunities = new Set();
+
+const selectAllCb = document.getElementById('select-all-cb');
+
+function updateSelectAllState() {
+  const total = LEGEND.length;
+  const hidden = hiddenCommunities.size;
+  selectAllCb.checked = hidden === 0;
+  selectAllCb.indeterminate = hidden > 0 && hidden < total;
+}
+
+function toggleAllCommunities(hide) {
+  document.querySelectorAll('.legend-item').forEach(item => {
+    hide ? item.classList.add('dimmed') : item.classList.remove('dimmed');
+  });
+  document.querySelectorAll('.legend-cb').forEach(cb => {
+    cb.checked = !hide;
+  });
+  LEGEND.forEach(c => {
+    if (hide) hiddenCommunities.add(c.cid); else hiddenCommunities.delete(c.cid);
+  });
+  const updates = RAW_NODES.map(n => ({ id: n.id, hidden: hide }));
+  nodesDS.update(updates);
+  updateSelectAllState();
+}
+
+const legendEl = document.getElementById('legend');
+LEGEND.forEach(c => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'legend-cb';
+  cb.checked = true;
+  cb.addEventListener('change', (e) => {
+    e.stopPropagation();
+    if (cb.checked) {
+      hiddenCommunities.delete(c.cid);
+      item.classList.remove('dimmed');
+    } else {
+      hiddenCommunities.add(c.cid);
+      item.classList.add('dimmed');
+    }
+    const updates = RAW_NODES
+      .filter(n => n.community === c.cid)
+      .map(n => ({ id: n.id, hidden: !cb.checked }));
+    nodesDS.update(updates);
+    updateSelectAllState();
+  });
+  item.innerHTML = `<div class="legend-dot" style="background:${c.color}"></div>
+    <span class="legend-label">${c.label}</span>
+    <span class="legend-count">${c.count}</span>`;
+  item.prepend(cb);
+  item.onclick = (e) => {
+    if (e.target === cb) return;
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change'));
+  };
+  legendEl.appendChild(item);
+});
+</script>
+<script>
+// Render hyperedges as shaded regions
+const hyperedges = [{"id": "three_step_production_pipeline", "label": "3-Step Production Pipeline Flow", "nodes": ["claude_step1_asset_generation", "claude_step2_raw_compilation", "claude_step3_ai_upscale"], "relation": "form", "confidence": "EXTRACTED", "confidence_score": 0.95, "source_file": "CLAUDE.md"}, {"id": "step2_compilation_components", "label": "Step 2 Compilation Subsystems", "nodes": ["compiler_compile_video_raw", "claude_whisper", "compiler_get_ai_head_positions_split", "claude_moviepy"], "relation": "participate_in", "confidence": "EXTRACTED", "confidence_score": 0.9, "source_file": "CLAUDE.md"}, {"id": "multi_ai_orchestration", "label": "Multi-AI Model Orchestration", "nodes": ["claude_prunaai_p_video", "claude_seedream", "claude_minimax_speech", "claude_replicate_api"], "relation": "participate_in", "confidence": "EXTRACTED", "confidence_score": 0.9, "source_file": "README.md"}];
+// afterDrawing passes ctx already transformed to network coordinate space.
+// Draw node positions raw — no manual pan/zoom/DPR math needed.
+network.on('afterDrawing', function(ctx) {
+    hyperedges.forEach(h => {
+        const positions = h.nodes
+            .map(nid => network.getPositions([nid])[nid])
+            .filter(p => p !== undefined);
+        if (positions.length < 2) return;
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#6366f1';
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // Centroid and expanded hull in network coordinates
+        const cx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+        const cy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+        const expanded = positions.map(p => ({
+            x: cx + (p.x - cx) * 1.15,
+            y: cy + (p.y - cy) * 1.15
+        }));
+        ctx.moveTo(expanded[0].x, expanded[0].y);
+        expanded.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.stroke();
+        // Label
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#4f46e5';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(h.label, cx, cy - 5);
+        ctx.restore();
+    });
+});
+</script>
+</body>
+</html>
