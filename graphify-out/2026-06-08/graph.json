@@ -48,14 +48,94 @@
   },
   "nodes": [
     {
+      "label": "ARCHITECTURE_PLAN.md",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "architecture_plan",
+      "community": 8,
+      "norm_label": "architecture_plan.md"
+    },
+    {
+      "label": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "community": 8,
+      "norm_label": "refactor : procedural \u2192 feature-driven + ports (typing.protocol)"
+    },
+    {
+      "label": "Contexte",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "architecture_plan_contexte",
+      "community": 8,
+      "norm_label": "contexte"
+    },
+    {
+      "label": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l'utilisateur)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur",
+      "community": 8,
+      "norm_label": "regle de decision pour les protocol (cadree avec l'utilisateur)"
+    },
+    {
+      "label": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9",
+      "community": 8,
+      "norm_label": "structure cible (a la racine, `streamlit run app.py` inchange)"
+    },
+    {
+      "label": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert",
+      "community": 8,
+      "norm_label": "sequencement strangler-fig (chaque etape = app fonctionnelle + mypy vert)"
+    },
+    {
+      "label": "Fichiers cl\u00e9s touch\u00e9s",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L146",
+      "_origin": "ast",
+      "id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s",
+      "community": 8,
+      "norm_label": "fichiers cles touches"
+    },
+    {
+      "label": "V\u00e9rification",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L152",
+      "_origin": "ast",
+      "id": "architecture_plan_v\u00e9rification",
+      "community": 8,
+      "norm_label": "verification"
+    },
+    {
       "label": "app.py",
       "file_type": "code",
       "source_file": "app.py",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "app",
       "community": 1,
-      "norm_label": "app.py"
+      "norm_label": "app.py",
+      "id": "app"
     },
     {
       "label": "VideoInstance",
@@ -63,9 +143,9 @@
       "source_file": "app.py",
       "source_location": "L20",
       "_origin": "ast",
-      "id": "app_videoinstance",
       "community": 1,
-      "norm_label": "videoinstance"
+      "norm_label": "videoinstance",
+      "id": "app_videoinstance"
     },
     {
       "label": "log_terminal()",
@@ -73,9 +153,9 @@
       "source_file": "app.py",
       "source_location": "L61",
       "_origin": "ast",
-      "id": "app_log_terminal",
       "community": 1,
-      "norm_label": "log_terminal()"
+      "norm_label": "log_terminal()",
+      "id": "app_log_terminal"
     },
     {
       "label": "get_whisper_subtitles()",
@@ -83,9 +163,9 @@
       "source_file": "app.py",
       "source_location": "L67",
       "_origin": "ast",
-      "id": "app_get_whisper_subtitles",
       "community": 1,
-      "norm_label": "get_whisper_subtitles()"
+      "norm_label": "get_whisper_subtitles()",
+      "id": "app_get_whisper_subtitles"
     },
     {
       "label": "download_file()",
@@ -93,9 +173,9 @@
       "source_file": "app.py",
       "source_location": "L89",
       "_origin": "ast",
-      "id": "app_download_file",
       "community": 1,
-      "norm_label": "download_file()"
+      "norm_label": "download_file()",
+      "id": "app_download_file"
     },
     {
       "label": "save_key_to_env()",
@@ -103,9 +183,9 @@
       "source_file": "app.py",
       "source_location": "L105",
       "_origin": "ast",
-      "id": "app_save_key_to_env",
       "community": 1,
-      "norm_label": "save_key_to_env()"
+      "norm_label": "save_key_to_env()",
+      "id": "app_save_key_to_env"
     },
     {
       "label": "sync_instance_to_widgets()",
@@ -113,9 +193,9 @@
       "source_file": "app.py",
       "source_location": "L124",
       "_origin": "ast",
-      "id": "app_sync_instance_to_widgets",
       "community": 1,
-      "norm_label": "sync_instance_to_widgets()"
+      "norm_label": "sync_instance_to_widgets()",
+      "id": "app_sync_instance_to_widgets"
     },
     {
       "label": "load_into_editor()",
@@ -123,9 +203,9 @@
       "source_file": "app.py",
       "source_location": "L141",
       "_origin": "ast",
-      "id": "app_load_into_editor",
       "community": 1,
-      "norm_label": "load_into_editor()"
+      "norm_label": "load_into_editor()",
+      "id": "app_load_into_editor"
     },
     {
       "label": "compiler.py",
@@ -133,9 +213,9 @@
       "source_file": "compiler.py",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "compiler",
       "community": 0,
-      "norm_label": "compiler.py"
+      "norm_label": "compiler.py",
+      "id": "compiler"
     },
     {
       "label": "get_whisper_subtitles()",
@@ -143,9 +223,9 @@
       "source_file": "compiler.py",
       "source_location": "L18",
       "_origin": "ast",
-      "id": "compiler_get_whisper_subtitles",
       "community": 0,
-      "norm_label": "get_whisper_subtitles()"
+      "norm_label": "get_whisper_subtitles()",
+      "id": "compiler_get_whisper_subtitles"
     },
     {
       "label": "format_timestamp()",
@@ -153,9 +233,9 @@
       "source_file": "compiler.py",
       "source_location": "L51",
       "_origin": "ast",
-      "id": "compiler_format_timestamp",
       "community": 0,
-      "norm_label": "format_timestamp()"
+      "norm_label": "format_timestamp()",
+      "id": "compiler_format_timestamp"
     },
     {
       "label": "save_srt()",
@@ -163,9 +243,9 @@
       "source_file": "compiler.py",
       "source_location": "L56",
       "_origin": "ast",
-      "id": "compiler_save_srt",
       "community": 0,
-      "norm_label": "save_srt()"
+      "norm_label": "save_srt()",
+      "id": "compiler_save_srt"
     },
     {
       "label": "create_styled_subtitle_pil()",
@@ -173,9 +253,9 @@
       "source_file": "compiler.py",
       "source_location": "L62",
       "_origin": "ast",
-      "id": "compiler_create_styled_subtitle_pil",
       "community": 0,
-      "norm_label": "create_styled_subtitle_pil()"
+      "norm_label": "create_styled_subtitle_pil()",
+      "id": "compiler_create_styled_subtitle_pil"
     },
     {
       "label": "create_circular_timer_pil()",
@@ -183,9 +263,9 @@
       "source_file": "compiler.py",
       "source_location": "L80",
       "_origin": "ast",
-      "id": "compiler_create_circular_timer_pil",
       "community": 0,
-      "norm_label": "create_circular_timer_pil()"
+      "norm_label": "create_circular_timer_pil()",
+      "id": "compiler_create_circular_timer_pil"
     },
     {
       "label": "create_dark_fantasy_gauge()",
@@ -193,9 +273,9 @@
       "source_file": "compiler.py",
       "source_location": "L93",
       "_origin": "ast",
-      "id": "compiler_create_dark_fantasy_gauge",
       "community": 0,
-      "norm_label": "create_dark_fantasy_gauge()"
+      "norm_label": "create_dark_fantasy_gauge()",
+      "id": "compiler_create_dark_fantasy_gauge"
     },
     {
       "label": "_make_text_clip_exact()",
@@ -203,9 +283,9 @@
       "source_file": "compiler.py",
       "source_location": "L109",
       "_origin": "ast",
-      "id": "compiler_make_text_clip_exact",
       "community": 0,
-      "norm_label": "_make_text_clip_exact()"
+      "norm_label": "_make_text_clip_exact()",
+      "id": "compiler_make_text_clip_exact"
     },
     {
       "label": "detect_side_entity()",
@@ -213,9 +293,9 @@
       "source_file": "compiler.py",
       "source_location": "L125",
       "_origin": "ast",
-      "id": "compiler_detect_side_entity",
       "community": 0,
-      "norm_label": "detect_side_entity()"
+      "norm_label": "detect_side_entity()",
+      "id": "compiler_detect_side_entity"
     },
     {
       "label": "get_ai_head_positions_split()",
@@ -223,9 +303,9 @@
       "source_file": "compiler.py",
       "source_location": "L150",
       "_origin": "ast",
-      "id": "compiler_get_ai_head_positions_split",
-      "community": 2,
-      "norm_label": "get_ai_head_positions_split()"
+      "community": 0,
+      "norm_label": "get_ai_head_positions_split()",
+      "id": "compiler_get_ai_head_positions_split"
     },
     {
       "label": "ai_upscale()",
@@ -233,9 +313,9 @@
       "source_file": "compiler.py",
       "source_location": "L178",
       "_origin": "ast",
-      "id": "compiler_ai_upscale",
       "community": 3,
-      "norm_label": "ai_upscale()"
+      "norm_label": "ai_upscale()",
+      "id": "compiler_ai_upscale"
     },
     {
       "label": "color_grade_tiktok()",
@@ -243,9 +323,9 @@
       "source_file": "compiler.py",
       "source_location": "L235",
       "_origin": "ast",
-      "id": "compiler_color_grade_tiktok",
       "community": 3,
-      "norm_label": "color_grade_tiktok()"
+      "norm_label": "color_grade_tiktok()",
+      "id": "compiler_color_grade_tiktok"
     },
     {
       "label": "compile_video_raw()",
@@ -253,9 +333,9 @@
       "source_file": "compiler.py",
       "source_location": "L289",
       "_origin": "ast",
-      "id": "compiler_compile_video_raw",
       "community": 0,
-      "norm_label": "compile_video_raw()"
+      "norm_label": "compile_video_raw()",
+      "id": "compiler_compile_video_raw"
     },
     {
       "label": "Upscale IA avec Real-ESRGAN (NCNN Vulkan) - Pipeline par images pour support vid",
@@ -263,9 +343,9 @@
       "source_file": "compiler.py",
       "source_location": "L179",
       "_origin": "ast",
-      "id": "compiler_rationale_179",
       "community": 3,
-      "norm_label": "upscale ia avec real-esrgan (ncnn vulkan) - pipeline par images pour support vid"
+      "norm_label": "upscale ia avec real-esrgan (ncnn vulkan) - pipeline par images pour support vid",
+      "id": "compiler_rationale_179"
     },
     {
       "label": "Color grading AMV Premium post-upscale IA.",
@@ -273,9 +353,9 @@
       "source_file": "compiler.py",
       "source_location": "L236",
       "_origin": "ast",
-      "id": "compiler_rationale_236",
       "community": 3,
-      "norm_label": "color grading amv premium post-upscale ia."
+      "norm_label": "color grading amv premium post-upscale ia.",
+      "id": "compiler_rationale_236"
     },
     {
       "label": "generate_assets.py",
@@ -283,9 +363,9 @@
       "source_file": "generate_assets.py",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "generate_assets",
       "community": 5,
-      "norm_label": "generate_assets.py"
+      "norm_label": "generate_assets.py",
+      "id": "generate_assets"
     },
     {
       "label": "generate_beep()",
@@ -293,9 +373,9 @@
       "source_file": "generate_assets.py",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "generate_assets_generate_beep",
       "community": 5,
-      "norm_label": "generate_beep()"
+      "norm_label": "generate_beep()",
+      "id": "generate_assets_generate_beep"
     },
     {
       "label": "3-Step Production Pipeline",
@@ -306,9 +386,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_production_pipeline",
       "community": 6,
-      "norm_label": "3-step production pipeline"
+      "norm_label": "3-step production pipeline",
+      "id": "claude_production_pipeline"
     },
     {
       "label": "Step 1 - Asset Generation",
@@ -319,9 +399,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_step1_asset_generation",
       "community": 2,
-      "norm_label": "step 1 - asset generation"
+      "norm_label": "step 1 - asset generation",
+      "id": "claude_step1_asset_generation"
     },
     {
       "label": "Step 2 - Raw Compilation",
@@ -332,9 +412,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_step2_raw_compilation",
       "community": 4,
-      "norm_label": "step 2 - raw compilation"
+      "norm_label": "step 2 - raw compilation",
+      "id": "claude_step2_raw_compilation"
     },
     {
       "label": "Step 3 - AI Upscale",
@@ -345,9 +425,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_step3_ai_upscale",
       "community": 3,
-      "norm_label": "step 3 - ai upscale"
+      "norm_label": "step 3 - ai upscale",
+      "id": "claude_step3_ai_upscale"
     },
     {
       "label": "app.py (Streamlit UI)",
@@ -358,9 +438,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "app_app",
       "community": 4,
-      "norm_label": "app.py (streamlit ui)"
+      "norm_label": "app.py (streamlit ui)",
+      "id": "app_app"
     },
     {
       "label": "compiler.py (post-processing)",
@@ -371,9 +451,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "compiler_compiler",
       "community": 7,
-      "norm_label": "compiler.py (post-processing)"
+      "norm_label": "compiler.py (post-processing)",
+      "id": "compiler_compiler"
     },
     {
       "label": "Replicate API",
@@ -384,9 +464,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_replicate_api",
       "community": 2,
-      "norm_label": "replicate api"
+      "norm_label": "replicate api",
+      "id": "claude_replicate_api"
     },
     {
       "label": "OpenAI API",
@@ -397,9 +477,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_openai_api",
       "community": 4,
-      "norm_label": "openai api"
+      "norm_label": "openai api",
+      "id": "claude_openai_api"
     },
     {
       "label": "Real-ESRGAN (NCNN Vulkan)",
@@ -410,9 +490,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_real_esrgan",
       "community": 3,
-      "norm_label": "real-esrgan (ncnn vulkan)"
+      "norm_label": "real-esrgan (ncnn vulkan)",
+      "id": "claude_real_esrgan"
     },
     {
       "label": "FFmpeg",
@@ -423,9 +503,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_ffmpeg",
       "community": 3,
-      "norm_label": "ffmpeg"
+      "norm_label": "ffmpeg",
+      "id": "claude_ffmpeg"
     },
     {
       "label": "Whisper (word-level subtitles)",
@@ -436,9 +516,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_whisper",
-      "community": 4,
-      "norm_label": "whisper (word-level subtitles)"
+      "community": 0,
+      "norm_label": "whisper (word-level subtitles)",
+      "id": "claude_whisper"
     },
     {
       "label": "Grounding DINO (head detection)",
@@ -449,9 +529,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_grounding_dino",
       "community": 2,
-      "norm_label": "grounding dino (head detection)"
+      "norm_label": "grounding dino (head detection)",
+      "id": "claude_grounding_dino"
     },
     {
       "label": "MoviePy",
@@ -462,9 +542,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_moviepy",
       "community": 0,
-      "norm_label": "moviepy"
+      "norm_label": "moviepy",
+      "id": "claude_moviepy"
     },
     {
       "label": "metadata.json (serialized state)",
@@ -475,9 +555,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_metadata_json",
       "community": 1,
-      "norm_label": "metadata.json (serialized state)"
+      "norm_label": "metadata.json (serialized state)",
+      "id": "claude_metadata_json"
     },
     {
       "label": "prunaai/p-video (video model)",
@@ -488,9 +568,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_prunaai_p_video",
       "community": 2,
-      "norm_label": "prunaai/p-video (video model)"
+      "norm_label": "prunaai/p-video (video model)",
+      "id": "claude_prunaai_p_video"
     },
     {
       "label": "bytedance/seedream-4.5 (image model)",
@@ -501,9 +581,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_seedream",
       "community": 2,
-      "norm_label": "bytedance/seedream-4.5 (image model)"
+      "norm_label": "bytedance/seedream-4.5 (image model)",
+      "id": "claude_seedream"
     },
     {
       "label": "minimax/speech-2.8-turbo (voice model)",
@@ -514,9 +594,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_minimax_speech",
       "community": 2,
-      "norm_label": "minimax/speech-2.8-turbo (voice model)"
+      "norm_label": "minimax/speech-2.8-turbo (voice model)",
+      "id": "claude_minimax_speech"
     },
     {
       "label": "Static camera prompt rule",
@@ -527,9 +607,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_static_camera_rule",
       "community": 2,
-      "norm_label": "static camera prompt rule"
+      "norm_label": "static camera prompt rule",
+      "id": "claude_static_camera_rule"
     },
     {
       "label": "English-visual / French-dialogue convention",
@@ -540,9 +620,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "claude_prompt_language_convention",
       "community": 2,
-      "norm_label": "english-visual / french-dialogue convention"
+      "norm_label": "english-visual / french-dialogue convention",
+      "id": "claude_prompt_language_convention"
     },
     {
       "label": "Instance-Based Generation",
@@ -553,9 +633,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "readme_instance_based_generation",
       "community": 1,
-      "norm_label": "instance-based generation"
+      "norm_label": "instance-based generation",
+      "id": "readme_instance_based_generation"
     },
     {
       "label": "log_terminal",
@@ -566,9 +646,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gemini_log_terminal",
       "community": 4,
-      "norm_label": "log_terminal"
+      "norm_label": "log_terminal",
+      "id": "gemini_log_terminal"
     },
     {
       "label": "save_key_to_env",
@@ -579,21 +659,91 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "gemini_save_key_to_env",
       "community": 4,
-      "norm_label": "save_key_to_env"
+      "norm_label": "save_key_to_env",
+      "id": "gemini_save_key_to_env"
     }
   ],
   "links": [
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "architecture_plan",
+      "target": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_contexte",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L146",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_v\u00e9rification",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "app.py",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_download_file",
-      "confidence_score": 1.0
+      "target": "app_download_file"
     },
     {
       "relation": "contains",
@@ -601,9 +751,9 @@
       "source_file": "app.py",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_get_whisper_subtitles",
-      "confidence_score": 1.0
+      "target": "app_get_whisper_subtitles"
     },
     {
       "relation": "contains",
@@ -611,9 +761,9 @@
       "source_file": "app.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_load_into_editor",
-      "confidence_score": 1.0
+      "target": "app_load_into_editor"
     },
     {
       "relation": "contains",
@@ -621,9 +771,9 @@
       "source_file": "app.py",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_log_terminal",
-      "confidence_score": 1.0
+      "target": "app_log_terminal"
     },
     {
       "relation": "contains",
@@ -631,9 +781,9 @@
       "source_file": "app.py",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_save_key_to_env",
-      "confidence_score": 1.0
+      "target": "app_save_key_to_env"
     },
     {
       "relation": "contains",
@@ -641,9 +791,9 @@
       "source_file": "app.py",
       "source_location": "L124",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_sync_instance_to_widgets",
-      "confidence_score": 1.0
+      "target": "app_sync_instance_to_widgets"
     },
     {
       "relation": "contains",
@@ -651,9 +801,9 @@
       "source_file": "app.py",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_videoinstance",
-      "confidence_score": 1.0
+      "target": "app_videoinstance"
     },
     {
       "relation": "imports_from",
@@ -662,9 +812,9 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "compiler",
-      "confidence_score": 1.0
+      "target": "compiler"
     },
     {
       "relation": "imports",
@@ -673,9 +823,9 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "compiler_ai_upscale",
-      "confidence_score": 1.0
+      "target": "compiler_ai_upscale"
     },
     {
       "relation": "imports",
@@ -684,9 +834,9 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "compiler_color_grade_tiktok",
-      "confidence_score": 1.0
+      "target": "compiler_color_grade_tiktok"
     },
     {
       "relation": "imports",
@@ -695,9 +845,9 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "compiler_compile_video_raw",
-      "confidence_score": 1.0
+      "target": "compiler_compile_video_raw"
     },
     {
       "relation": "shares_data_with",
@@ -716,9 +866,9 @@
       "source_file": "app.py",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_load_into_editor",
-      "target": "app_videoinstance",
-      "confidence_score": 1.0
+      "target": "app_videoinstance"
     },
     {
       "relation": "shares_data_with",
@@ -757,9 +907,9 @@
       "source_file": "app.py",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_download_file",
-      "target": "app_log_terminal",
-      "confidence_score": 1.0
+      "target": "app_log_terminal"
     },
     {
       "relation": "calls",
@@ -768,9 +918,9 @@
       "source_file": "app.py",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_get_whisper_subtitles",
-      "target": "app_log_terminal",
-      "confidence_score": 1.0
+      "target": "app_log_terminal"
     },
     {
       "relation": "calls",
@@ -779,9 +929,9 @@
       "source_file": "app.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_save_key_to_env",
-      "target": "app_log_terminal",
-      "confidence_score": 1.0
+      "target": "app_log_terminal"
     },
     {
       "relation": "calls",
@@ -790,9 +940,9 @@
       "source_file": "app.py",
       "source_location": "L144",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_load_into_editor",
-      "target": "app_sync_instance_to_widgets",
-      "confidence_score": 1.0
+      "target": "app_sync_instance_to_widgets"
     },
     {
       "relation": "contains",
@@ -800,9 +950,9 @@
       "source_file": "compiler.py",
       "source_location": "L178",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_ai_upscale",
-      "confidence_score": 1.0
+      "target": "compiler_ai_upscale"
     },
     {
       "relation": "contains",
@@ -810,9 +960,9 @@
       "source_file": "compiler.py",
       "source_location": "L235",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_color_grade_tiktok",
-      "confidence_score": 1.0
+      "target": "compiler_color_grade_tiktok"
     },
     {
       "relation": "contains",
@@ -820,9 +970,9 @@
       "source_file": "compiler.py",
       "source_location": "L289",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_compile_video_raw",
-      "confidence_score": 1.0
+      "target": "compiler_compile_video_raw"
     },
     {
       "relation": "contains",
@@ -830,9 +980,9 @@
       "source_file": "compiler.py",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_create_circular_timer_pil",
-      "confidence_score": 1.0
+      "target": "compiler_create_circular_timer_pil"
     },
     {
       "relation": "contains",
@@ -840,9 +990,9 @@
       "source_file": "compiler.py",
       "source_location": "L93",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_create_dark_fantasy_gauge",
-      "confidence_score": 1.0
+      "target": "compiler_create_dark_fantasy_gauge"
     },
     {
       "relation": "contains",
@@ -850,9 +1000,9 @@
       "source_file": "compiler.py",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_create_styled_subtitle_pil",
-      "confidence_score": 1.0
+      "target": "compiler_create_styled_subtitle_pil"
     },
     {
       "relation": "contains",
@@ -860,9 +1010,9 @@
       "source_file": "compiler.py",
       "source_location": "L125",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_detect_side_entity",
-      "confidence_score": 1.0
+      "target": "compiler_detect_side_entity"
     },
     {
       "relation": "contains",
@@ -870,9 +1020,9 @@
       "source_file": "compiler.py",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_format_timestamp",
-      "confidence_score": 1.0
+      "target": "compiler_format_timestamp"
     },
     {
       "relation": "contains",
@@ -880,9 +1030,9 @@
       "source_file": "compiler.py",
       "source_location": "L150",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_get_ai_head_positions_split",
-      "confidence_score": 1.0
+      "target": "compiler_get_ai_head_positions_split"
     },
     {
       "relation": "contains",
@@ -890,9 +1040,9 @@
       "source_file": "compiler.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_get_whisper_subtitles",
-      "confidence_score": 1.0
+      "target": "compiler_get_whisper_subtitles"
     },
     {
       "relation": "contains",
@@ -900,9 +1050,9 @@
       "source_file": "compiler.py",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_make_text_clip_exact",
-      "confidence_score": 1.0
+      "target": "compiler_make_text_clip_exact"
     },
     {
       "relation": "contains",
@@ -910,9 +1060,9 @@
       "source_file": "compiler.py",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler",
-      "target": "compiler_save_srt",
-      "confidence_score": 1.0
+      "target": "compiler_save_srt"
     },
     {
       "relation": "calls",
@@ -921,9 +1071,9 @@
       "source_file": "compiler.py",
       "source_location": "L307",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_get_whisper_subtitles",
-      "confidence_score": 1.0
+      "target": "compiler_get_whisper_subtitles"
     },
     {
       "relation": "calls",
@@ -932,9 +1082,9 @@
       "source_file": "compiler.py",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_save_srt",
-      "target": "compiler_format_timestamp",
-      "confidence_score": 1.0
+      "target": "compiler_format_timestamp"
     },
     {
       "relation": "calls",
@@ -943,9 +1093,9 @@
       "source_file": "compiler.py",
       "source_location": "L309",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_save_srt",
-      "confidence_score": 1.0
+      "target": "compiler_save_srt"
     },
     {
       "relation": "calls",
@@ -954,9 +1104,9 @@
       "source_file": "compiler.py",
       "source_location": "L354",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_create_styled_subtitle_pil",
-      "confidence_score": 1.0
+      "target": "compiler_create_styled_subtitle_pil"
     },
     {
       "relation": "calls",
@@ -965,9 +1115,9 @@
       "source_file": "compiler.py",
       "source_location": "L376",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_create_circular_timer_pil",
-      "confidence_score": 1.0
+      "target": "compiler_create_circular_timer_pil"
     },
     {
       "relation": "calls",
@@ -976,9 +1126,9 @@
       "source_file": "compiler.py",
       "source_location": "L377",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_create_dark_fantasy_gauge",
-      "confidence_score": 1.0
+      "target": "compiler_create_dark_fantasy_gauge"
     },
     {
       "relation": "calls",
@@ -987,9 +1137,9 @@
       "source_file": "compiler.py",
       "source_location": "L317",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_compile_video_raw",
-      "target": "compiler_make_text_clip_exact",
-      "confidence_score": 1.0
+      "target": "compiler_make_text_clip_exact"
     },
     {
       "relation": "calls",
@@ -1058,9 +1208,9 @@
       "source_file": "compiler.py",
       "source_location": "L179",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_rationale_179",
-      "target": "compiler_ai_upscale",
-      "confidence_score": 1.0
+      "target": "compiler_ai_upscale"
     },
     {
       "relation": "calls",
@@ -1078,9 +1228,9 @@
       "source_file": "compiler.py",
       "source_location": "L236",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_rationale_236",
-      "target": "compiler_color_grade_tiktok",
-      "confidence_score": 1.0
+      "target": "compiler_color_grade_tiktok"
     },
     {
       "relation": "implements",
@@ -1118,9 +1268,9 @@
       "source_file": "generate_assets.py",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "generate_assets",
-      "target": "generate_assets_generate_beep",
-      "confidence_score": 1.0
+      "target": "generate_assets_generate_beep"
     },
     {
       "relation": "rationale_for",
@@ -1296,5 +1446,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "228e96c53998f3bc2e804dbc60b1d954bdd5866d"
+  "built_at_commit": "bf76cfb4b3c0bc97d7217cf1c5509d4ea1360a27"
 }
