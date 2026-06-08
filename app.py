@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
-from compiler import compile_video
+from compiler import compile_video_raw, ai_upscale, color_grade_tiktok
 
 # Load environment variables
 load_dotenv()
@@ -432,97 +432,94 @@ if replicate_api_token:
 
         st.divider()
         st.subheader("3. Production Control")
-        p_col1, p_col2, p_col3 = st.columns(3)
+        p_row1_col1, p_row1_col2 = st.columns(2)
+        p_row2_col1, p_row2_col2 = st.columns(2)
         
-        if p_col1.button("🎬 Generate All Assets (9:16)", use_container_width=True):
+        # STEP 1: ASSETS
+        if p_row1_col1.button("🎬 [STEP 1] Generate All Assets", use_container_width=True):
             try:
                 status = st.empty()
-                with st.spinner("🚀 Producing..."):
-                    # 1. Narrator Voice (Always separate)
+                with st.spinner("🚀 Producing Assets..."):
                     if inst.narration_script:
                         status.info("🎙️ Synthesizing Narrator Voice...")
-                        # Use Deep_Voice_Man for Intro (more scary), Wise_Woman for others
                         v_id = "Deep_Voice_Man" if inst.type == "intro" else "Wise_Woman"
                         v2 = replicate.run("minimax/speech-2.8-turbo", input={"text": inst.narration_script, "voice_id": v_id})
                         inst.narrator_audio_url = str(v2)
-                    
-                    # 2. Character Voice
                     if inst.character_speech:
                         status.info("🎙️ Synthesizing Character Voice...")
                         v1 = replicate.run("minimax/speech-2.8-turbo", input={"text": inst.character_speech, "voice_id": "Deep_Voice_Man"})
                         inst.character_audio_url = str(v1)
-                    
-                    # 3. Base Image
                     status.info("🖼️ Generating Base Image...")
                     img = replicate.run("bytedance/seedream-4.5", input={"prompt": inst.freeze_image_prompt, "size": image_size, "aspect_ratio": "9:16"})
                     inst.freeze_image_url = str(img[0])
-                    
-                    # 4. Video
                     status.info("🎥 Animating Video (7s)...")
-                    vid_params = {
-                        "prompt": inst.video_prompt,
-                        "image": inst.freeze_image_url,
-                        "duration": 7, 
-                        "aspect_ratio": "9:16",
-                        "resolution": video_res,
-                        "draft": video_draft,
-                        "save_audio": True,
-                        "negative_prompt": "lying down, floor hands, crawling, walking, approaching camera, full body third-person view, camera movement, handheld shake, pan, tilt, zoom, dolly, drift, rotation, drifting, camera shake, moving background, weapons, guns, items in hands, flat palms, palms up, text, deformed fingers, watches, bracelets, rings, gloves, sleeves, cuffs, wristbands, jewelry"
-                    }
-                    # Inject audio for lip-sync if available
-                    if inst.character_audio_url:
-                        vid_params["audio"] = inst.character_audio_url
-                        
+                    vid_params = {"prompt": inst.video_prompt, "image": inst.freeze_image_url, "duration": 7, "aspect_ratio": "9:16", "resolution": video_res, "draft": video_draft, "save_audio": True}
+                    if inst.character_audio_url: vid_params["audio"] = inst.character_audio_url
                     vid = replicate.run("prunaai/p-video", input=vid_params)
                     inst.video_url = str(vid)
-
-                    # --- AUTO-DOWNLOAD & INDEXING ---
                     status.info("💾 Archiving assets locally...")
                     project_dir = os.path.join("exports", project_name, inst.id)
-                    
-                    if inst.narrator_audio_url:
-                        download_file(inst.narrator_audio_url, project_dir, "narrator.mp3")
-                    if inst.character_audio_url:
-                        # For intro, character audio is actually the video, but we might want a separate file if it was generated
-                        if inst.type != "intro":
-                            download_file(inst.character_audio_url, project_dir, "character.mp3")
-                    if inst.freeze_image_url:
-                        download_file(inst.freeze_image_url, project_dir, "base_image.png")
-                    if inst.video_url:
-                        download_file(inst.video_url, project_dir, "video.mp4")
-                    
-                    # Save metadata
-                    with open(os.path.join(project_dir, "metadata.json"), "w") as f:
-                        json.dump(asdict(inst), f, indent=4)
-                    
-                    log_terminal("SUCCESS", f"Project {project_name} instance {inst.id} archived.")
-                
-                status.success(f"✅ Production complete & archived in exports/{project_name}!")
+                    if inst.narrator_audio_url: download_file(inst.narrator_audio_url, project_dir, "narrator.mp3")
+                    if inst.character_audio_url: download_file(inst.character_audio_url, project_dir, "character.mp3")
+                    if inst.freeze_image_url: download_file(inst.freeze_image_url, project_dir, "base_image.png")
+                    if inst.video_url: download_file(inst.video_url, project_dir, "video.mp4")
+                    with open(os.path.join(project_dir, "metadata.json"), "w") as f: json.dump(asdict(inst), f, indent=4)
+                st.success("✅ Step 1: Assets Ready!")
                 st.rerun()
             except Exception as e: st.error(f"Error: {e}")
-            
-        if p_col2.button("💾 Save Config", use_container_width=True):
-            st.download_button("Download JSON", data=json.dumps(asdict(inst), indent=4), file_name=f"instance_{inst.id}.json")
 
-        if p_col3.button("🎞️ Compile Final Video", use_container_width=True):
-            with st.spinner("🎬 Compiling Final Video..."):
-                out_path = compile_video(project_name, inst.id)
-                if "Error" in out_path: st.error(out_path)
-                else: st.success(f"✅ Video ready: {out_path}")
+        # STEP 2: MOVIEPY
+        if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
+            with st.spinner("🎬 Running MoviePy..."):
+                compile_video_raw(project_name, inst.id)
+                st.success(f"✅ Step 2: Raw Video Ready!")
+                st.rerun()
 
-        if inst.video_url or inst.freeze_image_url:
+        # STEP 3: AI UPSCALE
+        if p_row2_col1.button("🧠 [STEP 3] AI Upscale (Real-ESRGAN)", use_container_width=True):
+            with st.spinner("🚀 Upscaling with IA..."):
+                project_dir = os.path.join("exports", project_name, inst.id)
+                raw_path = os.path.join(project_dir, "final_video.mp4")
+                upscaled_path = os.path.join(project_dir, "tiktok_final.mp4") # Renamed to final
+                if not os.path.exists(raw_path): st.error("Error: Please run Step 2 first.")
+                else:
+                    res = ai_upscale(raw_path, upscaled_path)
+                    if "Error" in res: st.error(res)
+                    else:
+                        st.success(f"✅ Step 3: AI Upscaled Video Ready!")
+                        st.rerun()
+
+        # --- CUMULATIVE PRODUCTION GALLERY ---
+        st.divider()
+        st.header("🎬 Production Gallery")
+        project_dir = os.path.join("exports", project_name, inst.id)
+        
+        has_assets = os.path.exists(os.path.join(project_dir, "base_image.png"))
+        has_raw_vid = os.path.exists(os.path.join(project_dir, "final_video.mp4"))
+        has_final_vid = os.path.exists(os.path.join(project_dir, "tiktok_final.mp4"))
+        
+        if not (has_assets or has_raw_vid or has_final_vid):
+            st.info("No production results yet. Start with Step 1.")
+        
+        if has_final_vid:
+            st.subheader("🏆 FINAL MASTERPIECE: AI Upscaled (Step 3)")
+            st.video(os.path.join(project_dir, "tiktok_final.mp4"))
+            st.success("✨ **Ultra Quality:** 1080x1920 | Real-ESRGAN Reconstruction | Reconstructed Details")
             st.divider()
-            st.subheader("🎥 Results")
+
+        if has_raw_vid:
+            st.subheader("🎞️ Raw Compilation (Step 2)")
+            st.video(os.path.join(project_dir, "final_video.mp4"))
+            st.caption("Standard montage before IA upscale.")
+            st.divider()
+
+        if has_assets:
+            st.subheader("📦 Base Assets (Step 1)")
             r1, r2 = st.columns(2)
-            if inst.video_url:
-                r1.write("**Part 1: Video Hook**")
-                r1.video(inst.video_url)
-                if inst.character_audio_url: r1.audio(inst.character_audio_url)
-            if inst.freeze_image_url:
-                r2.write("**Part 2: Freeze & Choice**")
-                r2.image(inst.freeze_image_url)
-                if inst.narrator_audio_url: r2.audio(inst.narrator_audio_url)
-            if inst.choice_a: st.info(f"**Options:** A: {inst.choice_a} | B: {inst.choice_b}")
+            r1.image(os.path.join(project_dir, "base_image.png"), caption="Base Image")
+            if os.path.exists(os.path.join(project_dir, "video.mp4")):
+                r2.video(os.path.join(project_dir, "video.mp4"))
+                r2.caption("Raw AI Animation")
 
     elif mode == "📁 Projects":
         st.header("📁 Project Library")
