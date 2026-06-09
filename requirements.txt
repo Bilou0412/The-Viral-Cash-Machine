@@ -3,6 +3,7 @@ replicate
 python-dotenv
 requests
 openai
-moviepy
+moviepy>=2.0.0
+imageio-ffmpeg
 numpy
 pillow

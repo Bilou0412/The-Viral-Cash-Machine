@@ -23,9 +23,9 @@ On Windows, use `setup.bat` and `start.bat` instead.
 
 ## Architecture
 
-### 3-Step Production Pipeline
+### 2-Step Production Pipeline
 
-The core workflow is a 3-step pipeline, each triggered by a button in the Streamlit UI:
+The core workflow is a 2-step pipeline, each triggered by a button in the Streamlit UI:
 
 1. **Step 1 - Asset Generation** (`app.py`): Calls Replicate APIs to generate voice audio (`minimax/speech-2.8-turbo`), base image (`bytedance/seedream-4.5`), and video animation (`prunaai/p-video`). Downloads all assets to `exports/{project}/{instance_id}/`.
 
@@ -33,9 +33,7 @@ The core workflow is a 3-step pipeline, each triggered by a button in the Stream
    - Runs Whisper (OpenAI) for word-level subtitle extraction
    - Uses Grounding DINO (Replicate) via `get_ai_head_positions_split()` to detect character head positions for nameplate placement — splits the image into left/right halves and runs detection in parallel
    - Builds a multi-segment video: cinematic intro → video hook with subtitles → narration with zoom → countdown timer with choices
-   - Output: `final_video.mp4`
-
-3. **Step 3 - AI Upscale** (`compiler.py:ai_upscale`): Extracts frames, upscales with Real-ESRGAN (NCNN Vulkan, binary at `bin/realesrgan/`), reassembles. Optional `color_grade_tiktok()` applies AMV-style FFmpeg color grading. Output: `tiktok_final.mp4`
+   - Output: `final_video.mp4` (the final deliverable)
 
 ### Data Model
 
@@ -44,15 +42,14 @@ The core workflow is a 3-step pipeline, each triggered by a button in the Stream
 ### Key File Roles
 
 - **`app.py`** — Streamlit UI, session state management, OpenAI prompt decomposition, Replicate API calls for asset generation
-- **`compiler.py`** — All post-processing: MoviePy video assembly, Whisper subtitles, AI head detection, Real-ESRGAN upscaling, FFmpeg color grading
+- **`compiler.py`** — All post-processing: MoviePy video assembly, Whisper subtitles, AI head detection
 - **`generate_assets.py`** — One-off script to create `assets/tick.wav` and `assets/final.wav` sound effects
 
 ### External Dependencies
 
 - **Replicate API** (`REPLICATE_API_TOKEN`): video gen, image gen, voice synthesis, Grounding DINO detection
 - **OpenAI API** (`OPENAI_API_KEY`): script decomposition (GPT), Whisper transcription
-- **Real-ESRGAN**: Windows binary expected at `bin/realesrgan/realesrgan-ncnn-vulkan.exe`
-- **FFmpeg**: Required by MoviePy and color grading pipeline
+- **FFmpeg**: Required by MoviePy
 
 ### Storage Layout
 
@@ -63,8 +60,7 @@ exports/{project_name}/{instance_id}/
 ├── character.mp3      # Character voice audio
 ├── narrator.mp3       # Narrator voice audio
 ├── metadata.json      # Serialized VideoInstance
-├── final_video.mp4    # Step 2 output (compiled)
-└── tiktok_final.mp4   # Step 3 output (upscaled)
+└── final_video.mp4    # Step 2 output (final deliverable)
 ```
 
 ## Important Conventions

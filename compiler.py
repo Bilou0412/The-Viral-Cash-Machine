@@ -1,9 +1,6 @@
 import os
 import json
 import numpy as np
-import subprocess
-import imageio_ffmpeg
-import shutil
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from moviepy import (
     VideoFileClip, ImageClip, AudioFileClip, TextClip,
@@ -174,117 +171,6 @@ def get_ai_head_positions_split(image_path, instance_dir):
     except Exception as e:
         print(f"💥 Split-Detection Critical Failure: {e}")
     return (0.25, 0.40), (0.75, 0.40)
-
-def ai_upscale(input_path: str, output_path: str, scale: int = 2) -> str:
-    """Upscale IA avec Real-ESRGAN (NCNN Vulkan) - Pipeline par images pour support vidéo."""
-    realesrgan_exe = os.path.abspath("bin/realesrgan/realesrgan-ncnn-vulkan.exe")
-    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    
-    if not os.path.exists(realesrgan_exe):
-        return f"Error: Real-ESRGAN binary not found at {realesrgan_exe}"
-
-    # Création des dossiers temporaires
-    instance_dir = os.path.dirname(output_path)
-    frames_dir = os.path.join(instance_dir, "temp_frames")
-    upscaled_dir = os.path.join(instance_dir, "temp_upscaled")
-    os.makedirs(frames_dir, exist_ok=True)
-    os.makedirs(upscaled_dir, exist_ok=True)
-
-    try:
-        # 1. Extraction des images
-        print(f"🎞️ [Real-ESRGAN] Extraction des frames...")
-        subprocess.run([ffmpeg_exe, "-y", "-i", input_path, os.path.join(frames_dir, "frame_%08d.png")], capture_output=True)
-
-        # 2. Upscale du dossier d'images
-        print(f"🧠 [Real-ESRGAN] Upscale IA du dossier (x{scale})...")
-        cmd = [
-            realesrgan_exe,
-            "-i", frames_dir,
-            "-o", upscaled_dir,
-            "-n", "realesr-animevideov3",
-            "-s", str(scale),
-            "-f", "png"
-        ]
-        subprocess.run(cmd, capture_output=True, text=True)
-
-        # 3. Ré-assemblage de la vidéo (avec audio d'origine)
-        print(f"📦 [Real-ESRGAN] Ré-assemblage de la vidéo...")
-        # Récupérer le framerate d'origine
-        with VideoFileClip(input_path) as clip:
-            fps = clip.fps
-
-        subprocess.run([
-            ffmpeg_exe, "-y",
-            "-framerate", str(fps),
-            "-i", os.path.join(upscaled_dir, "frame_%08d.png"),
-            "-i", input_path,
-            "-map", "0:v:0", "-map", "1:a:0?",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "17",
-            output_path
-        ], capture_output=True)
-
-        print(f"✅ [Real-ESRGAN] Upscale Finished -> {output_path}")
-
-    finally:
-        # Nettoyage
-        shutil.rmtree(frames_dir, ignore_errors=True)
-        shutil.rmtree(upscaled_dir, ignore_errors=True)
-
-    return output_path
-
-def color_grade_tiktok(input_path: str, output_path: str) -> str:
-    """Color grading AMV Premium post-upscale IA."""
-    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    
-    filters = [
-        "scale=1080:1920:flags=lanczos",
-        "setsar=1",
-        "fps=fps=30",
-        # Saturation AMV agressive
-        "eq=saturation=1.65:contrast=1.12:brightness=0.015:gamma=0.92",
-        "hue=s=1.25",
-        # Courbe S pour noirs profonds
-        "curves=all='0/0 0.08/0.02 0.5/0.52 0.92/1.0 1/1'",
-        # Orange & Teal
-        "colorbalance=rs=0.08:gs=0.0:bs=-0.06:rm=0.06:gm=0.0:bm=-0.04:rh=0.0:gh=0.0:bh=0.0",
-        # Double Sharpen
-        "unsharp=5:5:2.0:5:5:0.0",
-        "unsharp=3:3:0.8:3:3:0.0",
-        "hqdn3d=1.0:1.0:4:4",
-        # Cinema Vignette
-        "vignette=PI/4:mode=backward"
-    ]
-
-    vf = ",".join(filters)
-
-    cmd = [
-        ffmpeg_exe, "-y",
-        "-i", input_path,
-        "-vf", vf,
-        "-c:v", "libx264",
-        "-profile:v", "high",
-        "-level", "4.2",
-        "-preset", "veryslow",
-        "-b:v", "10M",
-        "-maxrate", "15M",
-        "-bufsize", "20M",
-        "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart",
-        "-g", "30",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        output_path
-    ]
-
-    print(f"🎨 [FFmpeg] Applying AMV Color Grade...")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(f"❌ FFmpeg Error:\n{result.stderr}")
-        return f"Error: FFmpeg failed: {result.stderr}"
-
-    print(f"✅ [FFmpeg] Masterpiece Finished -> {output_path}")
-    return output_path
 
 def compile_video_raw(project_name: str, instance_id: str) -> str:
     print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")

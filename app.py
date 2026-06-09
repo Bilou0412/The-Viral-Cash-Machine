@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
-from compiler import compile_video_raw, ai_upscale, color_grade_tiktok
+from compiler import compile_video_raw
 
 # Load environment variables
 load_dotenv()
@@ -433,8 +433,7 @@ if replicate_api_token:
         st.divider()
         st.subheader("3. Production Control")
         p_row1_col1, p_row1_col2 = st.columns(2)
-        p_row2_col1, p_row2_col2 = st.columns(2)
-        
+
         # STEP 1: ASSETS
         if p_row1_col1.button("🎬 [STEP 1] Generate All Assets", use_container_width=True):
             try:
@@ -472,22 +471,8 @@ if replicate_api_token:
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
             with st.spinner("🎬 Running MoviePy..."):
                 compile_video_raw(project_name, inst.id)
-                st.success(f"✅ Step 2: Raw Video Ready!")
+                st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
-
-        # STEP 3: AI UPSCALE
-        if p_row2_col1.button("🧠 [STEP 3] AI Upscale (Real-ESRGAN)", use_container_width=True):
-            with st.spinner("🚀 Upscaling with IA..."):
-                project_dir = os.path.join("exports", project_name, inst.id)
-                raw_path = os.path.join(project_dir, "final_video.mp4")
-                upscaled_path = os.path.join(project_dir, "tiktok_final.mp4") # Renamed to final
-                if not os.path.exists(raw_path): st.error("Error: Please run Step 2 first.")
-                else:
-                    res = ai_upscale(raw_path, upscaled_path)
-                    if "Error" in res: st.error(res)
-                    else:
-                        st.success(f"✅ Step 3: AI Upscaled Video Ready!")
-                        st.rerun()
 
         # --- CUMULATIVE PRODUCTION GALLERY ---
         st.divider()
@@ -495,22 +480,15 @@ if replicate_api_token:
         project_dir = os.path.join("exports", project_name, inst.id)
         
         has_assets = os.path.exists(os.path.join(project_dir, "base_image.png"))
-        has_raw_vid = os.path.exists(os.path.join(project_dir, "final_video.mp4"))
-        has_final_vid = os.path.exists(os.path.join(project_dir, "tiktok_final.mp4"))
-        
-        if not (has_assets or has_raw_vid or has_final_vid):
-            st.info("No production results yet. Start with Step 1.")
-        
-        if has_final_vid:
-            st.subheader("🏆 FINAL MASTERPIECE: AI Upscaled (Step 3)")
-            st.video(os.path.join(project_dir, "tiktok_final.mp4"))
-            st.success("✨ **Ultra Quality:** 1080x1920 | Real-ESRGAN Reconstruction | Reconstructed Details")
-            st.divider()
+        has_final_vid = os.path.exists(os.path.join(project_dir, "final_video.mp4"))
 
-        if has_raw_vid:
-            st.subheader("🎞️ Raw Compilation (Step 2)")
+        if not (has_assets or has_final_vid):
+            st.info("No production results yet. Start with Step 1.")
+
+        if has_final_vid:
+            st.subheader("🏆 FINAL VIDEO (Step 2)")
             st.video(os.path.join(project_dir, "final_video.mp4"))
-            st.caption("Standard montage before IA upscale.")
+            st.success("✨ Compiled montage: intro → hook → narration → choice")
             st.divider()
 
         if has_assets:

@@ -2,10 +2,17 @@
 
 > Feuille de route persistante entre sessions. **Une étape (−1 → 9) par session**, commit + diff contre le golden à chaque fois.
 
+> **Changement de périmètre (2026-06-09)** : l'**upscale IA (Step 3)** a été retiré du projet — `ai_upscale`,
+> Real-ESRGAN, `color_grade_tiktok` et `tiktok_final.mp4` n'existent plus. Le pipeline est désormais
+> **Step 1 (assets) → Step 2 (compilation)**, `final_video.mp4` étant le livrable final. En conséquence,
+> les **Étapes 1 (grading) et 2 (upscaling) du roadmap ci-dessous sont supprimées** (marquées ~~barrées~~).
+> La numérotation des étapes restantes est conservée pour ne pas casser les références croisées (couture 4↔5,
+> renvois vers l'étape 8, etc.).
+
 ## Contexte
 
 `ViralCashMachine` est aujourd'hui procédural : toute la logique vit dans `app.py` (UI Streamlit + appels
-Replicate/OpenAI + état) et `compiler.py` (rendu, sous-titres, détection, upscale, grading dans un seul module).
+Replicate/OpenAI + état) et `compiler.py` (rendu, sous-titres, détection dans un seul module).
 Le graphe `graphify` a isolé deux **god nodes** qui concentrent le couplage :
 
 - **`compile_video_raw()`** (`compiler.py:289`, 13 relations) : une fonction de ~100 lignes qui appelle en dur
@@ -15,7 +22,7 @@ Le graphe `graphify` a isolé deux **god nodes** qui concentrent le couplage :
   d'édition UI **et** schéma de `metadata.json` (`asdict()` / `VideoInstance(**meta)`). Muté étape par étape ;
   `compile_video_raw` lit/réécrit `metadata.json` directement (`compiler.py:294,302`) — couplage par JSON.
 
-**Objectif** : passer à une structure *feature-driven* (assets, transcription, compositing, upscaling, grading
+**Objectif** : passer à une structure *feature-driven* (assets, transcription, compositing
 + `pipeline` + `app.py` = câblage seul), introduire des **ports `Protocol`** aux bonnes frontières, et remplacer
 la mutation de `VideoInstance` par des **sorties d'étape immuables**. Migration **strangler-fig** : l'app reste
 fonctionnelle à *chaque* commit. `mypy` doit passer sur le code nouveau/touché.
@@ -28,12 +35,12 @@ fonctionnelle à *chaque* commit. `mypy` doit passer sur le code nouveau/touché
 | Cible | Justification | Décision |
 |---|---|---|
 | `Overlay` (sous-titre, timer, jauge, nameplate) | (a) 4 impls | **Protocol** |
-| `Upscaler` (Real-ESRGAN, binaire lourd) | (b) I/O | **Protocol** |
 | `Transcriber` (Whisper/OpenAI) | (b) I/O | **Protocol** |
 | `AssetProvider` (Replicate : voix/image/vidéo) | (b) I/O — frontière Replicate | **Protocol unique, 3 méthodes** |
 | `HeadDetector` (Grounding DINO/Replicate) | (b) I/O | **Protocol** |
-| `grading` (`color_grade_tiktok`, transfo pure) | ni (a) ni (b) | **Fonction concrète** |
 | étapes du pipeline | ordre fixe | **Pas de `Stage`** — séquence de fonctions |
+
+> ~~`Upscaler` (Real-ESRGAN) et `grading` (`color_grade_tiktok`)~~ : retirés du projet avec le Step 3.
 
 **Assets vérifié dans le code** (`app.py:446-458`) : voix `{text,voice_id}`, image `{prompt,size,aspect}`,
 vidéo `{prompt,image,…}` — contrats *différents*, non interchangeables. Donc pas de polymorphisme, mais une
@@ -50,9 +57,7 @@ features/
   assets/         ports.py (AssetProvider, AssetBundle) · replicate_provider.py
   transcription/  ports.py (Transcriber, Cue, Transcription) · whisper.py
   compositing/    overlays.py (Overlay + 4 impls) · compositor.py · srt.py · heads.py (HeadDetector)
-  upscaling/      ports.py (Upscaler) · realesrgan.py
-  grading/        grading.py                                # fonction, pas de Protocol
-pipeline.py       séquence fixe : assets → compositing → upscale → grade (fonctions, ports injectés)
+pipeline.py       séquence fixe : assets → compositing (fonctions, ports injectés)
 app.py            UI Streamlit + câblage seul
 ```
 
@@ -71,22 +76,25 @@ Le compositeur ne fait plus que : `CompositeVideoClip([base, *[o.to_clip((w, h))
 Ordre = « feature la plus isolée d'abord » puis « Protocol avant tout changement de comportement », overlays un
 par un, `VideoInstance` en dernier.
 
-**Étape −1 — Gel de la référence (test de caractérisation).** AVANT toute modif : produire une vidéo complète
-(Step 1 → 2 → 3) sur un projet réel, puis **figer** `final_video.mp4`, `tiktok_final.mp4` et leur `metadata.json`
-dans `tests/fixtures/golden/`. Capturer des invariants diffables : durée, nombre de segments, checksums de quelques
-frames-clés (intro / hook / narration / choice), et le `metadata.json` complet. C'est l'oracle contre lequel les
-étapes 0-9 se comparent — sans ce gel initial, la « comparaison à la référence » de la vérif #2 n'a pas de point fixe.
+**Étape −1 — Gel de la référence (test de caractérisation). ✅ FAIT (2026-06-09).** AVANT toute modif : figer un
+export réel (Step 1 → 2) dans `tests/fixtures/golden/`. Réalisé en gelant l'export existant
+`exports/default_project/20260609_183531` (vrai run Docker pré-refactor, donc zéro coût API) : `final_video.mp4`
++ `metadata.json` copiés, et `invariants.json` capturant les invariants diffables — durée (11.71s), nombre de
+segments (4 : intro / hook / narration / choice via `segment_plan`), checksums des 4 frames-clés, et le
+`metadata.json` complet (31 champs). Outillage : `tests/golden_tools.py` (probe/SSIM, ffmpeg+stdlib seuls),
+`tests/capture_golden.py` (figer), `tests/test_golden.py` (comparer un candidat au golden). C'est l'oracle contre
+lequel les étapes 0-9 se comparent — sans ce gel initial, la « comparaison à la référence » de la vérif #2 n'a pas
+de point fixe.
 
 **Étape 0 — Scaffold + infra.** Créer les paquets (`__init__.py`, `py.typed`), config mypy dans `pyproject`
 (`strict` sur `infra/`+`features/`, tolérant sur `app.py` legacy). Déplacer `log_terminal`, `download_file`,
 `save_key_to_env` (`app.py:61,89,105`) → `infra/`, ré-importer dans `app.py`. *Pur déplacement, zéro comportement.*
 
-**Étape 1 — `features/grading/` (concret, pas de Protocol).** Déplacer `color_grade_tiktok` (`compiler.py:235`).
-Le cas le plus net : transfo pure, isolé, aucune abstraction. Valide la mécanique de découpe.
+**~~Étape 1 — `features/grading/`~~ — SUPPRIMÉE.** `color_grade_tiktok` a été retiré du projet (faisait partie
+du Step 3). Plus de feature `grading`.
 
-**Étape 2 — `features/upscaling/` + 1er port I/O `Upscaler`.** Définir `Upscaler` (`upscale(src, dst, scale=2)
--> Path`) ; `RealEsrganUpscaler` = corps actuel de `ai_upscale` (`compiler.py:178`). Le bouton Step 3 d'`app.py`
-appelle un `Upscaler` injecté (défaut `RealEsrganUpscaler()`). Comportement identique, `FakeUpscaler` possible en test.
+**~~Étape 2 — `features/upscaling/` + port `Upscaler`~~ — SUPPRIMÉE.** `ai_upscale` / Real-ESRGAN ont été retirés
+du projet. Plus de feature `upscaling`, plus de port `Upscaler`, plus de `tiktok_final.mp4`.
 
 **Étape 3 — `features/transcription/` + `Transcriber` + types immuables.** Frozen `Cue(text,start,end)` et
 `Transcription`. `Transcriber.transcribe(audio) -> tuple[Cue,...]`, impl `WhisperTranscriber`. **Dédupe** les deux
@@ -155,10 +163,10 @@ vérifier sur le code actuel au moment de réduire `app.py` au câblage.
    `--strict` sur `app.py` **doit** réellement arriver à l'étape 9 (non-négociable, pas perpétuellement repoussé) —
    `app.py` concentre tout le câblage, donc l'endroit le plus exposé aux erreurs d'injection (mauvaise impl → port).
 2. **Comportement** : après chaque étape, `streamlit run app.py` et produire une vidéo de bout en bout
-   (Step 1 → 2 → 3) ; differ `final_video.mp4` / `tiktok_final.mp4` / `metadata.json` contre le **golden gelé à
-   l'étape −1** (durée, nb de segments, checksums frames-clés). Tout écart = régression à expliquer avant de continuer.
+   (Step 1 → 2) ; differ `final_video.mp4` / `metadata.json` contre le **golden gelé à l'étape −1**
+   (durée, nb de segments, checksums frames-clés, SSIM). Tout écart = régression à expliquer avant de continuer.
 3. **Compat données** : recharger un `metadata.json` d'un export *antérieur* au refactor → doit s'ouvrir sans erreur (schéma inchangé).
-4. **Tests** (rendus possibles par les ports) : `pytest` avec `FakeUpscaler`/`FakeTranscriber`/`FakeAssetProvider`/
-   `FakeHeadDetector` — la suite unitaire ne tape jamais Replicate/OpenAI, ni GPU, ni ffmpeg lourd.
+4. **Tests** (rendus possibles par les ports) : `pytest` avec `FakeTranscriber`/`FakeAssetProvider`/
+   `FakeHeadDetector` — la suite unitaire ne tape jamais Replicate/OpenAI ni ffmpeg lourd.
 5. **Graphe** : `graphify update .` en fin de parcours — vérifier que `compile_video_raw`/`VideoInstance` ne sont
    plus des god nodes (degré/centralité en baisse, `Overlay` comme nouveau hub de communauté compositing).

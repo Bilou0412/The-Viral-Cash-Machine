@@ -48,14 +48,164 @@
   },
   "nodes": [
     {
+      "label": "settings.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude_settings",
+      "community": 6,
+      "norm_label": "settings.json"
+    },
+    {
+      "label": "hooks",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "claude_settings_hooks",
+      "community": 6,
+      "norm_label": "hooks"
+    },
+    {
+      "label": "PreToolUse",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "claude_settings_hooks_pretooluse",
+      "community": 6,
+      "norm_label": "pretooluse"
+    },
+    {
+      "label": "CLAUDE.md",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude",
+      "community": 2,
+      "norm_label": "claude.md"
+    },
+    {
+      "label": "CLAUDE.md",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude_claude_md",
+      "community": 2,
+      "norm_label": "claude.md"
+    },
+    {
+      "label": "Project Overview",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "claude_project_overview",
+      "community": 2,
+      "norm_label": "project overview"
+    },
+    {
+      "label": "Commands",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "claude_commands",
+      "community": 2,
+      "norm_label": "commands"
+    },
+    {
+      "label": "Architecture",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "claude_architecture",
+      "community": 2,
+      "norm_label": "architecture"
+    },
+    {
+      "label": "3-Step Production Pipeline",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "claude_3_step_production_pipeline",
+      "community": 2,
+      "norm_label": "3-step production pipeline"
+    },
+    {
+      "label": "Data Model",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "claude_data_model",
+      "community": 2,
+      "norm_label": "data model"
+    },
+    {
+      "label": "Key File Roles",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "claude_key_file_roles",
+      "community": 2,
+      "norm_label": "key file roles"
+    },
+    {
+      "label": "External Dependencies",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L50",
+      "_origin": "ast",
+      "id": "claude_external_dependencies",
+      "community": 2,
+      "norm_label": "external dependencies"
+    },
+    {
+      "label": "Storage Layout",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "claude_storage_layout",
+      "community": 2,
+      "norm_label": "storage layout"
+    },
+    {
+      "label": "Important Conventions",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "claude_important_conventions",
+      "community": 2,
+      "norm_label": "important conventions"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L78",
+      "_origin": "ast",
+      "id": "claude_graphify",
+      "community": 2,
+      "norm_label": "graphify"
+    },
+    {
       "label": "ARCHITECTURE_PLAN.md",
       "file_type": "document",
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "architecture_plan",
       "community": 8,
-      "norm_label": "architecture_plan.md"
+      "norm_label": "architecture_plan.md",
+      "id": "architecture_plan"
     },
     {
       "label": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)",
@@ -63,9 +213,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
       "community": 8,
-      "norm_label": "refactor : procedural \u2192 feature-driven + ports (typing.protocol)"
+      "norm_label": "refactor : procedural \u2192 feature-driven + ports (typing.protocol)",
+      "id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol"
     },
     {
       "label": "Contexte",
@@ -73,9 +223,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "architecture_plan_contexte",
       "community": 8,
-      "norm_label": "contexte"
+      "norm_label": "contexte",
+      "id": "architecture_plan_contexte"
     },
     {
       "label": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l'utilisateur)",
@@ -83,9 +233,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L23",
       "_origin": "ast",
-      "id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur",
       "community": 8,
-      "norm_label": "regle de decision pour les protocol (cadree avec l'utilisateur)"
+      "norm_label": "regle de decision pour les protocol (cadree avec l'utilisateur)",
+      "id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur"
     },
     {
       "label": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)",
@@ -93,9 +243,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L45",
       "_origin": "ast",
-      "id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9",
       "community": 8,
-      "norm_label": "structure cible (a la racine, `streamlit run app.py` inchange)"
+      "norm_label": "structure cible (a la racine, `streamlit run app.py` inchange)",
+      "id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9"
     },
     {
       "label": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)",
@@ -103,9 +253,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L69",
       "_origin": "ast",
-      "id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert",
       "community": 8,
-      "norm_label": "sequencement strangler-fig (chaque etape = app fonctionnelle + mypy vert)"
+      "norm_label": "sequencement strangler-fig (chaque etape = app fonctionnelle + mypy vert)",
+      "id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert"
     },
     {
       "label": "Fichiers cl\u00e9s touch\u00e9s",
@@ -113,9 +263,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L146",
       "_origin": "ast",
-      "id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s",
       "community": 8,
-      "norm_label": "fichiers cles touches"
+      "norm_label": "fichiers cles touches",
+      "id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s"
     },
     {
       "label": "V\u00e9rification",
@@ -123,9 +273,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L152",
       "_origin": "ast",
-      "id": "architecture_plan_v\u00e9rification",
       "community": 8,
-      "norm_label": "verification"
+      "norm_label": "verification",
+      "id": "architecture_plan_v\u00e9rification"
     },
     {
       "label": "app.py",
@@ -378,58 +528,6 @@
       "id": "generate_assets_generate_beep"
     },
     {
-      "label": "3-Step Production Pipeline",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 6,
-      "norm_label": "3-step production pipeline",
-      "id": "claude_production_pipeline"
-    },
-    {
-      "label": "Step 1 - Asset Generation",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "step 1 - asset generation",
-      "id": "claude_step1_asset_generation"
-    },
-    {
-      "label": "Step 2 - Raw Compilation",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 4,
-      "norm_label": "step 2 - raw compilation",
-      "id": "claude_step2_raw_compilation"
-    },
-    {
-      "label": "Step 3 - AI Upscale",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 3,
-      "norm_label": "step 3 - ai upscale",
-      "id": "claude_step3_ai_upscale"
-    },
-    {
       "label": "app.py (Streamlit UI)",
       "file_type": "code",
       "source_file": "app.py",
@@ -454,175 +552,6 @@
       "community": 7,
       "norm_label": "compiler.py (post-processing)",
       "id": "compiler_compiler"
-    },
-    {
-      "label": "Replicate API",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "replicate api",
-      "id": "claude_replicate_api"
-    },
-    {
-      "label": "OpenAI API",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 4,
-      "norm_label": "openai api",
-      "id": "claude_openai_api"
-    },
-    {
-      "label": "Real-ESRGAN (NCNN Vulkan)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 3,
-      "norm_label": "real-esrgan (ncnn vulkan)",
-      "id": "claude_real_esrgan"
-    },
-    {
-      "label": "FFmpeg",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 3,
-      "norm_label": "ffmpeg",
-      "id": "claude_ffmpeg"
-    },
-    {
-      "label": "Whisper (word-level subtitles)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 0,
-      "norm_label": "whisper (word-level subtitles)",
-      "id": "claude_whisper"
-    },
-    {
-      "label": "Grounding DINO (head detection)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "grounding dino (head detection)",
-      "id": "claude_grounding_dino"
-    },
-    {
-      "label": "MoviePy",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 0,
-      "norm_label": "moviepy",
-      "id": "claude_moviepy"
-    },
-    {
-      "label": "metadata.json (serialized state)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 1,
-      "norm_label": "metadata.json (serialized state)",
-      "id": "claude_metadata_json"
-    },
-    {
-      "label": "prunaai/p-video (video model)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "prunaai/p-video (video model)",
-      "id": "claude_prunaai_p_video"
-    },
-    {
-      "label": "bytedance/seedream-4.5 (image model)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "bytedance/seedream-4.5 (image model)",
-      "id": "claude_seedream"
-    },
-    {
-      "label": "minimax/speech-2.8-turbo (voice model)",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "minimax/speech-2.8-turbo (voice model)",
-      "id": "claude_minimax_speech"
-    },
-    {
-      "label": "Static camera prompt rule",
-      "file_type": "rationale",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "static camera prompt rule",
-      "id": "claude_static_camera_rule"
-    },
-    {
-      "label": "English-visual / French-dialogue convention",
-      "file_type": "rationale",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 2,
-      "norm_label": "english-visual / french-dialogue convention",
-      "id": "claude_prompt_language_convention"
     },
     {
       "label": "Instance-Based Generation",
@@ -668,12 +597,142 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "claude_settings",
+      "target": "claude_settings_hooks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "claude_settings_hooks",
+      "target": "claude_settings_hooks_pretooluse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "claude",
+      "target": "claude_claude_md",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_architecture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_commands",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_important_conventions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_project_overview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_3_step_production_pipeline",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_data_model",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_external_dependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_key_file_roles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_storage_layout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan",
-      "target": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "confidence_score": 1.0
+      "target": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol"
     },
     {
       "relation": "contains",
@@ -681,9 +740,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_contexte",
-      "confidence_score": 1.0
+      "target": "architecture_plan_contexte"
     },
     {
       "relation": "contains",
@@ -691,9 +750,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L146",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s",
-      "confidence_score": 1.0
+      "target": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s"
     },
     {
       "relation": "contains",
@@ -701,9 +760,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur",
-      "confidence_score": 1.0
+      "target": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur"
     },
     {
       "relation": "contains",
@@ -711,9 +770,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9",
-      "confidence_score": 1.0
+      "target": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9"
     },
     {
       "relation": "contains",
@@ -721,9 +780,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert",
-      "confidence_score": 1.0
+      "target": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert"
     },
     {
       "relation": "contains",
@@ -731,9 +790,9 @@
       "source_file": "ARCHITECTURE_PLAN.md",
       "source_location": "L152",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_v\u00e9rification",
-      "confidence_score": 1.0
+      "target": "architecture_plan_v\u00e9rification"
     },
     {
       "relation": "contains",
@@ -869,16 +928,6 @@
       "confidence_score": 1.0,
       "source": "app_load_into_editor",
       "target": "app_videoinstance"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "app_videoinstance",
-      "target": "claude_metadata_json"
     },
     {
       "relation": "shares_data_with",
@@ -1159,46 +1208,6 @@
       "source_file": "CLAUDE.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "compiler_get_ai_head_positions_split",
-      "target": "claude_grounding_dino"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.65,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_get_ai_head_positions_split",
-      "target": "claude_whisper"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step3_ai_upscale",
-      "target": "compiler_ai_upscale"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_ai_upscale",
-      "target": "claude_real_esrgan"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
       "source": "compiler_ai_upscale",
       "target": "compiler_color_grade_tiktok"
     },
@@ -1213,16 +1222,6 @@
       "target": "compiler_ai_upscale"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_color_grade_tiktok",
-      "target": "claude_ffmpeg"
-    },
-    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "compiler.py",
@@ -1233,36 +1232,6 @@
       "target": "compiler_color_grade_tiktok"
     },
     {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step2_raw_compilation",
-      "target": "compiler_compile_video_raw"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_compile_video_raw",
-      "target": "claude_moviepy"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_compile_video_raw",
-      "target": "claude_whisper"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "generate_assets.py",
@@ -1271,86 +1240,6 @@
       "confidence_score": 1.0,
       "source": "generate_assets",
       "target": "generate_assets_generate_beep"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_prompt_language_convention",
-      "target": "claude_step1_asset_generation"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step1_asset_generation",
-      "target": "app_app"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step1_asset_generation",
-      "target": "claude_minimax_speech"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step1_asset_generation",
-      "target": "claude_prunaai_p_video"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step1_asset_generation",
-      "target": "claude_replicate_api"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step1_asset_generation",
-      "target": "claude_seedream"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_step2_raw_compilation",
-      "target": "claude_openai_api"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "app_app",
-      "target": "claude_openai_api"
     },
     {
       "relation": "references",
@@ -1371,36 +1260,6 @@
       "weight": 1.0,
       "source": "gemini_save_key_to_env",
       "target": "app_app"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_grounding_dino",
-      "target": "claude_replicate_api"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_whisper",
-      "target": "claude_openai_api"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "claude_static_camera_rule",
-      "target": "claude_prunaai_p_video"
     }
   ],
   "hyperedges": [
@@ -1446,5 +1305,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "bf76cfb4b3c0bc97d7217cf1c5509d4ea1360a27"
+  "built_at_commit": "3811e8a1671e68eb26696b7835ef7f0e3e3c9221"
 }

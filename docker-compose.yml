@@ -1,0 +1,13 @@
+services:
+  viralcashmachine:
+    build: .
+    image: viralcashmachine:v2
+    container_name: viralcashmachine
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      # Persiste les vidéos générées sur l'hôte
+      - ./exports:/app/exports
+    restart: unless-stopped

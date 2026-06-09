@@ -78,6 +78,1586 @@
       "norm_label": "pretooluse"
     },
     {
+      "label": "settings.local.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude_settings_local",
+      "community": 10,
+      "norm_label": "settings.local.json"
+    },
+    {
+      "label": "permissions",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "claude_settings_local_permissions",
+      "community": 10,
+      "norm_label": "permissions"
+    },
+    {
+      "label": "allow",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "claude_settings_local_permissions_allow",
+      "community": 10,
+      "norm_label": "allow"
+    },
+    {
+      "label": "app.py",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "app",
+      "community": 1,
+      "norm_label": "app.py"
+    },
+    {
+      "label": "VideoInstance",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "app_videoinstance",
+      "community": 1,
+      "norm_label": "videoinstance"
+    },
+    {
+      "label": "log_terminal()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "app_log_terminal",
+      "community": 1,
+      "norm_label": "log_terminal()"
+    },
+    {
+      "label": "get_whisper_subtitles()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L67",
+      "_origin": "ast",
+      "id": "app_get_whisper_subtitles",
+      "community": 1,
+      "norm_label": "get_whisper_subtitles()"
+    },
+    {
+      "label": "download_file()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L89",
+      "_origin": "ast",
+      "id": "app_download_file",
+      "community": 1,
+      "norm_label": "download_file()"
+    },
+    {
+      "label": "save_key_to_env()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L105",
+      "_origin": "ast",
+      "id": "app_save_key_to_env",
+      "community": 1,
+      "norm_label": "save_key_to_env()"
+    },
+    {
+      "label": "sync_instance_to_widgets()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L124",
+      "_origin": "ast",
+      "id": "app_sync_instance_to_widgets",
+      "community": 1,
+      "norm_label": "sync_instance_to_widgets()"
+    },
+    {
+      "label": "load_into_editor()",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L141",
+      "_origin": "ast",
+      "id": "app_load_into_editor",
+      "community": 1,
+      "norm_label": "load_into_editor()"
+    },
+    {
+      "label": "compiler.py",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "compiler",
+      "community": 1,
+      "norm_label": "compiler.py"
+    },
+    {
+      "label": "get_whisper_subtitles()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "compiler_get_whisper_subtitles",
+      "community": 1,
+      "norm_label": "get_whisper_subtitles()"
+    },
+    {
+      "label": "format_timestamp()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "compiler_format_timestamp",
+      "community": 1,
+      "norm_label": "format_timestamp()"
+    },
+    {
+      "label": "save_srt()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "compiler_save_srt",
+      "community": 1,
+      "norm_label": "save_srt()"
+    },
+    {
+      "label": "create_styled_subtitle_pil()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "compiler_create_styled_subtitle_pil",
+      "community": 1,
+      "norm_label": "create_styled_subtitle_pil()"
+    },
+    {
+      "label": "create_circular_timer_pil()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L77",
+      "_origin": "ast",
+      "id": "compiler_create_circular_timer_pil",
+      "community": 1,
+      "norm_label": "create_circular_timer_pil()"
+    },
+    {
+      "label": "create_dark_fantasy_gauge()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "compiler_create_dark_fantasy_gauge",
+      "community": 1,
+      "norm_label": "create_dark_fantasy_gauge()"
+    },
+    {
+      "label": "_make_text_clip_exact()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L106",
+      "_origin": "ast",
+      "id": "compiler_make_text_clip_exact",
+      "community": 1,
+      "norm_label": "_make_text_clip_exact()"
+    },
+    {
+      "label": "detect_side_entity()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L122",
+      "_origin": "ast",
+      "id": "compiler_detect_side_entity",
+      "community": 1,
+      "norm_label": "detect_side_entity()"
+    },
+    {
+      "label": "get_ai_head_positions_split()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L147",
+      "_origin": "ast",
+      "id": "compiler_get_ai_head_positions_split",
+      "community": 1,
+      "norm_label": "get_ai_head_positions_split()"
+    },
+    {
+      "label": "compile_video_raw()",
+      "file_type": "code",
+      "source_file": "compiler.py",
+      "source_location": "L175",
+      "_origin": "ast",
+      "id": "compiler_compile_video_raw",
+      "community": 1,
+      "norm_label": "compile_video_raw()"
+    },
+    {
+      "label": "generate_assets.py",
+      "file_type": "code",
+      "source_file": "generate_assets.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "generate_assets",
+      "community": 5,
+      "norm_label": "generate_assets.py"
+    },
+    {
+      "label": "generate_beep()",
+      "file_type": "code",
+      "source_file": "generate_assets.py",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "generate_assets_generate_beep",
+      "community": 5,
+      "norm_label": "generate_beep()"
+    },
+    {
+      "label": "capture_golden.py",
+      "file_type": "code",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_capture_golden",
+      "community": 16,
+      "norm_label": "capture_golden.py"
+    },
+    {
+      "label": "capture()",
+      "file_type": "code",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "tests_capture_golden_capture",
+      "community": 16,
+      "norm_label": "capture()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "tests_capture_golden_main",
+      "community": 16,
+      "norm_label": "main()"
+    },
+    {
+      "label": "Freeze a real production export as the golden oracle (ARCHITECTURE_PLAN.md, step",
+      "file_type": "rationale",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_capture_golden_rationale_1",
+      "community": 16,
+      "norm_label": "freeze a real production export as the golden oracle (architecture_plan.md, step"
+    },
+    {
+      "label": "invariants.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "golden_invariants",
+      "community": 13,
+      "norm_label": "invariants.json"
+    },
+    {
+      "label": "source_export",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "golden_invariants_source_export",
+      "community": 13,
+      "norm_label": "source_export"
+    },
+    {
+      "label": "final_video",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video",
+      "community": 13,
+      "norm_label": "final_video"
+    },
+    {
+      "label": "duration",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_duration",
+      "community": 13,
+      "norm_label": "duration"
+    },
+    {
+      "label": "width",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_width",
+      "community": 13,
+      "norm_label": "width"
+    },
+    {
+      "label": "height",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_height",
+      "community": 13,
+      "norm_label": "height"
+    },
+    {
+      "label": "fps",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_fps",
+      "community": 13,
+      "norm_label": "fps"
+    },
+    {
+      "label": "codec",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_codec",
+      "community": 13,
+      "norm_label": "codec"
+    },
+    {
+      "label": "nb_frames",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "golden_invariants_final_video_nb_frames",
+      "community": 13,
+      "norm_label": "nb_frames"
+    },
+    {
+      "label": "segment_plan",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "golden_invariants_segment_plan",
+      "community": 13,
+      "norm_label": "segment_plan"
+    },
+    {
+      "label": "key_frames",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "golden_invariants_key_frames",
+      "community": 12,
+      "norm_label": "key_frames"
+    },
+    {
+      "label": "intro",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "golden_invariants_key_frames_intro",
+      "community": 12,
+      "norm_label": "intro"
+    },
+    {
+      "label": "timestamp",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "golden_invariants_intro_timestamp",
+      "community": 12,
+      "norm_label": "timestamp"
+    },
+    {
+      "label": "sha256",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "golden_invariants_intro_sha256",
+      "community": 12,
+      "norm_label": "sha256"
+    },
+    {
+      "label": "file",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "golden_invariants_intro_file",
+      "community": 12,
+      "norm_label": "file"
+    },
+    {
+      "label": "hook",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "golden_invariants_key_frames_hook",
+      "community": 12,
+      "norm_label": "hook"
+    },
+    {
+      "label": "timestamp",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "golden_invariants_hook_timestamp",
+      "community": 12,
+      "norm_label": "timestamp"
+    },
+    {
+      "label": "sha256",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "golden_invariants_hook_sha256",
+      "community": 12,
+      "norm_label": "sha256"
+    },
+    {
+      "label": "file",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "golden_invariants_hook_file",
+      "community": 12,
+      "norm_label": "file"
+    },
+    {
+      "label": "narration",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "golden_invariants_key_frames_narration",
+      "community": 12,
+      "norm_label": "narration"
+    },
+    {
+      "label": "timestamp",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "golden_invariants_narration_timestamp",
+      "community": 12,
+      "norm_label": "timestamp"
+    },
+    {
+      "label": "sha256",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L50",
+      "_origin": "ast",
+      "id": "golden_invariants_narration_sha256",
+      "community": 12,
+      "norm_label": "sha256"
+    },
+    {
+      "label": "file",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "golden_invariants_narration_file",
+      "community": 12,
+      "norm_label": "file"
+    },
+    {
+      "label": "choice",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "golden_invariants_key_frames_choice",
+      "community": 12,
+      "norm_label": "choice"
+    },
+    {
+      "label": "timestamp",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "golden_invariants_choice_timestamp",
+      "community": 12,
+      "norm_label": "timestamp"
+    },
+    {
+      "label": "sha256",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "golden_invariants_choice_sha256",
+      "community": 12,
+      "norm_label": "sha256"
+    },
+    {
+      "label": "file",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "golden_invariants_choice_file",
+      "community": 12,
+      "norm_label": "file"
+    },
+    {
+      "label": "metadata_sha256",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_sha256",
+      "community": 13,
+      "norm_label": "metadata_sha256"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata",
+      "community": 0,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_id",
+      "community": 0,
+      "norm_label": "id"
+    },
+    {
+      "label": "type",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L62",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_type",
+      "community": 0,
+      "norm_label": "type"
+    },
+    {
+      "label": "general_script",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_general_script",
+      "community": 0,
+      "norm_label": "general_script"
+    },
+    {
+      "label": "char_left_name",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L64",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_left_name",
+      "community": 0,
+      "norm_label": "char_left_name"
+    },
+    {
+      "label": "char_left_gender",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_left_gender",
+      "community": 0,
+      "norm_label": "char_left_gender"
+    },
+    {
+      "label": "char_left_personality",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L66",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_left_personality",
+      "community": 0,
+      "norm_label": "char_left_personality"
+    },
+    {
+      "label": "char_right_name",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L67",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_right_name",
+      "community": 0,
+      "norm_label": "char_right_name"
+    },
+    {
+      "label": "char_right_gender",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_right_gender",
+      "community": 0,
+      "norm_label": "char_right_gender"
+    },
+    {
+      "label": "char_right_personality",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_char_right_personality",
+      "community": 0,
+      "norm_label": "char_right_personality"
+    },
+    {
+      "label": "video_prompt",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_video_prompt",
+      "community": 0,
+      "norm_label": "video_prompt"
+    },
+    {
+      "label": "character_speech",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L71",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_character_speech",
+      "community": 0,
+      "norm_label": "character_speech"
+    },
+    {
+      "label": "video_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_video_url",
+      "community": 0,
+      "norm_label": "video_url"
+    },
+    {
+      "label": "character_audio_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L73",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_character_audio_url",
+      "community": 0,
+      "norm_label": "character_audio_url"
+    },
+    {
+      "label": "freeze_image_prompt",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_freeze_image_prompt",
+      "community": 0,
+      "norm_label": "freeze_image_prompt"
+    },
+    {
+      "label": "narration_script",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L75",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_narration_script",
+      "community": 0,
+      "norm_label": "narration_script"
+    },
+    {
+      "label": "freeze_image_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L76",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_freeze_image_url",
+      "community": 0,
+      "norm_label": "freeze_image_url"
+    },
+    {
+      "label": "narrator_audio_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L77",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_narrator_audio_url",
+      "community": 0,
+      "norm_label": "narrator_audio_url"
+    },
+    {
+      "label": "choice_a",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L78",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_choice_a",
+      "community": 0,
+      "norm_label": "choice_a"
+    },
+    {
+      "label": "choice_b",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L79",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_choice_b",
+      "community": 0,
+      "norm_label": "choice_b"
+    },
+    {
+      "label": "timer_duration",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_timer_duration",
+      "community": 0,
+      "norm_label": "timer_duration"
+    },
+    {
+      "label": "monster_left_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L81",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_monster_left_desc",
+      "community": 0,
+      "norm_label": "monster_left_desc"
+    },
+    {
+      "label": "monster_right_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L82",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_monster_right_desc",
+      "community": 0,
+      "norm_label": "monster_right_desc"
+    },
+    {
+      "label": "monster_left_idle",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L83",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_monster_left_idle",
+      "community": 0,
+      "norm_label": "monster_left_idle"
+    },
+    {
+      "label": "monster_right_idle",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L84",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_monster_right_idle",
+      "community": 0,
+      "norm_label": "monster_right_idle"
+    },
+    {
+      "label": "environment_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L85",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_environment_desc",
+      "community": 0,
+      "norm_label": "environment_desc"
+    },
+    {
+      "label": "character_subtitles",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_character_subtitles",
+      "community": 0,
+      "norm_label": "character_subtitles"
+    },
+    {
+      "label": "narrator_subtitles",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L87",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_narrator_subtitles",
+      "community": 0,
+      "norm_label": "narrator_subtitles"
+    },
+    {
+      "label": "head_l_x",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L88",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_head_l_x",
+      "community": 0,
+      "norm_label": "head_l_x"
+    },
+    {
+      "label": "head_l_y",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L89",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_head_l_y",
+      "community": 0,
+      "norm_label": "head_l_y"
+    },
+    {
+      "label": "head_r_x",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_head_r_x",
+      "community": 0,
+      "norm_label": "head_r_x"
+    },
+    {
+      "label": "head_r_y",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L91",
+      "_origin": "ast",
+      "id": "golden_invariants_metadata_head_r_y",
+      "community": 0,
+      "norm_label": "head_r_y"
+    },
+    {
+      "label": "metadata.json",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "golden_metadata",
+      "community": 3,
+      "norm_label": "metadata.json"
+    },
+    {
+      "label": "id",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "golden_metadata_id",
+      "community": 3,
+      "norm_label": "id"
+    },
+    {
+      "label": "type",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "golden_metadata_type",
+      "community": 3,
+      "norm_label": "type"
+    },
+    {
+      "label": "general_script",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "golden_metadata_general_script",
+      "community": 3,
+      "norm_label": "general_script"
+    },
+    {
+      "label": "char_left_name",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "golden_metadata_char_left_name",
+      "community": 3,
+      "norm_label": "char_left_name"
+    },
+    {
+      "label": "char_left_gender",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "golden_metadata_char_left_gender",
+      "community": 3,
+      "norm_label": "char_left_gender"
+    },
+    {
+      "label": "char_left_personality",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "golden_metadata_char_left_personality",
+      "community": 3,
+      "norm_label": "char_left_personality"
+    },
+    {
+      "label": "char_right_name",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "golden_metadata_char_right_name",
+      "community": 3,
+      "norm_label": "char_right_name"
+    },
+    {
+      "label": "char_right_gender",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "golden_metadata_char_right_gender",
+      "community": 3,
+      "norm_label": "char_right_gender"
+    },
+    {
+      "label": "char_right_personality",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "golden_metadata_char_right_personality",
+      "community": 3,
+      "norm_label": "char_right_personality"
+    },
+    {
+      "label": "video_prompt",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "golden_metadata_video_prompt",
+      "community": 3,
+      "norm_label": "video_prompt"
+    },
+    {
+      "label": "character_speech",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "golden_metadata_character_speech",
+      "community": 3,
+      "norm_label": "character_speech"
+    },
+    {
+      "label": "video_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "golden_metadata_video_url",
+      "community": 3,
+      "norm_label": "video_url"
+    },
+    {
+      "label": "character_audio_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "golden_metadata_character_audio_url",
+      "community": 3,
+      "norm_label": "character_audio_url"
+    },
+    {
+      "label": "freeze_image_prompt",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "golden_metadata_freeze_image_prompt",
+      "community": 3,
+      "norm_label": "freeze_image_prompt"
+    },
+    {
+      "label": "narration_script",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "golden_metadata_narration_script",
+      "community": 3,
+      "norm_label": "narration_script"
+    },
+    {
+      "label": "freeze_image_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "golden_metadata_freeze_image_url",
+      "community": 3,
+      "norm_label": "freeze_image_url"
+    },
+    {
+      "label": "narrator_audio_url",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "golden_metadata_narrator_audio_url",
+      "community": 3,
+      "norm_label": "narrator_audio_url"
+    },
+    {
+      "label": "choice_a",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "golden_metadata_choice_a",
+      "community": 3,
+      "norm_label": "choice_a"
+    },
+    {
+      "label": "choice_b",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "golden_metadata_choice_b",
+      "community": 3,
+      "norm_label": "choice_b"
+    },
+    {
+      "label": "timer_duration",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "golden_metadata_timer_duration",
+      "community": 3,
+      "norm_label": "timer_duration"
+    },
+    {
+      "label": "monster_left_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "golden_metadata_monster_left_desc",
+      "community": 3,
+      "norm_label": "monster_left_desc"
+    },
+    {
+      "label": "monster_right_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "golden_metadata_monster_right_desc",
+      "community": 3,
+      "norm_label": "monster_right_desc"
+    },
+    {
+      "label": "monster_left_idle",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "golden_metadata_monster_left_idle",
+      "community": 3,
+      "norm_label": "monster_left_idle"
+    },
+    {
+      "label": "monster_right_idle",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L25",
+      "_origin": "ast",
+      "id": "golden_metadata_monster_right_idle",
+      "community": 3,
+      "norm_label": "monster_right_idle"
+    },
+    {
+      "label": "environment_desc",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "golden_metadata_environment_desc",
+      "community": 3,
+      "norm_label": "environment_desc"
+    },
+    {
+      "label": "character_subtitles",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "golden_metadata_character_subtitles",
+      "community": 3,
+      "norm_label": "character_subtitles"
+    },
+    {
+      "label": "narrator_subtitles",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "golden_metadata_narrator_subtitles",
+      "community": 3,
+      "norm_label": "narrator_subtitles"
+    },
+    {
+      "label": "head_l_x",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "golden_metadata_head_l_x",
+      "community": 3,
+      "norm_label": "head_l_x"
+    },
+    {
+      "label": "head_l_y",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "golden_metadata_head_l_y",
+      "community": 3,
+      "norm_label": "head_l_y"
+    },
+    {
+      "label": "head_r_x",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "golden_metadata_head_r_x",
+      "community": 3,
+      "norm_label": "head_r_x"
+    },
+    {
+      "label": "head_r_y",
+      "file_type": "code",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "golden_metadata_head_r_y",
+      "community": 3,
+      "norm_label": "head_r_y"
+    },
+    {
+      "label": "golden_tools.py",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_golden_tools",
+      "community": 11,
+      "norm_label": "golden_tools.py"
+    },
+    {
+      "label": "VideoProbe",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "tests_golden_tools_videoprobe",
+      "community": 11,
+      "norm_label": "videoprobe"
+    },
+    {
+      "label": "_run()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "tests_golden_tools_run",
+      "community": 11,
+      "norm_label": "_run()"
+    },
+    {
+      "label": "_ffprobe_value()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "tests_golden_tools_ffprobe_value",
+      "community": 11,
+      "norm_label": "_ffprobe_value()"
+    },
+    {
+      "label": "media_duration()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "tests_golden_tools_media_duration",
+      "community": 11,
+      "norm_label": "media_duration()"
+    },
+    {
+      "label": "_parse_fraction()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L64",
+      "_origin": "ast",
+      "id": "tests_golden_tools_parse_fraction",
+      "community": 11,
+      "norm_label": "_parse_fraction()"
+    },
+    {
+      "label": "probe_video()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "tests_golden_tools_probe_video",
+      "community": 11,
+      "norm_label": "probe_video()"
+    },
+    {
+      "label": "segment_plan()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L89",
+      "_origin": "ast",
+      "id": "tests_golden_tools_segment_plan",
+      "community": 11,
+      "norm_label": "segment_plan()"
+    },
+    {
+      "label": "key_frame_timestamps()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L108",
+      "_origin": "ast",
+      "id": "tests_golden_tools_key_frame_timestamps",
+      "community": 11,
+      "norm_label": "key_frame_timestamps()"
+    },
+    {
+      "label": "extract_frame()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L113",
+      "_origin": "ast",
+      "id": "tests_golden_tools_extract_frame",
+      "community": 11,
+      "norm_label": "extract_frame()"
+    },
+    {
+      "label": "sha256_file()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L119",
+      "_origin": "ast",
+      "id": "tests_golden_tools_sha256_file",
+      "community": 11,
+      "norm_label": "sha256_file()"
+    },
+    {
+      "label": "ssim()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L127",
+      "_origin": "ast",
+      "id": "tests_golden_tools_ssim",
+      "community": 11,
+      "norm_label": "ssim()"
+    },
+    {
+      "label": "probe_to_dict()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L145",
+      "_origin": "ast",
+      "id": "tests_golden_tools_probe_to_dict",
+      "community": 11,
+      "norm_label": "probe_to_dict()"
+    },
+    {
+      "label": "stable_metadata()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L158",
+      "_origin": "ast",
+      "id": "tests_golden_tools_stable_metadata",
+      "community": 11,
+      "norm_label": "stable_metadata()"
+    },
+    {
+      "label": "load_json()",
+      "file_type": "code",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L162",
+      "_origin": "ast",
+      "id": "tests_golden_tools_load_json",
+      "community": 11,
+      "norm_label": "load_json()"
+    },
+    {
+      "label": "Golden-oracle helpers for the strangler-fig refactor (ARCHITECTURE_PLAN.md, step",
+      "file_type": "rationale",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_golden_tools_rationale_1",
+      "community": 11,
+      "norm_label": "golden-oracle helpers for the strangler-fig refactor (architecture_plan.md, step"
+    },
+    {
+      "label": "Container duration in seconds (works for mp4, mp3, wav).",
+      "file_type": "rationale",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "tests_golden_tools_rationale_60",
+      "community": 11,
+      "norm_label": "container duration in seconds (works for mp4, mp3, wav)."
+    },
+    {
+      "label": "Reconstruct the concatenation plan that compile_video_raw produced.      Mirrors",
+      "file_type": "rationale",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "tests_golden_tools_rationale_90",
+      "community": 11,
+      "norm_label": "reconstruct the concatenation plan that compile_video_raw produced.      mirrors"
+    },
+    {
+      "label": "Mid-point of each segment - the representative 'frame-cl\u00e9' for that beat.",
+      "file_type": "rationale",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L109",
+      "_origin": "ast",
+      "id": "tests_golden_tools_rationale_109",
+      "community": 11,
+      "norm_label": "mid-point of each segment - the representative 'frame-cle' for that beat."
+    },
+    {
+      "label": "Mean SSIM of candidate vs reference via ffmpeg's ssim filter (no python deps).",
+      "file_type": "rationale",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L128",
+      "_origin": "ast",
+      "id": "tests_golden_tools_rationale_128",
+      "community": 11,
+      "norm_label": "mean ssim of candidate vs reference via ffmpeg's ssim filter (no python deps)."
+    },
+    {
+      "label": "test_golden.py",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_golden",
+      "community": 14,
+      "norm_label": "test_golden.py"
+    },
+    {
+      "label": "invariants()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "tests_test_golden_invariants",
+      "community": 14,
+      "norm_label": "invariants()"
+    },
+    {
+      "label": "test_golden_video_matches_recorded_probe()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_golden_video_matches_recorded_probe",
+      "community": 14,
+      "norm_label": "test_golden_video_matches_recorded_probe()"
+    },
+    {
+      "label": "test_golden_key_frames_unchanged()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_golden_key_frames_unchanged",
+      "community": 14,
+      "norm_label": "test_golden_key_frames_unchanged()"
+    },
+    {
+      "label": "test_golden_metadata_unchanged()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L71",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_golden_metadata_unchanged",
+      "community": 14,
+      "norm_label": "test_golden_metadata_unchanged()"
+    },
+    {
+      "label": "test_candidate_structure_and_duration()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L78",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_candidate_structure_and_duration",
+      "community": 14,
+      "norm_label": "test_candidate_structure_and_duration()"
+    },
+    {
+      "label": "test_candidate_visually_matches_golden()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L99",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_candidate_visually_matches_golden",
+      "community": 14,
+      "norm_label": "test_candidate_visually_matches_golden()"
+    },
+    {
+      "label": "test_candidate_stable_metadata_matches_golden()",
+      "file_type": "code",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L106",
+      "_origin": "ast",
+      "id": "tests_test_golden_test_candidate_stable_metadata_matches_golden",
+      "community": 14,
+      "norm_label": "test_candidate_stable_metadata_matches_golden()"
+    },
+    {
+      "label": "Characterization test against the frozen golden (ARCHITECTURE_PLAN.md, verificat",
+      "file_type": "rationale",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_golden_rationale_1",
+      "community": 14,
+      "norm_label": "characterization test against the frozen golden (architecture_plan.md, verificat"
+    },
+    {
+      "label": "Re-extract each key frame from the frozen video and confirm its checksum.",
+      "file_type": "rationale",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "tests_test_golden_rationale_60",
+      "community": 14,
+      "norm_label": "re-extract each key frame from the frozen video and confirm its checksum."
+    },
+    {
+      "label": "ARCHITECTURE_PLAN.md",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "architecture_plan",
+      "community": 8,
+      "norm_label": "architecture_plan.md"
+    },
+    {
+      "label": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "community": 8,
+      "norm_label": "refactor : procedural \u2192 feature-driven + ports (typing.protocol)"
+    },
+    {
+      "label": "Contexte",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "architecture_plan_contexte",
+      "community": 8,
+      "norm_label": "contexte"
+    },
+    {
+      "label": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l'utilisateur)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur",
+      "community": 8,
+      "norm_label": "regle de decision pour les protocol (cadree avec l'utilisateur)"
+    },
+    {
+      "label": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L52",
+      "_origin": "ast",
+      "id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9",
+      "community": 8,
+      "norm_label": "structure cible (a la racine, `streamlit run app.py` inchange)"
+    },
+    {
+      "label": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert",
+      "community": 8,
+      "norm_label": "sequencement strangler-fig (chaque etape = app fonctionnelle + mypy vert)"
+    },
+    {
+      "label": "Fichiers cl\u00e9s touch\u00e9s",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L154",
+      "_origin": "ast",
+      "id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s",
+      "community": 8,
+      "norm_label": "fichiers cles touches"
+    },
+    {
+      "label": "V\u00e9rification",
+      "file_type": "document",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L160",
+      "_origin": "ast",
+      "id": "architecture_plan_v\u00e9rification",
+      "community": 8,
+      "norm_label": "verification"
+    },
+    {
       "label": "CLAUDE.md",
       "file_type": "document",
       "source_file": "CLAUDE.md",
@@ -128,20 +1708,20 @@
       "norm_label": "architecture"
     },
     {
-      "label": "3-Step Production Pipeline",
+      "label": "2-Step Production Pipeline",
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L26",
       "_origin": "ast",
-      "id": "claude_3_step_production_pipeline",
+      "id": "claude_2_step_production_pipeline",
       "community": 2,
-      "norm_label": "3-step production pipeline"
+      "norm_label": "2-step production pipeline"
     },
     {
       "label": "Data Model",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L40",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "claude_data_model",
       "community": 2,
@@ -151,7 +1731,7 @@
       "label": "Key File Roles",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L44",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "claude_key_file_roles",
       "community": 2,
@@ -161,7 +1741,7 @@
       "label": "External Dependencies",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L50",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "claude_external_dependencies",
       "community": 2,
@@ -171,7 +1751,7 @@
       "label": "Storage Layout",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L57",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "claude_storage_layout",
       "community": 2,
@@ -181,7 +1761,7 @@
       "label": "Important Conventions",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L70",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "claude_important_conventions",
       "community": 2,
@@ -191,341 +1771,321 @@
       "label": "graphify",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L78",
+      "source_location": "L74",
       "_origin": "ast",
       "id": "claude_graphify",
       "community": 2,
       "norm_label": "graphify"
     },
     {
-      "label": "ARCHITECTURE_PLAN.md",
+      "label": "GEMINI.md",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_file": "GEMINI.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "architecture_plan.md",
-      "id": "architecture_plan"
+      "id": "gemini",
+      "community": 9,
+      "norm_label": "gemini.md"
     },
     {
-      "label": "Refactor : proc\u00e9dural \u2192 feature-driven + ports (typing.Protocol)",
+      "label": "ViralCashMachine_V2",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_file": "GEMINI.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "refactor : procedural \u2192 feature-driven + ports (typing.protocol)",
-      "id": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol"
+      "id": "gemini_viralcashmachine_v2",
+      "community": 9,
+      "norm_label": "viralcashmachine_v2"
     },
     {
-      "label": "Contexte",
+      "label": "Project Overview",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_file": "GEMINI.md",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "contexte",
-      "id": "architecture_plan_contexte"
+      "id": "gemini_project_overview",
+      "community": 9,
+      "norm_label": "project overview"
     },
     {
-      "label": "R\u00e8gle de d\u00e9cision pour les Protocol (cadr\u00e9e avec l'utilisateur)",
+      "label": "Building and Running",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L23",
+      "source_file": "GEMINI.md",
+      "source_location": "L15",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "regle de decision pour les protocol (cadree avec l'utilisateur)",
-      "id": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur"
+      "id": "gemini_building_and_running",
+      "community": 9,
+      "norm_label": "building and running"
     },
     {
-      "label": "Structure cible (\u00e0 la racine, `streamlit run app.py` inchang\u00e9)",
+      "label": "Prerequisites",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L45",
+      "source_file": "GEMINI.md",
+      "source_location": "L17",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "structure cible (a la racine, `streamlit run app.py` inchange)",
-      "id": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9"
+      "id": "gemini_prerequisites",
+      "community": 9,
+      "norm_label": "prerequisites"
     },
     {
-      "label": "S\u00e9quencement strangler-fig (chaque \u00e9tape = app fonctionnelle + mypy vert)",
+      "label": "Setup",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L69",
+      "source_file": "GEMINI.md",
+      "source_location": "L21",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "sequencement strangler-fig (chaque etape = app fonctionnelle + mypy vert)",
-      "id": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert"
+      "id": "gemini_setup",
+      "community": 9,
+      "norm_label": "setup"
     },
     {
-      "label": "Fichiers cl\u00e9s touch\u00e9s",
+      "label": "Running the Application",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L146",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "fichiers cles touches",
-      "id": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s"
+      "id": "gemini_running_the_application",
+      "community": 9,
+      "norm_label": "running the application"
     },
     {
-      "label": "V\u00e9rification",
+      "label": "Configuration",
       "file_type": "document",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L152",
+      "source_file": "GEMINI.md",
+      "source_location": "L35",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "verification",
-      "id": "architecture_plan_v\u00e9rification"
+      "id": "gemini_configuration",
+      "community": 9,
+      "norm_label": "configuration"
     },
     {
-      "label": "app.py",
-      "file_type": "code",
-      "source_file": "app.py",
+      "label": "Development Conventions",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "gemini_development_conventions",
+      "community": 9,
+      "norm_label": "development conventions"
+    },
+    {
+      "label": "Project Structure",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "gemini_project_structure",
+      "community": 9,
+      "norm_label": "project structure"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "app.py",
-      "id": "app"
+      "id": "readme",
+      "community": 4,
+      "norm_label": "readme.md"
     },
     {
-      "label": "VideoInstance",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L20",
+      "label": "\ud83d\ude80 ViralCashMachine V2",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "videoinstance",
-      "id": "app_videoinstance"
+      "id": "readme_viralcashmachine_v2",
+      "community": 4,
+      "norm_label": "\ud83d\ude80 viralcashmachine v2"
     },
     {
-      "label": "log_terminal()",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L61",
+      "label": "\ud83c\uddec\ud83c\udde7 English Version",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L8",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "log_terminal()",
-      "id": "app_log_terminal"
+      "id": "readme_english_version",
+      "community": 4,
+      "norm_label": "\ud83c\uddec\ud83c\udde7 english version"
     },
     {
-      "label": "get_whisper_subtitles()",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L67",
+      "label": "\u2728 Key Features",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L17",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "get_whisper_subtitles()",
-      "id": "app_get_whisper_subtitles"
+      "id": "readme_key_features",
+      "community": 4,
+      "norm_label": "\u2728 key features"
     },
     {
-      "label": "download_file()",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L89",
+      "label": "\ud83d\udee0\ufe0f Prerequisites",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L30",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "download_file()",
-      "id": "app_download_file"
+      "id": "readme_prerequisites",
+      "community": 4,
+      "norm_label": "\ud83d\udee0\ufe0f prerequisites"
     },
     {
-      "label": "save_key_to_env()",
-      "file_type": "code",
-      "source_file": "app.py",
+      "label": "\ud83d\ude80 Installation & Setup",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "readme_installation_setup",
+      "community": 4,
+      "norm_label": "\ud83d\ude80 installation & setup"
+    },
+    {
+      "label": "\ud83d\udcbb Usage",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "readme_usage",
+      "community": 4,
+      "norm_label": "\ud83d\udcbb usage"
+    },
+    {
+      "label": "\ud83d\udc33 Run with Docker (runs anywhere)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "readme_run_with_docker_runs_anywhere",
+      "community": 4,
+      "norm_label": "\ud83d\udc33 run with docker (runs anywhere)"
+    },
+    {
+      "label": "\ud83c\uddeb\ud83c\uddf7 Version Fran\u00e7aise",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L96",
+      "_origin": "ast",
+      "id": "readme_version_fran\u00e7aise",
+      "community": 4,
+      "norm_label": "\ud83c\uddeb\ud83c\uddf7 version francaise"
+    },
+    {
+      "label": "\u2728 Fonctionnalit\u00e9s Principales",
+      "file_type": "document",
+      "source_file": "README.md",
       "source_location": "L105",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "save_key_to_env()",
-      "id": "app_save_key_to_env"
+      "id": "readme_fonctionnalit\u00e9s_principales",
+      "community": 4,
+      "norm_label": "\u2728 fonctionnalites principales"
     },
     {
-      "label": "sync_instance_to_widgets()",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L124",
+      "label": "\ud83d\udee0\ufe0f Pr\u00e9requis",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L118",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "sync_instance_to_widgets()",
-      "id": "app_sync_instance_to_widgets"
+      "id": "readme_pr\u00e9requis",
+      "community": 4,
+      "norm_label": "\ud83d\udee0\ufe0f prerequis"
     },
     {
-      "label": "load_into_editor()",
-      "file_type": "code",
-      "source_file": "app.py",
-      "source_location": "L141",
+      "label": "\ud83d\ude80 Installation & Configuration",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L126",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": "load_into_editor()",
-      "id": "app_load_into_editor"
+      "id": "readme_installation_configuration",
+      "community": 4,
+      "norm_label": "\ud83d\ude80 installation & configuration"
     },
     {
-      "label": "compiler.py",
-      "file_type": "code",
-      "source_file": "compiler.py",
+      "label": "\ud83d\udcbb Utilisation",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L148",
+      "_origin": "ast",
+      "id": "readme_utilisation",
+      "community": 4,
+      "norm_label": "\ud83d\udcbb utilisation"
+    },
+    {
+      "label": "\ud83d\udcc2 Project Structure / Structure du Projet",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L162",
+      "_origin": "ast",
+      "id": "readme_project_structure_structure_du_projet",
+      "community": 4,
+      "norm_label": "\ud83d\udcc2 project structure / structure du projet"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "tests/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "compiler.py",
-      "id": "compiler"
+      "id": "tests_readme",
+      "community": 15,
+      "norm_label": "readme.md"
     },
     {
-      "label": "get_whisper_subtitles()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L18",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "get_whisper_subtitles()",
-      "id": "compiler_get_whisper_subtitles"
-    },
-    {
-      "label": "format_timestamp()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L51",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "format_timestamp()",
-      "id": "compiler_format_timestamp"
-    },
-    {
-      "label": "save_srt()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L56",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "save_srt()",
-      "id": "compiler_save_srt"
-    },
-    {
-      "label": "create_styled_subtitle_pil()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L62",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "create_styled_subtitle_pil()",
-      "id": "compiler_create_styled_subtitle_pil"
-    },
-    {
-      "label": "create_circular_timer_pil()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L80",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "create_circular_timer_pil()",
-      "id": "compiler_create_circular_timer_pil"
-    },
-    {
-      "label": "create_dark_fantasy_gauge()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L93",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "create_dark_fantasy_gauge()",
-      "id": "compiler_create_dark_fantasy_gauge"
-    },
-    {
-      "label": "_make_text_clip_exact()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L109",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "_make_text_clip_exact()",
-      "id": "compiler_make_text_clip_exact"
-    },
-    {
-      "label": "detect_side_entity()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L125",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "detect_side_entity()",
-      "id": "compiler_detect_side_entity"
-    },
-    {
-      "label": "get_ai_head_positions_split()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L150",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "get_ai_head_positions_split()",
-      "id": "compiler_get_ai_head_positions_split"
-    },
-    {
-      "label": "ai_upscale()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L178",
-      "_origin": "ast",
-      "community": 3,
-      "norm_label": "ai_upscale()",
-      "id": "compiler_ai_upscale"
-    },
-    {
-      "label": "color_grade_tiktok()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L235",
-      "_origin": "ast",
-      "community": 3,
-      "norm_label": "color_grade_tiktok()",
-      "id": "compiler_color_grade_tiktok"
-    },
-    {
-      "label": "compile_video_raw()",
-      "file_type": "code",
-      "source_file": "compiler.py",
-      "source_location": "L289",
-      "_origin": "ast",
-      "community": 0,
-      "norm_label": "compile_video_raw()",
-      "id": "compiler_compile_video_raw"
-    },
-    {
-      "label": "Upscale IA avec Real-ESRGAN (NCNN Vulkan) - Pipeline par images pour support vid",
-      "file_type": "rationale",
-      "source_file": "compiler.py",
-      "source_location": "L179",
-      "_origin": "ast",
-      "community": 3,
-      "norm_label": "upscale ia avec real-esrgan (ncnn vulkan) - pipeline par images pour support vid",
-      "id": "compiler_rationale_179"
-    },
-    {
-      "label": "Color grading AMV Premium post-upscale IA.",
-      "file_type": "rationale",
-      "source_file": "compiler.py",
-      "source_location": "L236",
-      "_origin": "ast",
-      "community": 3,
-      "norm_label": "color grading amv premium post-upscale ia.",
-      "id": "compiler_rationale_236"
-    },
-    {
-      "label": "generate_assets.py",
-      "file_type": "code",
-      "source_file": "generate_assets.py",
+      "label": "Golden oracle \u2014 characterization tests",
+      "file_type": "document",
+      "source_file": "tests/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 5,
-      "norm_label": "generate_assets.py",
-      "id": "generate_assets"
+      "id": "tests_readme_golden_oracle_characterization_tests",
+      "community": 15,
+      "norm_label": "golden oracle \u2014 characterization tests"
     },
     {
-      "label": "generate_beep()",
-      "file_type": "code",
-      "source_file": "generate_assets.py",
-      "source_location": "L5",
+      "label": "Why",
+      "file_type": "document",
+      "source_file": "tests/README.md",
+      "source_location": "L7",
       "_origin": "ast",
-      "community": 5,
-      "norm_label": "generate_beep()",
-      "id": "generate_assets_generate_beep"
+      "id": "tests_readme_why",
+      "community": 15,
+      "norm_label": "why"
+    },
+    {
+      "label": "What is frozen \u2014 `fixtures/golden/`",
+      "file_type": "document",
+      "source_file": "tests/README.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "tests_readme_what_is_frozen_fixtures_golden",
+      "community": 15,
+      "norm_label": "what is frozen \u2014 `fixtures/golden/`"
+    },
+    {
+      "label": "Tooling",
+      "file_type": "document",
+      "source_file": "tests/README.md",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "tests_readme_tooling",
+      "community": 15,
+      "norm_label": "tooling"
+    },
+    {
+      "label": "Running",
+      "file_type": "document",
+      "source_file": "tests/README.md",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "tests_readme_running",
+      "community": 15,
+      "norm_label": "running"
+    },
+    {
+      "label": "Per-step workflow (steps 0 \u2192 9)",
+      "file_type": "document",
+      "source_file": "tests/README.md",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "tests_readme_per_step_workflow_steps_0_9",
+      "community": 15,
+      "norm_label": "per-step workflow (steps 0 \u2192 9)"
     },
     {
       "label": "app.py (Streamlit UI)",
@@ -536,7 +2096,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 1,
       "norm_label": "app.py (streamlit ui)",
       "id": "app_app"
     },
@@ -575,7 +2135,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 1,
       "norm_label": "log_terminal",
       "id": "gemini_log_terminal"
     },
@@ -588,7 +2148,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 1,
       "norm_label": "save_key_to_env",
       "id": "gemini_save_key_to_env"
     }
@@ -600,9 +2160,9 @@
       "source_file": ".claude/settings.json",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_settings",
-      "target": "claude_settings_hooks",
-      "confidence_score": 1.0
+      "target": "claude_settings_hooks"
     },
     {
       "relation": "contains",
@@ -610,189 +2170,29 @@
       "source_file": ".claude/settings.json",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_settings_hooks",
-      "target": "claude_settings_hooks_pretooluse",
-      "confidence_score": 1.0
+      "target": "claude_settings_hooks_pretooluse"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "claude",
-      "target": "claude_claude_md",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L24",
-      "weight": 1.0,
-      "source": "claude_claude_md",
-      "target": "claude_architecture",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L9",
-      "weight": 1.0,
-      "source": "claude_claude_md",
-      "target": "claude_commands",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L78",
-      "weight": 1.0,
-      "source": "claude_claude_md",
-      "target": "claude_graphify",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L70",
-      "weight": 1.0,
-      "source": "claude_claude_md",
-      "target": "claude_important_conventions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L5",
-      "weight": 1.0,
-      "source": "claude_claude_md",
-      "target": "claude_project_overview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L26",
-      "weight": 1.0,
-      "source": "claude_architecture",
-      "target": "claude_3_step_production_pipeline",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L40",
-      "weight": 1.0,
-      "source": "claude_architecture",
-      "target": "claude_data_model",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L50",
-      "weight": 1.0,
-      "source": "claude_architecture",
-      "target": "claude_external_dependencies",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L44",
-      "weight": 1.0,
-      "source": "claude_architecture",
-      "target": "claude_key_file_roles",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L57",
-      "weight": 1.0,
-      "source": "claude_architecture",
-      "target": "claude_storage_layout",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L1",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "architecture_plan",
-      "target": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol"
+      "source": "claude_settings_local",
+      "target": "claude_settings_local_permissions"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L5",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_contexte"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L146",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L45",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L69",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ARCHITECTURE_PLAN.md",
-      "source_location": "L152",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
-      "target": "architecture_plan_v\u00e9rification"
+      "source": "claude_settings_local_permissions",
+      "target": "claude_settings_local_permissions_allow"
     },
     {
       "relation": "contains",
@@ -874,28 +2274,6 @@
       "confidence_score": 1.0,
       "source": "app",
       "target": "compiler"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "app.py",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app",
-      "target": "compiler_ai_upscale"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "app.py",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app",
-      "target": "compiler_color_grade_tiktok"
     },
     {
       "relation": "imports",
@@ -992,26 +2370,6 @@
       "confidence_score": 1.0,
       "source": "app_load_into_editor",
       "target": "app_sync_instance_to_widgets"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "compiler.py",
-      "source_location": "L178",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compiler",
-      "target": "compiler_ai_upscale"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "compiler.py",
-      "source_location": "L235",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compiler",
-      "target": "compiler_color_grade_tiktok"
     },
     {
       "relation": "contains",
@@ -1202,36 +2560,6 @@
       "target": "compiler_get_ai_head_positions_split"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_ai_upscale",
-      "target": "compiler_color_grade_tiktok"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "compiler.py",
-      "source_location": "L179",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compiler_rationale_179",
-      "target": "compiler_ai_upscale"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "compiler.py",
-      "source_location": "L236",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compiler_rationale_236",
-      "target": "compiler_color_grade_tiktok"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "generate_assets.py",
@@ -1240,6 +2568,1786 @@
       "confidence_score": 1.0,
       "source": "generate_assets",
       "target": "generate_assets_generate_beep"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "tests_capture_golden",
+      "target": "tests_capture_golden_capture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "tests_capture_golden",
+      "target": "tests_capture_golden_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_capture_golden_rationale_1",
+      "target": "tests_capture_golden",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/capture_golden.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "tests_capture_golden_main",
+      "target": "tests_capture_golden_capture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_final_video",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_key_frames",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_metadata_sha256",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_segment_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "golden_invariants",
+      "target": "golden_invariants_source_export",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_codec",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_fps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_height",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_nb_frames",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "golden_invariants_final_video",
+      "target": "golden_invariants_final_video_width",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames",
+      "target": "golden_invariants_key_frames_choice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames",
+      "target": "golden_invariants_key_frames_hook",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames",
+      "target": "golden_invariants_key_frames_intro",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames",
+      "target": "golden_invariants_key_frames_narration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_intro",
+      "target": "golden_invariants_intro_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_intro",
+      "target": "golden_invariants_intro_sha256",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_intro",
+      "target": "golden_invariants_intro_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_hook",
+      "target": "golden_invariants_hook_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_hook",
+      "target": "golden_invariants_hook_sha256",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_hook",
+      "target": "golden_invariants_hook_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_narration",
+      "target": "golden_invariants_narration_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_narration",
+      "target": "golden_invariants_narration_sha256",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_narration",
+      "target": "golden_invariants_narration_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_choice",
+      "target": "golden_invariants_choice_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_choice",
+      "target": "golden_invariants_choice_sha256",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "golden_invariants_key_frames_choice",
+      "target": "golden_invariants_choice_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_left_gender",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_left_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_left_personality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_right_gender",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_right_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_char_right_personality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_character_audio_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_character_speech",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_character_subtitles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_choice_a",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_choice_b",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_environment_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_freeze_image_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_freeze_image_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_general_script",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_head_l_x",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_head_l_y",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_head_r_x",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_head_r_y",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_monster_left_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_monster_left_idle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_monster_right_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_monster_right_idle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_narration_script",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_narrator_audio_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_narrator_subtitles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_timer_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_type",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_video_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/invariants.json",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "golden_invariants_metadata",
+      "target": "golden_invariants_metadata_video_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_left_gender",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_left_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_left_personality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_right_gender",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_right_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_char_right_personality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_character_audio_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_character_speech",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_character_subtitles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_choice_a",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_choice_b",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_environment_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_freeze_image_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_freeze_image_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_general_script",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_head_l_x",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_head_l_y",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_head_r_x",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_head_r_y",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_id",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_monster_left_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_monster_left_idle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_monster_right_desc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_monster_right_idle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_narration_script",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_narrator_audio_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_narrator_subtitles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_timer_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_type",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_video_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/fixtures/golden/metadata.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "golden_metadata",
+      "target": "golden_metadata_video_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_extract_frame",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_ffprobe_value",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_key_frame_timestamps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_load_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_media_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_parse_fraction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L145",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_probe_to_dict",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_probe_video",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_segment_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_sha256_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L127",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_ssim",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L158",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_stable_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "tests_golden_tools",
+      "target": "tests_golden_tools_videoprobe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_golden_tools_rationale_1",
+      "target": "tests_golden_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L145",
+      "weight": 1.0,
+      "source": "tests_golden_tools_probe_to_dict",
+      "target": "tests_golden_tools_videoprobe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "tests_golden_tools_probe_video",
+      "target": "tests_golden_tools_videoprobe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "tests_golden_tools_extract_frame",
+      "target": "tests_golden_tools_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "tests_golden_tools_ffprobe_value",
+      "target": "tests_golden_tools_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "tests_golden_tools_media_duration",
+      "target": "tests_golden_tools_ffprobe_value",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "tests_golden_tools_probe_video",
+      "target": "tests_golden_tools_ffprobe_value",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "tests_golden_tools_probe_video",
+      "target": "tests_golden_tools_media_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "tests_golden_tools_rationale_60",
+      "target": "tests_golden_tools_media_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "tests_golden_tools_segment_plan",
+      "target": "tests_golden_tools_media_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "tests_golden_tools_probe_video",
+      "target": "tests_golden_tools_parse_fraction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "tests_golden_tools_rationale_90",
+      "target": "tests_golden_tools_segment_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "tests_golden_tools_rationale_109",
+      "target": "tests_golden_tools_key_frame_timestamps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/golden_tools.py",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "tests_golden_tools_rationale_128",
+      "target": "tests_golden_tools_ssim",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_invariants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_candidate_stable_metadata_matches_golden",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_candidate_structure_and_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_candidate_visually_matches_golden",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_golden_key_frames_unchanged",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_golden_metadata_unchanged",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "tests_test_golden",
+      "target": "tests_test_golden_test_golden_video_matches_recorded_probe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_test_golden_rationale_1",
+      "target": "tests_test_golden",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_golden.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "tests_test_golden_rationale_60",
+      "target": "tests_test_golden_test_golden_key_frames_unchanged",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan",
+      "target": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_contexte"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L146",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_fichiers_cl\u00e9s_touch\u00e9s"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_r\u00e8gle_de_d\u00e9cision_pour_les_protocol_cadr\u00e9e_avec_l_utilisateur"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_structure_cible_\u00e0_la_racine_streamlit_run_app_py_inchang\u00e9"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L69",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_s\u00e9quencement_strangler_fig_chaque_\u00e9tape_app_fonctionnelle_mypy_vert"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ARCHITECTURE_PLAN.md",
+      "source_location": "L152",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "architecture_plan_refactor_proc\u00e9dural_feature_driven_ports_typing_protocol",
+      "target": "architecture_plan_v\u00e9rification"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude",
+      "target": "claude_claude_md"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_architecture"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_commands"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_graphify"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_important_conventions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_claude_md",
+      "target": "claude_project_overview"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_2_step_production_pipeline",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_data_model"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_external_dependencies"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_key_file_roles"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_architecture",
+      "target": "claude_storage_layout"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini",
+      "target": "gemini_viralcashmachine_v2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_viralcashmachine_v2",
+      "target": "gemini_building_and_running"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_viralcashmachine_v2",
+      "target": "gemini_development_conventions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_viralcashmachine_v2",
+      "target": "gemini_project_overview"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_viralcashmachine_v2",
+      "target": "gemini_project_structure"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L35",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_building_and_running",
+      "target": "gemini_configuration"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_building_and_running",
+      "target": "gemini_prerequisites"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_building_and_running",
+      "target": "gemini_running_the_application"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_building_and_running",
+      "target": "gemini_setup"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme",
+      "target": "readme_viralcashmachine_v2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_viralcashmachine_v2",
+      "target": "readme_english_version"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L168",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_viralcashmachine_v2",
+      "target": "readme_project_structure_structure_du_projet"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L100",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_viralcashmachine_v2",
+      "target": "readme_version_fran\u00e7aise"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_english_version",
+      "target": "readme_installation_setup"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_english_version",
+      "target": "readme_key_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_english_version",
+      "target": "readme_prerequisites"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_english_version",
+      "target": "readme_run_with_docker_runs_anywhere"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_english_version",
+      "target": "readme_usage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L109",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_version_fran\u00e7aise",
+      "target": "readme_fonctionnalit\u00e9s_principales"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L131",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_version_fran\u00e7aise",
+      "target": "readme_installation_configuration"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L123",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_version_fran\u00e7aise",
+      "target": "readme_pr\u00e9requis"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L153",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_version_fran\u00e7aise",
+      "target": "readme_utilisation"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_readme",
+      "target": "tests_readme_golden_oracle_characterization_tests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "tests_readme_golden_oracle_characterization_tests",
+      "target": "tests_readme_per_step_workflow_steps_0_9",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "tests_readme_golden_oracle_characterization_tests",
+      "target": "tests_readme_running",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "tests_readme_golden_oracle_characterization_tests",
+      "target": "tests_readme_tooling",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "tests_readme_golden_oracle_characterization_tests",
+      "target": "tests_readme_what_is_frozen_fixtures_golden",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "tests_readme_golden_oracle_characterization_tests",
+      "target": "tests_readme_why",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -1305,5 +4413,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "3811e8a1671e68eb26696b7835ef7f0e3e3c9221"
+  "built_at_commit": "079174c7ccd56fd93ca6fb828269b80ffd9c4cba"
 }
