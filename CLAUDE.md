@@ -21,6 +21,14 @@ python generate_assets.py
 
 On Windows, use `setup.bat` and `start.bat` instead.
 
+## Ongoing refactor (resume point)
+
+A feature-driven + ports refactor is in progress on branch **`refactor/feature-driven`**.
+If the user says "reprends le refactor" / "resume the refactor", open `ARCHITECTURE_PLAN.md`
+and read the **« État d'avancement — POINT DE REPRISE »** table: the first ⬜ row is the next
+step. One step per session; per-step protocol (mypy + golden diff + commit + tick the table)
+is in that section. Step −1 (golden oracle, `tests/`) is done; next is **Étape 0 (scaffold + infra)**.
+
 ## Architecture
 
 ### 2-Step Production Pipeline

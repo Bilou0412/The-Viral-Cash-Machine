@@ -9,6 +9,31 @@
 > La numérotation des étapes restantes est conservée pour ne pas casser les références croisées (couture 4↔5,
 > renvois vers l'étape 8, etc.).
 
+## État d'avancement — POINT DE REPRISE
+
+> **Pour reprendre :** en début de session, dire « reprends le refactor ». Lire ce tableau → la 1re ligne ⬜
+> est la prochaine étape. Travailler sur la branche **`refactor/feature-driven`**. **Une seule étape par session.**
+> Protocole par étape : (1) faire l'étape, (2) `mypy infra features pipeline.py` vert, (3) produire une vidéo
+> Step 1→2 et `GOLDEN_CANDIDATE=<export> pytest tests/test_golden.py` vert (voir `tests/README.md`),
+> (4) cocher la ligne ici + commit. Mettre à jour ce tableau à CHAQUE étape — c'est la source de vérité.
+
+| Étape | Sujet | Statut | Commit |
+|---|---|---|---|
+| −1 | Gel du golden (oracle de caractérisation) | ✅ fait | `a9fa0c1` |
+| — | Suppression upscale (Step 3) | ✅ fait | `a9fa0c1` |
+| 0 | Scaffold paquets + infra (`log_terminal`/`download_file`/`save_key_to_env` → `infra/`) | ⬜ à faire | |
+| ~~1~~ | ~~grading~~ — supprimée (upscale retiré) | ❌ N/A | |
+| ~~2~~ | ~~upscaling + port `Upscaler`~~ — supprimée (upscale retiré) | ❌ N/A | |
+| 3 | `features/transcription/` + `Transcriber` + types immuables | ⬜ à faire | |
+| 4 | `Overlay` Protocol + 4 overlays un par un + `srt.py` | ⬜ à faire | |
+| 5 | `heads.py` + `HeadDetector` (port I/O) | ⬜ à faire | |
+| 6 | `compositor.py` (corps de `compile_video_raw`) | ⬜ à faire | |
+| 7 | `features/assets/` + `AssetProvider` | ⬜ à faire | |
+| 8 | `pipeline.py` + sorties immuables (8a parallèle, 8b coupe le JSON) | ⬜ à faire | |
+| 9 | `app.py` = câblage seul + mypy `--strict` sur `app.py` | ⬜ à faire | |
+
+**Prochaine étape : 0 — Scaffold + infra.**
+
 ## Contexte
 
 `ViralCashMachine` est aujourd'hui procédural : toute la logique vit dans `app.py` (UI Streamlit + appels
