@@ -10,57 +10,64 @@
 ```
 INTRO (existant, inchangé)        eye-open → dialogue 2 persos → narration → TIMER
                                   « Choisis ton personnage »
-TRANSITION                        Narrateur : « Si tu as choisi Étienne... »
+TRANSITION          [photo+zoom]  Narrateur : « Si tu as choisi Étienne... »
 ROUND 1..3 (le chemin suivi = happy path : on survit)
-  a. ACTION                       le perso avance (grotte, château, échelle...)
-  b. ENVIRONNEMENT                hostile par nature (pierres suspendues, lave,
-                                  structures instables) — narré + illustré
-  c. LE PERSO PARLE               face caméra, manière décrite (chuchote, murmure,
+  a. ACTION         [photo+zoom]  le perso avance (grotte, château, échelle...) — narré
+  b. ENVIRONNEMENT  [photo+zoom]  hostile par nature (pierres suspendues, lave,
+                                  structures instables) — narré
+  c. LE PERSO PARLE [CLIP VIDÉO]  face caméra, manière décrite (chuchote, murmure,
                                   susurre...) : pose son dilemme lié à l'environnement
-                                  ou une question simple
-  d. NARRATEUR                    énonce les deux choix, illustrés
-  e. TIMER 3-2-1                  (brique existante) — un des deux choix est fatal
-  f. ISSUE FATALE                 « Si tu as choisi [A]... » description angoissante
+                                  ou une question simple — voix native p-video
+  d. NARRATEUR      [photo+zoom]  énonce les deux choix, illustrés
+  e. TIMER 3-2-1    [brique]      existante — un des deux choix est fatal
+  f. ISSUE FATALE   [photo+zoom]  « Si tu as choisi [A]... » description angoissante
                                   POV (ce qu'il te fait, comment tu réagis)
-  g. ISSUE SURVIE                 « Si tu as choisi [B]... » — on continue
-ÉPILOGUE                          « Si tu avais choisi [l'autre perso]... » résumé
-                                  de ce que l'autre chemin aurait été
-Durée cible : ~2 min – 2 min 30. Les rounds 2-3 enchaînent depuis l'issue survie.
-Les deux issues de chaque round sont montrées l'une après l'autre (pas de branche réelle).
+  g. ISSUE SURVIE   [photo+zoom]  « Si tu as choisi [B]... » — on continue
+ÉPILOGUE            [photo+zoom]  « Si tu avais choisi [l'autre perso]... »
+Durée cible : ~2 min – 2 min 30. Rounds 2-3 enchaînent depuis l'issue survie.
+Les deux issues de chaque round sont montrées l'une après l'autre.
 ```
 
-## Doctrine voix (simplifiée — décision auteur)
+**Économie du format (décision auteur)** : tout segment où le narrateur parle est
+illustré par **photo seedream + zoom Ken Burns** (brique narration existante du
+compositor). Les clips p-video sont réservés aux face-cam des persos (lipsync).
+→ Par vidéo complète : **~4 clips vidéo** (intro + 3 face-cam) + **~12-15 images**.
+Coût ≈ ÷3 vs tout-vidéo, génération bien plus rapide.
 
-**Pas de TTS, pas de clonage, pas de banque : chaque clip embarque sa propre
-voix, générée nativement par p-video depuis la description dans le prompt.**
+## Doctrine voix (hybride — décision auteur)
 
-- Le script GPT (phase S) génère UNE description de voix par identité —
-  perso gauche, perso droit, narrateur — courte et ultra-distinctive
-  (ex. « voix masculine jeune, rauque, qui chuchote, débit lent, française »).
-- Cette description est **réinjectée VERBATIM dans chaque prompt de clip** où
-  cette identité parle : c'est le mécanisme de cohérence vocale intra-vidéo.
-- Les segments narrés (action, environnement, choix, issues, épilogue) sont des
-  clips p-video dont le prompt fait parler le narrateur en voix off, avec la
-  même description verbatim.
-- Bonus gratuit : ambiance sonore native cohérente avec l'image sur chaque clip.
-- Les sous-titres restent Whisper : on transcrit l'audio des clips finaux.
+**Le narrateur : une voix générée UNE FOIS, puis clonée — la signature de la chaîne.**
+- Audition : p-video génère des candidats de voix narrateur décrits au prompt
+  (clips courts jetables), l'auteur choisit à l'oreille.
+- Clonage : `minimax/voice-cloning` (⚠️ `model` ∈ {speech-2.6-turbo, speech-2.6-hd,
+  speech-02-turbo, speech-02-hd}) → `voice_id` permanent stocké dans
+  `assets/narrator_voice.json` (+ le sample wav archivé).
+- Toutes les lignes narrateur = TTS minimax avec CE voice_id, posées sur les
+  photos+zoom. Cohérence totale sur les ~12 lignes par vidéo, et d'une vidéo à
+  l'autre (identité de chaîne).
+
+**Les personnages : voix natives p-video, uniquement sur leurs clips face-cam.**
+- Le script GPT génère une description de voix par perso, courte et distinctive.
+- Description réinjectée VERBATIM dans chaque prompt de clip du même perso
+  (~3-4 clips par vidéo) : cohérence best-effort à valider en phase P.
+- Bonus : ambiance sonore native cohérente sur les face-cam.
+
+Les sous-titres restent Whisper (transcription des audios finaux, mot à mot).
 
 ## L'enjeu n°1 : les prompts (décision auteur — « optimiser un maximum sans diluer »)
 
 Tout le système repose sur le fait que les instructions des prompts sont
 RESPECTÉES : voix, dialogue exact, caméra statique, style, absence de texte.
-Les prompts sont donc un **composant à part entière**, centralisé, versionné et
-testé — pas des strings éparpillées.
+Les prompts sont un **composant à part entière**, centralisé, versionné, testé.
 
 Règles d'or acquises en tests réels (à encoder dans les templates) :
-1. **Une ligne = une contrainte fonctionnelle.** Pas de littérature. Court et
-   dense > long et dilué (le modèle dilue son attention sur les pavés).
-2. **Dialogue exact entre guillemets**, précédé de la manière de dire
-   (« says in French, whispering: "..." »). Répliques COURTES (le natif
-   paraphrase moins sur du court).
+1. **Une ligne = une contrainte fonctionnelle.** Court et dense > long et dilué
+   (le modèle dilue son attention sur les pavés).
+2. **Dialogue exact entre guillemets**, manière de dire AVANT la réplique
+   (« says in French, whispering: "..." »). Répliques COURTES (moins de paraphrase).
 3. **Description de voix verbatim** — jamais reformulée d'un clip à l'autre.
-4. **Ne jamais mentionner ce qu'on ne veut PAS voir** (l'épisode lunettes de
-   soleil : nommer un objet = le faire apparaître). Formuler en positif.
+4. **Ne jamais mentionner ce qu'on ne veut PAS voir** (nommer un objet = le
+   faire apparaître). Formuler en positif.
 5. **Jamais de texte demandé à l'image** (charabia garanti) — tout texte réel
    vient des briques overlay au montage.
 6. Caméra statique : bloc anti-dérive existant, conservé tel quel.
@@ -70,18 +77,18 @@ Règles d'or acquises en tests réels (à encoder dans les templates) :
 
 | Phase | Sujet | Statut | Commit |
 |---|---|---|---|
-| P | **Bibliothèque de prompts** : module `src/features/scripting/prompts.py` — templates à slots pour CHAQUE type de clip (action, environnement, face-cam dilemme, issue fatale, issue survie, narration over, épilogue) + blocs réutilisables (voix verbatim, caméra statique, style). Test réel : générer 2-3 clips d'un même perso et vérifier à l'oreille la cohérence vocale inter-clips. | ⬜ à faire | |
-| S | **Script d'aventure** : structured output GPT — `AdventureScript` Pydantic (3 rounds : action, environnement, réplique perso + manière de dire, 2 choix, issue fatale, issue survie, lignes narrateur ; épilogue ; + les 3 descriptions de voix). Extension du port `ScriptDecomposer`. Le script remplit les slots des templates de la phase P. | ⬜ à faire | |
-| A | **Step 1 étendu** : génération des assets de rounds — images env (seedream) + clips p-video (audio natif). Parallélisé. Flag `draft` global. Manifest d'assets par instance (extension metadata.json). Estimation de coût AVANT lancement. | ⬜ à faire | |
-| M | **Step 2 étendu** : nouveaux constructeurs de segments dans le compositor (transition, action, face-cam, écran de choix A/B, issues, épilogue) en réutilisant les briques existantes (SubtitleOverlay, TimerOverlay, GaugeOverlay, NameplateOverlay). Sous-titres = Whisper sur l'audio des clips. Timeline complète. Golden intro inchangé. | ⬜ à faire | |
-| U | **Streamlit max** : onglets (① Script & voix éditables avant génération, ② Assets — galerie par round avec **régénération à l'unité** + écoute audio de chaque clip + toggle draft/final, ③ Montage & preview, ④ Bibliothèque). Barres de progression, coût estimé, état de projet persistant. | ⬜ à faire | |
+| P | **Prompts + voix narrateur** : ① module `src/features/scripting/prompts.py` — templates à slots par type d'asset (image action/environnement/choix/issues/épilogue, clip face-cam dilemme) + blocs réutilisables (voix verbatim, caméra statique, style). ② Voix narrateur : audition p-video → choix auteur → clonage → `assets/narrator_voice.json`. ③ Test de cohérence : 2-3 clips face-cam d'un même perso, validation à l'oreille. | ⬜ à faire | |
+| S | **Script d'aventure** : structured output GPT — `AdventureScript` Pydantic (3 rounds : action, environnement, réplique perso + manière de dire, 2 choix, issue fatale, issue survie, lignes narrateur ; épilogue ; descriptions de voix des 2 persos). Extension du port `ScriptDecomposer`. Le script remplit les slots des templates P. | ⬜ à faire | |
+| A | **Step 1 étendu** : génération des assets de rounds — images (seedream) + clips face-cam (p-video audio natif) + audios narrateur (TTS voice_id cloné). Parallélisé. Flag `draft` global. Manifest d'assets par instance. Estimation de coût AVANT lancement. | ⬜ à faire | |
+| M | **Step 2 étendu** : nouveaux constructeurs de segments dans le compositor — la plupart réutilisent la brique narration existante (photo + zoom + audio + subs Whisper) ; face-cam + subs ; écran de choix A/B (overlays) ; timer existant. Timeline complète intro + 3 rounds + épilogue. Golden intro inchangé. | ⬜ à faire | |
+| U | **Streamlit max** : onglets (① Script & voix éditables avant génération, ② Assets — galerie par round, régénération à l'unité, écoute par asset, toggle draft/final, ③ Montage & preview, ④ Bibliothèque). Barres de progression, coût estimé, état de projet persistant. | ⬜ à faire | |
 
-**Prochaine étape : Phase P — bibliothèque de prompts.**
+**Prochaine étape : Phase P — prompts + voix narrateur.**
 
 ## Protocole par phase
 
 1. Implémenter la phase. 2. `pytest tests/` vert (le golden intro ne doit JAMAIS
-casser). 3. Démo concrète à l'auteur (écouter les clips / lire un script généré /
+casser). 3. Démo concrète à l'auteur (écouter les voix / lire un script généré /
 voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 
 ## Acquis techniques des tests réels (ne pas re-découvrir)
@@ -89,16 +96,18 @@ voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 - seedream : `size` ∈ {2K, 4K, custom} ; jamais de texte dans l'image.
 - p-video : `resolution` ∈ {720p, 1080p} ; `duration` se cale sur l'audio fourni,
   sinon sur le paramètre ; `save_audio: true` pour l'audio natif.
-- API appelée en HTTP direct (package `replicate` absent de l'hôte, token `.env`).
+- minimax/voice-cloning : `voice_file` requis ; `model` ∈ {speech-2.6-turbo,
+  speech-2.6-hd, speech-02-turbo, speech-02-hd}.
+- API en HTTP direct (package `replicate` absent de l'hôte, token `.env`).
 - Upload de fichiers locaux : Files API (`/v1/files`, multipart) → URL signée.
 
 ## Risques identifiés
 
-- **Cohérence vocale inter-clips** (le narrateur sur 10+ clips) : best-effort
-  via description verbatim — à VALIDER en phase P avant tout le reste ; si
-  insuffisant, repli : une seule longue piste narrateur générée en un clip et
-  redécoupée au montage.
+- **Cohérence vocale des persos inter-clips** (~3-4 face-cam par perso) :
+  best-effort via description verbatim — à VALIDER en phase P ; repli : réduire
+  à 1 réplique face-cam par round.
 - **Paraphrase du dialogue natif** : répliques courtes + écoute par clip dans
-  l'UI (phase U) + régénération à l'unité.
-- **Coût par vidéo complète** : ~12-15 clips p-video → draft obligatoire,
-  rendu final uniquement après validation dans l'UI.
+  l'UI + régénération à l'unité.
+- **Qualité du clone narrateur** : le sample d'audition doit être propre
+  (voix seule, sans ambiance) — prompt d'audition « no background music,
+  no ambient sound » à tester ; sinon nettoyage ffmpeg avant clonage.
