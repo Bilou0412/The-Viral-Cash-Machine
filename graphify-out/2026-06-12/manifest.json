@@ -1,12 +1,12 @@
 {
   "app.py": {
-    "mtime": 1781264800.2762334,
-    "ast_hash": "767586a440041aacde449a4fd0f4eca3",
+    "mtime": 1781267632.1450577,
+    "ast_hash": "686230f4cb5e546d741affd2fbc519b9",
     "semantic_hash": ""
   },
   "compiler.py": {
-    "mtime": 1781264165.6295083,
-    "ast_hash": "8cffb3178bb4645bb1708fcefaf9b288",
+    "mtime": 1781264991.0525508,
+    "ast_hash": "f2a21fe63602f804155fda65ebabc2b9",
     "semantic_hash": ""
   },
   "generate_assets.py": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1781263516.0580776,
-    "ast_hash": "648d64270216162fa56620f42119ae27",
+    "mtime": 1781271564.7642784,
+    "ast_hash": "121ec8d96e965e03b3dfdd77992cb693",
     "semantic_hash": ""
   },
   "ARCHITECTURE_PLAN.md": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "features/compositing/compositor.py": {
-    "mtime": 1781264198.6697717,
-    "ast_hash": "376b1898a2ed047dcef63c56ad5b204f",
+    "mtime": 1781271731.535458,
+    "ast_hash": "da5d409fe7dd815e397bf442b71cd3b5",
     "semantic_hash": ""
   },
   "features/assets/__init__.py": {
@@ -205,8 +205,23 @@
     "semantic_hash": ""
   },
   "pipeline.py": {
-    "mtime": 1781264676.6675444,
-    "ast_hash": "80494d5148bd4d48a136f5baae337e80",
+    "mtime": 1781267611.254966,
+    "ast_hash": "6384331a2293e197dcddf7086e513e80",
+    "semantic_hash": ""
+  },
+  "features/scripting/__init__.py": {
+    "mtime": 1781267583.7789235,
+    "ast_hash": "84ccd13ac37f5a66dd2f592910d8c9ca",
+    "semantic_hash": ""
+  },
+  "features/scripting/openai_decomposer.py": {
+    "mtime": 1781267598.5424058,
+    "ast_hash": "61dfdd245d6c52abadf4fc5a97d699a4",
+    "semantic_hash": ""
+  },
+  "features/scripting/ports.py": {
+    "mtime": 1781267588.0494998,
+    "ast_hash": "3980b2bfebd9f45c5093c8caae784847",
     "semantic_hash": ""
   }
 }

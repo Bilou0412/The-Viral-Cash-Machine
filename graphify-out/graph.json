@@ -124,7 +124,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "app_videoinstance",
-      "community": 23,
+      "community": 13,
       "norm_label": "videoinstance"
     },
     {
@@ -194,7 +194,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "compiler_compile_video_raw",
-      "community": 23,
+      "community": 19,
       "norm_label": "compile_video_raw()"
     },
     {
@@ -224,7 +224,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "compiler_rationale_12",
-      "community": 23,
+      "community": 19,
       "norm_label": "compile raw video from assets and metadata."
     },
     {
@@ -454,7 +454,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "assets_replicate_provider_replicateassetprovider_animate_video",
-      "community": 18,
+      "community": 23,
       "norm_label": ".animate_video()"
     },
     {
@@ -504,7 +504,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "assets_replicate_provider_rationale_45",
-      "community": 18,
+      "community": 23,
       "norm_label": "generate animated video using pruna p-video model."
     },
     {
@@ -534,117 +534,57 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compositing_compositor",
-      "community": 1,
+      "community": 19,
       "norm_label": "compositor.py"
-    },
-    {
-      "label": "create_styled_subtitle_pil()",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L26",
-      "_origin": "ast",
-      "id": "compositing_compositor_create_styled_subtitle_pil",
-      "community": 1,
-      "norm_label": "create_styled_subtitle_pil()"
-    },
-    {
-      "label": "ImageClip",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L26",
-      "_origin": "ast",
-      "id": "features_compositing_compositor_py_imageclip",
-      "community": 1,
-      "norm_label": "imageclip"
-    },
-    {
-      "label": "create_circular_timer_pil()",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L48",
-      "_origin": "ast",
-      "id": "compositing_compositor_create_circular_timer_pil",
-      "community": 1,
-      "norm_label": "create_circular_timer_pil()"
-    },
-    {
-      "label": "create_dark_fantasy_gauge()",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L64",
-      "_origin": "ast",
-      "id": "compositing_compositor_create_dark_fantasy_gauge",
-      "community": 1,
-      "norm_label": "create_dark_fantasy_gauge()"
-    },
-    {
-      "label": "VideoClip",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L64",
-      "_origin": "ast",
-      "id": "features_compositing_compositor_py_videoclip",
-      "community": 1,
-      "norm_label": "videoclip"
-    },
-    {
-      "label": "_make_text_clip_exact()",
-      "file_type": "code",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L80",
-      "_origin": "ast",
-      "id": "compositing_compositor_make_text_clip_exact",
-      "community": 1,
-      "norm_label": "_make_text_clip_exact()"
     },
     {
       "label": "RawVideoCompositor",
       "file_type": "code",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L99",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "compositing_compositor_rawvideocompositor",
-      "community": 23,
+      "community": 19,
       "norm_label": "rawvideocompositor"
     },
     {
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L102",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "compositing_compositor_rawvideocompositor_init",
-      "community": 23,
+      "community": 19,
       "norm_label": ".__init__()"
     },
     {
       "label": "Transcriber",
       "file_type": "code",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L102",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "features_compositing_compositor_py_transcriber",
-      "community": 23,
+      "community": 19,
       "norm_label": "transcriber"
     },
     {
       "label": "HeadDetector",
       "file_type": "code",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L102",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "features_compositing_compositor_py_headdetector",
-      "community": 23,
+      "community": 19,
       "norm_label": "headdetector"
     },
     {
       "label": ".compose()",
       "file_type": "code",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L106",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "compositing_compositor_rawvideocompositor_compose",
-      "community": 1,
+      "community": 19,
       "norm_label": ".compose()"
     },
     {
@@ -654,28 +594,28 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compositing_compositor_rationale_1",
-      "community": 1,
+      "community": 19,
       "norm_label": "video composition orchestration."
     },
     {
       "label": "Orchestrates video composition with injected dependencies.",
       "file_type": "rationale",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L100",
+      "source_location": "L26",
       "_origin": "ast",
-      "id": "compositing_compositor_rationale_100",
-      "community": 23,
+      "id": "compositing_compositor_rationale_26",
+      "community": 19,
       "norm_label": "orchestrates video composition with injected dependencies."
     },
     {
-      "label": "Compose raw video from assets and metadata.",
+      "label": "Compose raw video from assets with immutable parameters.          Args:",
       "file_type": "rationale",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L107",
+      "source_location": "L43",
       "_origin": "ast",
-      "id": "compositing_compositor_rationale_107",
-      "community": 1,
-      "norm_label": "compose raw video from assets and metadata."
+      "id": "compositing_compositor_rationale_43",
+      "community": 19,
+      "norm_label": "compose raw video from assets with immutable parameters.          args:"
     },
     {
       "label": "heads.py",
@@ -744,7 +684,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "compositing_heads_groundingdinoheaddetector_detect_side",
-      "community": 24,
+      "community": 23,
       "norm_label": "._detect_side()"
     },
     {
@@ -814,7 +754,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "compositing_heads_rationale_70",
-      "community": 24,
+      "community": 23,
       "norm_label": "detect head in one half of the image."
     },
     {
@@ -853,7 +793,7 @@
       "source_file": "features/compositing/overlays.py",
       "source_location": "L12",
       "_origin": "ast",
-      "id": "features_compositing_overlays_py_imageclip",
+      "id": "imageclip",
       "community": 19,
       "norm_label": "imageclip"
     },
@@ -863,7 +803,7 @@
       "source_file": "features/compositing/overlays.py",
       "source_location": "L12",
       "_origin": "ast",
-      "id": "features_compositing_overlays_py_videoclip",
+      "id": "videoclip",
       "community": 19,
       "norm_label": "videoclip"
     },
@@ -1054,7 +994,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compositing_srt",
-      "community": 1,
+      "community": 19,
       "norm_label": "srt.py"
     },
     {
@@ -1064,7 +1004,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "compositing_srt_format_timestamp",
-      "community": 1,
+      "community": 19,
       "norm_label": "format_timestamp()"
     },
     {
@@ -1074,7 +1014,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "compositing_srt_save_srt",
-      "community": 1,
+      "community": 19,
       "norm_label": "save_srt()"
     },
     {
@@ -1084,7 +1024,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compositing_srt_rationale_1",
-      "community": 1,
+      "community": 19,
       "norm_label": "srt subtitle utilities."
     },
     {
@@ -1094,7 +1034,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "compositing_srt_rationale_5",
-      "community": 1,
+      "community": 19,
       "norm_label": "convert seconds to srt timestamp format (hh:mm:ss,mmm)."
     },
     {
@@ -1104,8 +1044,208 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "compositing_srt_rationale_14",
-      "community": 1,
+      "community": 19,
       "norm_label": "save subtitles to srt file."
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "features/scripting/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_init",
+      "community": 24,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "Script decomposition feature.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_init_rationale_1",
+      "community": 24,
+      "norm_label": "script decomposition feature."
+    },
+    {
+      "label": "openai_decomposer.py",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer",
+      "community": 18,
+      "norm_label": "openai_decomposer.py"
+    },
+    {
+      "label": "OpenAIScriptDecomposer",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_openaiscriptdecomposer",
+      "community": 18,
+      "norm_label": "openaiscriptdecomposer"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_openaiscriptdecomposer_init",
+      "community": 18,
+      "norm_label": ".__init__()"
+    },
+    {
+      "label": "OpenAI",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "features_scripting_openai_decomposer_py_openai",
+      "community": 18,
+      "norm_label": "openai"
+    },
+    {
+      "label": ".decompose()",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_openaiscriptdecomposer_decompose",
+      "community": 18,
+      "norm_label": ".decompose()"
+    },
+    {
+      "label": "ScriptDecomposition",
+      "file_type": "code",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "scriptdecomposition",
+      "community": 18,
+      "norm_label": "scriptdecomposition"
+    },
+    {
+      "label": "OpenAI GPT script decomposer implementation.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_rationale_1",
+      "community": 18,
+      "norm_label": "openai gpt script decomposer implementation."
+    },
+    {
+      "label": "Decomposes scripts using OpenAI GPT models.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_rationale_12",
+      "community": 18,
+      "norm_label": "decomposes scripts using openai gpt models."
+    },
+    {
+      "label": "Initialize with OpenAI client and model.          Args:             client: Auth",
+      "file_type": "rationale",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_rationale_15",
+      "community": 18,
+      "norm_label": "initialize with openai client and model.          args:             client: auth"
+    },
+    {
+      "label": "Decompose script into visual elements.          Args:             script: User-p",
+      "file_type": "rationale",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "scripting_openai_decomposer_rationale_31",
+      "community": 18,
+      "norm_label": "decompose script into visual elements.          args:             script: user-p"
+    },
+    {
+      "label": "ports.py",
+      "file_type": "code",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_ports",
+      "community": 18,
+      "norm_label": "ports.py"
+    },
+    {
+      "label": "ScriptDecomposition",
+      "file_type": "code",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "scripting_ports_scriptdecomposition",
+      "community": 18,
+      "norm_label": "scriptdecomposition"
+    },
+    {
+      "label": "ScriptDecomposer",
+      "file_type": "code",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "scripting_ports_scriptdecomposer",
+      "community": 18,
+      "norm_label": "scriptdecomposer"
+    },
+    {
+      "label": ".decompose()",
+      "file_type": "code",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "scripting_ports_scriptdecomposer_decompose",
+      "community": 18,
+      "norm_label": ".decompose()"
+    },
+    {
+      "label": "Script decomposition ports.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripting_ports_rationale_1",
+      "community": 18,
+      "norm_label": "script decomposition ports."
+    },
+    {
+      "label": "Decomposed script elements for video instance.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "scripting_ports_rationale_9",
+      "community": 18,
+      "norm_label": "decomposed script elements for video instance."
+    },
+    {
+      "label": "Port for decomposing user scripts into instance elements.",
+      "file_type": "rationale",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "scripting_ports_rationale_19",
+      "community": 18,
+      "norm_label": "port for decomposing user scripts into instance elements."
+    },
+    {
+      "label": "Decompose script into behavioral slots.          Args:             script: User-",
+      "file_type": "rationale",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "scripting_ports_rationale_22",
+      "community": 18,
+      "norm_label": "decompose script into behavioral slots.          args:             script: user-"
     },
     {
       "label": "__init__.py",
@@ -1134,7 +1274,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "transcription_ports",
-      "community": 19,
+      "community": 1,
       "norm_label": "ports.py"
     },
     {
@@ -1144,7 +1284,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "transcription_ports_cue",
-      "community": 19,
+      "community": 1,
       "norm_label": "cue"
     },
     {
@@ -1154,7 +1294,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "transcription_ports_transcription",
-      "community": 19,
+      "community": 1,
       "norm_label": "transcription"
     },
     {
@@ -1164,7 +1304,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "transcription_ports_transcription_to_list",
-      "community": 19,
+      "community": 1,
       "norm_label": ".to_list()"
     },
     {
@@ -1174,7 +1314,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "transcription_ports_transcriber",
-      "community": 19,
+      "community": 1,
       "norm_label": "transcriber"
     },
     {
@@ -1184,7 +1324,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "transcription_ports_transcriber_transcribe",
-      "community": 19,
+      "community": 1,
       "norm_label": ".transcribe()"
     },
     {
@@ -1194,7 +1334,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "transcription_ports_rationale_7",
-      "community": 19,
+      "community": 1,
       "norm_label": "a single subtitle with timing."
     },
     {
@@ -1204,7 +1344,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "transcription_ports_rationale_15",
-      "community": 19,
+      "community": 1,
       "norm_label": "complete transcription as immutable tuple of cues."
     },
     {
@@ -1214,7 +1354,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "transcription_ports_rationale_19",
-      "community": 19,
+      "community": 1,
       "norm_label": "convert to list of dicts for backwards compat with metadata.json."
     },
     {
@@ -1224,7 +1364,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "transcription_ports_rationale_27",
-      "community": 19,
+      "community": 1,
       "norm_label": "port for speech-to-text services."
     },
     {
@@ -1234,7 +1374,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "transcription_ports_rationale_30",
-      "community": 19,
+      "community": 1,
       "norm_label": "transcribe audio file and return cues with timing."
     },
     {
@@ -1244,7 +1384,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "transcription_whisper",
-      "community": 19,
+      "community": 1,
       "norm_label": "whisper.py"
     },
     {
@@ -1274,7 +1414,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "transcription_whisper_whispertranscriber_init",
-      "community": 19,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1283,8 +1423,8 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L10",
       "_origin": "ast",
-      "id": "openai",
-      "community": 19,
+      "id": "features_transcription_whisper_py_openai",
+      "community": 1,
       "norm_label": "openai"
     },
     {
@@ -1294,7 +1434,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "transcription_whisper_whispertranscriber_transcribe",
-      "community": 19,
+      "community": 1,
       "norm_label": ".transcribe()"
     },
     {
@@ -1304,7 +1444,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "transcription",
-      "community": 19,
+      "community": 1,
       "norm_label": "transcription"
     },
     {
@@ -1324,7 +1464,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "transcription_whisper_rationale_14",
-      "community": 19,
+      "community": 1,
       "norm_label": "transcribe audio using whisper api with word-level granularity."
     },
     {
@@ -1438,10 +1578,20 @@
       "norm_label": "pipeline.py"
     },
     {
-      "label": "CompiledVideo",
+      "label": "VideoInstance",
       "file_type": "code",
       "source_file": "pipeline.py",
       "source_location": "L18",
+      "_origin": "ast",
+      "id": "pipeline_videoinstance",
+      "community": 23,
+      "norm_label": "videoinstance"
+    },
+    {
+      "label": "CompiledVideo",
+      "file_type": "code",
+      "source_file": "pipeline.py",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "pipeline_compiledvideo",
       "community": 23,
@@ -1451,7 +1601,7 @@
       "label": "Pipeline",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L25",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "pipeline_pipeline",
       "community": 23,
@@ -1461,7 +1611,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L28",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "pipeline_pipeline_init",
       "community": 23,
@@ -1471,7 +1621,7 @@
       "label": "AssetProvider",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L28",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "pipeline_py_assetprovider",
       "community": 23,
@@ -1481,7 +1631,7 @@
       "label": "Transcriber",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L28",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "pipeline_py_transcriber",
       "community": 23,
@@ -1491,7 +1641,7 @@
       "label": "HeadDetector",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L28",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "pipeline_py_headdetector",
       "community": 23,
@@ -1501,7 +1651,7 @@
       "label": ".generate_assets()",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L38",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "pipeline_pipeline_generate_assets",
       "community": 23,
@@ -1511,7 +1661,7 @@
       "label": "AssetBundle",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L38",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "assetbundle",
       "community": 23,
@@ -1521,7 +1671,7 @@
       "label": ".detect_heads()",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L101",
+      "source_location": "L115",
       "_origin": "ast",
       "id": "pipeline_pipeline_detect_heads",
       "community": 23,
@@ -1531,7 +1681,7 @@
       "label": "HeadLayout",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L101",
+      "source_location": "L115",
       "_origin": "ast",
       "id": "headlayout",
       "community": 23,
@@ -1541,7 +1691,7 @@
       "label": ".compile_video()",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L114",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "pipeline_pipeline_compile_video",
       "community": 23,
@@ -1551,7 +1701,7 @@
       "label": ".produce()",
       "file_type": "code",
       "source_file": "pipeline.py",
-      "source_location": "L132",
+      "source_location": "L160",
       "_origin": "ast",
       "id": "pipeline_pipeline_produce",
       "community": 23,
@@ -1568,12 +1718,22 @@
       "norm_label": "feature-driven pipeline orchestration with immutable outputs."
     },
     {
-      "label": "Compiled video output.",
+      "label": "Immutable video instance with all composition parameters.",
       "file_type": "rationale",
       "source_file": "pipeline.py",
       "source_location": "L19",
       "_origin": "ast",
       "id": "pipeline_rationale_19",
+      "community": 23,
+      "norm_label": "immutable video instance with all composition parameters."
+    },
+    {
+      "label": "Compiled video output.",
+      "file_type": "rationale",
+      "source_file": "pipeline.py",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "pipeline_rationale_33",
       "community": 23,
       "norm_label": "compiled video output."
     },
@@ -1581,9 +1741,9 @@
       "label": "Orchestrates feature-driven video generation with immutable outputs.",
       "file_type": "rationale",
       "source_file": "pipeline.py",
-      "source_location": "L26",
+      "source_location": "L40",
       "_origin": "ast",
-      "id": "pipeline_rationale_26",
+      "id": "pipeline_rationale_40",
       "community": 23,
       "norm_label": "orchestrates feature-driven video generation with immutable outputs."
     },
@@ -1591,9 +1751,9 @@
       "label": "Generate all assets (voice, image, video). Returns immutable AssetBundle.",
       "file_type": "rationale",
       "source_file": "pipeline.py",
-      "source_location": "L48",
+      "source_location": "L62",
       "_origin": "ast",
-      "id": "pipeline_rationale_48",
+      "id": "pipeline_rationale_62",
       "community": 23,
       "norm_label": "generate all assets (voice, image, video). returns immutable assetbundle."
     },
@@ -1601,29 +1761,29 @@
       "label": "Detect character head positions. Returns immutable HeadLayout.",
       "file_type": "rationale",
       "source_file": "pipeline.py",
-      "source_location": "L104",
+      "source_location": "L118",
       "_origin": "ast",
-      "id": "pipeline_rationale_104",
+      "id": "pipeline_rationale_118",
       "community": 23,
       "norm_label": "detect character head positions. returns immutable headlayout."
     },
     {
-      "label": "Compile final video. Returns immutable CompiledVideo.",
+      "label": "Compile final video from immutable instance parameters.          Args:",
       "file_type": "rationale",
       "source_file": "pipeline.py",
-      "source_location": "L117",
+      "source_location": "L129",
       "_origin": "ast",
-      "id": "pipeline_rationale_117",
+      "id": "pipeline_rationale_129",
       "community": 23,
-      "norm_label": "compile final video. returns immutable compiledvideo."
+      "norm_label": "compile final video from immutable instance parameters.          args:"
     },
     {
       "label": "Run full pipeline: assets \u2192 heads \u2192 compilation. Returns immutable outputs.",
       "file_type": "rationale",
       "source_file": "pipeline.py",
-      "source_location": "L142",
+      "source_location": "L172",
       "_origin": "ast",
-      "id": "pipeline_rationale_142",
+      "id": "pipeline_rationale_172",
       "community": 23,
       "norm_label": "run full pipeline: assets \u2192 heads \u2192 compilation. returns immutable outputs."
     },
@@ -3486,9 +3646,9 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_py_pipeline",
-      "confidence_score": 1.0
+      "target": "app_py_pipeline"
     },
     {
       "relation": "contains",
@@ -3621,17 +3781,6 @@
       "target": "infra_logging_log_terminal"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "app.py",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app",
-      "target": "openai"
-    },
-    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -3641,6 +3790,17 @@
       "confidence_score": 1.0,
       "source": "app",
       "target": "pipeline_pipeline"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app",
+      "target": "pipeline_videoinstance"
     },
     {
       "relation": "imports",
@@ -3698,6 +3858,16 @@
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "app.py",
+      "source_location": "L11",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "app_videoinstance",
+      "target": "pipeline_videoinstance"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "app.py",
       "source_location": "L15",
       "weight": 0.8,
       "confidence_score": 0.5,
@@ -3726,15 +3896,26 @@
       "target": "app_sync_instance_to_widgets"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_load_into_editor",
+      "target": "pipeline_videoinstance"
+    },
+    {
       "relation": "references",
       "context": "return_type",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_get_pipeline",
-      "target": "app_py_pipeline",
-      "confidence_score": 1.0
+      "target": "app_py_pipeline"
     },
     {
       "relation": "rationale_for",
@@ -3752,9 +3933,19 @@
       "source_file": "app.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "app_py_pipeline",
-      "target": "pipeline_pipeline",
-      "confidence_score": 0.5
+      "target": "pipeline_pipeline"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "app.py",
+      "source_location": "L11",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "app_py_pipeline",
+      "target": "pipeline_videoinstance"
     },
     {
       "relation": "contains",
@@ -3877,17 +4068,6 @@
       "target": "compositing_srt_save_srt"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "compiler.py",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compiler",
-      "target": "openai"
-    },
-    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -3981,9 +4161,9 @@
       "source_file": "compiler.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compiler_rationale_12",
-      "target": "compiler_compile_video_raw",
-      "confidence_score": 1.0
+      "target": "compiler_compile_video_raw"
     },
     {
       "relation": "uses",
@@ -4001,9 +4181,9 @@
       "source_file": "compiler.py",
       "source_location": "L3",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_transcriber",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "uses",
@@ -4011,9 +4191,9 @@
       "source_file": "compiler.py",
       "source_location": "L3",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_transcriber",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -4021,9 +4201,9 @@
       "source_file": "compiler.py",
       "source_location": "L2",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_transcriber",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "uses",
@@ -4041,9 +4221,9 @@
       "source_file": "compiler.py",
       "source_location": "L3",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_headdetector",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "uses",
@@ -4051,9 +4231,9 @@
       "source_file": "compiler.py",
       "source_location": "L3",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_headdetector",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -4061,9 +4241,9 @@
       "source_file": "compiler.py",
       "source_location": "L2",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compiler_py_headdetector",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "rationale_for",
@@ -4132,9 +4312,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "rationale_for",
@@ -4152,9 +4332,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "uses",
@@ -4162,9 +4342,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "uses",
@@ -4172,9 +4352,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "uses",
@@ -4192,9 +4372,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "imports",
@@ -4203,9 +4383,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "assets_ports_assetbundle",
-      "confidence_score": 1.0
+      "target": "assets_ports_assetbundle"
     },
     {
       "relation": "uses",
@@ -4213,7 +4393,17 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "assets_ports_assetbundle"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "assets_ports_assetbundle",
       "confidence_score": 0.5
     },
@@ -4223,9 +4413,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "method",
@@ -4304,9 +4494,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "uses",
@@ -4314,9 +4504,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "uses",
@@ -4324,9 +4514,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "uses",
@@ -4344,9 +4534,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 0.5
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "imports",
@@ -4355,9 +4545,9 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "assets_ports_assetprovider",
-      "confidence_score": 1.0
+      "target": "assets_ports_assetprovider"
     },
     {
       "relation": "uses",
@@ -4365,7 +4555,17 @@
       "source_file": "pipeline.py",
       "source_location": "L12",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "assets_ports_assetprovider"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "assets_ports_assetprovider",
       "confidence_score": 0.5
     },
@@ -4387,6 +4587,16 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "compositing_overlays_overlay",
+      "target": "protocol"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_scriptdecomposer",
       "target": "protocol"
     },
     {
@@ -4455,9 +4665,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 0.5
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "rationale_for",
@@ -4475,9 +4685,9 @@
       "source_file": "features/assets/replicate_provider.py",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "assets_replicate_provider_replicateassetprovider",
-      "target": "assetprovider",
-      "confidence_score": 1.0
+      "target": "assetprovider"
     },
     {
       "relation": "method",
@@ -4515,9 +4725,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 0.5
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "uses",
@@ -4525,9 +4735,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 0.5
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "uses",
@@ -4535,9 +4745,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 0.5
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "calls",
@@ -4566,9 +4776,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 0.5
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "imports",
@@ -4577,9 +4787,9 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "assets_replicate_provider_replicateassetprovider",
-      "confidence_score": 1.0
+      "target": "assets_replicate_provider_replicateassetprovider"
     },
     {
       "relation": "uses",
@@ -4587,9 +4797,29 @@
       "source_file": "pipeline.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "assets_replicate_provider_replicateassetprovider"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L13",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "assets_replicate_provider_replicateassetprovider",
       "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L11",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "assetprovider",
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "references",
@@ -4646,46 +4876,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L48",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor",
-      "target": "compositing_compositor_create_circular_timer_pil"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L64",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor",
-      "target": "compositing_compositor_create_dark_fantasy_gauge"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor",
-      "target": "compositing_compositor_create_styled_subtitle_pil"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L80",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor",
-      "target": "compositing_compositor_make_text_clip_exact"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
       "source_location": "L99",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -4699,8 +4889,19 @@
       "source_file": "features/compositing/compositor.py",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compositing_compositor",
-      "target": "compositing_heads_headdetector",
+      "target": "compositing_heads_headdetector"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "compositing_compositor",
+      "target": "compositing_overlays_gaugeoverlay",
       "confidence_score": 1.0
     },
     {
@@ -4711,8 +4912,41 @@
       "source_location": "L22",
       "weight": 1.0,
       "source": "compositing_compositor",
-      "target": "compositing_srt_save_srt",
+      "target": "compositing_overlays_nameplateoverlay",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "compositing_compositor",
+      "target": "compositing_overlays_subtitleoverlay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "compositing_compositor",
+      "target": "compositing_overlays_timeroverlay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "compositing_compositor",
+      "target": "compositing_srt_save_srt"
     },
     {
       "relation": "imports",
@@ -4721,9 +4955,9 @@
       "source_file": "features/compositing/compositor.py",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "compositing_compositor",
-      "target": "transcription_ports_transcriber",
-      "confidence_score": 1.0
+      "target": "transcription_ports_transcriber"
     },
     {
       "relation": "rationale_for",
@@ -4736,142 +4970,23 @@
       "target": "compositing_compositor"
     },
     {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L26",
-      "weight": 1.0,
-      "source": "compositing_compositor_create_styled_subtitle_pil",
-      "target": "features_compositing_compositor_py_imageclip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L253",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor_rawvideocompositor_compose",
-      "target": "compositing_compositor_create_styled_subtitle_pil"
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L48",
-      "weight": 1.0,
-      "source": "compositing_compositor_create_circular_timer_pil",
-      "target": "features_compositing_compositor_py_imageclip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "generic_arg",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L80",
-      "weight": 1.0,
-      "source": "compositing_compositor_make_text_clip_exact",
-      "target": "features_compositing_compositor_py_imageclip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L192",
-      "weight": 1.0,
-      "source": "compositing_compositor_rawvideocompositor_compose",
-      "target": "features_compositing_compositor_py_imageclip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L21",
-      "weight": 0.8,
-      "source": "features_compositing_compositor_py_imageclip",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L308",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor_rawvideocompositor_compose",
-      "target": "compositing_compositor_create_circular_timer_pil"
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L64",
-      "weight": 1.0,
-      "source": "compositing_compositor_create_dark_fantasy_gauge",
-      "target": "features_compositing_compositor_py_videoclip",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L313",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor_rawvideocompositor_compose",
-      "target": "compositing_compositor_create_dark_fantasy_gauge"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L21",
-      "weight": 0.8,
-      "source": "features_compositing_compositor_py_videoclip",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "features/compositing/compositor.py",
-      "source_location": "L164",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "compositing_compositor_rawvideocompositor_compose",
-      "target": "compositing_compositor_make_text_clip_exact"
-    },
-    {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L100",
+      "source_location": "L26",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "compositing_compositor_rationale_100",
+      "source": "compositing_compositor_rationale_26",
       "target": "compositing_compositor_rawvideocompositor"
     },
     {
@@ -4900,8 +5015,48 @@
       "source_file": "features/compositing/compositor.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "compositing_compositor_rawvideocompositor",
-      "target": "compositing_heads_headdetector",
+      "target": "compositing_heads_headdetector"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "compositing_compositor_rawvideocompositor",
+      "target": "compositing_overlays_gaugeoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "compositing_compositor_rawvideocompositor",
+      "target": "compositing_overlays_nameplateoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "compositing_compositor_rawvideocompositor",
+      "target": "compositing_overlays_subtitleoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "compositing_compositor_rawvideocompositor",
+      "target": "compositing_overlays_timeroverlay",
       "confidence_score": 0.5
     },
     {
@@ -4910,9 +5065,9 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "uses",
@@ -4920,9 +5075,9 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "uses",
@@ -4930,9 +5085,9 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "calls",
@@ -4961,9 +5116,9 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "imports",
@@ -4972,9 +5127,9 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 1.0
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "uses",
@@ -4982,9 +5137,19 @@
       "source_file": "pipeline.py",
       "source_location": "L11",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
-      "target": "compositing_compositor_rawvideocompositor",
-      "confidence_score": 0.5
+      "target": "compositing_compositor_rawvideocompositor"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L11",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "pipeline_videoinstance",
+      "target": "compositing_compositor_rawvideocompositor"
     },
     {
       "relation": "references",
@@ -5014,8 +5179,48 @@
       "source_file": "features/compositing/compositor.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "features_compositing_compositor_py_transcriber",
-      "target": "compositing_heads_headdetector",
+      "target": "compositing_heads_headdetector"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_transcriber",
+      "target": "compositing_overlays_gaugeoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_transcriber",
+      "target": "compositing_overlays_nameplateoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_transcriber",
+      "target": "compositing_overlays_subtitleoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_transcriber",
+      "target": "compositing_overlays_timeroverlay",
       "confidence_score": 0.5
     },
     {
@@ -5024,19 +5229,103 @@
       "source_file": "features/compositing/compositor.py",
       "source_location": "L21",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "features_compositing_compositor_py_headdetector",
-      "target": "compositing_heads_headdetector",
+      "target": "compositing_heads_headdetector"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_headdetector",
+      "target": "compositing_overlays_gaugeoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_headdetector",
+      "target": "compositing_overlays_nameplateoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_headdetector",
+      "target": "compositing_overlays_subtitleoverlay",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L22",
+      "weight": 0.8,
+      "source": "features_compositing_compositor_py_headdetector",
+      "target": "compositing_overlays_timeroverlay",
       "confidence_score": 0.5
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "features/compositing/compositor.py",
-      "source_location": "L107",
+      "source_location": "L43",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "compositing_compositor_rationale_107",
+      "source": "compositing_compositor_rationale_43",
       "target": "compositing_compositor_rawvideocompositor_compose"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L279",
+      "weight": 1.0,
+      "source": "compositing_compositor_rawvideocompositor_compose",
+      "target": "compositing_overlays_gaugeoverlay"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L118",
+      "weight": 1.0,
+      "source": "compositing_compositor_rawvideocompositor_compose",
+      "target": "compositing_overlays_nameplateoverlay"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L212",
+      "weight": 1.0,
+      "source": "compositing_compositor_rawvideocompositor_compose",
+      "target": "compositing_overlays_subtitleoverlay"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L273",
+      "weight": 1.0,
+      "source": "compositing_compositor_rawvideocompositor_compose",
+      "target": "compositing_overlays_timeroverlay"
     },
     {
       "relation": "calls",
@@ -5048,6 +5337,17 @@
       "weight": 1.0,
       "source": "compositing_compositor_rawvideocompositor_compose",
       "target": "compositing_srt_save_srt"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "features/compositing/compositor.py",
+      "source_location": "L151",
+      "weight": 1.0,
+      "source": "compositing_compositor_rawvideocompositor_compose",
+      "target": "imageclip"
     },
     {
       "relation": "contains",
@@ -5095,9 +5395,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "references",
@@ -5137,9 +5437,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "uses",
@@ -5147,9 +5447,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "uses",
@@ -5157,9 +5457,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "uses",
@@ -5177,9 +5477,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "imports",
@@ -5188,9 +5488,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "compositing_heads_headlayout",
-      "confidence_score": 1.0
+      "target": "compositing_heads_headlayout"
     },
     {
       "relation": "uses",
@@ -5198,7 +5498,17 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "compositing_heads_headlayout"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "compositing_heads_headlayout",
       "confidence_score": 0.5
     },
@@ -5208,9 +5518,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "inherits",
@@ -5248,9 +5558,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -5258,9 +5568,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -5268,9 +5578,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -5288,9 +5598,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "imports",
@@ -5299,9 +5609,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "compositing_heads_headdetector",
-      "confidence_score": 1.0
+      "target": "compositing_heads_headdetector"
     },
     {
       "relation": "uses",
@@ -5309,7 +5619,17 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "compositing_heads_headdetector"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "compositing_heads_headdetector",
       "confidence_score": 0.5
     },
@@ -5329,9 +5649,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "method",
@@ -5369,9 +5689,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "uses",
@@ -5379,9 +5699,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "uses",
@@ -5389,9 +5709,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "calls",
@@ -5420,9 +5740,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 0.5
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "imports",
@@ -5431,9 +5751,9 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "compositing_heads_groundingdinoheaddetector",
-      "confidence_score": 1.0
+      "target": "compositing_heads_groundingdinoheaddetector"
     },
     {
       "relation": "uses",
@@ -5441,7 +5761,17 @@
       "source_file": "pipeline.py",
       "source_location": "L10",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "compositing_heads_groundingdinoheaddetector"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "compositing_heads_groundingdinoheaddetector",
       "confidence_score": 0.5
     },
@@ -5543,7 +5873,7 @@
       "source_location": "L12",
       "weight": 1.0,
       "source": "compositing_overlays_overlay_to_clip",
-      "target": "features_compositing_overlays_py_imageclip",
+      "target": "imageclip",
       "confidence_score": 1.0
     },
     {
@@ -5554,7 +5884,7 @@
       "source_location": "L12",
       "weight": 1.0,
       "source": "compositing_overlays_overlay_to_clip",
-      "target": "features_compositing_overlays_py_videoclip",
+      "target": "videoclip",
       "confidence_score": 1.0
     },
     {
@@ -5575,7 +5905,7 @@
       "source_location": "L125",
       "weight": 1.0,
       "source": "compositing_overlays_nameplateoverlay_to_clip",
-      "target": "features_compositing_overlays_py_imageclip",
+      "target": "imageclip",
       "confidence_score": 1.0
     },
     {
@@ -5586,7 +5916,7 @@
       "source_location": "L26",
       "weight": 1.0,
       "source": "compositing_overlays_subtitleoverlay_to_clip",
-      "target": "features_compositing_overlays_py_imageclip",
+      "target": "imageclip",
       "confidence_score": 1.0
     },
     {
@@ -5597,7 +5927,7 @@
       "source_location": "L64",
       "weight": 1.0,
       "source": "compositing_overlays_timeroverlay_to_clip",
-      "target": "features_compositing_overlays_py_imageclip",
+      "target": "imageclip",
       "confidence_score": 1.0
     },
     {
@@ -5608,7 +5938,7 @@
       "source_location": "L90",
       "weight": 1.0,
       "source": "compositing_overlays_gaugeoverlay_to_clip",
-      "target": "features_compositing_overlays_py_videoclip",
+      "target": "videoclip",
       "confidence_score": 1.0
     },
     {
@@ -5795,6 +6125,293 @@
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
+      "source_file": "features/scripting/__init__.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_init_rationale_1",
+      "target": "scripting_init"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "scripting_openai_decomposer",
+      "target": "features_scripting_openai_decomposer_py_openai",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer",
+      "target": "scripting_ports"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer",
+      "target": "scripting_ports_scriptdecomposer"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_rationale_1",
+      "target": "scripting_openai_decomposer"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer_decompose"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer_init"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer",
+      "target": "scripting_ports_scriptdecomposer"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_rationale_12",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer_init",
+      "target": "features_scripting_openai_decomposer_py_openai",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_rationale_15",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer_init"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "source": "features_scripting_openai_decomposer_py_openai",
+      "target": "scripting_ports_scriptdecomposer",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "source": "features_scripting_openai_decomposer_py_openai",
+      "target": "scripting_ports_scriptdecomposition",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_openaiscriptdecomposer_decompose",
+      "target": "scriptdecomposition"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_openai_decomposer_rationale_31",
+      "target": "scripting_openai_decomposer_openaiscriptdecomposer_decompose"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "scriptdecomposition",
+      "target": "scripting_ports_scriptdecomposer"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "features/scripting/openai_decomposer.py",
+      "source_location": "L8",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "scriptdecomposition",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports",
+      "target": "scripting_ports_scriptdecomposer"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_rationale_1",
+      "target": "scripting_ports"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_rationale_9",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_scriptdecomposer_decompose",
+      "target": "scripting_ports_scriptdecomposition"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_rationale_19",
+      "target": "scripting_ports_scriptdecomposer"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_scriptdecomposer",
+      "target": "scripting_ports_scriptdecomposer_decompose"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "features/scripting/ports.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripting_ports_rationale_22",
+      "target": "scripting_ports_scriptdecomposer_decompose"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
       "source_file": "features/transcription/__init__.py",
       "source_location": "L1",
       "weight": 1.0,
@@ -5849,9 +6466,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L3",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "openai",
-      "target": "transcription_ports_cue"
+      "source": "features_transcription_whisper_py_openai",
+      "target": "transcription_ports_cue",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -5911,9 +6528,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L3",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "openai",
-      "target": "transcription_ports_transcription"
+      "source": "features_transcription_whisper_py_openai",
+      "target": "transcription_ports_transcription",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -5993,9 +6610,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L3",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "openai",
-      "target": "transcription_ports_transcriber"
+      "source": "features_transcription_whisper_py_openai",
+      "target": "transcription_ports_transcriber",
+      "confidence_score": 0.5
     },
     {
       "relation": "imports",
@@ -6004,9 +6621,9 @@
       "source_file": "pipeline.py",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "transcription_ports_transcriber",
-      "confidence_score": 1.0
+      "target": "transcription_ports_transcriber"
     },
     {
       "relation": "uses",
@@ -6074,6 +6691,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "features/transcription/whisper.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "transcription_whisper",
+      "target": "features_transcription_whisper_py_openai",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "features/transcription/whisper.py",
       "source_location": "L4",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -6087,20 +6715,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L4",
       "weight": 1.0,
-      "source": "transcription_whisper",
-      "target": "infra_logging_log_terminal",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "features/transcription/whisper.py",
-      "source_location": "L2",
-      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "transcription_whisper",
-      "target": "openai"
+      "target": "infra_logging_log_terminal"
     },
     {
       "relation": "contains",
@@ -6118,9 +6735,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "assetbundle",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "uses",
@@ -6128,9 +6745,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "headlayout",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "uses",
@@ -6138,9 +6755,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_compiledvideo",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "uses",
@@ -6148,9 +6765,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_pipeline",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "calls",
@@ -6179,9 +6796,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_headdetector",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 0.5
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "imports",
@@ -6190,9 +6807,9 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "transcription_whisper_whispertranscriber",
-      "confidence_score": 1.0
+      "target": "transcription_whisper_whispertranscriber"
     },
     {
       "relation": "uses",
@@ -6200,7 +6817,17 @@
       "source_file": "pipeline.py",
       "source_location": "L9",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "pipeline_py_transcriber",
+      "target": "transcription_whisper_whispertranscriber"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "pipeline.py",
+      "source_location": "L9",
+      "weight": 0.8,
+      "source": "pipeline_videoinstance",
       "target": "transcription_whisper_whispertranscriber",
       "confidence_score": 0.5
     },
@@ -6220,9 +6847,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "transcription_whisper_whispertranscriber",
-      "target": "transcriber",
-      "confidence_score": 1.0
+      "target": "transcriber"
     },
     {
       "relation": "method",
@@ -6262,9 +6889,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L10",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "transcription_whisper_whispertranscriber_init",
-      "target": "openai"
+      "target": "features_transcription_whisper_py_openai",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -6273,9 +6900,9 @@
       "source_file": "features/transcription/whisper.py",
       "source_location": "L16",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "transcription_whisper_whispertranscriber_transcribe",
-      "target": "openai"
+      "target": "features_transcription_whisper_py_openai",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -6368,9 +6995,9 @@
       "source_file": "pipeline.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "infra_download",
-      "confidence_score": 1.0
+      "target": "infra_download"
     },
     {
       "relation": "calls",
@@ -6401,9 +7028,9 @@
       "source_file": "pipeline.py",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "infra_download_download_file",
-      "confidence_score": 1.0
+      "target": "infra_download_download_file"
     },
     {
       "relation": "contains",
@@ -6464,9 +7091,9 @@
       "source_file": "pipeline.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "pipeline_compiledvideo",
-      "confidence_score": 1.0
+      "target": "pipeline_compiledvideo"
     },
     {
       "relation": "contains",
@@ -6474,9 +7101,19 @@
       "source_file": "pipeline.py",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_py_pipeline",
-      "target": "pipeline_pipeline",
-      "confidence_score": 1.0
+      "target": "pipeline_pipeline"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pipeline_py_pipeline",
+      "target": "pipeline_videoinstance"
     },
     {
       "relation": "rationale_for",
@@ -6484,9 +7121,41 @@
       "source_file": "pipeline.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_rationale_1",
-      "target": "pipeline_py_pipeline",
-      "confidence_score": 1.0
+      "target": "pipeline_py_pipeline"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline.py",
+      "source_location": "L128",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pipeline_pipeline_compile_video",
+      "target": "pipeline_videoinstance"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline.py",
+      "source_location": "L188",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pipeline_pipeline_produce",
+      "target": "pipeline_videoinstance"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pipeline_rationale_19",
+      "target": "pipeline_videoinstance"
     },
     {
       "relation": "references",
@@ -6518,6 +7187,16 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "pipeline_rationale_19",
+      "target": "pipeline_compiledvideo"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pipeline_rationale_33",
       "target": "pipeline_compiledvideo"
     },
     {
@@ -6574,10 +7253,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L26",
+      "source_location": "L40",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pipeline_rationale_26",
+      "source": "pipeline_rationale_40",
       "target": "pipeline_pipeline"
     },
     {
@@ -6585,7 +7264,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L28",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "pipeline_pipeline_init",
       "target": "pipeline_py_assetprovider",
@@ -6598,9 +7277,9 @@
       "source_file": "pipeline.py",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_pipeline_init",
-      "target": "pipeline_py_headdetector",
-      "confidence_score": 1.0
+      "target": "pipeline_py_headdetector"
     },
     {
       "relation": "references",
@@ -6609,9 +7288,9 @@
       "source_file": "pipeline.py",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pipeline_pipeline_init",
-      "target": "pipeline_py_transcriber",
-      "confidence_score": 1.0
+      "target": "pipeline_py_transcriber"
     },
     {
       "relation": "references",
@@ -6639,10 +7318,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L48",
+      "source_location": "L62",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pipeline_rationale_48",
+      "source": "pipeline_rationale_62",
       "target": "pipeline_pipeline_generate_assets"
     },
     {
@@ -6682,10 +7361,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L104",
+      "source_location": "L118",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pipeline_rationale_104",
+      "source": "pipeline_rationale_118",
       "target": "pipeline_pipeline_detect_heads"
     },
     {
@@ -6714,20 +7393,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L117",
+      "source_location": "L129",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pipeline_rationale_117",
+      "source": "pipeline_rationale_129",
       "target": "pipeline_pipeline_compile_video"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "pipeline.py",
-      "source_location": "L142",
+      "source_location": "L172",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pipeline_rationale_142",
+      "source": "pipeline_rationale_172",
       "target": "pipeline_pipeline_produce"
     },
     {
@@ -8574,5 +9253,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "a464712a95761c44dcfca2309e7185468b6ce648"
+  "built_at_commit": "f2bff50af9aae41bdde02d68af16354318d39d51"
 }
