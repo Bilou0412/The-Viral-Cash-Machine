@@ -1,0 +1,1 @@
+"""Script decomposition feature."""

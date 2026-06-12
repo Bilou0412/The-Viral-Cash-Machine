@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from infra.download import download_file
 from infra.env import save_key_to_env
-from pipeline import Pipeline
+from pipeline import Pipeline, VideoInstance
 
 # Load environment variables
 load_dotenv()
@@ -408,8 +408,30 @@ if replicate_api_token:
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
             try:
                 with st.spinner("🎬 Running MoviePy..."):
+                    # Load metadata to get head positions
+                    project_dir = os.path.join("exports", project_name, inst.id)
+                    meta_path = os.path.join(project_dir, "metadata.json")
+                    if not os.path.exists(meta_path):
+                        raise FileNotFoundError(f"metadata.json not found at {meta_path}")
+
+                    with open(meta_path, "r", encoding="utf-8") as f:
+                        meta = json.load(f)
+
+                    # Create immutable VideoInstance from metadata
+                    video_instance = VideoInstance(
+                        project_name=project_name,
+                        instance_id=inst.id,
+                        char_left_name=meta.get("char_left_name", "Unknown"),
+                        char_right_name=meta.get("char_right_name", "Unknown"),
+                        head_l_x=meta.get("head_l_x", 0.25),
+                        head_l_y=meta.get("head_l_y", 0.40),
+                        head_r_x=meta.get("head_r_x", 0.75),
+                        head_r_y=meta.get("head_r_y", 0.40),
+                    )
+
+                    # Compile video with immutable instance
                     pipeline = get_pipeline()
-                    compiled_video = pipeline.compile_video(project_name, inst.id)
+                    compiled_video = pipeline.compile_video(video_instance)
                 st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
             except Exception as e:
@@ -502,9 +524,23 @@ if replicate_api_token:
                             st.rerun()
                         if p_col_2.button("🎞️ Compile Final Video", use_container_width=True):
                             with st.spinner("🎬 Compiling..."):
-                                out_path = compile_video(sel_proj, sel_inst)
-                                if "Error" in out_path: st.error(out_path)
-                                else: st.success(f"✅ Video ready: {out_path}")
+                                try:
+                                    # Create immutable VideoInstance from metadata
+                                    video_instance = VideoInstance(
+                                        project_name=sel_proj,
+                                        instance_id=sel_inst,
+                                        char_left_name=meta_data.get("char_left_name", "Unknown"),
+                                        char_right_name=meta_data.get("char_right_name", "Unknown"),
+                                        head_l_x=meta_data.get("head_l_x", 0.25),
+                                        head_l_y=meta_data.get("head_l_y", 0.40),
+                                        head_r_x=meta_data.get("head_r_x", 0.75),
+                                        head_r_y=meta_data.get("head_r_y", 0.40),
+                                    )
+                                    pipeline = get_pipeline()
+                                    compiled_video = pipeline.compile_video(video_instance)
+                                    st.success(f"✅ Video ready: {compiled_video.output_path}")
+                                except Exception as e:
+                                    st.error(f"Error: {e}")
 
     # Simplified other modes
     elif mode == "📝 Script":

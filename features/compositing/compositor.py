@@ -1,6 +1,5 @@
 """Video composition orchestration."""
 
-import json
 import os
 import sys
 import numpy as np
@@ -20,80 +19,7 @@ from moviepy.video.fx import Resize
 from features.transcription.ports import Transcriber
 from features.compositing.heads import HeadDetector
 from features.compositing.srt import save_srt
-
-
-# Overlay creation functions (temporary - will become Overlay classes in future steps)
-def create_styled_subtitle_pil(text: str, fontsize: int, duration: float, font_path: str = "assets/montserrat.bold.ttf") -> ImageClip:
-    try:
-        font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
-    except:
-        font = ImageFont.load_default()
-    left, top, right, bottom = font.getbbox(text)
-    tw, th = right - left, bottom - top
-    px, py = int(fontsize * 0.35), int(fontsize * 0.2)
-    img_w, img_h = tw + 2 * px, th + 2 * py
-    img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.rounded_rectangle([0, 0, img_w, img_h], radius=int(fontsize * 0.2), fill=(0, 0, 0, 140))
-    tx, ty = px - left, py - top
-    sw = 4
-    for dx in range(-sw, sw + 1):
-        for dy in range(-sw, sw + 1):
-            if dx**2 + dy**2 <= sw**2:
-                draw.text((tx + dx, ty + dy), text, font=font, fill=(0, 0, 0, 255))
-    draw.text((tx, ty), text, font=font, fill=(255, 255, 255, 255))
-    return ImageClip(np.array(img)).with_duration(duration)
-
-
-def create_circular_timer_pil(label: str, fontsize: int, size: float, duration: float, font_path: str = "assets/Minecraft.ttf") -> ImageClip:
-    img_size = int(size)
-    img = Image.new("RGBA", (img_size, img_size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.ellipse([5, 5, img_size - 5, img_size - 5], fill=(0, 0, 0, 220), outline="white", width=6)
-    try:
-        font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
-    except:
-        font = ImageFont.load_default()
-    left, top, right, bottom = font.getbbox(label)
-    tw, th = right - left, bottom - top
-    tx, ty = (img_size - tw) // 2 - left, (img_size - th) // 2 - top
-    draw.text((tx, ty), label, font=font, fill="white")
-    return ImageClip(np.array(img)).with_duration(duration)
-
-
-def create_dark_fantasy_gauge(w: float, duration: float) -> VideoClip:
-    gauge_w, gauge_h = int(w * 0.8), 60
-    def make_frame(t: float) -> np.ndarray:
-        progress = max(0, 1.0 - (t / duration))
-        img = Image.new("RGBA", (gauge_w, gauge_h), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        draw.rectangle([0, 0, gauge_w, gauge_h], outline=(120, 120, 120), width=4)
-        draw.rectangle([4, 4, gauge_w - 4, gauge_h - 4], fill=(20, 5, 5))
-        if progress > 0:
-            fill_w = int((gauge_w - 8) * progress)
-            draw.rectangle([4, 4, 4 + fill_w, gauge_h - 4], fill=(160, 0, 0))
-            draw.rectangle([4, 4, 4 + fill_w, gauge_h - 40], fill=(255, 50, 50, 100))
-        return np.array(img)
-    return VideoClip(make_frame, duration=duration)
-
-
-def _make_text_clip_exact(text: str, fsize: int, color: str, duration: float, font_path: str, stroke_w: int = 4) -> tuple[ImageClip, int, int]:
-    try:
-        font = ImageFont.truetype(os.path.abspath(font_path), int(fsize))
-    except:
-        font = ImageFont.load_default()
-    l, t, r, b = font.getbbox(text)
-    tw, th = r - l, b - t
-    sw = int(stroke_w)
-    img_w, img_h = tw + 2 * sw + 10, th + 2 * sw + 10
-    img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    tx, ty = sw + 5 - l, sw + 5 - t
-    if sw > 0:
-        for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            draw.text((tx + dx * sw, ty + dy * sw), text, font=font, fill="black")
-    draw.text((tx, ty), text, font=font, fill=color)
-    return ImageClip(np.array(img)).with_duration(duration), img_w, img_h
+from features.compositing.overlays import SubtitleOverlay, TimerOverlay, GaugeOverlay, NameplateOverlay
 
 
 class RawVideoCompositor:
@@ -103,8 +29,32 @@ class RawVideoCompositor:
         self.transcriber = transcriber
         self.head_detector = head_detector
 
-    def compose(self, project_name: str, instance_id: str) -> str:
-        """Compose raw video from assets and metadata."""
+    def compose(
+        self,
+        project_name: str,
+        instance_id: str,
+        char_left_name: str,
+        char_right_name: str,
+        head_l_x: float,
+        head_l_y: float,
+        head_r_x: float,
+        head_r_y: float,
+    ) -> str:
+        """Compose raw video from assets with immutable parameters.
+
+        Args:
+            project_name: Project directory name
+            instance_id: Instance directory name
+            char_left_name: Left character name
+            char_right_name: Right character name
+            head_l_x: Left head x position (0-1)
+            head_l_y: Left head y position (0-1)
+            head_r_x: Right head x position (0-1)
+            head_r_y: Right head y position (0-1)
+
+        Returns:
+            Path to final_video.mp4
+        """
         print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")
 
         project_dir = os.path.join("exports", project_name, instance_id)
@@ -112,33 +62,21 @@ class RawVideoCompositor:
             "video": os.path.join(project_dir, "video.mp4"),
             "image": os.path.join(project_dir, "base_image.png"),
             "narrator": os.path.join(project_dir, "narrator.mp3"),
-            "metadata": os.path.join(project_dir, "metadata.json"),
             "output": os.path.join(project_dir, "final_video.mp4"),
             "tick": os.path.join("assets", "tick.wav"),
             "beep": os.path.join("assets", "final.wav"),
         }
 
-        if not os.path.exists(paths["video"]) or not os.path.exists(
-            paths["metadata"]
-        ):
+        if not os.path.exists(paths["video"]):
             raise FileNotFoundError("Assets manquants.")
 
-        with open(paths["metadata"], "r", encoding="utf-8") as f:
-            meta = json.load(f)
-
-        # Detect heads if needed
-        if os.path.exists(paths["image"]):
-            hx, hy = meta.get("head_l_x"), meta.get("head_l_y")
-            if hx is None or (hx == 0.25 and hy == 0.40):
-                head_layout = self.head_detector.detect(paths["image"], project_dir)
-                meta["head_l_x"], meta["head_l_y"] = head_layout.left
-                meta["head_r_x"], meta["head_r_y"] = head_layout.right
-                with open(paths["metadata"], "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=4)
+        # Use immutable parameters
+        hl_x, hl_y = head_l_x, head_l_y
+        hr_x, hr_y = head_r_x, head_r_y
+        name_l = char_left_name.upper()
+        name_r = char_right_name.upper()
 
         # Transcribe and save subtitles
-        name_l = meta.get("char_left_name", "").upper()
-        name_r = meta.get("char_right_name", "").upper()
         char_audio = os.path.join(project_dir, "character.mp3")
         if not os.path.exists(char_audio):
             char_audio = paths["video"]
@@ -158,19 +96,36 @@ class RawVideoCompositor:
         video_clip = VideoFileClip(paths["video"])
         w, h = video_clip.size
 
-        # Create nameplate clips
+        # Create nameplate clips via Overlay classes
         NAME_FSIZE = 50
         font_p = "assets/Minecraft.ttf"
-        lbl_l_exact, tw_l, th_l = _make_text_clip_exact(
-            name_l, NAME_FSIZE, "white", 99, font_p, stroke_w=3
+
+        # Helper to get dimensions from a NameplateOverlay
+        def get_nameplate_dims(text: str, fsize: int, color: str, font_path: str, stroke_w: int) -> tuple[int, int]:
+            """Extract width and height from nameplate overlay rendering."""
+            try:
+                font = ImageFont.truetype(os.path.abspath(font_path), int(fsize))
+            except:
+                font = ImageFont.load_default()
+            l, t, r, b = font.getbbox(text)
+            tw, th = r - l, b - t
+            sw = int(stroke_w)
+            return tw + 2 * sw + 10, th + 2 * sw + 10
+
+        tw_l, th_l = get_nameplate_dims(name_l, NAME_FSIZE, "white", font_p, 3)
+        tw_r, th_r = get_nameplate_dims(name_r, NAME_FSIZE, "white", font_p, 3)
+
+        lbl_l_overlay = NameplateOverlay(
+            text=name_l, fontsize=NAME_FSIZE, color="white", duration=99,
+            font_path=font_p, stroke_width=3, pos=(0, 0)
         )
-        lbl_r_exact, tw_r, th_r = _make_text_clip_exact(
-            name_r, NAME_FSIZE, "white", 99, font_p, stroke_w=3
+        lbl_r_overlay = NameplateOverlay(
+            text=name_r, fontsize=NAME_FSIZE, color="white", duration=99,
+            font_path=font_p, stroke_width=3, pos=(0, 0)
         )
 
         # Calculate nameplate positions
-        hl_x, hl_y = meta.get("head_l_x", 0.25), meta.get("head_l_y", 0.40)
-        hr_x, hr_y = meta.get("head_r_x", 0.75), meta.get("head_r_y", 0.40)
+        # (hl_x, hl_y, hr_x, hr_y already set from parameters)
         V_OFFSET = 60
         pos_l_x, pos_l_y = int(hl_x * w - tw_l / 2), int(hl_y * h - th_l - V_OFFSET)
         pos_r_x, pos_r_y = int(hr_x * w - tw_r / 2), int(hr_y * h - th_r - V_OFFSET)
@@ -181,6 +136,10 @@ class RawVideoCompositor:
             5, min(h - th_r - 5, pos_r_y)
         )
         POS_L, POS_R = (pos_l_x, pos_l_y), (pos_r_x, pos_r_y)
+
+        # Render nameplate clips from overlays
+        lbl_l_exact = lbl_l_overlay.to_clip((w, h))
+        lbl_r_exact = lbl_r_overlay.to_clip((w, h))
 
         # Prepare background images
         if os.path.exists(paths["image"]):
@@ -250,9 +209,12 @@ class RawVideoCompositor:
         char_subs = []
         for s in char_subs_raw:
             if s["start"] < vid_dur:
-                badge = create_styled_subtitle_pil(
-                    s["text"].upper(), 72, min(s["end"], vid_dur) - s["start"]
+                subtitle_overlay = SubtitleOverlay(
+                    text=s["text"].upper(),
+                    fontsize=72,
+                    duration=min(s["end"], vid_dur) - s["start"]
                 )
+                badge = subtitle_overlay.to_clip((w, h))
                 char_subs.append(
                     badge.with_start(s["start"]).with_position(
                         ("center", 0.78 * h)
@@ -281,9 +243,12 @@ class RawVideoCompositor:
             narr_subs = []
             for s in narr_subs_raw:
                 if s["start"] < narr_dur:
-                    badge = create_styled_subtitle_pil(
-                        s["text"].upper(), 72, min(s["end"], narr_dur) - s["start"]
+                    subtitle_overlay = SubtitleOverlay(
+                        text=s["text"].upper(),
+                        fontsize=72,
+                        duration=min(s["end"], narr_dur) - s["start"]
                     )
+                    badge = subtitle_overlay.to_clip((w, h))
                     narr_subs.append(
                         badge.with_start(s["start"]).with_position(
                             ("center", 0.78 * h)
@@ -305,12 +270,14 @@ class RawVideoCompositor:
             choice_bg = blur_bg_with_names.with_duration(CHOICE_DUR)
             timer_size = 230
             countdown = [
-                create_circular_timer_pil(label, 160, timer_size, T_STEP)
+                TimerOverlay(label=label, fontsize=160, size=timer_size, duration=T_STEP)
+                .to_clip((w, h))
                 .with_start(i * T_STEP)
                 .with_position(("center", "center"))
                 for i, label in enumerate(["3", "2", "1"])
             ]
-            dark_gauge = create_dark_fantasy_gauge(w, CHOICE_DUR).with_position(
+            gauge_overlay = GaugeOverlay(width=w, duration=CHOICE_DUR)
+            dark_gauge = gauge_overlay.to_clip((w, h)).with_position(
                 ("center", int(0.65 * h))
             )
             choice_audio_el = []

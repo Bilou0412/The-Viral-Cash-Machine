@@ -15,6 +15,20 @@ from infra.download import download_file
 
 
 @dataclass(frozen=True)
+class VideoInstance:
+    """Immutable video instance with all composition parameters."""
+
+    project_name: str
+    instance_id: str
+    char_left_name: str
+    char_right_name: str
+    head_l_x: float
+    head_l_y: float
+    head_r_x: float
+    head_r_y: float
+
+
+@dataclass(frozen=True)
 class CompiledVideo:
     """Compiled video output."""
 
@@ -111,12 +125,26 @@ class Pipeline:
 
         return self.head_detector.detect(image_path, project_dir)
 
-    def compile_video(
-        self, project_name: str, instance_id: str
-    ) -> CompiledVideo:
-        """Compile final video. Returns immutable CompiledVideo."""
+    def compile_video(self, video_instance: VideoInstance) -> CompiledVideo:
+        """Compile final video from immutable instance parameters.
+
+        Args:
+            video_instance: Immutable VideoInstance with all composition parameters
+
+        Returns:
+            Immutable CompiledVideo with output path and duration
+        """
         compositor = RawVideoCompositor(self.transcriber, self.head_detector)
-        output_path = compositor.compose(project_name, instance_id)
+        output_path = compositor.compose(
+            video_instance.project_name,
+            video_instance.instance_id,
+            video_instance.char_left_name,
+            video_instance.char_right_name,
+            video_instance.head_l_x,
+            video_instance.head_l_y,
+            video_instance.head_r_x,
+            video_instance.head_r_y,
+        )
 
         # Get duration from output video
         try:
@@ -133,6 +161,8 @@ class Pipeline:
         self,
         project_name: str,
         instance_id: str,
+        char_left_name: str,
+        char_right_name: str,
         video_prompt: str,
         freeze_image_prompt: str,
         character_speech: str,
@@ -154,7 +184,17 @@ class Pipeline:
         # Stage 2: Detect heads
         head_layout = self.detect_heads(project_name, instance_id)
 
-        # Stage 3: Compile video
-        compiled_video = self.compile_video(project_name, instance_id)
+        # Stage 3: Compile video with immutable VideoInstance
+        video_instance = VideoInstance(
+            project_name=project_name,
+            instance_id=instance_id,
+            char_left_name=char_left_name,
+            char_right_name=char_right_name,
+            head_l_x=head_layout.left[0],
+            head_l_y=head_layout.left[1],
+            head_r_x=head_layout.right[0],
+            head_r_y=head_layout.right[1],
+        )
+        compiled_video = self.compile_video(video_instance)
 
         return asset_bundle, head_layout, compiled_video
