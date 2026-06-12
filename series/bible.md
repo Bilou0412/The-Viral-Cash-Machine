@@ -224,5 +224,115 @@ L'identité vit dans des **fichiers de référence**, pas dans des descriptions.
 
 ---
 
+## 13. Les caricatures — fiches physiques canoniques
+
+> Principe : **la silhouette raconte le personnage avant qu'il parle.**
+> Chaque perso a SA forme, SA couleur, SON accessoire. Reconnaissable en 0,3 s.
+> Règle de génération : décrire la TECHNIQUE, jamais une franchise.
+> Interdit : lumière dorée chaleureuse + grands yeux (tue le deadpan).
+
+### Rendu officiel ✅ (v2 — corrigé après feedback auteur)
+**Réalisme stylisé adulte, veine Arcane** : proportions et structure faciale
+RÉALISTES (des adultes de 25 ans, pas des personnages mignons), textures
+peintes à la main, coups de pinceau visibles, trame légère, palette
+neutre-froide, lumière naturelle dramatique mais sobre.
+**Interdits** : yeux surdimensionnés, rondeurs Pixar, peau lisse parfaite,
+look « dessin animé enfant ». (Référence interne : `da-tests/sam-hybride.png`.)
+
+**Règle des imperfections** : chaque visage porte 2–3 défauts qui font son
+charme — dents légèrement de travers, barbe clairsemée de mec de 25 ans,
+cicatrices d'acné, cernes vraies, nez pas droit, oreilles décollées, frisottis,
+lèvres gercées, ongles rongés. La perfection tue l'identification (loi 1 :
+hyper-spécificité — ça vaut aussi pour les visages).
+
+### Âges, types et imperfections (canon v2)
+- **Téo, 24** — Français rural (Massif central). Peau hâlée par le dehors,
+  taches de rousseur, dents du bonheur légères dans un sourire franc, oreilles
+  un peu décollées, coupe « coiffeur du village » ratée aux pattes.
+- **Sam, 26** — Franco-algérien. Buzz cut à la ligne nette, barbe courte
+  taillée au millimètre, cernes creusées permanentes, nez busqué légèrement
+  dévié, petites cicatrices d'acné sur les joues.
+- **Nabil, 25** — Franco-marocain. Boucles avec frisottis, **barbe clairsemée
+  qui ne se connecte pas** (la barbe de 25 ans), sourcils épais presque
+  joints, cernes légères, ongles rongés, col de chemise jamais net.
+- **Jimmy, 26** — Français, bronzage limite artificiel. Banane gélifiée qui
+  commence DÉJÀ à se dégarnir aux tempes, sourire trop blanc un poil trop
+  grand, irritation de rasoir dans le cou, fine pellicule de sueur d'effort
+  permanent. Son imperfection : l'effort se voit.
+- **Inès, 25** — Franco-tunisienne. Chignon qui fuit en mèches folles, cernes
+  douces et vraies (PAS des coquards), lèvres gercées, ongles rongés sur le
+  thermos, tache de café sur le hoodie.
+- **Léna, 25** — Métisse franco-sénégalaise. **Petit écart entre les dents de
+  devant — son charme signature**, baby hairs qui s'échappent, taches de
+  rousseur claires, cardigan crème un peu bouloché (la perfection vécue,
+  pas neuve).
+- **Pierre-Édouard, 52** — Français. Front trop lisse pour son âge (botox)
+  mais pattes d'oie, dents trop blanches, léger embonpoint sous le blazer,
+  marque de bronzage des lunettes de soleil.
+
+### TÉO — formes RONDES, couleur VERT/TERRE
+Carrure de ferme : épaules larges, joues pleines et colorées, sourcils épais.
+Coupe courte pratique « coiffeur du village ». Polaire ou polo trop propre
+acheté exprès pour Paris, pantalon un poil trop court, chaussettes de sport
+blanches. **Accessoire** : sac à dos porté sur LES DEUX épaules + écharpe du
+club de foot de son bled. **Expression canonique** : sourire ouvert, yeux
+légèrement dépassés par les événements. **Décor** : chambre aux sacs Ikea.
+
+### SAM — silhouette VERTICALE, couleur NOIR
+Grand, sec, posture impeccable. **Dé-Milesé** : crâne dégradé court (buzz/fade)
++ barbe courte entretenue au millimètre. Paupières mi-closes permanentes.
+**L'uniforme** : sept hoodies noirs identiques (la caricature de son
+organisation — même tenue chaque jour), claquettes-chaussettes à la coloc.
+**Accessoire** : casque autour du cou + un tupperware à la main. Gestes lents,
+économes. **Expression canonique** : deadpan absolu — il a déjà répondu dans sa
+tête et a décidé que ça ne valait pas la peine. **Décor** : son coin, étagère
+de meal preps.
+
+### NABIL — silhouette PENCHÉE EN AVANT, couleur BLEU-GRIS
+Taille moyenne, boucles en bataille (à force d'y passer les mains), cernes
+légères, sourcils ultra-expressifs — le visage qui pense trop fort. Vêtements
+en couches qui ne tranchent pas : chemise ouverte sur t-shirt (entre formel et
+casual = incapable de choisir, même vestimentairement). **Accessoire** : tote
+bag débordant de bouquins + téléphone à 14 onglets en main. **Expression
+canonique** : sourcils froncés, bouche entrouverte — sur le point de poser une
+question. **Décor** : bureau chaos organisé, piles de livres, double écran.
+
+### JIMMY — silhouette EN V, couleur MARINE + BLANC ÉCLATANT
+Coiffé-gélifié frais du barbier, sourire de pitch permanent, sourcils en
+position « opportunité ». **L'uniforme startup** : doudoune SANS MANCHES sur
+chemise, sneakers blanches immaculées, montre connectée. **Accessoire** :
+AirPods vissés en permanence (même quand tu lui parles) + téléphone tenu comme
+un micro. **Expression canonique** : sourire 100 % confiance, regard déjà sur
+le prochain truc. **Décor** : devant un whiteboard couvert de flèches.
+
+### INÈS — silhouette COMPACTE, couleur BORDEAUX
+Petite mais dense — de l'énergie comprimée. Chignon serré à la va-vite (pas le
+temps), cernes portées comme des médailles, hoodie XXL de l'école dans lequel
+elle dort au cluster, baskets usées jusqu'à la trame. **Accessoire** : thermos
+de café géant + tour de cou avec son badge d'accès. **Expression canonique** :
+épuisée mais le petit sourire en coin de celle qui ne lâchera JAMAIS. **Décor** :
+le cluster, rangées d'ordis, canettes d'energy drink.
+
+### LÉNA — la SEULE silhouette CLAIRE du cast, couleur CRÈME/JAUNE PÂLE
+Fonction visuelle : le rayon de soleil — tout le cast est sombre, elle est
+lumineuse. Soignée sans effort : cardigan pastel, cheveux simples parfaits,
+posture détendue. **Accessoire** : une plante ou un carnet propre — son monde
+est en ordre. **Expression canonique** : sourire chaleureux sincère, regard
+direct et calme. **Décor** : coin lumineux et rangé, plantes vertes.
+
+### PIERRE-ÉDOUARD — silhouette TED-TALK, couleur GRIS BLAZER
+La cinquantaine entretenue, tempes grises parfaites, léger bronzage permanent.
+**LA caricature** : blazer sur t-shirt de l'école, sneakers blanches « pour
+rester jeune », badge lanyard. Posture conférence : mains en triangle.
+**Expression canonique** : sourire corporate à 40 000 € de media training.
+**Décor** : hall de l'école, poufs colorés, néon avec slogan creux.
+
+### Palette d'ensemble
+Cast sombre (noir/marine/bleu-gris/bordeaux/terre) + UNE tache claire (Léna)
++ UN costume d'adulte (P-E). Dans n'importe quel plan de groupe, chacun est
+identifiable par sa seule couleur-silhouette.
+
+---
+
 *Document vivant. Version initiale générée le 2026-06-12 à partir des sessions
 de développement créatif avec l'auteur.*
