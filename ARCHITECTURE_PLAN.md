@@ -25,7 +25,7 @@
 | ~~1~~ | ~~grading~~ — supprimée (upscale retiré) | ❌ N/A | |
 | ~~2~~ | ~~upscaling + port `Upscaler`~~ — supprimée (upscale retiré) | ❌ N/A | |
 | 3 | `features/transcription/` + `Transcriber` + types immuables | ✅ fait | `c75e37f` |
-| 4 | `Overlay` Protocol + 4 overlays un par un + `srt.py` | ⬜ à faire | |
+| 4 | `Overlay` Protocol + 4 overlays un par un + `srt.py` | ✅ fait | `fd6dea2` |
 | 5 | `heads.py` + `HeadDetector` (port I/O) | ⬜ à faire | |
 | 6 | `compositor.py` (corps de `compile_video_raw`) | ⬜ à faire | |
 | 7 | `features/assets/` + `AssetProvider` | ⬜ à faire | |
