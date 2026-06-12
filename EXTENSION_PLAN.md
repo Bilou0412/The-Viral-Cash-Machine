@@ -19,8 +19,10 @@ ROUND 1..3 (le chemin suivi = happy path : on survit)
                                   structures instables) — narré par-dessus
   c. LE PERSO PARLE [VIDÉO]       face caméra, manière décrite (chuchote, murmure,
                                   susurre...) : pose son dilemme — voix native p-video
-  d. NARRATEUR      [PHOTO+ZOOM]  énonce les deux choix, illustrés — LE SEUL
-                                  segment photo du format
+  d. NARRATEUR      [2 PHOTOS+ZOOM] énonce les deux choix — DEUX images qui se
+                                  succèdent, une par choix, chacune illustrant
+                                  son option pendant que le narrateur l'énonce.
+                                  Le seul segment photo du format.
   e. TIMER 3-2-1    [brique]      existante — un des deux choix est fatal
   f. ISSUE FATALE   [VIDÉO]       « Si tu as choisi [A]... » la mort en mouvement,
                                   angoissante, POV (ce qu'il te fait, comment tu réagis)
@@ -34,7 +36,7 @@ Les deux issues de chaque round sont montrées l'une après l'autre.
 (immersion), avec UNE seule exception — l'écran des choix (photo + zoom Ken
 Burns, brique narration existante) : la pause dramatique avant le timer.
 → Par vidéo complète : **~16-17 clips vidéo** (intro + 3×5 + épilogue) +
-**3 images** (les 3 écrans de choix).
+**6 images** (3 rounds × 2 choix : une image par option, en succession).
 **Audio des séquences narrées** : la voix narrateur (TTS clonée) se MIXE
 par-dessus l'ambiance native du clip (volume ambiance baissé).
 
@@ -115,7 +117,7 @@ voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 - **Qualité du clone narrateur** : le sample d'audition doit être propre
   (voix seule, sans ambiance) — prompt d'audition « no background music,
   no ambient sound » à tester ; sinon nettoyage ffmpeg avant clonage.
-- **Coût par vidéo complète** : ~16-17 clips p-video + 3 images → le mode
+- **Coût par vidéo complète** : ~16-17 clips p-video + 6 images → le mode
   draft est OBLIGATOIRE pour les essais ; rendu final uniquement après
   validation du script et des assets dans l'UI. Estimation affichée avant
   chaque lancement (phase A). C'est le poste de coût n°1 du format.
