@@ -21,6 +21,7 @@ from features.compositing.overlays import (
     GaugeOverlay,
     NameplateOverlay,
 )
+from features.compositing.heads import HeadDetector, GroundingDINOHeadDetector
 def create_styled_subtitle_pil(text, fontsize, duration, font_path="assets/montserrat.bold.ttf"):
     try: font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
     except: font = ImageFont.load_default()
@@ -84,64 +85,16 @@ def _make_text_clip_exact(text, fsize, color, duration, font_path, stroke_w=4):
     draw.text((tx, ty), text, font=font, fill=color)
     return ImageClip(np.array(img)).with_duration(duration), img_w, img_h
 
-def detect_side_entity(img_bytes, side_label, full_w, full_h):
-    try:
-        img_file = io.BytesIO(img_bytes)
-        output = replicate.run(
-            "adirik/grounding-dino:efd10a8ddc57ea28773327e881ce95e20cc1d734c589f7dd01d2036921ed78aa",
-            input={
-                "image": img_file,
-                "query": "the head or highest point of the entity",
-                "box_threshold": 0.12,
-                "text_threshold": 0.12
-            }
-        )
-        detections = output.get("detections", [])
-        if detections:
-            best = sorted(detections, key=lambda d: d['bbox'][1])[0]
-            bbox = best['bbox']
-            if any(v > 2.0 for v in bbox):
-                cx = (bbox[0] + bbox[2]) / (2.0 * full_w)
-                ty = bbox[1] / full_h
-                return cx, ty
-            return (bbox[0] + bbox[2]) / 2.0, bbox[1]
-    except Exception as e:
-        print(f"❌ AI Error ({side_label}): {e}")
-    return None
-
-def get_ai_head_positions_split(image_path, instance_dir):
-    try:
-        print(f"🔍 Starting Parallel Split-Detection for: {image_path}")
-        with Image.open(image_path) as full_img:
-            w, h = full_img.size
-            left_mask = full_img.copy()
-            draw_l = ImageDraw.Draw(left_mask)
-            draw_l.rectangle([w//2, 0, w, h], fill="black")
-            left_path = os.path.join(instance_dir, "debug_split_left.png")
-            left_mask.save(left_path)
-            right_mask = full_img.copy()
-            draw_r = ImageDraw.Draw(right_mask)
-            draw_r.rectangle([0, 0, w//2, h], fill="black")
-            right_path = os.path.join(instance_dir, "debug_split_right.png")
-            right_mask.save(right_path)
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                with open(left_path, "rb") as fl, open(right_path, "rb") as fr:
-                    f_left = executor.submit(detect_side_entity, fl.read(), "LEFT", w, h)
-                    f_right = executor.submit(detect_side_entity, fr.read(), "RIGHT", w, h)
-                    res_l = f_left.result()
-                    res_r = f_right.result()
-                final_l = res_l if res_l else (0.25, 0.40)
-                final_r = res_r if res_r else (0.75, 0.40)
-                return final_l, final_r
-    except Exception as e:
-        print(f"💥 Split-Detection Critical Failure: {e}")
-    return (0.25, 0.40), (0.75, 0.40)
-
 def compile_video_raw(
-    project_name: str, instance_id: str, transcriber: Transcriber | None = None
+    project_name: str,
+    instance_id: str,
+    transcriber: Transcriber | None = None,
+    head_detector: HeadDetector | None = None,
 ) -> str:
     if transcriber is None:
         transcriber = WhisperTranscriber()
+    if head_detector is None:
+        head_detector = GroundingDINOHeadDetector()
     print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")
     project_dir = os.path.join("exports", project_name, instance_id)
     paths = {"video": os.path.join(project_dir, "video.mp4"), "image": os.path.join(project_dir, "base_image.png"), "narrator": os.path.join(project_dir, "narrator.mp3"), "metadata": os.path.join(project_dir, "metadata.json"), "output": os.path.join(project_dir, "final_video.mp4"), "tick": os.path.join("assets", "tick.wav"), "beep": os.path.join("assets", "final.wav")}
@@ -151,10 +104,11 @@ def compile_video_raw(
     if os.path.exists(paths["image"]):
         hx, hy = meta.get("head_l_x"), meta.get("head_l_y")
         if hx is None or (hx == 0.25 and hy == 0.40):
-            l_head, r_head = get_ai_head_positions_split(paths["image"], project_dir)
-            meta["head_l_x"], meta["head_l_y"] = l_head
-            meta["head_r_x"], meta["head_r_y"] = r_head
-            with open(paths["metadata"], "w", encoding="utf-8") as f: json.dump(meta, f, indent=4)
+            head_layout = head_detector.detect(paths["image"], project_dir)
+            meta["head_l_x"], meta["head_l_y"] = head_layout.left
+            meta["head_r_x"], meta["head_r_y"] = head_layout.right
+            with open(paths["metadata"], "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=4)
 
     name_l, name_r = meta.get("char_left_name", "").upper(), meta.get("char_right_name", "").upper()
     char_audio = os.path.join(project_dir, "character.mp3")

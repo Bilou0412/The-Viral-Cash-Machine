@@ -13,6 +13,7 @@ from infra.logging import log_terminal
 from infra.download import download_file
 from infra.env import save_key_to_env
 from features.transcription.whisper import WhisperTranscriber
+from features.compositing.heads import GroundingDINOHeadDetector
 
 # Load environment variables
 load_dotenv()
@@ -411,7 +412,10 @@ if replicate_api_token:
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
             with st.spinner("🎬 Running MoviePy..."):
                 transcriber = WhisperTranscriber()
-                compile_video_raw(project_name, inst.id, transcriber=transcriber)
+                head_detector = GroundingDINOHeadDetector()
+                compile_video_raw(
+                    project_name, inst.id, transcriber=transcriber, head_detector=head_detector
+                )
                 st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
 
