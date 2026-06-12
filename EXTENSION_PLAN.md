@@ -19,22 +19,22 @@ ROUND 1..3 (le chemin suivi = happy path : on survit)
                                   structures instables) — narré par-dessus
   c. LE PERSO PARLE [VIDÉO]       face caméra, manière décrite (chuchote, murmure,
                                   susurre...) : pose son dilemme — voix native p-video
-  d. NARRATEUR      [PHOTO+ZOOM]  énonce les deux choix, illustrés
+  d. NARRATEUR      [PHOTO+ZOOM]  énonce les deux choix, illustrés — LE SEUL
+                                  segment photo du format
   e. TIMER 3-2-1    [brique]      existante — un des deux choix est fatal
-  f. ISSUE FATALE   [PHOTO+ZOOM]  « Si tu as choisi [A]... » description de la mort,
+  f. ISSUE FATALE   [VIDÉO]       « Si tu as choisi [A]... » la mort en mouvement,
                                   angoissante, POV (ce qu'il te fait, comment tu réagis)
-  g. ISSUE SURVIE   [PHOTO+ZOOM]  « Si tu as choisi [B]... » — on continue
+  g. ISSUE SURVIE   [VIDÉO]       « Si tu as choisi [B]... » — on continue
 ÉPILOGUE            [VIDÉO]       « Si tu avais choisi [l'autre perso]... »
 Durée cible : ~2 min – 2 min 30. Rounds 2-3 enchaînent depuis l'issue survie.
 Les deux issues de chaque round sont montrées l'une après l'autre.
 ```
 
-**Répartition photo/vidéo (décision auteur)** : l'aventure se vit en **vidéos qui
-s'enchaînent en séquence** (immersion) ; les **photos + zoom Ken Burns** (brique
-narration existante) sont réservées aux moments où le narrateur propose les
-choix et décrit les morts/issues — les temps de pause dramatique.
-→ Par vidéo complète : **~10-11 clips vidéo** (intro + 3×3 + épilogue) +
-**~9 images** (3×3 : choix, issue fatale, issue survie).
+**Répartition photo/vidéo (décision auteur)** : TOUT est vidéo en séquences
+(immersion), avec UNE seule exception — l'écran des choix (photo + zoom Ken
+Burns, brique narration existante) : la pause dramatique avant le timer.
+→ Par vidéo complète : **~16-17 clips vidéo** (intro + 3×5 + épilogue) +
+**3 images** (les 3 écrans de choix).
 **Audio des séquences narrées** : la voix narrateur (TTS clonée) se MIXE
 par-dessus l'ambiance native du clip (volume ambiance baissé).
 
@@ -115,9 +115,9 @@ voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 - **Qualité du clone narrateur** : le sample d'audition doit être propre
   (voix seule, sans ambiance) — prompt d'audition « no background music,
   no ambient sound » à tester ; sinon nettoyage ffmpeg avant clonage.
-- **Coût par vidéo complète** : ~10-11 clips p-video + ~9 images → le mode
-  draft reste OBLIGATOIRE pour les essais ; rendu final uniquement après
+- **Coût par vidéo complète** : ~16-17 clips p-video + 3 images → le mode
+  draft est OBLIGATOIRE pour les essais ; rendu final uniquement après
   validation du script et des assets dans l'UI. Estimation affichée avant
-  chaque lancement (phase A).
+  chaque lancement (phase A). C'est le poste de coût n°1 du format.
 - **Mixage narration/ambiance** sur les clips d'action : équilibre des volumes
   à régler en phase M (la voix doit toujours dominer).
