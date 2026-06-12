@@ -13,18 +13,14 @@ from concurrent.futures import ThreadPoolExecutor
 import io
 from features.transcription.ports import Transcriber
 from features.transcription.whisper import WhisperTranscriber
-
-def format_timestamp(seconds):
-    h, m, s = int(seconds // 3600), int((seconds % 3600) // 60), int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
-    return f"{h:02}:{m:02}:{s:02},{ms:03}"
-
-def save_srt(subs_data, output_path):
-    if not subs_data: return
-    with open(output_path, "w", encoding="utf-8") as f:
-        for i, s in enumerate(subs_data, 1):
-            f.write(f"{i}\n{format_timestamp(s['start'])} --> {format_timestamp(s['end'])}\n{s['text']}\n\n")
-
+from features.compositing.srt import save_srt, format_timestamp
+from features.compositing.overlays import (
+    Overlay,
+    SubtitleOverlay,
+    TimerOverlay,
+    GaugeOverlay,
+    NameplateOverlay,
+)
 def create_styled_subtitle_pil(text, fontsize, duration, font_path="assets/montserrat.bold.ttf"):
     try: font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
     except: font = ImageFont.load_default()
