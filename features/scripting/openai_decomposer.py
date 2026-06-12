@@ -1,11 +1,10 @@
 """OpenAI GPT script decomposer implementation."""
 
 import json
-from typing import Optional
 
 from openai import OpenAI
 
-from .ports import ScriptDecomposition, ScriptDecomposer
+from .ports import ScriptDecomposition
 
 
 class OpenAIScriptDecomposer:

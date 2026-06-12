@@ -1,6 +1,5 @@
 """Feature-driven pipeline orchestration with immutable outputs."""
 
-import json
 import os
 from dataclasses import dataclass
 from typing import Optional

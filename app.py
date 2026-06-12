@@ -2,9 +2,10 @@ import streamlit as st
 import os
 import datetime
 import json
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, field
 from typing import List, Optional
 from dotenv import load_dotenv
+from openai import OpenAI
 
 from infra.download import download_file
 from infra.env import save_key_to_env
