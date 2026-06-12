@@ -11,39 +11,8 @@ from openai import OpenAI
 import replicate
 from concurrent.futures import ThreadPoolExecutor
 import io
-
-def get_whisper_subtitles(file_path):
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or not os.path.exists(file_path): return []
-    try:
-        client = OpenAI(api_key=api_key)
-        with open(file_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1", 
-                file=audio_file, 
-                response_format="verbose_json",
-                timestamp_granularities=["word"]
-            )
-        subs = []
-        if hasattr(transcript, 'words') and transcript.words:
-            raw_words = transcript.words
-        elif hasattr(transcript, 'segments') and transcript.segments:
-            for seg in transcript.segments:
-                words_in_seg = seg.text.strip().split()
-                if not words_in_seg: continue
-                dur = seg.end - seg.start
-                word_dur = dur / len(words_in_seg)
-                for i, w in enumerate(words_in_seg):
-                    subs.append({"text": w.strip(), "start": seg.start + (i * word_dur), "end": seg.start + ((i + 1) * word_dur)})
-            return subs
-        else: return []
-        for item in raw_words:
-            text_val = item.word if hasattr(item, 'word') else getattr(item, 'text', "")
-            if text_val: subs.append({"text": text_val.strip(), "start": item.start, "end": item.end})
-        return subs
-    except Exception as e:
-        print(f"Whisper failed for {file_path}: {e}")
-        return []
+from features.transcription.ports import Transcriber
+from features.transcription.whisper import WhisperTranscriber
 
 def format_timestamp(seconds):
     h, m, s = int(seconds // 3600), int((seconds % 3600) // 60), int(seconds % 60)
@@ -172,7 +141,11 @@ def get_ai_head_positions_split(image_path, instance_dir):
         print(f"💥 Split-Detection Critical Failure: {e}")
     return (0.25, 0.40), (0.75, 0.40)
 
-def compile_video_raw(project_name: str, instance_id: str) -> str:
+def compile_video_raw(
+    project_name: str, instance_id: str, transcriber: Transcriber | None = None
+) -> str:
+    if transcriber is None:
+        transcriber = WhisperTranscriber()
     print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")
     project_dir = os.path.join("exports", project_name, instance_id)
     paths = {"video": os.path.join(project_dir, "video.mp4"), "image": os.path.join(project_dir, "base_image.png"), "narrator": os.path.join(project_dir, "narrator.mp3"), "metadata": os.path.join(project_dir, "metadata.json"), "output": os.path.join(project_dir, "final_video.mp4"), "tick": os.path.join("assets", "tick.wav"), "beep": os.path.join("assets", "final.wav")}
@@ -189,9 +162,16 @@ def compile_video_raw(project_name: str, instance_id: str) -> str:
 
     name_l, name_r = meta.get("char_left_name", "").upper(), meta.get("char_right_name", "").upper()
     char_audio = os.path.join(project_dir, "character.mp3")
-    if not os.path.exists(char_audio): char_audio = paths["video"]
-    char_subs_raw = get_whisper_subtitles(char_audio)
-    narr_subs_raw = get_whisper_subtitles(paths["narrator"]) if os.path.exists(paths["narrator"]) else []
+    if not os.path.exists(char_audio):
+        char_audio = paths["video"]
+    char_transcription = transcriber.transcribe(char_audio)
+    char_subs_raw = char_transcription.to_list()
+    narr_transcription = (
+        transcriber.transcribe(paths["narrator"])
+        if os.path.exists(paths["narrator"])
+        else None
+    )
+    narr_subs_raw = narr_transcription.to_list() if narr_transcription else []
     save_srt(char_subs_raw, os.path.join(project_dir, "character.srt"))
     save_srt(narr_subs_raw, os.path.join(project_dir, "narrator.srt"))
 

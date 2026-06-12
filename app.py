@@ -12,6 +12,7 @@ from compiler import compile_video_raw
 from infra.logging import log_terminal
 from infra.download import download_file
 from infra.env import save_key_to_env
+from features.transcription.whisper import WhisperTranscriber
 
 # Load environment variables
 load_dotenv()
@@ -59,28 +60,6 @@ class VideoInstance:
     head_l_y: float = 0.40
     head_r_x: float = 0.75
     head_r_y: float = 0.40
-
-def get_whisper_subtitles(file_path, client):
-    if not client or not os.path.exists(file_path): return []
-    try:
-        with open(file_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1", 
-                file=audio_file, 
-                response_format="verbose_json",
-                timestamp_granularities=["segment"]
-            )
-        subs = []
-        for segment in transcript.segments:
-            subs.append({
-                "text": segment.text.strip(),
-                "start": segment.start,
-                "end": segment.end
-            })
-        return subs
-    except Exception as e:
-        log_terminal("ERROR", f"Whisper failed for {file_path}: {e}")
-        return []
 
 def sync_instance_to_widgets(inst):
     st.session_state["inst_v_p"] = inst.video_prompt
@@ -431,7 +410,8 @@ if replicate_api_token:
         # STEP 2: MOVIEPY
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
             with st.spinner("🎬 Running MoviePy..."):
-                compile_video_raw(project_name, inst.id)
+                transcriber = WhisperTranscriber()
+                compile_video_raw(project_name, inst.id, transcriber=transcriber)
                 st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
 
