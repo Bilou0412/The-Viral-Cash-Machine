@@ -26,7 +26,7 @@
 | ~~2~~ | ~~upscaling + port `Upscaler`~~ — supprimée (upscale retiré) | ❌ N/A | |
 | 3 | `features/transcription/` + `Transcriber` + types immuables | ✅ fait | `c75e37f` |
 | 4 | `Overlay` Protocol + 4 overlays un par un + `srt.py` | ✅ fait | `fd6dea2` |
-| 5 | `heads.py` + `HeadDetector` (port I/O) | ⬜ à faire | |
+| 5 | `heads.py` + `HeadDetector` (port I/O) | ✅ fait | `aa8ce8b` |
 | 6 | `compositor.py` (corps de `compile_video_raw`) | ⬜ à faire | |
 | 7 | `features/assets/` + `AssetProvider` | ⬜ à faire | |
 | 8 | `pipeline.py` + sorties immuables (8a parallèle, 8b coupe le JSON) | ⬜ à faire | |
