@@ -1,28 +1,8 @@
 {
-  "app.py": {
-    "mtime": 1781267632.1450577,
-    "ast_hash": "686230f4cb5e546d741affd2fbc519b9",
-    "semantic_hash": ""
-  },
-  "compiler.py": {
-    "mtime": 1781264991.0525508,
-    "ast_hash": "f2a21fe63602f804155fda65ebabc2b9",
-    "semantic_hash": ""
-  },
-  "generate_assets.py": {
-    "mtime": 1780947166.1140585,
-    "ast_hash": "76b58c5bbf5c4daec4feba844b848656",
-    "semantic_hash": "76b58c5bbf5c4daec4feba844b848656"
-  },
   "CLAUDE.md": {
-    "mtime": 1781036646.5925844,
-    "ast_hash": "0bae03f356644dcedfed92a17f70c154",
+    "mtime": 1781273877.310754,
+    "ast_hash": "78e5751d7e9f56adea1b6af89d13e3f6",
     "semantic_hash": ""
-  },
-  "GEMINI.md": {
-    "mtime": 1780947166.1102252,
-    "ast_hash": "32ca594161b29bb7d3728234b199a227",
-    "semantic_hash": "32ca594161b29bb7d3728234b199a227"
   },
   "README.md": {
     "mtime": 1781031996.5441725,
@@ -50,8 +30,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1781271564.7642784,
-    "ast_hash": "121ec8d96e965e03b3dfdd77992cb693",
+    "mtime": 1781273619.9568765,
+    "ast_hash": "38a32cc0c08f8122bb4f2e3fdf7e8b0e",
     "semantic_hash": ""
   },
   "ARCHITECTURE_PLAN.md": {
@@ -124,104 +104,129 @@
     "ast_hash": "51fe94730f33703ab5f5788ec748436d",
     "semantic_hash": ""
   },
-  "features/__init__.py": {
+  "scripts/__init__.py": {
+    "mtime": 1781273896.0689614,
+    "ast_hash": "4e89b946a083e89cddc09c15d3471885",
+    "semantic_hash": ""
+  },
+  "scripts/compiler.py": {
+    "mtime": 1781273904.1974669,
+    "ast_hash": "fb1d1806c95120d694daecedebd11861",
+    "semantic_hash": ""
+  },
+  "scripts/generate_assets.py": {
+    "mtime": 1780947166.1140585,
+    "ast_hash": "76b58c5bbf5c4daec4feba844b848656",
+    "semantic_hash": ""
+  },
+  "src/__init__.py": {
+    "mtime": 1781273893.9021685,
+    "ast_hash": "d557db071a0a4df0c497995bd0b4c184",
+    "semantic_hash": ""
+  },
+  "src/app.py": {
+    "mtime": 1781273912.1441178,
+    "ast_hash": "80ca8968f6434ee69528d42c7b3fa760",
+    "semantic_hash": ""
+  },
+  "src/features/__init__.py": {
     "mtime": 1781263146.9531877,
     "ast_hash": "665f6e729d419c8f457c0a7a37c07f5f",
     "semantic_hash": ""
   },
-  "infra/__init__.py": {
-    "mtime": 1781263146.3399534,
-    "ast_hash": "3285d402da2b16ff1089ce914eca899e",
-    "semantic_hash": ""
-  },
-  "infra/download.py": {
-    "mtime": 1781263155.5308807,
-    "ast_hash": "4dd2c3ad4bd404aa8e1771874bc6674a",
-    "semantic_hash": ""
-  },
-  "infra/env.py": {
-    "mtime": 1781263156.8005533,
-    "ast_hash": "d838ac74e450d54d18e8de9945de5034",
-    "semantic_hash": ""
-  },
-  "infra/logging.py": {
-    "mtime": 1781263154.5673945,
-    "ast_hash": "be68ebd2607a7376a35203c40a8cae5a",
-    "semantic_hash": ""
-  },
-  "features/transcription/__init__.py": {
-    "mtime": 1781263564.257855,
-    "ast_hash": "1a8d60625ee2094588415d2fc1895e23",
-    "semantic_hash": ""
-  },
-  "features/transcription/ports.py": {
-    "mtime": 1781263565.99059,
-    "ast_hash": "d60249867aa17b148f4e56543b8632aa",
-    "semantic_hash": ""
-  },
-  "features/transcription/whisper.py": {
-    "mtime": 1781263606.2445512,
-    "ast_hash": "32c9ba143e52796f662fc533d8be2390",
-    "semantic_hash": ""
-  },
-  "features/compositing/__init__.py": {
-    "mtime": 1781263775.6385403,
-    "ast_hash": "4b3bbebd4e131b3cdba5f07491eaa043",
-    "semantic_hash": ""
-  },
-  "features/compositing/overlays.py": {
-    "mtime": 1781263798.308517,
-    "ast_hash": "b78315d4bc9237e5dbd2c85f6193210e",
-    "semantic_hash": ""
-  },
-  "features/compositing/srt.py": {
-    "mtime": 1781263810.7931154,
-    "ast_hash": "006f4cdabc8fe387ec59e6cf14bc50a3",
-    "semantic_hash": ""
-  },
-  "features/compositing/heads.py": {
-    "mtime": 1781263914.4247942,
-    "ast_hash": "218827a82f373a994db72eb16249d338",
-    "semantic_hash": ""
-  },
-  "features/compositing/compositor.py": {
-    "mtime": 1781271731.535458,
-    "ast_hash": "da5d409fe7dd815e397bf442b71cd3b5",
-    "semantic_hash": ""
-  },
-  "features/assets/__init__.py": {
+  "src/features/assets/__init__.py": {
     "mtime": 1781264296.612317,
     "ast_hash": "e670738f2d3b0eb473b144c260aa622c",
     "semantic_hash": ""
   },
-  "features/assets/ports.py": {
+  "src/features/assets/ports.py": {
     "mtime": 1781264299.1729953,
     "ast_hash": "37a9d72d5e35ebcc16493d781199efa9",
     "semantic_hash": ""
   },
-  "features/assets/replicate_provider.py": {
+  "src/features/assets/replicate_provider.py": {
     "mtime": 1781264305.5506349,
     "ast_hash": "697e869776cf592aa7fff8838fac2db5",
     "semantic_hash": ""
   },
-  "pipeline.py": {
-    "mtime": 1781267611.254966,
-    "ast_hash": "6384331a2293e197dcddf7086e513e80",
+  "src/features/compositing/__init__.py": {
+    "mtime": 1781263775.6385403,
+    "ast_hash": "4b3bbebd4e131b3cdba5f07491eaa043",
     "semantic_hash": ""
   },
-  "features/scripting/__init__.py": {
+  "src/features/compositing/compositor.py": {
+    "mtime": 1781273922.5244615,
+    "ast_hash": "613718164f5d53592105750c3b160311",
+    "semantic_hash": ""
+  },
+  "src/features/compositing/heads.py": {
+    "mtime": 1781263914.4247942,
+    "ast_hash": "218827a82f373a994db72eb16249d338",
+    "semantic_hash": ""
+  },
+  "src/features/compositing/overlays.py": {
+    "mtime": 1781263798.308517,
+    "ast_hash": "b78315d4bc9237e5dbd2c85f6193210e",
+    "semantic_hash": ""
+  },
+  "src/features/compositing/srt.py": {
+    "mtime": 1781263810.7931154,
+    "ast_hash": "006f4cdabc8fe387ec59e6cf14bc50a3",
+    "semantic_hash": ""
+  },
+  "src/features/scripting/__init__.py": {
     "mtime": 1781267583.7789235,
     "ast_hash": "84ccd13ac37f5a66dd2f592910d8c9ca",
     "semantic_hash": ""
   },
-  "features/scripting/openai_decomposer.py": {
-    "mtime": 1781267598.5424058,
-    "ast_hash": "61dfdd245d6c52abadf4fc5a97d699a4",
+  "src/features/scripting/openai_decomposer.py": {
+    "mtime": 1781273591.7492218,
+    "ast_hash": "1e68d15821d38b29760287bc4daa710a",
     "semantic_hash": ""
   },
-  "features/scripting/ports.py": {
+  "src/features/scripting/ports.py": {
     "mtime": 1781267588.0494998,
     "ast_hash": "3980b2bfebd9f45c5093c8caae784847",
+    "semantic_hash": ""
+  },
+  "src/features/transcription/__init__.py": {
+    "mtime": 1781263564.257855,
+    "ast_hash": "1a8d60625ee2094588415d2fc1895e23",
+    "semantic_hash": ""
+  },
+  "src/features/transcription/ports.py": {
+    "mtime": 1781263565.99059,
+    "ast_hash": "d60249867aa17b148f4e56543b8632aa",
+    "semantic_hash": ""
+  },
+  "src/features/transcription/whisper.py": {
+    "mtime": 1781263606.2445512,
+    "ast_hash": "32c9ba143e52796f662fc533d8be2390",
+    "semantic_hash": ""
+  },
+  "src/infra/__init__.py": {
+    "mtime": 1781263146.3399534,
+    "ast_hash": "3285d402da2b16ff1089ce914eca899e",
+    "semantic_hash": ""
+  },
+  "src/infra/download.py": {
+    "mtime": 1781263155.5308807,
+    "ast_hash": "4dd2c3ad4bd404aa8e1771874bc6674a",
+    "semantic_hash": ""
+  },
+  "src/infra/env.py": {
+    "mtime": 1781263156.8005533,
+    "ast_hash": "d838ac74e450d54d18e8de9945de5034",
+    "semantic_hash": ""
+  },
+  "src/infra/logging.py": {
+    "mtime": 1781263154.5673945,
+    "ast_hash": "be68ebd2607a7376a35203c40a8cae5a",
+    "semantic_hash": ""
+  },
+  "src/pipeline.py": {
+    "mtime": 1781273909.2986598,
+    "ast_hash": "47ac6efe86161175a74e6078c2466495",
     "semantic_hash": ""
   }
 }

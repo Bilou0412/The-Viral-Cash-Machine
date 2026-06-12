@@ -1,16 +1,16 @@
 # Graph Report - The-Viral-Cash-Machine  (2026-06-12)
 
 ## Corpus Check
-- 35 files · ~152,350 words
+- 36 files · ~152,001 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 353 nodes · 550 edges · 25 communities (17 shown, 8 thin omitted)
-- Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 118 edges (avg confidence: 0.52)
+- 384 nodes · 650 edges · 28 communities (18 shown, 10 thin omitted)
+- Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 134 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f2bff50a`
+- Built from commit: `fe78803d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -39,50 +39,52 @@
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `metadata` - 32 edges
-2. `RawVideoCompositor` - 24 edges
-3. `WhisperTranscriber` - 24 edges
-4. `HeadDetector` - 21 edges
-5. `GroundingDINOHeadDetector` - 21 edges
-6. `ReplicateAssetProvider` - 19 edges
+2. `RawVideoCompositor` - 29 edges
+3. `WhisperTranscriber` - 29 edges
+4. `HeadDetector` - 26 edges
+5. `GroundingDINOHeadDetector` - 26 edges
+6. `ReplicateAssetProvider` - 20 edges
 7. `Pipeline` - 18 edges
 8. `AssetProvider` - 17 edges
 9. `VideoInstance` - 16 edges
-10. `HeadLayout` - 13 edges
+10. `Transcriber` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `VideoInstance` --uses--> `ReplicateAssetProvider`  [INFERRED]
-  app.py → features/assets/replicate_provider.py
-- `VideoInstance` --uses--> `GroundingDINOHeadDetector`  [INFERRED]
-  app.py → features/compositing/heads.py
-- `VideoInstance` --uses--> `Pipeline`  [INFERRED]
+- `HeadDetector` --uses--> `HeadDetector`  [INFERRED]
+  features/compositing/compositor.py → src/features/compositing/heads.py
+- `Transcriber` --uses--> `HeadDetector`  [INFERRED]
+  features/compositing/compositor.py → src/features/compositing/heads.py
+- `Pipeline` --uses--> `Pipeline`  [INFERRED]
   app.py → pipeline.py
-- `VideoInstance` --uses--> `VideoInstance`  [INFERRED]
+- `Pipeline` --uses--> `VideoInstance`  [INFERRED]
   app.py → pipeline.py
-- `VideoInstance` --uses--> `WhisperTranscriber`  [INFERRED]
-  app.py → features/transcription/whisper.py
+- `Transcriber` --uses--> `RawVideoCompositor`  [INFERRED]
+  scripts/compiler.py → src/features/compositing/compositor.py
 
 ## Import Cycles
+- 1-file cycle: `src/features/scripting/openai_decomposer.py -> src/features/scripting/openai_decomposer.py`
+- 1-file cycle: `src/features/transcription/whisper.py -> src/features/transcription/whisper.py`
 - 1-file cycle: `app.py -> app.py`
-- 1-file cycle: `features/scripting/openai_decomposer.py -> features/scripting/openai_decomposer.py`
-- 1-file cycle: `features/transcription/whisper.py -> features/transcription/whisper.py`
 
 ## Hyperedges (group relationships)
 - **3-Step Production Pipeline Flow** — claude_step1_asset_generation, claude_step2_raw_compilation, claude_step3_ai_upscale [EXTRACTED 0.95]
 - **Step 2 Compilation Subsystems** — compiler_compile_video_raw, claude_whisper, compiler_get_ai_head_positions_split, claude_moviepy [EXTRACTED 0.90]
 - **Multi-AI Model Orchestration** — claude_prunaai_p_video, claude_seedream, claude_minimax_speech, claude_replicate_api [EXTRACTED 0.90]
 
-## Communities (25 total, 8 thin omitted)
+## Communities (28 total, 10 thin omitted)
 
 ### Community 0 - "Video Compilation & Subtitles"
 Cohesion: 0.06
 Nodes (32): metadata, char_left_gender, char_left_name, char_left_personality, char_right_gender, char_right_name, char_right_personality, character_audio_url (+24 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.20
-Nodes (11): OpenAI, Transcription, Cue, Complete transcription as immutable tuple of cues., Convert to list of dicts for backwards compat with metadata.json., Port for speech-to-text services., Transcribe audio file and return cues with timing., A single subtitle with timing. (+3 more)
+Cohesion: 0.22
+Nodes (12): OpenAI, OpenAI, Transcription, Cue, Complete transcription as immutable tuple of cues., Convert to list of dicts for backwards compat with metadata.json., Port for speech-to-text services., Transcribe audio file and return cues with timing. (+4 more)
 
 ### Community 2 - "AI Asset Generation"
 Cohesion: 0.15
@@ -101,8 +103,8 @@ Cohesion: 0.22
 Nodes (8): Contexte, Fichiers clés touchés, Refactor : procédural → feature-driven + ports (typing.Protocol), Règle de décision pour les Protocol (cadrée avec l'utilisateur), Structure cible (à la racine, `streamlit run app.py` inchangé), Séquencement strangler-fig (chaque étape = app fonctionnelle + mypy vert), Vérification, État d'avancement — POINT DE REPRISE
 
 ### Community 9 - "Community 9"
-Cohesion: 0.20
-Nodes (9): Building and Running, Configuration, Development Conventions, Prerequisites, Project Overview, Project Structure, Running the Application, Setup (+1 more)
+Cohesion: 0.50
+Nodes (3): AssetProvider, HeadDetector, Transcriber
 
 ### Community 11 - "Community 11"
 Cohesion: 0.15
@@ -113,8 +115,8 @@ Cohesion: 0.07
 Nodes (27): file, sha256, timestamp, final_video, codec, duration, fps, height (+19 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.31
-Nodes (9): get_pipeline(), load_into_editor(), Pipeline, Get or create cached pipeline with injected dependencies., sync_instance_to_widgets(), VideoInstance, download_file(), save_key_to_env() (+1 more)
+Cohesion: 0.11
+Nodes (24): get_pipeline(), load_into_editor(), Pipeline, Get or create cached pipeline with injected dependencies., sync_instance_to_widgets(), download_file(), save_key_to_env(), log_terminal() (+16 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.20
@@ -129,36 +131,36 @@ Cohesion: 0.67
 Nodes (3): capture(), main(), Freeze a real production export as the golden oracle (ARCHITECTURE_PLAN.md, step
 
 ### Community 18 - "Community 18"
-Cohesion: 0.18
-Nodes (13): OpenAI, ScriptDecomposition, OpenAIScriptDecomposer, OpenAI GPT script decomposer implementation., Decomposes scripts using OpenAI GPT models., Initialize with OpenAI client and model.          Args:             client: Auth, Decompose script into visual elements.          Args:             script: User-p, Script decomposition ports. (+5 more)
+Cohesion: 0.16
+Nodes (14): OpenAI, ScriptDecomposition, OpenAIScriptDecomposer, OpenAI GPT script decomposer implementation., Decomposes scripts using OpenAI GPT models., Initialize with OpenAI client and model.          Args:             client: Auth, Decompose script into visual elements.          Args:             script: User-p, Script decomposition ports. (+6 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.09
-Nodes (31): compile_video_raw(), Compile raw video from assets and metadata., Video composition orchestration., Orchestrates video composition with injected dependencies., Compose raw video from assets with immutable parameters.          Args:, RawVideoCompositor, GaugeOverlay, NameplateOverlay (+23 more)
+Cohesion: 0.10
+Nodes (29): Video composition orchestration., Compose raw video from assets with immutable parameters.          Args:, GaugeOverlay, NameplateOverlay, Overlay, Port for video overlays (subtitles, timers, nameplates, etc.)., Character nameplate with position., Create nameplate clip. (+21 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.07
-Nodes (46): AssetBundle, AssetProvider, AssetBundle, AssetProvider, Asset generation ports., Port for generating AI assets (voice, image, video)., Synthesize voice from text. Returns URL., Generate image from prompt. Returns URL. (+38 more)
+Nodes (55): VideoInstance, AssetBundle, AssetProvider, AssetBundle, AssetProvider, Asset generation ports., Port for generating AI assets (voice, image, video)., Synthesize voice from text. Returns URL. (+47 more)
 
 ## Knowledge Gaps
-- **124 isolated node(s):** `PreToolUse`, `allow`, `source_export`, `duration`, `width` (+119 more)
+- **120 isolated node(s):** `Project Overview`, `Commands`, `Ongoing refactor (resume point)`, `2-Step Production Pipeline`, `Data Model` (+115 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ScriptDecomposer` connect `Community 18` to `Community 19`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `AssetProvider` connect `Community 23` to `Community 19`?**
-  _High betweenness centrality (0.030) - this node is a cross-community bridge._
-- **Why does `RawVideoCompositor` connect `Community 19` to `Community 23`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Are the 17 inferred relationships involving `RawVideoCompositor` (e.g. with `AssetBundle` and `AssetProvider`) actually correct?**
-  _`RawVideoCompositor` has 17 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 15 inferred relationships involving `WhisperTranscriber` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
-  _`WhisperTranscriber` has 15 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 13 inferred relationships involving `HeadDetector` (e.g. with `AssetBundle` and `HeadDetector`) actually correct?**
-  _`HeadDetector` has 13 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 12 inferred relationships involving `GroundingDINOHeadDetector` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
-  _`GroundingDINOHeadDetector` has 12 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `RawVideoCompositor` connect `Community 23` to `Community 19`, `Community 13`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `WhisperTranscriber` connect `Community 23` to `Community 9`, `Community 19`, `Community 13`, `Community 1`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `HeadDetector` connect `Community 23` to `Community 19`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Are the 18 inferred relationships involving `RawVideoCompositor` (e.g. with `AssetBundle` and `AssetProvider`) actually correct?**
+  _`RawVideoCompositor` has 18 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 16 inferred relationships involving `WhisperTranscriber` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
+  _`WhisperTranscriber` has 16 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 16 inferred relationships involving `HeadDetector` (e.g. with `AssetBundle` and `HeadDetector`) actually correct?**
+  _`HeadDetector` has 16 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 13 inferred relationships involving `GroundingDINOHeadDetector` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
+  _`GroundingDINOHeadDetector` has 13 INFERRED edges - model-reasoned connections that need verification._
