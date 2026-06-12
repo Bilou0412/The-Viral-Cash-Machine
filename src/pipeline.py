@@ -79,8 +79,9 @@ class Pipeline:
             )
 
         # Generate image
+        # seedream-4.5 n'accepte que "2K", "4K" ou "custom"
         freeze_image_url = self.asset_provider.generate_image(
-            freeze_image_prompt, "1024", "9:16"
+            freeze_image_prompt, "2K", "9:16"
         )
 
         # Animate video
