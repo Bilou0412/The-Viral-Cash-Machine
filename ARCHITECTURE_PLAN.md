@@ -21,7 +21,7 @@
 |---|---|---|---|
 | −1 | Gel du golden (oracle de caractérisation) | ✅ fait | `a9fa0c1` |
 | — | Suppression upscale (Step 3) | ✅ fait | `a9fa0c1` |
-| 0 | Scaffold paquets + infra (`log_terminal`/`download_file`/`save_key_to_env` → `infra/`) | ✅ fait | TBD |
+| 0 | Scaffold paquets + infra (`log_terminal`/`download_file`/`save_key_to_env` → `infra/`) | ✅ fait | `fdf4eac` |
 | ~~1~~ | ~~grading~~ — supprimée (upscale retiré) | ❌ N/A | |
 | ~~2~~ | ~~upscaling + port `Upscaler`~~ — supprimée (upscale retiré) | ❌ N/A | |
 | 3 | `features/transcription/` + `Transcriber` + types immuables | ⬜ à faire | |
