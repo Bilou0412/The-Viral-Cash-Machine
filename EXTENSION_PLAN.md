@@ -10,29 +10,33 @@
 ```
 INTRO (existant, inchangé)        eye-open → dialogue 2 persos → narration → TIMER
                                   « Choisis ton personnage »
-TRANSITION          [photo+zoom]  Narrateur : « Si tu as choisi Étienne... »
+TRANSITION          [VIDÉO]       Narrateur : « Si tu as choisi Étienne... » —
+                                  la ligne peut se poser sur le début de l'action
 ROUND 1..3 (le chemin suivi = happy path : on survit)
-  a. ACTION         [photo+zoom]  le perso avance (grotte, château, échelle...) — narré
-  b. ENVIRONNEMENT  [photo+zoom]  hostile par nature (pierres suspendues, lave,
-                                  structures instables) — narré
-  c. LE PERSO PARLE [CLIP VIDÉO]  face caméra, manière décrite (chuchote, murmure,
-                                  susurre...) : pose son dilemme lié à l'environnement
-                                  ou une question simple — voix native p-video
-  d. NARRATEUR      [photo+zoom]  énonce les deux choix, illustrés
+  a. ACTION         [VIDÉO]       le perso avance (grotte, château, échelle...) —
+                                  séquence immersive, narrée par-dessus
+  b. ENVIRONNEMENT  [VIDÉO]       hostile par nature (pierres suspendues, lave,
+                                  structures instables) — narré par-dessus
+  c. LE PERSO PARLE [VIDÉO]       face caméra, manière décrite (chuchote, murmure,
+                                  susurre...) : pose son dilemme — voix native p-video
+  d. NARRATEUR      [PHOTO+ZOOM]  énonce les deux choix, illustrés
   e. TIMER 3-2-1    [brique]      existante — un des deux choix est fatal
-  f. ISSUE FATALE   [photo+zoom]  « Si tu as choisi [A]... » description angoissante
-                                  POV (ce qu'il te fait, comment tu réagis)
-  g. ISSUE SURVIE   [photo+zoom]  « Si tu as choisi [B]... » — on continue
-ÉPILOGUE            [photo+zoom]  « Si tu avais choisi [l'autre perso]... »
+  f. ISSUE FATALE   [PHOTO+ZOOM]  « Si tu as choisi [A]... » description de la mort,
+                                  angoissante, POV (ce qu'il te fait, comment tu réagis)
+  g. ISSUE SURVIE   [PHOTO+ZOOM]  « Si tu as choisi [B]... » — on continue
+ÉPILOGUE            [VIDÉO]       « Si tu avais choisi [l'autre perso]... »
 Durée cible : ~2 min – 2 min 30. Rounds 2-3 enchaînent depuis l'issue survie.
 Les deux issues de chaque round sont montrées l'une après l'autre.
 ```
 
-**Économie du format (décision auteur)** : tout segment où le narrateur parle est
-illustré par **photo seedream + zoom Ken Burns** (brique narration existante du
-compositor). Les clips p-video sont réservés aux face-cam des persos (lipsync).
-→ Par vidéo complète : **~4 clips vidéo** (intro + 3 face-cam) + **~12-15 images**.
-Coût ≈ ÷3 vs tout-vidéo, génération bien plus rapide.
+**Répartition photo/vidéo (décision auteur)** : l'aventure se vit en **vidéos qui
+s'enchaînent en séquence** (immersion) ; les **photos + zoom Ken Burns** (brique
+narration existante) sont réservées aux moments où le narrateur propose les
+choix et décrit les morts/issues — les temps de pause dramatique.
+→ Par vidéo complète : **~10-11 clips vidéo** (intro + 3×3 + épilogue) +
+**~9 images** (3×3 : choix, issue fatale, issue survie).
+**Audio des séquences narrées** : la voix narrateur (TTS clonée) se MIXE
+par-dessus l'ambiance native du clip (volume ambiance baissé).
 
 ## Doctrine voix (hybride — décision auteur)
 
@@ -111,3 +115,9 @@ voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 - **Qualité du clone narrateur** : le sample d'audition doit être propre
   (voix seule, sans ambiance) — prompt d'audition « no background music,
   no ambient sound » à tester ; sinon nettoyage ffmpeg avant clonage.
+- **Coût par vidéo complète** : ~10-11 clips p-video + ~9 images → le mode
+  draft reste OBLIGATOIRE pour les essais ; rendu final uniquement après
+  validation du script et des assets dans l'UI. Estimation affichée avant
+  chaque lancement (phase A).
+- **Mixage narration/ambiance** sur les clips d'action : équilibre des volumes
+  à régler en phase M (la voix doit toujours dominer).
