@@ -1,0 +1,203 @@
+{
+  "$defs": {
+    "Choice": {
+      "additionalProperties": false,
+      "description": "Une des deux options d'un round.",
+      "properties": {
+        "label_fr": {
+          "title": "Label Fr",
+          "type": "string"
+        },
+        "image_desc": {
+          "title": "Image Desc",
+          "type": "string"
+        },
+        "is_fatal": {
+          "title": "Is Fatal",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label_fr",
+        "image_desc",
+        "is_fatal"
+      ],
+      "title": "Choice",
+      "type": "object"
+    },
+    "Round": {
+      "additionalProperties": false,
+      "description": "Un round d'aventure : action → environnement → dilemme → choix → issues.",
+      "properties": {
+        "action_desc": {
+          "title": "Action Desc",
+          "type": "string"
+        },
+        "action_narration_fr": {
+          "title": "Action Narration Fr",
+          "type": "string"
+        },
+        "environment_desc": {
+          "title": "Environment Desc",
+          "type": "string"
+        },
+        "danger_desc": {
+          "title": "Danger Desc",
+          "type": "string"
+        },
+        "environment_narration_fr": {
+          "title": "Environment Narration Fr",
+          "type": "string"
+        },
+        "character_line_fr": {
+          "title": "Character Line Fr",
+          "type": "string"
+        },
+        "character_delivery": {
+          "title": "Character Delivery",
+          "type": "string"
+        },
+        "choices": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/Choice"
+            },
+            {
+              "$ref": "#/$defs/Choice"
+            }
+          ],
+          "title": "Choices",
+          "type": "array"
+        },
+        "choice_narration_fr": {
+          "title": "Choice Narration Fr",
+          "type": "string"
+        },
+        "fatal_kill_desc": {
+          "title": "Fatal Kill Desc",
+          "type": "string"
+        },
+        "fatal_pov_reaction": {
+          "title": "Fatal Pov Reaction",
+          "type": "string"
+        },
+        "fatal_narration_fr": {
+          "title": "Fatal Narration Fr",
+          "type": "string"
+        },
+        "survival_outcome_desc": {
+          "title": "Survival Outcome Desc",
+          "type": "string"
+        },
+        "survival_narration_fr": {
+          "title": "Survival Narration Fr",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_desc",
+        "action_narration_fr",
+        "environment_desc",
+        "danger_desc",
+        "environment_narration_fr",
+        "character_line_fr",
+        "character_delivery",
+        "choices",
+        "choice_narration_fr",
+        "fatal_kill_desc",
+        "fatal_pov_reaction",
+        "fatal_narration_fr",
+        "survival_outcome_desc",
+        "survival_narration_fr"
+      ],
+      "title": "Round",
+      "type": "object"
+    },
+    "VoiceProfile": {
+      "additionalProperties": false,
+      "description": "Description de voix d'un personnage.\n\n`description` (EN) est réinjectée VERBATIM dans chaque prompt face-cam du\nmême perso — c'est le mécanisme de cohérence vocale (règle d'or 3).",
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "title": "VoiceProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Script complet d'une vidéo « Aventure » : 2 persos, 3 rounds, 1 épilogue.",
+  "properties": {
+    "char_left_name": {
+      "title": "Char Left Name",
+      "type": "string"
+    },
+    "char_right_name": {
+      "title": "Char Right Name",
+      "type": "string"
+    },
+    "char_left_desc": {
+      "title": "Char Left Desc",
+      "type": "string"
+    },
+    "char_right_desc": {
+      "title": "Char Right Desc",
+      "type": "string"
+    },
+    "char_left_voice": {
+      "$ref": "#/$defs/VoiceProfile"
+    },
+    "char_right_voice": {
+      "$ref": "#/$defs/VoiceProfile"
+    },
+    "transition_narration_fr": {
+      "title": "Transition Narration Fr",
+      "type": "string"
+    },
+    "rounds": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/Round"
+        },
+        {
+          "$ref": "#/$defs/Round"
+        },
+        {
+          "$ref": "#/$defs/Round"
+        }
+      ],
+      "title": "Rounds",
+      "type": "array"
+    },
+    "epilogue_other_desc": {
+      "title": "Epilogue Other Desc",
+      "type": "string"
+    },
+    "epilogue_narration_fr": {
+      "title": "Epilogue Narration Fr",
+      "type": "string"
+    }
+  },
+  "required": [
+    "char_left_name",
+    "char_right_name",
+    "char_left_desc",
+    "char_right_desc",
+    "char_left_voice",
+    "char_right_voice",
+    "transition_narration_fr",
+    "rounds",
+    "epilogue_other_desc",
+    "epilogue_narration_fr"
+  ],
+  "title": "AdventureScript",
+  "type": "object"
+}
