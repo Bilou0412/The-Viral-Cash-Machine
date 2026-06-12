@@ -30,7 +30,7 @@
 | 6 | `compositor.py` (corps de `compile_video_raw`) | ✅ fait | `dde5ae6` |
 | 7 | `features/assets/` + `AssetProvider` | ✅ fait | `73e15fe` |
 | 8 | `pipeline.py` + sorties immuables (8a parallèle, 8b coupe le JSON) | ✅ fait | `2821f0f` |
-| 9 | `app.py` = câblage seul + mypy `--strict` sur `app.py` | ⬜ à faire | |
+| 9 | `app.py` = câblage seul + mypy `--strict` sur `app.py` | ✅ fait | `d4a2a41` |
 
 **Prochaine étape : 0 — Scaffold + infra.**
 
