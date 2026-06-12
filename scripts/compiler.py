@@ -1,7 +1,7 @@
-from features.transcription.ports import Transcriber
-from features.transcription.whisper import WhisperTranscriber
-from features.compositing.heads import HeadDetector, GroundingDINOHeadDetector
-from features.compositing.compositor import RawVideoCompositor
+from src.features.transcription.ports import Transcriber
+from src.features.transcription.whisper import WhisperTranscriber
+from src.features.compositing.heads import HeadDetector, GroundingDINOHeadDetector
+from src.features.compositing.compositor import RawVideoCompositor
 
 def compile_video_raw(
     project_name: str,

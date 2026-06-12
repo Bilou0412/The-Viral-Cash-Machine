@@ -7,9 +7,9 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from infra.download import download_file
-from infra.env import save_key_to_env
-from pipeline import Pipeline, VideoInstance
+from .infra.download import download_file
+from .infra.env import save_key_to_env
+from .pipeline import Pipeline, VideoInstance as PipelineVideoInstance
 
 # Load environment variables
 load_dotenv()

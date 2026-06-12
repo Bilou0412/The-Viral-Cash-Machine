@@ -4,13 +4,13 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-from features.transcription.ports import Transcriber
-from features.transcription.whisper import WhisperTranscriber
-from features.compositing.heads import HeadDetector, GroundingDINOHeadDetector, HeadLayout
-from features.compositing.compositor import RawVideoCompositor
-from features.assets.ports import AssetProvider, AssetBundle
-from features.assets.replicate_provider import ReplicateAssetProvider
-from infra.download import download_file
+from .features.transcription.ports import Transcriber
+from .features.transcription.whisper import WhisperTranscriber
+from .features.compositing.heads import HeadDetector, GroundingDINOHeadDetector, HeadLayout
+from .features.compositing.compositor import RawVideoCompositor
+from .features.assets.ports import AssetProvider, AssetBundle
+from .features.assets.replicate_provider import ReplicateAssetProvider
+from .infra.download import download_file
 
 
 @dataclass(frozen=True)

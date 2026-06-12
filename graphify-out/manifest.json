@@ -1,7 +1,7 @@
 {
   "app.py": {
-    "mtime": 1781267632.1450577,
-    "ast_hash": "686230f4cb5e546d741affd2fbc519b9",
+    "mtime": 1781273578.4485064,
+    "ast_hash": "d4a6caea283aa9ed2778a39f1171d348",
     "semantic_hash": ""
   },
   "compiler.py": {
@@ -18,11 +18,6 @@
     "mtime": 1781036646.5925844,
     "ast_hash": "0bae03f356644dcedfed92a17f70c154",
     "semantic_hash": ""
-  },
-  "GEMINI.md": {
-    "mtime": 1780947166.1102252,
-    "ast_hash": "32ca594161b29bb7d3728234b199a227",
-    "semantic_hash": "32ca594161b29bb7d3728234b199a227"
   },
   "README.md": {
     "mtime": 1781031996.5441725,
@@ -50,8 +45,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1781271564.7642784,
-    "ast_hash": "121ec8d96e965e03b3dfdd77992cb693",
+    "mtime": 1781273619.9568765,
+    "ast_hash": "38a32cc0c08f8122bb4f2e3fdf7e8b0e",
     "semantic_hash": ""
   },
   "ARCHITECTURE_PLAN.md": {
@@ -185,8 +180,8 @@
     "semantic_hash": ""
   },
   "features/compositing/compositor.py": {
-    "mtime": 1781271731.535458,
-    "ast_hash": "da5d409fe7dd815e397bf442b71cd3b5",
+    "mtime": 1781273585.6558664,
+    "ast_hash": "ceef390010383be3777dc0514d420395",
     "semantic_hash": ""
   },
   "features/assets/__init__.py": {
@@ -205,8 +200,8 @@
     "semantic_hash": ""
   },
   "pipeline.py": {
-    "mtime": 1781267611.254966,
-    "ast_hash": "6384331a2293e197dcddf7086e513e80",
+    "mtime": 1781273575.0542133,
+    "ast_hash": "d823a7a36d527a9dc9469f148eaa8024",
     "semantic_hash": ""
   },
   "features/scripting/__init__.py": {
@@ -215,8 +210,8 @@
     "semantic_hash": ""
   },
   "features/scripting/openai_decomposer.py": {
-    "mtime": 1781267598.5424058,
-    "ast_hash": "61dfdd245d6c52abadf4fc5a97d699a4",
+    "mtime": 1781273591.7492218,
+    "ast_hash": "1e68d15821d38b29760287bc4daa710a",
     "semantic_hash": ""
   },
   "features/scripting/ports.py": {

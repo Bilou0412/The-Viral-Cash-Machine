@@ -1,3 +1,38 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "viral-cash-machine"
+version = "2.0.0"
+description = "AI-powered vertical video (9:16) generation for TikTok/Shorts/Reels"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Bilel Moudache", email = "bilel.moudache0412@gmail.com" }
+]
+
+dependencies = [
+    "streamlit>=1.28.0",
+    "moviepy>=1.0.3",
+    "replicate>=0.15.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.setuptools]
+packages = ["src", "scripts"]
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
@@ -5,14 +40,17 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
-module = ["infra.*", "features.*"]
+module = ["src.infra.*", "src.features.*"]
 strict = true
 
 [[tool.mypy.overrides]]
-module = "app"
+module = "src.app"
 # Legacy app.py: tolerant during refactor, will be --strict at step 9
 ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = ["streamlit.*", "replicate.*", "openai.*", "moviepy.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

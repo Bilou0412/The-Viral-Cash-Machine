@@ -13,10 +13,10 @@ ViralCashMachine V2 is a Streamlit dashboard that automates AI-powered vertical 
 pip install -r requirements.txt
 
 # Run the app
-python -m streamlit run app.py
+python -m streamlit run src/app.py
 
 # Generate audio assets (tick/beep sound effects)
-python generate_assets.py
+python scripts/generate_assets.py
 ```
 
 On Windows, use `setup.bat` and `start.bat` instead.
@@ -49,9 +49,9 @@ The core workflow is a 2-step pipeline, each triggered by a button in the Stream
 
 ### Key File Roles
 
-- **`app.py`** — Streamlit UI, session state management, OpenAI prompt decomposition, Replicate API calls for asset generation
-- **`compiler.py`** — All post-processing: MoviePy video assembly, Whisper subtitles, AI head detection
-- **`generate_assets.py`** — One-off script to create `assets/tick.wav` and `assets/final.wav` sound effects
+- **`src/app.py`** — Streamlit UI, session state management, OpenAI prompt decomposition, Replicate API calls for asset generation
+- **`scripts/compiler.py`** — All post-processing: MoviePy video assembly, Whisper subtitles, AI head detection
+- **`scripts/generate_assets.py`** — One-off script to create `assets/tick.wav` and `assets/final.wav` sound effects
 
 ### External Dependencies
 

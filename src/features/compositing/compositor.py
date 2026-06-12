@@ -15,10 +15,10 @@ from moviepy import (
 )
 from moviepy.video.fx import Resize
 
-from features.transcription.ports import Transcriber
-from features.compositing.heads import HeadDetector
-from features.compositing.srt import save_srt
-from features.compositing.overlays import SubtitleOverlay, TimerOverlay, GaugeOverlay, NameplateOverlay
+from ..transcription.ports import Transcriber
+from .heads import HeadDetector
+from .srt import save_srt
+from .overlays import SubtitleOverlay, TimerOverlay, GaugeOverlay, NameplateOverlay
 
 
 class RawVideoCompositor:

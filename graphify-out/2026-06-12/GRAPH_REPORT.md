@@ -5,8 +5,8 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 351 nodes · 515 edges · 25 communities (17 shown, 8 thin omitted)
-- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 90 edges (avg confidence: 0.52)
+- 353 nodes · 550 edges · 25 communities (17 shown, 8 thin omitted)
+- Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 118 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -42,15 +42,15 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `metadata` - 32 edges
-2. `WhisperTranscriber` - 22 edges
-3. `RawVideoCompositor` - 19 edges
-4. `HeadDetector` - 19 edges
-5. `GroundingDINOHeadDetector` - 19 edges
-6. `Pipeline` - 18 edges
-7. `ReplicateAssetProvider` - 17 edges
-8. `AssetProvider` - 15 edges
-9. `CompiledVideo` - 13 edges
-10. `OpenAI` - 12 edges
+2. `RawVideoCompositor` - 24 edges
+3. `WhisperTranscriber` - 24 edges
+4. `HeadDetector` - 21 edges
+5. `GroundingDINOHeadDetector` - 21 edges
+6. `ReplicateAssetProvider` - 19 edges
+7. `Pipeline` - 18 edges
+8. `AssetProvider` - 17 edges
+9. `VideoInstance` - 16 edges
+10. `HeadLayout` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `VideoInstance` --uses--> `ReplicateAssetProvider`  [INFERRED]
@@ -59,14 +59,15 @@
   app.py → features/compositing/heads.py
 - `VideoInstance` --uses--> `Pipeline`  [INFERRED]
   app.py → pipeline.py
+- `VideoInstance` --uses--> `VideoInstance`  [INFERRED]
+  app.py → pipeline.py
 - `VideoInstance` --uses--> `WhisperTranscriber`  [INFERRED]
   app.py → features/transcription/whisper.py
-- `compile_video_raw()` --shares_data_with--> `VideoInstance`  [INFERRED]
-  compiler.py → app.py
 
 ## Import Cycles
 - 1-file cycle: `app.py -> app.py`
 - 1-file cycle: `features/scripting/openai_decomposer.py -> features/scripting/openai_decomposer.py`
+- 1-file cycle: `features/transcription/whisper.py -> features/transcription/whisper.py`
 
 ## Hyperedges (group relationships)
 - **3-Step Production Pipeline Flow** — claude_step1_asset_generation, claude_step2_raw_compilation, claude_step3_ai_upscale [EXTRACTED 0.95]
@@ -76,12 +77,12 @@
 ## Communities (25 total, 8 thin omitted)
 
 ### Community 0 - "Video Compilation & Subtitles"
-Cohesion: 0.05
-Nodes (42): final_video, codec, duration, fps, height, nb_frames, width, metadata (+34 more)
+Cohesion: 0.06
+Nodes (32): metadata, char_left_gender, char_left_name, char_left_personality, char_right_gender, char_right_name, char_right_personality, character_audio_url (+24 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.14
-Nodes (15): compile_video_raw(), HeadDetector, Transcriber, Compile raw video from assets and metadata., Video composition orchestration., Orchestrates video composition with injected dependencies., Compose raw video from assets with immutable parameters.          Args:, RawVideoCompositor (+7 more)
+Cohesion: 0.20
+Nodes (11): OpenAI, Transcription, Cue, Complete transcription as immutable tuple of cues., Convert to list of dicts for backwards compat with metadata.json., Port for speech-to-text services., Transcribe audio file and return cues with timing., A single subtitle with timing. (+3 more)
 
 ### Community 2 - "AI Asset Generation"
 Cohesion: 0.15
@@ -108,12 +109,12 @@ Cohesion: 0.15
 Nodes (16): extract_frame(), _ffprobe_value(), key_frame_timestamps(), media_duration(), _parse_fraction(), probe_to_dict(), probe_video(), Golden-oracle helpers for the strangler-fig refactor (ARCHITECTURE_PLAN.md, step (+8 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.12
-Nodes (17): file, sha256, timestamp, file, sha256, timestamp, file, sha256 (+9 more)
+Cohesion: 0.07
+Nodes (27): file, sha256, timestamp, final_video, codec, duration, fps, height (+19 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.28
-Nodes (11): get_pipeline(), load_into_editor(), Pipeline, Get or create cached pipeline with injected dependencies., sync_instance_to_widgets(), VideoInstance, download_file(), save_key_to_env() (+3 more)
+Cohesion: 0.31
+Nodes (9): get_pipeline(), load_into_editor(), Pipeline, Get or create cached pipeline with injected dependencies., sync_instance_to_widgets(), VideoInstance, download_file(), save_key_to_env() (+1 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.20
@@ -128,16 +129,16 @@ Cohesion: 0.67
 Nodes (3): capture(), main(), Freeze a real production export as the golden oracle (ARCHITECTURE_PLAN.md, step
 
 ### Community 18 - "Community 18"
-Cohesion: 0.10
-Nodes (23): OpenAI, ScriptDecomposition, OpenAIScriptDecomposer, OpenAI GPT script decomposer implementation., Decomposes scripts using OpenAI GPT models., Initialize with OpenAI client and model.          Args:             client: Auth, Decompose script into visual elements.          Args:             script: User-p, Script decomposition ports. (+15 more)
+Cohesion: 0.18
+Nodes (13): OpenAI, ScriptDecomposition, OpenAIScriptDecomposer, OpenAI GPT script decomposer implementation., Decomposes scripts using OpenAI GPT models., Initialize with OpenAI client and model.          Args:             client: Auth, Decompose script into visual elements.          Args:             script: User-p, Script decomposition ports. (+5 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.10
-Nodes (18): GaugeOverlay, NameplateOverlay, Overlay, Port for video overlays (subtitles, timers, nameplates, etc.)., Character nameplate with position., Create nameplate clip., Render overlay as a MoviePy Clip., Subtitle text with styling. (+10 more)
+Cohesion: 0.09
+Nodes (31): compile_video_raw(), Compile raw video from assets and metadata., Video composition orchestration., Orchestrates video composition with injected dependencies., Compose raw video from assets with immutable parameters.          Args:, RawVideoCompositor, GaugeOverlay, NameplateOverlay (+23 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.07
-Nodes (41): AssetBundle, AssetProvider, AssetBundle, AssetProvider, Asset generation ports., Port for generating AI assets (voice, image, video)., Synthesize voice from text. Returns URL., Generate image from prompt. Returns URL. (+33 more)
+Nodes (46): AssetBundle, AssetProvider, AssetBundle, AssetProvider, Asset generation ports., Port for generating AI assets (voice, image, video)., Synthesize voice from text. Returns URL., Generate image from prompt. Returns URL. (+38 more)
 
 ## Knowledge Gaps
 - **124 isolated node(s):** `PreToolUse`, `allow`, `source_export`, `duration`, `width` (+119 more)
@@ -147,17 +148,17 @@ Nodes (41): AssetBundle, AssetProvider, AssetBundle, AssetProvider, Asset genera
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `OpenAI` connect `Community 18` to `Community 1`, `Community 13`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
-- **Why does `WhisperTranscriber` connect `Community 23` to `Community 1`, `Community 18`, `Community 13`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `ScriptDecomposer` connect `Community 18` to `Community 19`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Why does `AssetProvider` connect `Community 23` to `Community 19`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Are the 13 inferred relationships involving `WhisperTranscriber` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
-  _`WhisperTranscriber` has 13 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 12 inferred relationships involving `RawVideoCompositor` (e.g. with `AssetBundle` and `AssetProvider`) actually correct?**
-  _`RawVideoCompositor` has 12 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 11 inferred relationships involving `HeadDetector` (e.g. with `AssetBundle` and `HeadDetector`) actually correct?**
-  _`HeadDetector` has 11 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `GroundingDINOHeadDetector` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
-  _`GroundingDINOHeadDetector` has 10 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
+- **Why does `RawVideoCompositor` connect `Community 19` to `Community 23`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Are the 17 inferred relationships involving `RawVideoCompositor` (e.g. with `AssetBundle` and `AssetProvider`) actually correct?**
+  _`RawVideoCompositor` has 17 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 15 inferred relationships involving `WhisperTranscriber` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
+  _`WhisperTranscriber` has 15 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 13 inferred relationships involving `HeadDetector` (e.g. with `AssetBundle` and `HeadDetector`) actually correct?**
+  _`HeadDetector` has 13 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 12 inferred relationships involving `GroundingDINOHeadDetector` (e.g. with `VideoInstance` and `AssetBundle`) actually correct?**
+  _`GroundingDINOHeadDetector` has 12 INFERRED edges - model-reasoned connections that need verification._
