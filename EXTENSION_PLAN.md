@@ -84,12 +84,12 @@ Règles d'or acquises en tests réels (à encoder dans les templates) :
 | Phase | Sujet | Statut | Commit |
 |---|---|---|---|
 | P | **Prompts + voix narrateur** : ① `prompts.py` ✅ (templates + 7 règles d'or, 6 tests verts). ② Voix narrateur ✅ — **LE CONTEUR cloné**, `voice_id=R8_3HPKBKXB`, modèle TTS `speech-02-hd`, fiche `assets/narrator_voice.json`, test réutilisable OK (`conteur-clone-TEST.mp3`). Procédé retenu : concaténer ~27 s de parole (3 clips) → data URI `audio/mpeg` → `minimax/voice-cloning model=speech-02-hd`. ③ Cohérence persos : `coherence-1/2/3.mp3`, **verdict auteur en attente** (non bloquant). | ✅ fait | `7dcb7a6` |
-| S | **Script d'aventure** : structured output GPT — `AdventureScript` Pydantic (3 rounds : action, environnement, réplique perso + manière de dire, 2 choix, issue fatale, issue survie, lignes narrateur ; épilogue ; descriptions de voix des 2 persos). Extension du port `ScriptDecomposer`. Le script remplit les slots des templates P. | ⬜ à faire | |
+| S | **Script d'aventure** ✅ (équipe phase-s-script) : `adventure.py` (schéma Pydantic AdventureScript, validators 3 rounds/2 choix/1 fatal), port `AdventureDecomposer`, `openai_adventure_decomposer.py` (structured output + validation + retry, 7 règles d'or, narrateur non généré), `fake_adventure_decomposer.py` (offline grotte/mine), `adventure_to_prompts.py` (mapping pur champ→slot), `schemas/adventure.schema.json`, +17 tests. Suite : 33 passed. | ✅ fait | `2916292` |
 | A | **Step 1 étendu** : génération des assets de rounds — images (seedream) + clips face-cam (p-video audio natif) + audios narrateur (TTS voice_id cloné). Parallélisé. Flag `draft` global. Manifest d'assets par instance. Estimation de coût AVANT lancement. | ⬜ à faire | |
 | M | **Step 2 étendu** : nouveaux constructeurs de segments dans le compositor — la plupart réutilisent la brique narration existante (photo + zoom + audio + subs Whisper) ; face-cam + subs ; écran de choix A/B (overlays) ; timer existant. Timeline complète intro + 3 rounds + épilogue. Golden intro inchangé. | ⬜ à faire | |
 | U | **Streamlit max** : onglets (① Script & voix éditables avant génération, ② Assets — galerie par round, régénération à l'unité, écoute par asset, toggle draft/final, ③ Montage & preview, ④ Bibliothèque). Barres de progression, coût estimé, état de projet persistant. | ⬜ à faire | |
 
-**Prochaine étape : Phase S — script d'aventure (structured output GPT).**
+**Prochaine étape : Phase A — Step 1 étendu (génération des assets de rounds).**
 
 ## Protocole par phase
 
