@@ -60,6 +60,30 @@ par-dessus l'ambiance native du clip (volume ambiance baissé).
 
 Les sous-titres restent Whisper (transcription des audios finaux, mot à mot).
 
+## Doctrine POV/FPS immersif (décision auteur après 1er montage test)
+
+Le format n'est PAS du b-roll illustratif : c'est une **immersion POV/FPS** où le
+spectateur EST quelqu'un qui suit le protagoniste.
+
+1. **POV first-person partout** (vidéo ET photo) : nos mains visibles en bas du
+   cadre, comme un jeu FPS / comme l'intro.
+2. **Le protagoniste est TOUJOURS dans le cadre** : de dos quand il marche devant
+   nous (on le suit), de face quand il s'arrête pour nous parler.
+3. **Une seule DA, cohérente de l'intro jusqu'à la fin** : horreur cinématique
+   photoréaliste, palette froide désaturée, ombres profondes, torche unique,
+   grain. Tout asset partage ce bloc DA (constante `DA` dans prompts.py).
+4. **Descriptions vidéo = ce qu'on VOIT**, riche et immersif (l'action POV, le
+   décor, la lumière), PAS un écho du dialogue. Plus de contexte que de paroles.
+5. **Le personnage annonce les choix lui-même**, à SA manière (selon son
+   caractère), en s'adressant à nous (« tu préfères ça, suis-moi, ou tu pars »),
+   en caractérisant chaque option, et en nous STRESSANT (« choisis vite, t'as
+   pas vraiment le choix »). Il ne dit jamais « qu'est-ce que je fais ».
+6. **Zéro silence** : la durée de chaque plan se cale sur la parole (narration ou
+   réplique). Le montage trime le clip à la longueur de l'audio + court tail.
+7. **Immersion réelle** : caméra POV en mouvement avant pour l'action (pas de
+   plan fixe « carte postale »), mains qui bougent. Plan fixe seulement quand le
+   perso s'arrête face caméra.
+
 ## L'enjeu n°1 : les prompts (décision auteur — « optimiser un maximum sans diluer »)
 
 Tout le système repose sur le fait que les instructions des prompts sont

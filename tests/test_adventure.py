@@ -136,7 +136,7 @@ def test_export_schema(tmp_path):
 def test_face_cam_porte_la_replique_et_la_voix_verbatim():
     """character_line_fr (FR exact) + voice.description (verbatim) dans le face-cam."""
     s = _script()
-    rp = A2P.round_prompts(s.rounds[0], s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(s.rounds[0], s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     assert f'"{s.rounds[0].character_line_fr}"' in rp.face_cam
     assert s.char_left_voice.description in rp.face_cam
     assert s.char_left_desc in rp.face_cam
@@ -146,14 +146,14 @@ def test_delivery_precede_la_replique():
     """Règle d'or 2 : la manière de dire (delivery) précède la réplique."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     assert rp.face_cam.index(rnd.character_delivery) < rp.face_cam.index(rnd.character_line_fr)
 
 
 def test_action_et_environnement_dans_les_bons_slots():
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     assert rnd.action_desc in rp.action
     assert rnd.environment_desc in rp.action          # action_sequence(..., environment_desc)
     assert rnd.environment_desc in rp.environment      # environment_showcase(environment_desc, ...)
@@ -164,7 +164,7 @@ def test_choix_deux_images_distinctes():
     """Une image par option, dans l'ordre, avec l'environnement du round."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     assert rnd.choices[0].image_desc in rp.choice_images[0]
     assert rnd.choices[1].image_desc in rp.choice_images[1]
     assert rp.choice_images[0] != rp.choice_images[1]
@@ -175,7 +175,7 @@ def test_choix_deux_images_distinctes():
 def test_issues_fatale_et_survie():
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     assert rnd.fatal_kill_desc in rp.fatal
     assert rnd.fatal_pov_reaction in rp.fatal
     assert rnd.survival_outcome_desc in rp.survival
@@ -221,10 +221,9 @@ def test_regles_d_or_sur_tous_les_prompts_du_script():
     all_prompts.append(A2P.epilogue_prompt(s, "left"))
     for p in all_prompts:
         assert P.NO_TEXT in p
-    # STATIC_CAMERA sur les clips (les images de choix n'embarquent pas ce bloc)
-    for rp in rps:
-        for clip in (rp.action, rp.environment, rp.face_cam, rp.fatal, rp.survival):
-            assert P.STATIC_CAMERA in clip
+        assert P.DA in p                  # DA unique partout (cohérence visuelle)
+        assert "First-person POV" in p    # doctrine POV/FPS
+        assert P.POV_HANDS in p           # nos mains visibles partout
 
 
 def test_tous_les_champs_round_sont_consommes():
@@ -235,7 +234,7 @@ def test_tous_les_champs_round_sont_consommes():
     """
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_desc, s.char_left_voice.description)
+    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
     blob = " ||| ".join(rp.as_list())
     # champs visuels EN qui DOIVENT atterrir dans un prompt
     for field in (

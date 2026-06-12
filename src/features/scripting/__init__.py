@@ -1,10 +1,9 @@
 """Script decomposition feature.
 
-Note: the OpenAI-backed decomposers (`OpenAIScriptDecomposer`,
-`OpenAIAdventureDecomposer`) are intentionally NOT re-exported here — they import
-the `openai` SDK at module load, which is absent offline. Import them directly
-from their module when needed. The Pydantic schema, ports and the Fake offline
-decomposer stay importable without any network dependency.
+Note: `OpenAIAdventureDecomposer` only references the `openai` SDK under
+TYPE_CHECKING (the SDK is absent outside the container), so importing it here is
+safe offline. The legacy `OpenAIScriptDecomposer` still imports `openai` eagerly
+and is therefore deliberately NOT re-exported — import it directly when needed.
 """
 
 from .adventure import (
@@ -15,6 +14,7 @@ from .adventure import (
     export_schema,
 )
 from .fake_adventure_decomposer import FakeAdventureDecomposer
+from .openai_adventure_decomposer import OpenAIAdventureDecomposer
 from .ports import AdventureDecomposer, ScriptDecomposer, ScriptDecomposition
 
 __all__ = [
@@ -27,4 +27,5 @@ __all__ = [
     "VoiceProfile",
     "export_schema",
     "FakeAdventureDecomposer",
+    "OpenAIAdventureDecomposer",
 ]

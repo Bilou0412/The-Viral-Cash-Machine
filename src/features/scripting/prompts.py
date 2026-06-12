@@ -1,45 +1,42 @@
 """Bibliothèque de prompts — le composant n°1 du système.
 
 Chaque type d'asset a son template à slots. Les templates assemblent des blocs
-réutilisables. RÈGLES D'OR (apprises en tests réels, cf. EXTENSION_PLAN.md) :
+réutilisables. Tout le format est une IMMERSION POV/FPS : le spectateur EST
+quelqu'un qui suit le protagoniste (cf. EXTENSION_PLAN.md, doctrine POV/FPS).
 
+RÈGLES D'OR (apprises en tests réels) :
 1. Une ligne = une contrainte fonctionnelle. Court et dense, jamais dilué.
 2. Dialogue exact entre guillemets, manière de dire AVANT la réplique.
    Répliques courtes (moins de paraphrase).
-3. Description de voix réinjectée VERBATIM — jamais reformulée entre deux
-   clips d'une même identité. C'est le mécanisme de cohérence vocale.
+3. Description de voix réinjectée VERBATIM — jamais reformulée entre deux clips
+   d'une même identité. C'est le mécanisme de cohérence vocale.
 4. Ne JAMAIS mentionner ce qu'on ne veut pas voir (nommer = faire apparaître).
 5. Jamais de texte demandé à l'image — le texte réel vient des overlays.
-6. Caméra statique : bloc anti-dérive, toujours présent sur les clips.
+6. POV/FPS partout : nos mains visibles, le protagoniste toujours dans le cadre.
 7. Visuels en ANGLAIS, dialogues en FRANÇAIS.
-
-Toute modification d'un template doit passer par ce module (versionné, testé
-par tests/test_prompts.py). Pas de prompt en dur ailleurs dans le code.
 """
 
 # ---------------------------------------------------------------------------
-# Blocs réutilisables
+# Blocs réutilisables — DA unique + grammaire POV
 # ---------------------------------------------------------------------------
 
-STATIC_CAMERA = (
-    "Static locked-off camera. No camera movement, no zoom, no pan, "
-    "no background change."
+# La DA partagée par TOUS les assets (intro → fin), pour la cohérence visuelle.
+DA = (
+    "dark cinematic horror, photorealistic, heavily desaturated cold palette, "
+    "deep crushed shadows, a single harsh handheld torch as the only light, "
+    "wet glistening surfaces, drifting dust, fine film grain"
 )
 
-NO_TEXT = "No text, no lettering, no logos anywhere in the frame."
+# Notre présence à la première personne (mains visibles, comme un FPS / l'intro).
+POV_HANDS = "our own bare hands visible at the lower edge of the frame"
 
-VERTICAL = "Vertical 9:16 format."
+NO_TEXT = "No text, no lettering, no logos in the frame."
 
-HORROR_STYLE = (
-    "Dark cinematic horror atmosphere, realistic, oppressive shadows, "
-    "desaturated cold palette, single hard light source, fine film grain."
-)
+VOICE_ONLY_AUDIO = "Audio: voice only, no music, no ambience."
 
-VOICE_ONLY_AUDIO = (
-    "Audio: voice only. No background music, no ambient sound, no echo."
-)
+AMBIENT_AUDIO = "Audio: immersive ambience of the place, no music."
 
-AMBIENT_AUDIO = "Audio: natural ambient sound of the scene, no music."
+VERTICAL = "Vertical 9:16."
 
 
 def _join(*parts: str) -> str:
@@ -48,126 +45,144 @@ def _join(*parts: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Templates CLIPS (p-video)
+# Templates CLIPS (p-video) — immersion POV/FPS
 # ---------------------------------------------------------------------------
 
-def face_cam_dilemma(
-    character_desc: str, voice_desc: str, delivery: str, line_fr: str
+def action_sequence(
+    character_name: str, character_desc: str, action_desc: str, environment_desc: str
 ) -> str:
-    """Le perso face caméra pose son dilemme. Voix native, manière jouée.
+    """On SUIT le protagoniste qui avance devant nous (POV/FPS, caméra mobile)."""
+    return _join(
+        f"First-person POV, immersive FPS video-game perspective.",
+        f"We follow close behind {character_name} ({character_desc}), always in "
+        f"shot ahead of us, seen from behind, leading us as he {action_desc} "
+        f"through {environment_desc}.",
+        f"Forward walking camera motion, handheld sway, {POV_HANDS}.",
+        DA + ".",
+        AMBIENT_AUDIO,
+        NO_TEXT,
+        VERTICAL,
+    )
 
-    voice_desc doit être LA MÊME CHAÎNE pour tous les clips de ce perso.
-    delivery : whispering / murmuring / hissing... (la manière de dire).
+
+def environment_showcase(
+    character_name: str, environment_desc: str, danger_desc: str
+) -> str:
+    """Le perso s'arrête devant nous ; on découvre le danger du lieu (POV)."""
+    return _join(
+        f"First-person POV. {character_name} halts a few steps ahead of us in "
+        f"{environment_desc}.",
+        f"From our viewpoint the danger looms: {danger_desc}.",
+        f"Slow first-person sway, {POV_HANDS}.",
+        DA + ".",
+        AMBIENT_AUDIO,
+        NO_TEXT,
+        VERTICAL,
+    )
+
+
+def character_choice(
+    character_name: str,
+    character_desc: str,
+    voice_desc: str,
+    delivery: str,
+    line_fr: str,
+) -> str:
+    """Le perso s'arrête, se RETOURNE vers nous et nous balance les choix.
+
+    Il s'adresse à nous (« tu »), caractérise les options, nous met la pression.
+    `voice_desc` reste VERBATIM pour tous ses clips (règle d'or 3).
+    `delivery` = manière (whispering / hissing / urgent low voice...).
     """
     return _join(
-        f"{character_desc}, facing the camera, close-up.",
-        f"He speaks in French, {delivery}, with {voice_desc}, "
-        f'and says exactly: "{line_fr}"',
-        "Then he falls silent and keeps staring at the camera.",
-        "Natural lip sync, minimal facial movement, slow blinks.",
+        f"First-person POV: {character_name} ({character_desc}) stops, turns and "
+        f"faces us, close, locking eyes with the camera.",
+        f"He speaks straight to us in French, {delivery}, with {voice_desc}, "
+        f'pressing us to choose fast, and says exactly: "{line_fr}"',
+        f"Intense eye contact, natural lip sync, {POV_HANDS}.",
+        DA + ".",
         VOICE_ONLY_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
         NO_TEXT,
         VERTICAL,
     )
 
 
-def action_sequence(character_desc: str, action_desc: str, environment_desc: str) -> str:
-    """Le perso avance dans l'aventure (la narration TTS sera mixée par-dessus)."""
+# Alias rétro-compat (ancien nom du template).
+face_cam_dilemma = character_choice
+
+
+def fatal_outcome(
+    character_name: str, character_desc: str, kill_desc: str, pov_reaction: str
+) -> str:
+    """La mort en POV : ce que le perso nous fait, comment NOUS réagissons."""
     return _join(
-        f"{character_desc} {action_desc}, seen from behind or in profile,",
-        f"moving through {environment_desc}.",
-        "Slow deliberate movement, the figure stays small in the frame.",
+        "First-person POV, we are the victim.",
+        f"{character_name} ({character_desc}) {kill_desc}.",
+        f"We react: {pov_reaction}, {POV_HANDS} flailing.",
+        "Slow, deliberate, terrifying.",
+        DA + ".",
         AMBIENT_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
         NO_TEXT,
         VERTICAL,
     )
 
 
-def environment_showcase(environment_desc: str, danger_desc: str) -> str:
-    """Plan d'environnement hostile (narration TTS mixée par-dessus)."""
+def survival_outcome(
+    character_name: str, character_desc: str, outcome_desc: str
+) -> str:
+    """On survit et on continue de suivre le perso — la tension reste (POV)."""
     return _join(
-        f"Establishing shot of {environment_desc}.",
-        f"The danger is visible and physical: {danger_desc}.",
-        "Subtle menacing motion within the scene: dust falling, faint tremors, "
-        "unstable elements shifting slightly.",
+        "First-person POV, we just survived.",
+        f"We follow {character_name} ({character_desc}) as he {outcome_desc}, "
+        f"still ahead of us.",
+        f"The threat lingers, {POV_HANDS}.",
+        DA + ".",
         AMBIENT_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
         NO_TEXT,
         VERTICAL,
     )
 
 
-def fatal_outcome(character_desc: str, kill_desc: str, pov_reaction: str) -> str:
-    """La mort en mouvement, POV : ce que le perso TE fait, comment TU réagis."""
+def epilogue_other_path(
+    other_name: str, other_desc: str, glimpse_desc: str
+) -> str:
+    """« Si tu avais choisi l'autre... » — aperçu POV de l'autre protagoniste."""
     return _join(
-        "First-person POV shot, the viewer is the victim.",
-        f"{character_desc} {kill_desc}.",
-        f"The viewer reacts: {pov_reaction}.",
-        "Slow, deliberate, terrifying pacing.",
+        f"First-person POV glimpse of {other_name} ({other_desc}) {glimpse_desc}.",
+        f"Dreamlike, distant, a path not taken, {POV_HANDS}.",
+        DA + ".",
         AMBIENT_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
-        NO_TEXT,
-        VERTICAL,
-    )
-
-
-def survival_outcome(character_desc: str, outcome_desc: str) -> str:
-    """L'issue où l'on survit — mais qui reste angoissante."""
-    return _join(
-        "First-person POV shot, the viewer just survived.",
-        f"{character_desc} {outcome_desc}.",
-        "The tension does not release: the threat remains present.",
-        AMBIENT_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
-        NO_TEXT,
-        VERTICAL,
-    )
-
-
-def epilogue_other_path(other_character_desc: str, glimpse_desc: str) -> str:
-    """« Si tu avais choisi l'autre... » — aperçu de l'autre chemin."""
-    return _join(
-        f"{other_character_desc} {glimpse_desc}.",
-        "Dreamlike distant tone, as a vision of a path not taken.",
-        AMBIENT_AUDIO,
-        STATIC_CAMERA,
-        HORROR_STYLE,
         NO_TEXT,
         VERTICAL,
     )
 
 
 def narrator_audition(voice_desc: str, line_fr: str) -> str:
-    """Clip jetable d'audition : visuel minimal, la voix est le sujet."""
+    """Clip jetable d'audition narrateur : visuel minimal, la voix est le sujet."""
     return _join(
         "Almost black screen: faint embers drifting in darkness.",
         f"A narrator speaks in French, off-screen, with {voice_desc}, "
         f'and says exactly: "{line_fr}"',
         VOICE_ONLY_AUDIO,
-        STATIC_CAMERA,
+        "Static shot.",
         NO_TEXT,
         VERTICAL,
     )
 
 
 # ---------------------------------------------------------------------------
-# Templates IMAGES (seedream)
+# Templates IMAGES (seedream) — POV figé pour l'écran des choix
 # ---------------------------------------------------------------------------
 
-def choice_image(option_desc: str, environment_desc: str) -> str:
-    """L'image d'UN choix (deux images en succession par round)."""
+def choice_image(
+    character_name: str, option_desc: str, environment_desc: str
+) -> str:
+    """Image POV d'UNE option (le perso la désigne devant nous)."""
     return _join(
-        f"Dramatic still frame illustrating one option: {option_desc},",
-        f"within {environment_desc}.",
+        f"First-person POV still. Ahead of us in {environment_desc}: {option_desc}.",
+        f"{character_name} is in frame, gesturing toward it, {POV_HANDS}.",
         "Strong central composition, readable in half a second.",
-        HORROR_STYLE,
+        DA + ".",
         NO_TEXT,
         VERTICAL,
     )
