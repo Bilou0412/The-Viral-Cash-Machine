@@ -45,7 +45,7 @@ demain). Architecture cerveau (Python) / moteur (port `RenderEngine`).
 
 | Étape | Sujet | Statut | Commit |
 |---|---|---|---|
-| IR-1 | Schéma `VideoSpec` (Pydantic) + ports `RenderEngine`/`AssetResolver` + JSON Schema + builder legacy | ✅ fait | |
+| IR-1 | Schéma `VideoSpec` (Pydantic) + ports `RenderEngine`/`AssetResolver` + JSON Schema + builder legacy | ✅ fait | `d26f572` |
 | IR-2 | `MoviePyRenderer` : interpréteur du spec (extraire `compose()` segment par segment, golden diff) | ⬜ à faire | |
 | IR-3 | `SpecAssetResolver` : Step 1 piloté par le manifest d'assets du spec | ⬜ à faire | |
 | IR-4 | Planner LLM : structured output contraint par `schemas/videospec.schema.json` → VideoSpec | ⬜ à faire | |
