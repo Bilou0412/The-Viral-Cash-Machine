@@ -15,6 +15,7 @@ from infra.env import save_key_to_env
 from features.transcription.whisper import WhisperTranscriber
 from features.compositing.heads import GroundingDINOHeadDetector
 from features.assets.replicate_provider import ReplicateAssetProvider
+from pipeline import Pipeline
 
 # Load environment variables
 load_dotenv()
@@ -379,49 +380,24 @@ if replicate_api_token:
         # STEP 1: ASSETS
         if p_row1_col1.button("🎬 [STEP 1] Generate All Assets", use_container_width=True):
             try:
-                status = st.empty()
                 with st.spinner("🚀 Producing Assets..."):
-                    asset_provider = ReplicateAssetProvider()
-
-                    if inst.narration_script:
-                        status.info("🎙️ Synthesizing Narrator Voice...")
-                        v_id = "Deep_Voice_Man" if inst.type == "intro" else "Wise_Woman"
-                        inst.narrator_audio_url = asset_provider.synthesize_voice(
-                            inst.narration_script, v_id
-                        )
-
-                    if inst.character_speech:
-                        status.info("🎙️ Synthesizing Character Voice...")
-                        inst.character_audio_url = asset_provider.synthesize_voice(
-                            inst.character_speech, "Deep_Voice_Man"
-                        )
-
-                    status.info("🖼️ Generating Base Image...")
-                    inst.freeze_image_url = asset_provider.generate_image(
-                        inst.freeze_image_prompt, image_size, "9:16"
-                    )
-
-                    status.info("🎥 Animating Video (7s)...")
-                    inst.video_url = asset_provider.animate_video(
+                    pipeline = Pipeline()
+                    asset_bundle = pipeline.generate_assets(
+                        project_name,
+                        inst.id,
                         inst.video_prompt,
-                        inst.freeze_image_url,
-                        duration=7,
-                        aspect_ratio="9:16",
-                        resolution=video_res,
-                        audio_url=inst.character_audio_url,
-                        draft=video_draft,
+                        inst.freeze_image_prompt,
+                        inst.character_speech,
+                        inst.narration_script,
+                        inst.type,
                     )
-
-                    status.info("💾 Archiving assets locally...")
+                    # Update instance with generated URLs
+                    inst.narrator_audio_url = asset_bundle.narrator_audio_url
+                    inst.character_audio_url = asset_bundle.character_audio_url
+                    inst.freeze_image_url = asset_bundle.freeze_image_url
+                    inst.video_url = asset_bundle.video_url
+                    # Persist metadata
                     project_dir = os.path.join("exports", project_name, inst.id)
-                    if inst.narrator_audio_url:
-                        download_file(inst.narrator_audio_url, project_dir, "narrator.mp3")
-                    if inst.character_audio_url:
-                        download_file(inst.character_audio_url, project_dir, "character.mp3")
-                    if inst.freeze_image_url:
-                        download_file(inst.freeze_image_url, project_dir, "base_image.png")
-                    if inst.video_url:
-                        download_file(inst.video_url, project_dir, "video.mp4")
                     with open(os.path.join(project_dir, "metadata.json"), "w") as f:
                         json.dump(asdict(inst), f, indent=4)
                 st.success("✅ Step 1: Assets Ready!")
@@ -431,14 +407,14 @@ if replicate_api_token:
 
         # STEP 2: MOVIEPY
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
-            with st.spinner("🎬 Running MoviePy..."):
-                transcriber = WhisperTranscriber()
-                head_detector = GroundingDINOHeadDetector()
-                compile_video_raw(
-                    project_name, inst.id, transcriber=transcriber, head_detector=head_detector
-                )
+            try:
+                with st.spinner("🎬 Running MoviePy..."):
+                    pipeline = Pipeline()
+                    compiled_video = pipeline.compile_video(project_name, inst.id)
                 st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
+            except Exception as e:
+                st.error(f"Error: {e}")
 
         # --- CUMULATIVE PRODUCTION GALLERY ---
         st.divider()
