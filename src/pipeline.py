@@ -90,7 +90,7 @@ class Pipeline:
             freeze_image_url,
             duration=7,
             aspect_ratio="9:16",
-            resolution="720x1280",
+            resolution="720p",  # p-video n'accepte que "720p"/"1080p"
             audio_url=character_audio_url,
             draft=False,
         )
