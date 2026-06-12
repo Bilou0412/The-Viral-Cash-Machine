@@ -59,7 +59,7 @@ class FakeAdventureDecomposer:
         the names are injected, the prompt is ignored (no network call).
         """
         round1 = _round(
-            action_desc="leads us deeper down the collapsed mine shaft, torch raised",
+            action_desc="descends deeper down the collapsed mine shaft, torch raised",
             action_narration_fr=(
                 "Tu le suis dans le boyau effondré. L'air sent la rouille et "
                 "l'eau croupie, et chaque planche craque sous vos pas."
@@ -99,7 +99,7 @@ class FakeAdventureDecomposer:
             ),
         )
         round2 = _round(
-            action_desc="leads us up a groaning rusted ladder toward a pale glow",
+            action_desc="climbs a groaning rusted ladder toward a pale glow",
             action_narration_fr=(
                 "Tu grimpes derrière lui vers une lueur malade. Les barreaux "
                 "rouillés plient, et le vide t'aspire dans le dos."
@@ -139,7 +139,7 @@ class FakeAdventureDecomposer:
             ),
         )
         round3 = _round(
-            action_desc="leads us onto a narrow ledge above an unseen drop",
+            action_desc="edges onto a narrow ledge above an unseen drop",
             action_narration_fr=(
                 "La sortie n'est plus loin. Mais le vide aussi. Tu avances derrière "
                 "lui sur une corniche large comme une main."
