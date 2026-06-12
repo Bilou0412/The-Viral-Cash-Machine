@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1780950934.1982112,
-    "ast_hash": "44abcd9f59426c4c6aa8736a0d11ec72",
+    "mtime": 1781275405.5379498,
+    "ast_hash": "833760fbf406bcbe0a9d7d9a6436190f",
     "semantic_hash": ""
   },
   "assets/final.wav": {
@@ -30,13 +30,13 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1781273619.9568765,
-    "ast_hash": "38a32cc0c08f8122bb4f2e3fdf7e8b0e",
+    "mtime": 1781285698.9524362,
+    "ast_hash": "2427a8dfcef5e1c61e34fb50af145d2e",
     "semantic_hash": ""
   },
   "ARCHITECTURE_PLAN.md": {
-    "mtime": 1781264829.0848987,
-    "ast_hash": "514f9d72afcd272c7765f1f4ced2c456",
+    "mtime": 1781275428.8182352,
+    "ast_hash": "14837b53d744357bb770415c01b944a9",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -225,8 +225,128 @@
     "semantic_hash": ""
   },
   "src/pipeline.py": {
-    "mtime": 1781273909.2986598,
-    "ast_hash": "47ac6efe86161175a74e6078c2466495",
+    "mtime": 1781283673.9707258,
+    "ast_hash": "06a84af88e3f639a0ed89ffbca014405",
+    "semantic_hash": ""
+  },
+  "schemas/videospec.schema.json": {
+    "mtime": 1781275386.20771,
+    "ast_hash": "588a70c3d6c08fa0ec5a4a7d3eec6c7d",
+    "semantic_hash": ""
+  },
+  "src/videospec/__init__.py": {
+    "mtime": 1781275358.5589993,
+    "ast_hash": "d5fbcf45a779e9d7e8e67ed8205937b9",
+    "semantic_hash": ""
+  },
+  "src/videospec/builder.py": {
+    "mtime": 1781275342.639711,
+    "ast_hash": "3e1e08c119b74086c3b4f87107ef633e",
+    "semantic_hash": ""
+  },
+  "src/videospec/models.py": {
+    "mtime": 1781275320.2500236,
+    "ast_hash": "c089b1419c7a4cd491b92abd7a2d0d26",
+    "semantic_hash": ""
+  },
+  "src/videospec/ports.py": {
+    "mtime": 1781275331.5167577,
+    "ast_hash": "c6c362eae871ec02f7c54d6e28f711ff",
+    "semantic_hash": ""
+  },
+  "src/videospec/schema.py": {
+    "mtime": 1781275349.7895918,
+    "ast_hash": "ed3623b4f1755c575ba619ddc1757427",
+    "semantic_hash": ""
+  },
+  "tests/test_videospec.py": {
+    "mtime": 1781275373.256151,
+    "ast_hash": "9434e6a8003cf3ceed5c7a2695117959",
+    "semantic_hash": ""
+  },
+  "series/bible.md": {
+    "mtime": 1781281685.6235723,
+    "ast_hash": "203d3182af86fa7020a00e63ca6427f9",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-3d-stylise.png": {
+    "mtime": 1781279836.5979803,
+    "ast_hash": "b9a353c71d79ea403f692cf61bf295f7",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-painterly.png": {
+    "mtime": 1781279852.9859147,
+    "ast_hash": "4eecc72c2686a48ed3007aaf7ac6e29e",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-realiste.png": {
+    "mtime": 1781279866.1307914,
+    "ast_hash": "5626d47eb70f6bccdc0a7069aae66d43",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-hybride-chaud.png": {
+    "mtime": 1781280200.5559332,
+    "ast_hash": "c606d511fa3f60a467c0f9f408d48b30",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-hybride.png": {
+    "mtime": 1781280189.6335313,
+    "ast_hash": "314332c44c945d2dd557ab94ba66b15c",
+    "semantic_hash": ""
+  },
+  "series/characters/ines.png": {
+    "mtime": 1781282723.2284198,
+    "ast_hash": "c34728cb749b012cb9575263fa83954d",
+    "semantic_hash": ""
+  },
+  "series/characters/jimmy.png": {
+    "mtime": 1781283007.7384007,
+    "ast_hash": "1be390a9f157c5f7fb82131b2391eee9",
+    "semantic_hash": ""
+  },
+  "series/characters/lena.png": {
+    "mtime": 1781282749.585804,
+    "ast_hash": "4c5262f22fb7710dc5717c4d9be5c5cc",
+    "semantic_hash": ""
+  },
+  "series/characters/nabil.png": {
+    "mtime": 1781282677.312304,
+    "ast_hash": "ff3f5fda0c0e15b56c5c7f89d44fcffc",
+    "semantic_hash": ""
+  },
+  "series/characters/sam.png": {
+    "mtime": 1781282659.5764906,
+    "ast_hash": "2ad1992288a8fbcadce3ae373eb7c967",
+    "semantic_hash": ""
+  },
+  "series/characters/teo.png": {
+    "mtime": 1781282983.3152487,
+    "ast_hash": "27c83cf810a29f43d691a222eaabddce",
+    "semantic_hash": ""
+  },
+  "series/characters/stanislas.png": {
+    "mtime": 1781283025.3065255,
+    "ast_hash": "1e84f27890bff246565967245448b9ad",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-animation-test.mp4": {
+    "mtime": 1781284202.3775043,
+    "ast_hash": "fc8dc460ee5fd878f353aa31a80a7e96",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-audio-natif-test.mp4": {
+    "mtime": 1781285237.6980436,
+    "ast_hash": "3f5210455ff719b5b0dc1f031c1d62c4",
+    "semantic_hash": ""
+  },
+  "series/da-tests/sam-voice-sample.wav": {
+    "mtime": 1781285699.704974,
+    "ast_hash": "01b1227e41f2f69d29713c773f86b45c",
+    "semantic_hash": ""
+  },
+  "EXTENSION_PLAN.md": {
+    "mtime": 1781292530.7857842,
+    "ast_hash": "cb0399006109a314f4ef171950315636",
     "semantic_hash": ""
   }
 }
