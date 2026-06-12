@@ -99,6 +99,12 @@ voir les assets / regarder le montage). 4. Cocher le tableau + commit.
 
 ## Acquis techniques des tests réels (ne pas re-découvrir)
 
+- **RÈGLE ABSOLUE — les liens Replicate expirent.** On ne stocke et on ne
+  réutilise JAMAIS une URL `replicate.delivery` comme référence. Tout asset
+  (image, clip, audio, preview) est **téléchargé en local immédiatement** après
+  génération, et seul le chemin local est conservé. La seule référence durable
+  qu'on garde est le `voice_id` du clone (ça, ça ne périme pas). Tout le reste =
+  fichier sur disque. Vaut pour Step 1, le montage, et tout script de test.
 - seedream : `size` ∈ {2K, 4K, custom} ; jamais de texte dans l'image.
 - p-video : `resolution` ∈ {720p, 1080p} ; `duration` se cale sur l'audio fourni,
   sinon sur le paramètre ; `save_audio: true` pour l'audio natif.
