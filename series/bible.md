@@ -114,10 +114,28 @@ répond *enfin* sérieusement à une angoisse de Nabil.
   parfait devient inerte vers l'épisode 10. Prévoir *un* coût caché de la
   perfection, même minuscule, révélé en fin de saison.
 
-### Les satellites des satellites
+### ADAM — l'ENS *(personne réelle : pote de Nabil à Villebon)*
+Détestait les profs, les profs le détestaient, « nul à l'école » — et il a fini
+à **l'ENS**. Le sommet du système scolaire atteint par celui que le système
+rejetait. **Fonction** : la preuve vivante qu'il n'y a pas de « bon parcours » —
+le contre-exemple ambulant qui désamorce chaque angoisse d'orientation de
+Nabil. Apparitions rares = impact maximal (on l'invoque plus qu'on ne le voit).
+
+### PIERRE — BTP man *(personne réelle : pote de Nabil à Villebon)*
+A quitté la licence comme Nabil — sauf que lui est **« en place »** : un vrai
+métier (BTP), un vrai salaire, un utilitaire, des mains qui savent tout faire.
+Le seul de toute la série qui soit stable à 25 ans. **Fonction** : le
+contre-argument incarné au monde tech — zéro LinkedIn, zéro pitch, une
+utilité réelle. **Mécanique récurrente** : dès que la coloc a une galère du
+monde réel (déménagement, caution, meuble, proprio), on appelle Pierre.
+Il vient. Toujours.
+
+### Les autres satellites
 Potes de Jimmy (l'écosystème startup) et de Sam (le monde d'avant la rupture).
 Donnent de la profondeur au monde sans surcharger la coloc.
 **L'ex de Sam** existe dramaturgiquement même sans apparaître.
+Adam + Pierre = le monde d'avant de Nabil (Villebon) : la série respire
+au-delà de l'école de code.
 
 ---
 
@@ -131,7 +149,8 @@ d'employabilité. Source : le vécu réel de l'auteur (école type 42).
 pendant que le marché junior dev se fait manger par l'IA. C'est le fil rouge
 thématique de la saison.
 
-### PIERRE-ÉDOUARD — le fondateur *(remix Pier — le Dean)*
+### STANISLAS — le fondateur *(personnage inventé — le Dean ; « Pierre » est
+désormais le pote BTP réel de Nabil, cf. satellites)*
 Fondateur-philanthrope, veste de costard sur t-shirt de l'école, dit
 « la pédagogie par les pairs » quatre fois par phrase, survend l'employabilité
 avec un sourire LinkedIn. Antagoniste comique récurrent, adulte de service.
@@ -266,7 +285,7 @@ hyper-spécificité — ça vaut aussi pour les visages).
   devant — son charme signature**, baby hairs qui s'échappent, taches de
   rousseur claires, cardigan crème un peu bouloché (la perfection vécue,
   pas neuve).
-- **Pierre-Édouard, 52** — Français. Front trop lisse pour son âge (botox)
+- **Stanislas, 52** — Français. Front trop lisse pour son âge (botox)
   mais pattes d'oie, dents trop blanches, léger embonpoint sous le blazer,
   marque de bronzage des lunettes de soleil.
 
@@ -320,7 +339,7 @@ posture détendue. **Accessoire** : une plante ou un carnet propre — son monde
 est en ordre. **Expression canonique** : sourire chaleureux sincère, regard
 direct et calme. **Décor** : coin lumineux et rangé, plantes vertes.
 
-### PIERRE-ÉDOUARD — silhouette TED-TALK, couleur GRIS BLAZER
+### STANISLAS — silhouette TED-TALK, couleur GRIS BLAZER
 La cinquantaine entretenue, tempes grises parfaites, léger bronzage permanent.
 **LA caricature** : blazer sur t-shirt de l'école, sneakers blanches « pour
 rester jeune », badge lanyard. Posture conférence : mains en triangle.
@@ -329,7 +348,7 @@ rester jeune », badge lanyard. Posture conférence : mains en triangle.
 
 ### Palette d'ensemble
 Cast sombre (noir/marine/bleu-gris/bordeaux/terre) + UNE tache claire (Léna)
-+ UN costume d'adulte (P-E). Dans n'importe quel plan de groupe, chacun est
++ UN costume d'adulte (Stanislas). Dans n'importe quel plan de groupe, chacun est
 identifiable par sa seule couleur-silhouette.
 
 ---
