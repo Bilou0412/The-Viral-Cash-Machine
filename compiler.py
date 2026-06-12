@@ -22,6 +22,7 @@ from features.compositing.overlays import (
     NameplateOverlay,
 )
 from features.compositing.heads import HeadDetector, GroundingDINOHeadDetector
+from features.compositing.compositor import RawVideoCompositor
 def create_styled_subtitle_pil(text, fontsize, duration, font_path="assets/montserrat.bold.ttf"):
     try: font = ImageFont.truetype(os.path.abspath(font_path), int(fontsize))
     except: font = ImageFont.load_default()
@@ -91,118 +92,11 @@ def compile_video_raw(
     transcriber: Transcriber | None = None,
     head_detector: HeadDetector | None = None,
 ) -> str:
+    """Compile raw video from assets and metadata."""
     if transcriber is None:
         transcriber = WhisperTranscriber()
     if head_detector is None:
         head_detector = GroundingDINOHeadDetector()
-    print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")
-    project_dir = os.path.join("exports", project_name, instance_id)
-    paths = {"video": os.path.join(project_dir, "video.mp4"), "image": os.path.join(project_dir, "base_image.png"), "narrator": os.path.join(project_dir, "narrator.mp3"), "metadata": os.path.join(project_dir, "metadata.json"), "output": os.path.join(project_dir, "final_video.mp4"), "tick": os.path.join("assets", "tick.wav"), "beep": os.path.join("assets", "final.wav")}
-    if not os.path.exists(paths["video"]) or not os.path.exists(paths["metadata"]): raise FileNotFoundError("Assets manquants.")
-    with open(paths["metadata"], "r", encoding="utf-8") as f: meta = json.load(f)
 
-    if os.path.exists(paths["image"]):
-        hx, hy = meta.get("head_l_x"), meta.get("head_l_y")
-        if hx is None or (hx == 0.25 and hy == 0.40):
-            head_layout = head_detector.detect(paths["image"], project_dir)
-            meta["head_l_x"], meta["head_l_y"] = head_layout.left
-            meta["head_r_x"], meta["head_r_y"] = head_layout.right
-            with open(paths["metadata"], "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=4)
-
-    name_l, name_r = meta.get("char_left_name", "").upper(), meta.get("char_right_name", "").upper()
-    char_audio = os.path.join(project_dir, "character.mp3")
-    if not os.path.exists(char_audio):
-        char_audio = paths["video"]
-    char_transcription = transcriber.transcribe(char_audio)
-    char_subs_raw = char_transcription.to_list()
-    narr_transcription = (
-        transcriber.transcribe(paths["narrator"])
-        if os.path.exists(paths["narrator"])
-        else None
-    )
-    narr_subs_raw = narr_transcription.to_list() if narr_transcription else []
-    save_srt(char_subs_raw, os.path.join(project_dir, "character.srt"))
-    save_srt(narr_subs_raw, os.path.join(project_dir, "narrator.srt"))
-
-    video_clip = VideoFileClip(paths["video"])
-    w, h = video_clip.size
-    
-    NAME_FSIZE = 50 
-    font_p = "assets/Minecraft.ttf"
-    lbl_l_exact, tw_l, th_l = _make_text_clip_exact(name_l, NAME_FSIZE, "white", 99, font_p, stroke_w=3)
-    lbl_r_exact, tw_r, th_r = _make_text_clip_exact(name_r, NAME_FSIZE, "white", 99, font_p, stroke_w=3)
-    hl_x, hl_y = meta.get("head_l_x", 0.25), meta.get("head_l_y", 0.40)
-    hr_x, hr_y = meta.get("head_r_x", 0.75), meta.get("head_r_y", 0.40)
-    V_OFFSET = 60
-    pos_l_x, pos_l_y = int(hl_x * w - tw_l / 2), int(hl_y * h - th_l - V_OFFSET)
-    pos_r_x, pos_r_y = int(hr_x * w - tw_r / 2), int(hr_y * h - th_r - V_OFFSET)
-    pos_l_x, pos_l_y = max(5, min(w - tw_l - 5, pos_l_x)), max(5, min(h - th_l - 5, pos_l_y))
-    pos_r_x, pos_r_y = max(5, min(w - tw_r - 5, pos_r_x)), max(5, min(h - th_r - 5, pos_r_y))
-    POS_L, POS_R = (pos_l_x, pos_l_y), (pos_r_x, pos_r_y)
-
-    if os.path.exists(paths["image"]):
-        img_orig_pil = Image.open(paths["image"]).convert("RGB").resize((w, h), Image.Resampling.LANCZOS)
-        base_img = ImageClip(np.array(img_orig_pil))
-        img_for_blur = img_orig_pil.copy()
-        draw = ImageDraw.Draw(img_for_blur)
-        try: font_pix = ImageFont.truetype(os.path.abspath(font_p), NAME_FSIZE)
-        except: font_pix = ImageFont.load_default()
-        draw.text((pos_l_x + tw_l//2, pos_l_y + th_l//2), name_l, font=font_pix, fill="white", anchor="mm", stroke_width=3, stroke_fill="black")
-        draw.text((pos_r_x + tw_r//2, pos_r_y + th_r//2), name_r, font=font_pix, fill="white", anchor="mm", stroke_width=3, stroke_fill="black")
-        blur_bg_with_names = ImageClip(np.array(img_for_blur.filter(ImageFilter.GaussianBlur(radius=25))))
-    else: 
-        base_img = ColorClip(size=(w, h), color=(50, 50, 50))
-        blur_bg_with_names = ColorClip(size=(w, h), color=(30, 30, 30))
-
-    lbl_l_pers = lbl_l_exact.with_position(POS_L)
-    lbl_r_pers = lbl_r_exact.with_position(POS_R)
-
-    INTRO_DUR, EYE_DUR = 1.2, 0.8
-    bar_top = ColorClip(size=(w, h // 2), color=(0,0,0)).with_duration(EYE_DUR).with_position(lambda t: ("center", -(t/EYE_DUR)*(h//2)))
-    bar_bot = ColorClip(size=(w, h // 2), color=(0,0,0)).with_duration(EYE_DUR).with_position(lambda t: ("center", (h//2)+(t/EYE_DUR)*(h//2)))
-    intro_part = CompositeVideoClip([base_img.with_duration(INTRO_DUR), lbl_l_pers.with_duration(INTRO_DUR), lbl_r_pers.with_duration(INTRO_DUR), bar_top, bar_bot], size=(w, h))
-
-    vid_dur = video_clip.duration
-    char_subs = []
-    for s in char_subs_raw:
-        if s['start'] < vid_dur:
-            badge = create_styled_subtitle_pil(s['text'].upper(), 72, min(s['end'], vid_dur)-s['start'])
-            char_subs.append(badge.with_start(s['start']).with_position(("center", 0.78 * h)))
-    video_part = CompositeVideoClip([video_clip, lbl_l_pers.with_duration(vid_dur), lbl_r_pers.with_duration(vid_dur), *char_subs], size=(w, h))
-
-    if os.path.exists(paths["narrator"]):
-        narrator_audio = AudioFileClip(paths["narrator"])
-        narr_dur = narrator_audio.duration
-        img_bg_narr = base_img.with_duration(narr_dur)
-        img_bg_narr = img_bg_narr.with_effects([Resize(lambda t: 1.0 + 0.15 * (t / narr_dur))])
-        img_bg_narr = img_bg_narr.with_position('center')
-        
-        narr_subs = []
-        for s in narr_subs_raw:
-            if s['start'] < narr_dur:
-                badge = create_styled_subtitle_pil(s['text'].upper(), 72, min(s['end'], narr_dur)-s['start'])
-                narr_subs.append(badge.with_start(s['start']).with_position(("center", 0.78 * h)))
-        narration_part = CompositeVideoClip([img_bg_narr, lbl_l_pers.with_duration(narr_dur), lbl_r_pers.with_duration(narr_dur), *narr_subs], size=(w,h)).with_audio(narrator_audio)
-        
-        T_STEP = 0.7 
-        CHOICE_DUR = T_STEP * 3
-        choice_bg = blur_bg_with_names.with_duration(CHOICE_DUR)
-        timer_size = 230
-        countdown = [create_circular_timer_pil(label, 160, timer_size, T_STEP).with_start(i * T_STEP).with_position(("center", "center")) for i, label in enumerate(["3","2","1"])]
-        dark_gauge = create_dark_fantasy_gauge(w, CHOICE_DUR).with_position(("center", int(0.65 * h)))
-        choice_audio_el = []
-        if os.path.exists(paths["tick"]): 
-            for step in [0, T_STEP, 2*T_STEP]: choice_audio_el.append(AudioFileClip(paths["tick"]).with_start(step))
-        if os.path.exists(paths["beep"]): choice_audio_el.append(AudioFileClip(paths["beep"]).with_start(CHOICE_DUR))
-        choice_part = CompositeVideoClip([choice_bg, dark_gauge, *countdown], size=(w,h))
-        if choice_audio_el: choice_part = choice_part.with_audio(CompositeAudioClip(choice_audio_el))
-        
-        final_video = concatenate_videoclips([intro_part, video_part, narration_part, choice_part], method="compose")
-    else:
-        final_video = concatenate_videoclips([intro_part, video_part], method="compose")
-
-    final_video.write_videofile(paths["output"], fps=24, codec="libx264", audio_codec="aac", temp_audiofile=os.path.join(project_dir, "temp-audio.m4a"), remove_temp=True)
-    video_clip.close()
-    if 'narrator_audio' in locals(): narrator_audio.close()
-    return paths["output"]
+    compositor = RawVideoCompositor(transcriber, head_detector)
+    return compositor.compose(project_name, instance_id)
