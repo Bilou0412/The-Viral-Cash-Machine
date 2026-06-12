@@ -28,6 +28,12 @@ Moteur de rétention : **la reconnaissance** — « c'est moi », « c'est ma co
    fait autant de vues que celui qu'on aime.
 4. **Le running mystery ne s'explique jamais** (cf. Inès).
 5. **La fissure de Sam n'arrive pas avant l'épisode 8.**
+6. **La misère n'existe que de l'extérieur.** On rigole de la galère mais on ne
+   la plaint JAMAIS : pour les personnages ce n'est pas de la misère, c'est leur
+   vie — ils ne la mettent pas en perspective. Elle ne devient « la misère » que
+   sous le regard des autres (la caméra, le viewer). Interdits absolus : musique
+   triste, voix off apitoyée, « c'est dur d'être jeune ». L'émotion naît du
+   regard du viewer, jamais de la plainte des personnages.
 
 ---
 
@@ -182,13 +188,29 @@ l'algo pousse.
 |---|---|---|
 | *(à remplir)* | | |
 
-## 11. Direction artistique — ⚠️ À VALIDER
+## 11. Direction artistique — LE MOCKUMENTAIRE VERTICAL ✅ *(validé : Community × The Office)*
 
-**Recommandation forte : style illustré/animé assumé.**
-- Cohérence des 7 visages récurrents : facile en style graphique, enfer en
-  photoréalisme IA (uncanny valley = mort de l'authenticité).
-- Signature visuelle immédiate dans le feed.
-- Statut : **non tranché — bloque la production des références personnages.**
+**Le dispositif documentaire incarne la thèse de la série (loi 6) : la caméra
+EST « les autres qui regardent ».** Les personnages vivent normalement ; c'est
+le regard documentaire qui transforme leur vie en comédie — et en misère.
+
+### Grammaire de caméra
+- **Le confessionnal** (talking head) : perso face cam, plan fixe, décor
+  récurrent (son coin de la coloc / le cluster). Le plan-roi de la série.
+  Format natif TikTok (se camoufle dans le feed) ET le plan le plus fiable
+  pour l'IA — caméra statique, déjà conforme à nos règles de prompt.
+- **Le regard caméra** (le « Jim look ») : après une absurdité, 1–2 s de
+  fixation muette. Complicité directe. Spécialité de Sam.
+- **Le B-roll documentaire** : plans courts d'illustration (le frigo étiqueté
+  de Sam, les 14 onglets de Nabil, les sacs Ikea de Téo).
+- **Les maladresses assumées** : zooms hésitants, recadrages — la signature
+  mockumentaire, qui EXCUSE les imperfections IA au lieu de les exposer.
+
+### Rendu visuel — à trancher SUR PIÈCE
+Réaliste stylisé vs illustré : test comparatif du confessionnal de Sam dans
+2–3 styles avant de figer. Avantage prod du mockumentaire : un épisode =
+surtout des confessionnaux → **un seul décor canonique par personnage**,
+identité visuelle beaucoup plus tenable quel que soit le style.
 
 ## 12. Identité des personnages (technique)
 
