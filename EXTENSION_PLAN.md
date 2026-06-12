@@ -83,13 +83,13 @@ Règles d'or acquises en tests réels (à encoder dans les templates) :
 
 | Phase | Sujet | Statut | Commit |
 |---|---|---|---|
-| P | **Prompts + voix narrateur** : ① `prompts.py` ✅ fait (templates + 7 règles d'or, 6 tests verts). ② Audition ✅ faite — **choix auteur : LE CONTEUR** (`assets/voice-audition/narrateur-conteur.mp3`). Clonage ⏳ EN COURS — bloqué sur « voice duration too short » : minimax exige ~10-15 s de parole. **Reprise** : générer 2-3 clips conteur supplémentaires (description verbatim : "an old weathered French male storyteller voice, gravelly, intimate and unsettling", template `narrator_audition`), concaténer l'audio (ffmpeg concat), passer en **data URI** (l'URL Files API est rejetée — pas d'extension ; le data URI `audio/mpeg` passe ✓), cloner avec `model="speech-02-hd"` → écrire `assets/narrator_voice.json`. ③ Cohérence persos : clips générés (`coherence-1/2/3.mp3`), **verdict auteur en attente**. | 🔄 en cours | `7dcb7a6` |
+| P | **Prompts + voix narrateur** : ① `prompts.py` ✅ (templates + 7 règles d'or, 6 tests verts). ② Voix narrateur ✅ — **LE CONTEUR cloné**, `voice_id=R8_3HPKBKXB`, modèle TTS `speech-02-hd`, fiche `assets/narrator_voice.json`, test réutilisable OK (`conteur-clone-TEST.mp3`). Procédé retenu : concaténer ~27 s de parole (3 clips) → data URI `audio/mpeg` → `minimax/voice-cloning model=speech-02-hd`. ③ Cohérence persos : `coherence-1/2/3.mp3`, **verdict auteur en attente** (non bloquant). | ✅ fait | `7dcb7a6` |
 | S | **Script d'aventure** : structured output GPT — `AdventureScript` Pydantic (3 rounds : action, environnement, réplique perso + manière de dire, 2 choix, issue fatale, issue survie, lignes narrateur ; épilogue ; descriptions de voix des 2 persos). Extension du port `ScriptDecomposer`. Le script remplit les slots des templates P. | ⬜ à faire | |
 | A | **Step 1 étendu** : génération des assets de rounds — images (seedream) + clips face-cam (p-video audio natif) + audios narrateur (TTS voice_id cloné). Parallélisé. Flag `draft` global. Manifest d'assets par instance. Estimation de coût AVANT lancement. | ⬜ à faire | |
 | M | **Step 2 étendu** : nouveaux constructeurs de segments dans le compositor — la plupart réutilisent la brique narration existante (photo + zoom + audio + subs Whisper) ; face-cam + subs ; écran de choix A/B (overlays) ; timer existant. Timeline complète intro + 3 rounds + épilogue. Golden intro inchangé. | ⬜ à faire | |
 | U | **Streamlit max** : onglets (① Script & voix éditables avant génération, ② Assets — galerie par round, régénération à l'unité, écoute par asset, toggle draft/final, ③ Montage & preview, ④ Bibliothèque). Barres de progression, coût estimé, état de projet persistant. | ⬜ à faire | |
 
-**Prochaine étape : Phase P — prompts + voix narrateur.**
+**Prochaine étape : Phase S — script d'aventure (structured output GPT).**
 
 ## Protocole par phase
 
