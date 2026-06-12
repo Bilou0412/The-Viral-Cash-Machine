@@ -9,6 +9,9 @@ from openai import OpenAI
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
 from compiler import compile_video_raw
+from infra.logging import log_terminal
+from infra.download import download_file
+from infra.env import save_key_to_env
 
 # Load environment variables
 load_dotenv()
@@ -57,13 +60,6 @@ class VideoInstance:
     head_r_x: float = 0.75
     head_r_y: float = 0.40
 
-# --- LOGGING UTILITY ---
-def log_terminal(level, message):
-    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-    colors = {"INFO": "\033[94m", "SUCCESS": "\033[92m", "WARNING": "\033[93m", "ERROR": "\033[91m", "RESET": "\033[0m"}
-    color = colors.get(level, colors["RESET"])
-    print(f"{color}[{timestamp}] [{level}] {message}{colors['RESET']}")
-
 def get_whisper_subtitles(file_path, client):
     if not client or not os.path.exists(file_path): return []
     try:
@@ -85,41 +81,6 @@ def get_whisper_subtitles(file_path, client):
     except Exception as e:
         log_terminal("ERROR", f"Whisper failed for {file_path}: {e}")
         return []
-
-def download_file(url, folder, filename):
-    if not url: return None
-    try:
-        os.makedirs(folder, exist_ok=True)
-        path = os.path.join(folder, filename)
-        response = requests.get(url, stream=True)
-        if response.status_code == 200:
-            with open(path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            log_terminal("SUCCESS", f"Downloaded: {filename}")
-            return path
-    except Exception as e:
-        log_terminal("ERROR", f"Failed to download {url}: {e}")
-    return None
-
-def save_key_to_env(key_name, value):
-    if not value: return
-    try:
-        env_path = ".env"
-        lines = []
-        if os.path.exists(env_path):
-            with open(env_path, "r") as f: lines = f.readlines()
-        found = False
-        new_lines = []
-        for line in lines:
-            if line.startswith(f"{key_name}="):
-                new_lines.append(f"{key_name}={value}\n")
-                found = True
-            else: new_lines.append(line)
-        if not found: new_lines.append(f"{key_name}={value}\n")
-        with open(env_path, "w") as f: f.writelines(new_lines)
-        log_terminal("SUCCESS", f"Saved {key_name} to .env file.")
-    except Exception as e: log_terminal("ERROR", f"Failed to save {key_name} to .env: {e}")
 
 def sync_instance_to_widgets(inst):
     st.session_state["inst_v_p"] = inst.video_prompt
