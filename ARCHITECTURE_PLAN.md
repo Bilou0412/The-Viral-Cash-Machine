@@ -31,8 +31,28 @@
 | 7 | `features/assets/` + `AssetProvider` | ✅ fait | `73e15fe` |
 | 8 | `pipeline.py` + sorties immuables (8a parallèle, 8b coupe le JSON) | ✅ fait | `2821f0f` |
 | 9 | `app.py` = câblage seul + mypy `--strict` sur `app.py` | ✅ fait | `d4a2a41` |
+| 8b | Découplage JSON du compositor (VideoInstance immuable) | ✅ fait | `f2bff50` |
+| C | Overlays → implémentations du Protocol (dataclasses gelées) | ✅ fait | `f2bff50` |
+| D | `features/scripting/` + port `ScriptDecomposer` | ✅ fait | `f2bff50` |
+| — | Restructuration `src/` + `scripts/` + `pyproject.toml` | ✅ fait | `8037ff5` |
 
-**Prochaine étape : 0 — Scaffold + infra.**
+### Phase IR — « la vidéo comme donnée » (studio génératif)
+
+Vision : le montage devient un **VideoSpec** (IR déclarative JSON) généré par le LLM
+en structured output, les assets sont déclarés puis résolus (plan/apply), et le
+moteur de rendu est un port interchangeable (MoviePy aujourd'hui, Remotion/Revideo
+demain). Architecture cerveau (Python) / moteur (port `RenderEngine`).
+
+| Étape | Sujet | Statut | Commit |
+|---|---|---|---|
+| IR-1 | Schéma `VideoSpec` (Pydantic) + ports `RenderEngine`/`AssetResolver` + JSON Schema + builder legacy | ✅ fait | |
+| IR-2 | `MoviePyRenderer` : interpréteur du spec (extraire `compose()` segment par segment, golden diff) | ⬜ à faire | |
+| IR-3 | `SpecAssetResolver` : Step 1 piloté par le manifest d'assets du spec | ⬜ à faire | |
+| IR-4 | Planner LLM : structured output contraint par `schemas/videospec.schema.json` → VideoSpec | ⬜ à faire | |
+| IR-5 | Prototype `RemotionRenderer` (ou Revideo) sur une brique, comparaison visuelle vs MoviePy | ⬜ à faire | |
+| IR-6 | Bascule du port renderer + nouveaux formats générés par le LLM | ⬜ à faire | |
+
+**Prochaine étape : IR-2 — MoviePyRenderer (interpréteur du spec).**
 
 ## Contexte
 

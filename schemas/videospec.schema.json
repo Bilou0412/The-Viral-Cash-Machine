@@ -1,0 +1,762 @@
+{
+  "$defs": {
+    "AbsolutePosition": {
+      "additionalProperties": false,
+      "description": "Position normalisée (0–1) sur le canvas.",
+      "properties": {
+        "type": {
+          "const": "absolute",
+          "default": "absolute",
+          "title": "Type",
+          "type": "string"
+        },
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "AbsolutePosition",
+      "type": "object"
+    },
+    "Canvas": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "default": 1080,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 1920,
+          "title": "Height",
+          "type": "integer"
+        },
+        "fps": {
+          "default": 24,
+          "title": "Fps",
+          "type": "integer"
+        }
+      },
+      "title": "Canvas",
+      "type": "object"
+    },
+    "CountdownSegment": {
+      "additionalProperties": false,
+      "description": "Fond flouté + compte à rebours + jauge + SFX.",
+      "properties": {
+        "type": {
+          "const": "countdown",
+          "default": "countdown",
+          "title": "Type",
+          "type": "string"
+        },
+        "background": {
+          "title": "Background",
+          "type": "string"
+        },
+        "blur_radius": {
+          "default": 25.0,
+          "title": "Blur Radius",
+          "type": "number"
+        },
+        "steps": {
+          "default": [
+            "3",
+            "2",
+            "1"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "step_duration": {
+          "default": 0.7,
+          "title": "Step Duration",
+          "type": "number"
+        },
+        "timer": {
+          "$ref": "#/$defs/TimerStyle",
+          "default": {
+            "fontsize": 160,
+            "size": 230,
+            "font_path": "assets/Minecraft.ttf"
+          }
+        },
+        "gauge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GaugeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": {
+            "y": 0.65,
+            "height": 50
+          }
+        },
+        "tick_sound": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tick Sound"
+        },
+        "end_sound": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Sound"
+        },
+        "nameplates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/NameplateSpec"
+          },
+          "title": "Nameplates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "background"
+      ],
+      "title": "CountdownSegment",
+      "type": "object"
+    },
+    "EyeOpenTransition": {
+      "additionalProperties": false,
+      "description": "Deux barres noires qui s'ouvrent verticalement.",
+      "properties": {
+        "duration": {
+          "default": 0.8,
+          "title": "Duration",
+          "type": "number"
+        }
+      },
+      "title": "EyeOpenTransition",
+      "type": "object"
+    },
+    "FileAsset": {
+      "additionalProperties": false,
+      "description": "Fichier statique déjà présent sur disque (SFX, musique, fonts...).",
+      "properties": {
+        "type": {
+          "const": "file",
+          "default": "file",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "path"
+      ],
+      "title": "FileAsset",
+      "type": "object"
+    },
+    "FootageSegment": {
+      "additionalProperties": false,
+      "description": "Vidéo principale (hook) avec sous-titres et nameplates incrustés.",
+      "properties": {
+        "type": {
+          "const": "footage",
+          "default": "footage",
+          "title": "Type",
+          "type": "string"
+        },
+        "video": {
+          "title": "Video",
+          "type": "string"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration"
+        },
+        "subtitles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubtitleTrack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "nameplates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/NameplateSpec"
+          },
+          "title": "Nameplates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "video"
+      ],
+      "title": "FootageSegment",
+      "type": "object"
+    },
+    "GaugeSpec": {
+      "additionalProperties": false,
+      "description": "Jauge de progression animée.",
+      "properties": {
+        "y": {
+          "default": 0.65,
+          "title": "Y",
+          "type": "number"
+        },
+        "height": {
+          "default": 50,
+          "title": "Height",
+          "type": "integer"
+        }
+      },
+      "title": "GaugeSpec",
+      "type": "object"
+    },
+    "HeadAnchor": {
+      "additionalProperties": false,
+      "description": "Position ancrée sur une tête détectée (résolue par HeadDetector).",
+      "properties": {
+        "type": {
+          "const": "head",
+          "default": "head",
+          "title": "Type",
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "left",
+            "right"
+          ],
+          "title": "Side",
+          "type": "string"
+        },
+        "v_offset": {
+          "default": 60,
+          "title": "V Offset",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "side"
+      ],
+      "title": "HeadAnchor",
+      "type": "object"
+    },
+    "ImageAsset": {
+      "additionalProperties": false,
+      "description": "Image à générer (text-to-image).",
+      "properties": {
+        "type": {
+          "const": "image",
+          "default": "image",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "size": {
+          "default": "1024",
+          "title": "Size",
+          "type": "string"
+        },
+        "aspect_ratio": {
+          "default": "9:16",
+          "title": "Aspect Ratio",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "prompt"
+      ],
+      "title": "ImageAsset",
+      "type": "object"
+    },
+    "IntroSegment": {
+      "additionalProperties": false,
+      "description": "Image fixe + nameplates, révélée par une transition eye-open.",
+      "properties": {
+        "type": {
+          "const": "intro",
+          "default": "intro",
+          "title": "Type",
+          "type": "string"
+        },
+        "background": {
+          "title": "Background",
+          "type": "string"
+        },
+        "duration": {
+          "default": 1.2,
+          "title": "Duration",
+          "type": "number"
+        },
+        "transition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EyeOpenTransition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": {
+            "duration": 0.8
+          }
+        },
+        "nameplates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/NameplateSpec"
+          },
+          "title": "Nameplates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "background"
+      ],
+      "title": "IntroSegment",
+      "type": "object"
+    },
+    "NameplateSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "placement": {
+          "discriminator": {
+            "mapping": {
+              "absolute": "#/$defs/AbsolutePosition",
+              "head": "#/$defs/HeadAnchor"
+            },
+            "propertyName": "type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AbsolutePosition"
+            },
+            {
+              "$ref": "#/$defs/HeadAnchor"
+            }
+          ],
+          "title": "Placement"
+        },
+        "fontsize": {
+          "default": 50,
+          "title": "Fontsize",
+          "type": "integer"
+        },
+        "color": {
+          "default": "white",
+          "title": "Color",
+          "type": "string"
+        },
+        "font_path": {
+          "default": "assets/Minecraft.ttf",
+          "title": "Font Path",
+          "type": "string"
+        },
+        "stroke_width": {
+          "default": 3,
+          "title": "Stroke Width",
+          "type": "integer"
+        },
+        "uppercase": {
+          "default": true,
+          "title": "Uppercase",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "placement"
+      ],
+      "title": "NameplateSpec",
+      "type": "object"
+    },
+    "NarrationSegment": {
+      "additionalProperties": false,
+      "description": "Image de fond zoomée + voix off + sous-titres.",
+      "properties": {
+        "type": {
+          "const": "narration",
+          "default": "narration",
+          "title": "Type",
+          "type": "string"
+        },
+        "background": {
+          "title": "Background",
+          "type": "string"
+        },
+        "audio": {
+          "title": "Audio",
+          "type": "string"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration"
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ZoomEffect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": {
+            "scale_from": 1.0,
+            "scale_to": 1.15
+          }
+        },
+        "subtitles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubtitleTrack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "nameplates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/NameplateSpec"
+          },
+          "title": "Nameplates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "background",
+        "audio"
+      ],
+      "title": "NarrationSegment",
+      "type": "object"
+    },
+    "SubtitleStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "fontsize": {
+          "default": 72,
+          "title": "Fontsize",
+          "type": "integer"
+        },
+        "font_path": {
+          "default": "assets/montserrat.bold.ttf",
+          "title": "Font Path",
+          "type": "string"
+        },
+        "y": {
+          "default": 0.78,
+          "title": "Y",
+          "type": "number"
+        },
+        "uppercase": {
+          "default": true,
+          "title": "Uppercase",
+          "type": "boolean"
+        }
+      },
+      "title": "SubtitleStyle",
+      "type": "object"
+    },
+    "SubtitleTrack": {
+      "additionalProperties": false,
+      "description": "Sous-titres mot-à-mot dérivés d'un asset audio (transcription au resolve).",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/SubtitleStyle",
+          "default": {
+            "fontsize": 72,
+            "font_path": "assets/montserrat.bold.ttf",
+            "y": 0.78,
+            "uppercase": true
+          }
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "SubtitleTrack",
+      "type": "object"
+    },
+    "TimerStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "fontsize": {
+          "default": 160,
+          "title": "Fontsize",
+          "type": "integer"
+        },
+        "size": {
+          "default": 230,
+          "title": "Size",
+          "type": "integer"
+        },
+        "font_path": {
+          "default": "assets/Minecraft.ttf",
+          "title": "Font Path",
+          "type": "string"
+        }
+      },
+      "title": "TimerStyle",
+      "type": "object"
+    },
+    "VideoAsset": {
+      "additionalProperties": false,
+      "description": "Vidéo à générer (image-to-video). `image` et `audio` référencent des assets.",
+      "properties": {
+        "type": {
+          "const": "video",
+          "default": "video",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "image": {
+          "title": "Image",
+          "type": "string"
+        },
+        "audio": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audio"
+        },
+        "duration": {
+          "default": 7.0,
+          "title": "Duration",
+          "type": "number"
+        },
+        "resolution": {
+          "default": "720x1280",
+          "title": "Resolution",
+          "type": "string"
+        },
+        "draft": {
+          "default": false,
+          "title": "Draft",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "image"
+      ],
+      "title": "VideoAsset",
+      "type": "object"
+    },
+    "VoiceAsset": {
+      "additionalProperties": false,
+      "description": "Voix à synthétiser (TTS).",
+      "properties": {
+        "type": {
+          "const": "voice",
+          "default": "voice",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "voice_id": {
+          "default": "Deep_Voice_Man",
+          "title": "Voice Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "title": "VoiceAsset",
+      "type": "object"
+    },
+    "ZoomEffect": {
+      "additionalProperties": false,
+      "description": "Zoom linéaire sur la durée du segment (effet Ken Burns).",
+      "properties": {
+        "scale_from": {
+          "default": 1.0,
+          "title": "Scale From",
+          "type": "number"
+        },
+        "scale_to": {
+          "default": 1.15,
+          "title": "Scale To",
+          "type": "number"
+        }
+      },
+      "title": "ZoomEffect",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Description complète d'une vidéo : manifest d'assets + timeline.",
+  "properties": {
+    "version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "canvas": {
+      "$ref": "#/$defs/Canvas",
+      "default": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 24
+      }
+    },
+    "assets": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "file": "#/$defs/FileAsset",
+            "image": "#/$defs/ImageAsset",
+            "video": "#/$defs/VideoAsset",
+            "voice": "#/$defs/VoiceAsset"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/VoiceAsset"
+          },
+          {
+            "$ref": "#/$defs/ImageAsset"
+          },
+          {
+            "$ref": "#/$defs/VideoAsset"
+          },
+          {
+            "$ref": "#/$defs/FileAsset"
+          }
+        ]
+      },
+      "title": "Assets",
+      "type": "array"
+    },
+    "segments": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "countdown": "#/$defs/CountdownSegment",
+            "footage": "#/$defs/FootageSegment",
+            "intro": "#/$defs/IntroSegment",
+            "narration": "#/$defs/NarrationSegment"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/IntroSegment"
+          },
+          {
+            "$ref": "#/$defs/FootageSegment"
+          },
+          {
+            "$ref": "#/$defs/NarrationSegment"
+          },
+          {
+            "$ref": "#/$defs/CountdownSegment"
+          }
+        ]
+      },
+      "title": "Segments",
+      "type": "array"
+    }
+  },
+  "required": [
+    "assets",
+    "segments"
+  ],
+  "title": "VideoSpec",
+  "type": "object"
+}
