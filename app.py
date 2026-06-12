@@ -14,6 +14,7 @@ from infra.download import download_file
 from infra.env import save_key_to_env
 from features.transcription.whisper import WhisperTranscriber
 from features.compositing.heads import GroundingDINOHeadDetector
+from features.assets.replicate_provider import ReplicateAssetProvider
 
 # Load environment variables
 load_dotenv()
@@ -380,33 +381,53 @@ if replicate_api_token:
             try:
                 status = st.empty()
                 with st.spinner("🚀 Producing Assets..."):
+                    asset_provider = ReplicateAssetProvider()
+
                     if inst.narration_script:
                         status.info("🎙️ Synthesizing Narrator Voice...")
                         v_id = "Deep_Voice_Man" if inst.type == "intro" else "Wise_Woman"
-                        v2 = replicate.run("minimax/speech-2.8-turbo", input={"text": inst.narration_script, "voice_id": v_id})
-                        inst.narrator_audio_url = str(v2)
+                        inst.narrator_audio_url = asset_provider.synthesize_voice(
+                            inst.narration_script, v_id
+                        )
+
                     if inst.character_speech:
                         status.info("🎙️ Synthesizing Character Voice...")
-                        v1 = replicate.run("minimax/speech-2.8-turbo", input={"text": inst.character_speech, "voice_id": "Deep_Voice_Man"})
-                        inst.character_audio_url = str(v1)
+                        inst.character_audio_url = asset_provider.synthesize_voice(
+                            inst.character_speech, "Deep_Voice_Man"
+                        )
+
                     status.info("🖼️ Generating Base Image...")
-                    img = replicate.run("bytedance/seedream-4.5", input={"prompt": inst.freeze_image_prompt, "size": image_size, "aspect_ratio": "9:16"})
-                    inst.freeze_image_url = str(img[0])
+                    inst.freeze_image_url = asset_provider.generate_image(
+                        inst.freeze_image_prompt, image_size, "9:16"
+                    )
+
                     status.info("🎥 Animating Video (7s)...")
-                    vid_params = {"prompt": inst.video_prompt, "image": inst.freeze_image_url, "duration": 7, "aspect_ratio": "9:16", "resolution": video_res, "draft": video_draft, "save_audio": True}
-                    if inst.character_audio_url: vid_params["audio"] = inst.character_audio_url
-                    vid = replicate.run("prunaai/p-video", input=vid_params)
-                    inst.video_url = str(vid)
+                    inst.video_url = asset_provider.animate_video(
+                        inst.video_prompt,
+                        inst.freeze_image_url,
+                        duration=7,
+                        aspect_ratio="9:16",
+                        resolution=video_res,
+                        audio_url=inst.character_audio_url,
+                        draft=video_draft,
+                    )
+
                     status.info("💾 Archiving assets locally...")
                     project_dir = os.path.join("exports", project_name, inst.id)
-                    if inst.narrator_audio_url: download_file(inst.narrator_audio_url, project_dir, "narrator.mp3")
-                    if inst.character_audio_url: download_file(inst.character_audio_url, project_dir, "character.mp3")
-                    if inst.freeze_image_url: download_file(inst.freeze_image_url, project_dir, "base_image.png")
-                    if inst.video_url: download_file(inst.video_url, project_dir, "video.mp4")
-                    with open(os.path.join(project_dir, "metadata.json"), "w") as f: json.dump(asdict(inst), f, indent=4)
+                    if inst.narrator_audio_url:
+                        download_file(inst.narrator_audio_url, project_dir, "narrator.mp3")
+                    if inst.character_audio_url:
+                        download_file(inst.character_audio_url, project_dir, "character.mp3")
+                    if inst.freeze_image_url:
+                        download_file(inst.freeze_image_url, project_dir, "base_image.png")
+                    if inst.video_url:
+                        download_file(inst.video_url, project_dir, "video.mp4")
+                    with open(os.path.join(project_dir, "metadata.json"), "w") as f:
+                        json.dump(asdict(inst), f, indent=4)
                 st.success("✅ Step 1: Assets Ready!")
                 st.rerun()
-            except Exception as e: st.error(f"Error: {e}")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
         # STEP 2: MOVIEPY
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
