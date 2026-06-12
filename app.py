@@ -1,20 +1,13 @@
 import streamlit as st
-import replicate
 import os
-import requests
 import datetime
 import json
-from dotenv import load_dotenv
-from openai import OpenAI
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
-from compiler import compile_video_raw
-from infra.logging import log_terminal
+from dotenv import load_dotenv
+
 from infra.download import download_file
 from infra.env import save_key_to_env
-from features.transcription.whisper import WhisperTranscriber
-from features.compositing.heads import GroundingDINOHeadDetector
-from features.assets.replicate_provider import ReplicateAssetProvider
 from pipeline import Pipeline
 
 # Load environment variables
@@ -86,6 +79,12 @@ def load_into_editor(meta_data):
     st.session_state.current_instance = inst
     sync_instance_to_widgets(inst)
     st.session_state.navigation_mode = "📦 Instance"
+
+
+@st.cache_resource
+def get_pipeline() -> Pipeline:
+    """Get or create cached pipeline with injected dependencies."""
+    return Pipeline()
 
 st.title("🚀 ViralCashMachine_V2 - Dashboard")
 
@@ -381,7 +380,7 @@ if replicate_api_token:
         if p_row1_col1.button("🎬 [STEP 1] Generate All Assets", use_container_width=True):
             try:
                 with st.spinner("🚀 Producing Assets..."):
-                    pipeline = Pipeline()
+                    pipeline = get_pipeline()
                     asset_bundle = pipeline.generate_assets(
                         project_name,
                         inst.id,
@@ -409,7 +408,7 @@ if replicate_api_token:
         if p_row1_col2.button("🎞️ [STEP 2] Basic Compilation", use_container_width=True):
             try:
                 with st.spinner("🎬 Running MoviePy..."):
-                    pipeline = Pipeline()
+                    pipeline = get_pipeline()
                     compiled_video = pipeline.compile_video(project_name, inst.id)
                 st.success(f"✅ Step 2: Video Ready!")
                 st.rerun()
