@@ -84,6 +84,48 @@ spectateur EST quelqu'un qui suit le protagoniste.
    plan fixe « carte postale »), mains qui bougent. Plan fixe seulement quand le
    perso s'arrête face caméra.
 
+## Méthodologie « image-first » (décision auteur après les tests POV)
+
+### Analyse — pourquoi le texte→vidéo seul échoue
+Tout le contrôle (look + mouvement + dialogue) entassé dans UN prompt
+texte→vidéo → le modèle improvise le mouvement (le perso court au lieu de
+suivre tranquille) et la fidélité visuelle est aléatoire. Diagnostic confirmé
+sur `aventure-test-pov` : POV/mains/DA OK, mais le MOUVEMENT ne correspond pas.
+
+### Le principe (best practice de la vidéo IA)
+**Génération en 2 temps, séparation look / mouvement :**
+1. **Première frame = IMAGE** (seedream, texte→image) : décrit TOUT le visuel —
+   cadrage POV, perso (apparence, pose, expression), mains au bord du cadre,
+   décor, lumière, DA, composition. C'est ici que vit 100 % du contrôle visuel.
+2. **Vidéo = image→vidéo** (p-video avec l'image en première frame) : le prompt
+   ne décrit QUE le MOUVEMENT (avec sa VITESSE/intensité) + ce qui est DIT.
+   Rien d'autre — le look est déjà verrouillé par l'image.
+
+**RÈGLE : toute vidéo a TOUJOURS sa première-frame image générée d'abord.**
+
+### Règles de prompt engineering (encodées dans prompts.py)
+- **Image (first frame)** : ordonnée, dense, tout le visuel. Structure :
+  [cadrage POV] + [perso : apparence, pose, expression] + [mains POV] +
+  [décor] + [lumière] + [DA] + [mots-clés de composition]. Front-load
+  l'important. Réutilise la constante `DA` (cohérence).
+- **Vidéo (motion)** : minimal. [Qui bouge + COMMENT, avec la vitesse :
+  « calm, steady, unhurried » vs « sudden, violent »] + [dialogue : manière
+  puis réplique exacte] + [comportement caméra]. Jamais de re-description du
+  look. La VITESSE explicite corrige le « court au lieu de marcher ».
+- **Cohérence inter-vidéos** : la première frame peut elle-même être seedée
+  depuis une référence perso (image→image) pour stabiliser le visage/tenue.
+
+### Impact technique
+- `prompts.py` : pour chaque plan vidéo, DEUX builders — `frame_*()` (image
+  riche) et `motion_*()` (mouvement + dialogue minimal). Les images de choix
+  restent de simples images riches.
+- Schéma `AdventureScript` : champs déjà séparables — atomes VISUELS
+  (`environment_desc`, `danger_desc`, `image_desc`, `char_*_desc`) nourrissent
+  les `frame_*`, atomes MOUVEMENT (`action_desc`, `fatal_kill_desc`,
+  `survival_outcome_desc`, `character_line_fr`) nourrissent les `motion_*`.
+  Les contenus de mouvement portent désormais la VITESSE (calme par défaut).
+- Step 1 (phase A) : par plan vidéo → générer l'image, puis image→vidéo.
+
 ## L'enjeu n°1 : les prompts (décision auteur — « optimiser un maximum sans diluer »)
 
 Tout le système repose sur le fait que les instructions des prompts sont
@@ -113,7 +155,11 @@ Règles d'or acquises en tests réels (à encoder dans les templates) :
 | M | **Step 2 étendu** : nouveaux constructeurs de segments dans le compositor — la plupart réutilisent la brique narration existante (photo + zoom + audio + subs Whisper) ; face-cam + subs ; écran de choix A/B (overlays) ; timer existant. Timeline complète intro + 3 rounds + épilogue. Golden intro inchangé. | ⬜ à faire | |
 | U | **Streamlit max** : onglets (① Script & voix éditables avant génération, ② Assets — galerie par round, régénération à l'unité, écoute par asset, toggle draft/final, ③ Montage & preview, ④ Bibliothèque). Barres de progression, coût estimé, état de projet persistant. | ⬜ à faire | |
 
-**Prochaine étape : Phase A — Step 1 étendu (génération des assets de rounds).**
+**Prochaine étape : Phase P2 — méthodologie image-first dans prompts.py + preuve d'un plan, PUIS Phase A.**
+
+| Phase | Sujet | Statut | Commit |
+|---|---|---|---|
+| P2 | **Image-first** : `prompts.py` scindé en `frame_*()` (image riche, tout le visuel) + `motion_*()` (mouvement+dialogue minimal, avec vitesse) ; contenus mouvement avec pace calme ; tests ; preuve = 1 plan généré image→vidéo (mouvement contrôlé). | ⬜ à faire | |
 
 ## Protocole par phase
 

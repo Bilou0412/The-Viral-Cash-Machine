@@ -130,41 +130,59 @@ def test_export_schema(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 2. Intégration slots → prompts.py — CHAQUE champ alimente le bon template
+# 2. Intégration image-first → prompts.py — frame (visuel) vs motion (mouvement)
 # ---------------------------------------------------------------------------
 
-def test_face_cam_porte_la_replique_et_la_voix_verbatim():
-    """character_line_fr (FR exact) + voice.description (verbatim) dans le face-cam."""
-    s = _script()
-    rp = A2P.round_prompts(s.rounds[0], s.char_left_name, s.char_left_desc, s.char_left_voice.description)
-    assert f'"{s.rounds[0].character_line_fr}"' in rp.face_cam
-    assert s.char_left_voice.description in rp.face_cam
-    assert s.char_left_desc in rp.face_cam
+def _rp(s):
+    return A2P.round_prompts(
+        s.rounds[0], s.char_left_name, s.char_left_desc, s.char_left_voice.description
+    )
 
 
-def test_delivery_precede_la_replique():
-    """Règle d'or 2 : la manière de dire (delivery) précède la réplique."""
+def test_face_cam_motion_porte_la_replique_et_la_voix_verbatim():
+    """La réplique FR exacte + la voix verbatim vivent dans le MOTION du face-cam."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
-    assert rp.face_cam.index(rnd.character_delivery) < rp.face_cam.index(rnd.character_line_fr)
+    rp = _rp(s)
+    assert f'"{rnd.character_line_fr}"' in rp.character.motion
+    assert s.char_left_voice.description in rp.character.motion
+    # la manière précède la réplique
+    assert rp.character.motion.index(rnd.character_delivery) < rp.character.motion.index(
+        rnd.character_line_fr
+    )
 
 
-def test_action_et_environnement_dans_les_bons_slots():
+def test_separation_look_mouvement():
+    """Le look (apparence, DA) est dans la FRAME ; jamais dans le MOTION."""
+    s = _script()
+    rp = _rp(s)
+    # le visage/apparence du perso est décrit dans la frame, pas re-décrit dans le motion
+    assert s.char_left_desc in rp.character.frame
+    assert s.char_left_desc not in rp.character.motion
+    for beat in rp.video_beats():
+        assert P.DA in beat.frame          # la DA vit dans l'image
+        assert P.DA not in beat.motion     # jamais re-décrite dans la vidéo
+        assert "Animate from the first frame" in beat.motion
+
+
+def test_action_motion_controle_la_vitesse():
+    """Le motion d'action impose la vitesse calme (corrige le 'court')."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
-    assert rnd.action_desc in rp.action
-    assert rnd.environment_desc in rp.action          # action_sequence(..., environment_desc)
-    assert rnd.environment_desc in rp.environment      # environment_showcase(environment_desc, ...)
-    assert rnd.danger_desc in rp.environment
+    rp = _rp(s)
+    assert rnd.action_desc in rp.action.motion
+    assert P.PACE_CALM in rp.action.motion
+    # l'environnement est un atome VISUEL → dans la frame
+    assert rnd.environment_desc in rp.action.frame
+    assert rnd.environment_desc in rp.environment.frame
+    assert rnd.danger_desc in rp.environment.frame
 
 
 def test_choix_deux_images_distinctes():
     """Une image par option, dans l'ordre, avec l'environnement du round."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
+    rp = _rp(s)
     assert rnd.choices[0].image_desc in rp.choice_images[0]
     assert rnd.choices[1].image_desc in rp.choice_images[1]
     assert rp.choice_images[0] != rp.choice_images[1]
@@ -173,13 +191,14 @@ def test_choix_deux_images_distinctes():
 
 
 def test_issues_fatale_et_survie():
+    """Mouvements de mort/survie dans les motions ; apparence dans les frames."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
-    assert rnd.fatal_kill_desc in rp.fatal
-    assert rnd.fatal_pov_reaction in rp.fatal
-    assert rnd.survival_outcome_desc in rp.survival
-    assert s.char_left_desc in rp.fatal and s.char_left_desc in rp.survival
+    rp = _rp(s)
+    assert rnd.fatal_kill_desc in rp.fatal.motion
+    assert rnd.fatal_pov_reaction in rp.fatal.motion
+    assert rnd.survival_outcome_desc in rp.survival.motion
+    assert s.char_left_desc in rp.fatal.frame and s.char_left_desc in rp.survival.frame
 
 
 def test_voix_perso_identique_entre_clips_du_meme_perso():
@@ -188,13 +207,12 @@ def test_voix_perso_identique_entre_clips_du_meme_perso():
     rps = A2P.script_prompts(s, "left")
     voice = s.char_left_voice.description
     for rp in rps:
-        assert voice in rp.face_cam
-    # et jamais la voix de l'autre perso sur le chemin gauche
-    assert all(s.char_right_voice.description not in rp.face_cam for rp in rps)
+        assert voice in rp.character.motion
+    assert all(s.char_right_voice.description not in rp.character.motion for rp in rps)
 
 
 def test_six_images_de_choix_sur_trois_rounds():
-    """3 rounds × 2 options = 6 images de choix, toutes non vides et distinctes par round."""
+    """3 rounds × 2 options = 6 images de choix, non vides."""
     s = _script()
     rps = A2P.script_prompts(s, "left")
     images = [img for rp in rps for img in rp.choice_images]
@@ -202,41 +220,51 @@ def test_six_images_de_choix_sur_trois_rounds():
     assert all(img.strip() for img in images)
 
 
+def test_toute_video_a_une_premiere_frame():
+    """RÈGLE image-first : chaque plan vidéo a une frame ET un motion non vides."""
+    s = _script()
+    rps = A2P.script_prompts(s, "left")
+    beats = [b for rp in rps for b in rp.video_beats()]
+    beats.append(A2P.epilogue_beat(s, "left"))
+    for b in beats:
+        assert b.frame.strip() and b.motion.strip()
+        assert "First-person POV" in b.frame
+
+
 def test_epilogue_montre_l_autre_perso():
     """L'épilogue suit l'AUTRE personnage que celui du chemin suivi."""
     s = _script()
-    epi_left = A2P.epilogue_prompt(s, "left")   # suivi=gauche → épilogue montre droite
-    assert s.char_right_desc in epi_left
-    assert s.char_left_desc not in epi_left
-    assert s.epilogue_other_desc in epi_left
-    epi_right = A2P.epilogue_prompt(s, "right")  # symétrique
-    assert s.char_left_desc in epi_right
+    epi_left = A2P.epilogue_beat(s, "left")   # suivi=gauche → épilogue montre droite
+    assert s.char_right_desc in epi_left.frame
+    assert s.char_left_desc not in epi_left.frame
+    assert s.epilogue_other_desc in epi_left.motion
+    epi_right = A2P.epilogue_beat(s, "right")
+    assert s.char_left_desc in epi_right.frame
 
 
-def test_regles_d_or_sur_tous_les_prompts_du_script():
-    """Caméra statique + no-text présents sur CHAQUE prompt produit (clips et images)."""
+def test_regles_d_or_sur_toutes_les_images():
+    """No-text + DA + POV + mains sur CHAQUE image (frames + images de choix)."""
     s = _script()
     rps = A2P.script_prompts(s, "left")
-    all_prompts = [p for rp in rps for p in rp.as_list()]
-    all_prompts.append(A2P.epilogue_prompt(s, "left"))
-    for p in all_prompts:
+    images = []
+    for rp in rps:
+        images += rp.all_image_prompts()
+    images.append(A2P.epilogue_beat(s, "left").frame)
+    for p in images:
         assert P.NO_TEXT in p
-        assert P.DA in p                  # DA unique partout (cohérence visuelle)
-        assert "First-person POV" in p    # doctrine POV/FPS
-        assert P.POV_HANDS in p           # nos mains visibles partout
+        assert P.DA in p
+        assert "First-person POV" in p
+        assert P.POV_HANDS in p
 
 
 def test_tous_les_champs_round_sont_consommes():
-    """Garde-fou : chaque champ texte EN/FR d'un round apparaît dans au moins un prompt.
-
-    Si le builder ajoute un champ visuel au schéma, ce test échoue tant que le
-    mapping ne le consomme pas — il empêche un slot oublié.
-    """
+    """Garde-fou : chaque champ texte EN/FR d'un round apparaît dans un prompt."""
     s = _script()
     rnd = s.rounds[0]
-    rp = A2P.round_prompts(rnd, s.char_left_name, s.char_left_desc, s.char_left_voice.description)
-    blob = " ||| ".join(rp.as_list())
-    # champs visuels EN qui DOIVENT atterrir dans un prompt
+    rp = _rp(s)
+    blob = " ||| ".join(
+        [b.frame + " " + b.motion for b in rp.video_beats()] + list(rp.choice_images)
+    )
     for field in (
         rnd.action_desc,
         rnd.environment_desc,
