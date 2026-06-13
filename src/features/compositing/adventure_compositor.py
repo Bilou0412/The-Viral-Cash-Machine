@@ -66,6 +66,12 @@ class RoundAssets:
     narr_choice: str
     narr_fatal: str
     narr_survival: str
+    # premières frames (images) des plans narrés — servent à PROLONGER le plan
+    # quand la narration est plus longue que la vidéo (on n'illustre jamais du vide).
+    action_frame: str = ""
+    environment_frame: str = ""
+    fatal_frame: str = ""
+    survival_frame: str = ""
 
 
 def _ascii_upper(name: str) -> str:
@@ -84,13 +90,18 @@ def _nameplate(name: str, dur: float) -> ImageClip:
     return plate.with_position(("center", 60))
 
 
+def _subs_cues(transcriber: Transcriber, audio_path: str) -> List[dict]:
+    """Cues mot-à-mot (Whisper) bruts pour un audio."""
+    if not audio_path or not os.path.exists(audio_path):
+        return []
+    return transcriber.transcribe(audio_path).to_list()
+
+
 def _subs_from_audio(
     transcriber: Transcriber, audio_path: str, dur_cap: float
 ) -> List[ImageClip]:
     """Sous-titres mot-à-mot (Whisper) calés sur l'audio, à 78% de la hauteur."""
-    if not os.path.exists(audio_path):
-        return []
-    cues = transcriber.transcribe(audio_path).to_list()
+    cues = _subs_cues(transcriber, audio_path)
     subs: List[ImageClip] = []
     for c in cues:
         if c["start"] >= dur_cap:
@@ -113,29 +124,37 @@ def _fit(clip, dur: float):
 
 
 def _narrated_video(
-    video_path: str, narr_path: str, name: str, transcriber: Transcriber
+    video_path: str, frame_path: str, narr_path: str, transcriber: Transcriber
 ):
-    """Plan vidéo narré : clip + nameplate + narration mixée + sous-titres."""
+    """Plan vidéo narré : on NE COUPE JAMAIS le narrateur.
+
+    La vidéo joue sa durée ; si la narration est plus longue, on PROLONGE le plan
+    avec la photo (première frame) en léger zoom — on illustre toujours, jamais du
+    vide. Pas de plaque de nom (réservée à l'intro). Sous-titres mot-à-mot.
+    """
     v = VideoFileClip(video_path)
-    # Durée = celle du clip (on n'étend pas : lire l'audio au-delà de sa fin
-    # casse MoviePy). La narration courte rentre dedans ; on la borne par sûreté.
-    dur = float(v.duration)
-    safe = max(0.1, dur - 1.0 / FPS)  # marge anti-erreur de bord
-    base = _fit(v, dur)
-
+    vdur = float(v.duration)
+    vsafe = max(0.1, vdur - 1.0 / FPS)
     narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
-    tracks = []
-    if base.audio is not None:
-        amb = _scale_volume(base.audio.with_duration(safe), 0.22)
-        tracks.append(amb)
-    if narr is not None:
-        n = narr.with_duration(min(narr.duration, safe - 0.2)).with_start(0.2)
-        tracks.append(n)
-    audio = CompositeAudioClip(tracks).with_duration(safe) if tracks else None
+    ndur = float(narr.duration) if narr else 0.0
+    seg = max(vdur, ndur + 0.4)
 
-    layers = [base, _nameplate(name, dur)]
-    layers += _subs_from_audio(transcriber, narr_path, dur)
-    comp = CompositeVideoClip(layers, size=(W, H)).with_duration(dur)
+    vbase = _fit(v, vdur)
+    if seg > vdur + 0.05 and frame_path and os.path.exists(frame_path):
+        tail = _ken_burns(frame_path, seg - vdur).with_start(vdur)
+        video_layer = CompositeVideoClip([vbase, tail], size=(W, H)).with_duration(seg)
+    else:
+        video_layer = vbase  # narration rentre dans la vidéo
+
+    tracks = []
+    if v.audio is not None:
+        tracks.append(_scale_volume(v.audio.with_duration(vsafe), 0.22))
+    if narr is not None:
+        tracks.append(narr.with_start(0.2))  # narration COMPLÈTE, jamais coupée
+    audio = CompositeAudioClip(tracks).with_duration(seg) if tracks else None
+
+    layers = [video_layer] + _subs_from_audio(transcriber, narr_path, seg)
+    comp = CompositeVideoClip(layers, size=(W, H)).with_duration(seg)
     return comp.with_audio(audio) if audio else comp
 
 
@@ -152,7 +171,7 @@ def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir
         wav = os.path.join(workdir, "_facecam_audio.wav")
         native.write_audiofile(wav, logger=None)
         subs = _subs_from_audio(transcriber, wav, dur)
-    layers = [base, _nameplate(name, dur)] + subs
+    layers = [base] + subs  # pas de plaque de nom (réservée à l'intro)
     comp = CompositeVideoClip(layers, size=(W, H)).with_duration(dur)
     return comp.with_audio(native.with_duration(safe)) if native is not None else comp
 
@@ -170,16 +189,26 @@ def _choice_screen(
 ):
     """Écran des choix : 2 photos qui se succèdent (Ken Burns) + narration + subs."""
     narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
-    total = max(5.0, (narr.duration + 0.4) if narr else 5.0)
-    half = total / 2
-    # les deux options se succèdent (Ken Burns), une moitié chacune
+    ndur = float(narr.duration) if narr else 0.0
+    total = max(4.0, ndur + 0.4)
+
+    # Changement d'image AU BON MOMENT : à l'instant où le narrateur dit « ou »
+    # (la bascule entre option A et option B). Sinon, au milieu.
+    switch = total / 2
+    cues = _subs_cues(transcriber, narr_path) if narr else []
+    for c in cues:
+        if c["text"].strip().lower().strip(".,!?") in ("ou", "or"):
+            switch = max(0.6, min(total - 0.6, c["start"] + 0.1))
+            break
+
     seq = concatenate_videoclips(
-        [_ken_burns(a_img, half), _ken_burns(b_img, half)], method="compose"
+        [_ken_burns(a_img, switch), _ken_burns(b_img, total - switch)],
+        method="compose",
     )
     subs = _subs_from_audio(transcriber, narr_path, total) if narr else []
-    comp = CompositeVideoClip([seq, _nameplate(name, total), *subs], size=(W, H)).with_duration(total)
+    comp = CompositeVideoClip([seq, *subs], size=(W, H)).with_duration(total)
     if narr is not None:
-        comp = comp.with_audio(narr.with_start(0.2))
+        comp = comp.with_audio(narr.with_start(0.1))  # narration complète
     return comp
 
 
@@ -217,8 +246,8 @@ def _timer_screen(bg_image: str):
 
 def compose_narrated_segment(
     video_path: str,
+    frame_path: str,
     narr_path: str,
-    follower_name: str,
     transcriber: Transcriber,
     output_path: str,
     workdir: Optional[str] = None,
@@ -226,7 +255,7 @@ def compose_narrated_segment(
     """Monte UN plan vidéo narré (ex. l'épilogue) en fichier autonome."""
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
-    clip = _narrated_video(video_path, narr_path, follower_name, transcriber)
+    clip = _narrated_video(video_path, frame_path, narr_path, transcriber)
     clip.write_videofile(
         output_path, fps=FPS, codec="libx264", audio_codec="aac",
         temp_audiofile=os.path.join(workdir, "_temp_epi.m4a"), remove_temp=True,
@@ -247,13 +276,13 @@ def compose_round(
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
     segments = [
-        _narrated_video(assets.action_video, assets.narr_action, follower_name, transcriber),
-        _narrated_video(assets.environment_video, assets.narr_environment, follower_name, transcriber),
+        _narrated_video(assets.action_video, assets.action_frame, assets.narr_action, transcriber),
+        _narrated_video(assets.environment_video, assets.environment_frame, assets.narr_environment, transcriber),
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
         _timer_screen(assets.choice_b_image),
-        _narrated_video(assets.fatal_video, assets.narr_fatal, follower_name, transcriber),
-        _narrated_video(assets.survival_video, assets.narr_survival, follower_name, transcriber),
+        _narrated_video(assets.fatal_video, assets.fatal_frame, assets.narr_fatal, transcriber),
+        _narrated_video(assets.survival_video, assets.survival_frame, assets.narr_survival, transcriber),
     ]
     final = concatenate_videoclips(segments, method="compose")
     final.write_videofile(

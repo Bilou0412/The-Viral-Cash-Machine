@@ -183,6 +183,10 @@ class MontageService:
                         narr_choice=g(ri, "choice.narration") or "",
                         narr_fatal=g(ri, "fatal.narration") or "",
                         narr_survival=g(ri, "survival.narration") or "",
+                        action_frame=g(ri, "action.frame") or "",
+                        environment_frame=g(ri, "environment.frame") or "",
+                        fatal_frame=g(ri, "fatal.frame") or "",
+                        survival_frame=g(ri, "survival.frame") or "",
                     ),
                     follower, transcriber, rf, workdir=work,
                 )
@@ -192,8 +196,9 @@ class MontageService:
             if epi_video:
                 ef = os.path.join(work, "epilogue.mp4")
                 compose_narrated_segment(
-                    epi_video, g(None, "epilogue.narration") or "",
-                    script.char_right_name, transcriber, ef, workdir=work,
+                    epi_video, g(None, "epilogue.frame") or "",
+                    g(None, "epilogue.narration") or "",
+                    transcriber, ef, workdir=work,
                 )
                 round_files.append(ef)
 
