@@ -347,6 +347,22 @@ def montage_episode(
     return {"episode_id": episode_id, "final_path": output_path}
 
 
+@app.post("/api/episodes/{episode_id}/produce")
+def produce_full_episode(
+    episode_id: int,
+    background: BackgroundTasks,
+    session: Session = Depends(_session),
+    engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Un bouton = toute la vidéo : assets aventure + intro + montage (fond)."""
+    _require_episode(session, episode_id)
+    _load_script(session, episode_id)  # 404 si pas de script
+    from .services.produce import produce_episode
+
+    background.add_task(produce_episode, engine, episode_id)
+    return {"episode_id": episode_id, "status": "scheduled"}
+
+
 @app.get("/api/library")
 def library(session: Session = Depends(_session)) -> list[dict[str, Any]]:
     episodes = EpisodeRepo(session).list()
