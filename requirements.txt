@@ -8,3 +8,9 @@ moviepy>=2.0.0
 imageio-ffmpeg
 numpy
 pillow
+
+# VCM Studio (FastAPI backend + SQLite DB)
+sqlmodel
+fastapi
+uvicorn[standard]
+httpx

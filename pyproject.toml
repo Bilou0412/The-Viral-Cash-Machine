@@ -40,8 +40,12 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
-module = ["src.infra.*", "src.features.*"]
+module = ["src.infra.*", "src.features.*", "src.studio.db.*"]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["sqlmodel.*", "sqlalchemy.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "src.app"
