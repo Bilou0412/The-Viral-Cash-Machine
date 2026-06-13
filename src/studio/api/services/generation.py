@@ -27,6 +27,7 @@ from ...db.repositories import AssetRepo, CostRepo, EpisodeRepo, JobRepo
 from ..events import bus
 from . import pricing
 from .generation_plan import PlannedAsset, plan_episode_assets
+from .paths import episode_dir
 
 # Default voice ids (mirror Pipeline.generate_assets: narrator vs character).
 NARRATOR_VOICE_ID = "Deep_Voice_Man"
@@ -67,7 +68,7 @@ class AssetGenerationService:
         self.downloader = downloader or _default_downloader
 
     def export_dir(self, project_name: str, episode_id: int) -> str:
-        return os.path.join("exports", project_name, f"episode_{episode_id}")
+        return episode_dir(project_name, episode_id)
 
     def generate_episode(
         self, episode_id: int, script: AdventureScript, side: str = "left"

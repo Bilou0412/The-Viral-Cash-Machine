@@ -6,6 +6,8 @@ they hold regardless of the DB layer. The full API integration test lives in
 test_studio_api.py.
 """
 
+import os
+
 import pytest
 
 pytest.importorskip("pydantic")
@@ -15,6 +17,7 @@ from src.studio.api.services.generation_plan import (  # noqa: E402
     estimate_cost,
     plan_episode_assets,
 )
+from src.studio.api.services.paths import episode_dir, exports_base  # noqa: E402
 from src.studio.api.services.scripting import generate_script  # noqa: E402
 
 
@@ -65,6 +68,18 @@ def test_estimate_cost_breakdown_and_total(script):
     assert est.total_usd > 0
     # Draft is cheaper than final (video multiplier < 1).
     assert estimate_cost(script, draft=True).total_usd < est.total_usd
+
+
+def test_output_dir_is_configurable(monkeypatch, tmp_path):
+    # Default base.
+    monkeypatch.delenv("VCM_OUTPUT_DIR", raising=False)
+    assert exports_base() == "exports"
+    assert episode_dir("demo", 7).endswith("exports/demo/episode_7")
+    # Overridable for environments where exports/ is not writable.
+    out = str(tmp_path / "studio_output")
+    monkeypatch.setenv("VCM_OUTPUT_DIR", out)
+    assert exports_base() == out
+    assert episode_dir("demo", 7) == os.path.join(out, "demo", "episode_7")
 
 
 def test_fake_provider_records_calls_no_network():

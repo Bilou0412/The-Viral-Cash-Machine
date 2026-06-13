@@ -167,6 +167,13 @@ def _require_episode(session: Session, episode_id: int) -> Episode:
     return episode
 
 
+@app.get("/api/episodes/{episode_id}")
+def get_episode(
+    episode_id: int, session: Session = Depends(_session)
+) -> Episode:
+    return _require_episode(session, episode_id)
+
+
 # ---------------------------------------------------------------------------
 # Script
 # ---------------------------------------------------------------------------

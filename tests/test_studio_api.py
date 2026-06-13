@@ -80,6 +80,11 @@ def test_full_flow(client):
         client.get(f"/api/episodes?project_id={project_id}").json()[0]["title"]
         == "ep1"
     )
+    # Single-episode fetch.
+    one = client.get(f"/api/episodes/{episode_id}")
+    assert one.status_code == 200
+    assert one.json()["id"] == episode_id
+    assert client.get("/api/episodes/99999").status_code == 404
 
     # Script (Fake decomposer, no OpenAI key)
     r = client.post(

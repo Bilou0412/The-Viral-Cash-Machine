@@ -19,6 +19,7 @@ from sqlmodel import Session
 
 from ...db.models import Asset
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
+from .paths import episode_dir
 
 # (ordered local video paths, output path) -> duration seconds.
 Concatenator = Callable[[Sequence[str], str], float]
@@ -84,7 +85,7 @@ class MontageService:
                 f"episode {episode_id} has no ready video assets to assemble"
             )
 
-        out_dir = os.path.join("exports", project_name, f"episode_{episode_id}")
+        out_dir = episode_dir(project_name, episode_id)
         os.makedirs(out_dir, exist_ok=True)
         output_path = os.path.join(out_dir, "final_video.mp4")
 

@@ -9,6 +9,8 @@ graphify-out/.rebuild.lock
 # VCM Studio: local SQLite DB and dev virtualenv (deps live in requirements.txt).
 /studio.db
 /.venv/
+# VCM Studio: user-writable output dir (alternative to root-owned /exports/, via VCM_OUTPUT_DIR).
+/studio_output/
 
 # VCM Studio frontend (React/Vite)
 frontend/node_modules/
