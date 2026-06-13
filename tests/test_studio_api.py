@@ -98,7 +98,7 @@ def test_full_flow(client):
 
     # Beats
     beats = client.get(f"/api/episodes/{episode_id}/beats").json()
-    assert len(beats["assets"]) == 55
+    assert len(beats["assets"]) == 56
 
     # Cost estimate (draft) before generation: actual is 0.
     cost = client.get(f"/api/episodes/{episode_id}/cost").json()
@@ -111,12 +111,12 @@ def test_full_flow(client):
     assert r.status_code == 200
 
     # Provider was called offline; assets are persisted with local paths.
-    assert len(client.fake_provider.image_calls) == 22
+    assert len(client.fake_provider.image_calls) == 23
     assert len(client.fake_provider.video_calls) == 16
     assert len(client.fake_provider.voice_calls) == 17
 
     assets = client.get(f"/api/episodes/{episode_id}/assets").json()
-    assert len(assets) == 55
+    assert len(assets) == 56
     assert all(a["status"] == "ready" for a in assets)
     assert all(a["local_path"] for a in assets)
 

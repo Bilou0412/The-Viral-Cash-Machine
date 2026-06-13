@@ -206,8 +206,12 @@ class AssetGenerationService:
     ) -> tuple[str, str, pricing.CostLine]:
         """Dispatch to the right provider method; return (model, url, cost line)."""
         if planned.kind == "image":
+            # La référence perso n'a pas de réf elle-même ; toutes les autres
+            # images la reçoivent en image_input pour rester cohérentes (R2).
+            ref = frame_url_by_beat.get("char_reference")
+            image_input = [ref] if (ref and planned.beat != "char_reference") else None
             url = self.provider.generate_image(
-                planned.image_prompt or "", "2K", "9:16"
+                planned.image_prompt or "", "2K", "9:16", image_input=image_input
             )
             frame_url_by_beat[planned.beat] = url
             return pricing.MODEL_IMAGE, url, pricing.image_cost(1)

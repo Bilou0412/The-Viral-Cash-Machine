@@ -71,6 +71,25 @@ def plan_episode_assets(
     """
     assets: List[PlannedAsset] = []
 
+    # R2 — RÉFÉRENCE PERSONNAGE en tête : le perso suivi, plein cadre, fond uni.
+    # Sert d'`image_input` (image-to-image) à TOUTES les images suivantes pour
+    # garder le même perso + la même DA partout (validé : seedream image_input).
+    followed_desc = (
+        script.char_left_desc if side == "left" else script.char_right_desc
+    )
+    assets.append(
+        PlannedAsset(
+            None,
+            "char_reference",
+            "image",
+            image_prompt=(
+                f"Full-body front portrait of {followed_desc}, standing, plain "
+                "neutral grey studio background, even soft light, no text. "
+                "Vertical 9:16."
+            ),
+        )
+    )
+
     rounds = script_prompts(script, side)
     for i, rp in enumerate(rounds):
         for beat_name, beat in (

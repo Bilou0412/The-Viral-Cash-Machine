@@ -25,16 +25,26 @@ class ReplicateAssetProvider(AssetProvider):
         )
         return str(result)
 
-    def generate_image(self, prompt: str, size: str, aspect_ratio: str) -> str:
-        """Generate image using ByteDance SeedDream model."""
-        result = replicate.run(
-            "bytedance/seedream-4.5",
-            input={
-                "prompt": prompt,
-                "size": size,
-                "aspect_ratio": aspect_ratio,
-            },
-        )
+    def generate_image(
+        self,
+        prompt: str,
+        size: str,
+        aspect_ratio: str,
+        image_input: Optional[list[str]] = None,
+    ) -> str:
+        """Generate image using ByteDance SeedDream model.
+
+        `image_input` : 1-14 images de référence (image-to-image) — garde le
+        personnage et la DA cohérents (validé : seedream-4.5 `image_input`).
+        """
+        params = {
+            "prompt": prompt,
+            "size": size,
+            "aspect_ratio": aspect_ratio,
+        }
+        if image_input:
+            params["image_input"] = image_input
+        result = replicate.run("bytedance/seedream-4.5", input=params)
         # Result is a list, take first element
         return str(result[0])
 

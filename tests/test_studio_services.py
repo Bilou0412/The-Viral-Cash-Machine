@@ -39,8 +39,8 @@ def test_plan_is_image_first_with_expected_counts(script):
     videos = [a for a in plan if a.kind == "video"]
     audio = [a for a in plan if a.kind == "audio"]
 
-    # 3 rounds x (5 beat frames + 2 choice images) + 1 epilogue frame = 22.
-    assert len(images) == 22
+    # 1 réf perso + 3 rounds x (5 frames + 2 choix) + 1 epilogue frame = 23.
+    assert len(images) == 23
     # 3 rounds x 5 beats + 1 epilogue = 16 motions.
     assert len(videos) == 16
     # Narration PAR BEAT (voix conteur) : transition + 3 rounds x 5 + epilogue.
@@ -86,7 +86,7 @@ def test_fake_provider_records_calls_no_network():
     fake = FakeAssetProvider()
     url = fake.generate_image("a dark cave", "2K", "9:16")
     assert url.startswith("https://fake.local/")
-    assert fake.image_calls == [("a dark cave", "2K", "9:16")]
+    assert fake.image_calls == [("a dark cave", "2K", "9:16", None)]
     vurl = fake.animate_video("move", url, 7, "9:16", "720p")
     assert vurl.endswith(".mp4")
     assert fake.video_calls[0]["image"] == url

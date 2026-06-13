@@ -29,8 +29,14 @@ class FakeAssetProvider(AssetProvider):
         self.voice_calls.append((text, voice_id))
         return self._next("mp3")
 
-    def generate_image(self, prompt: str, size: str, aspect_ratio: str) -> str:
-        self.image_calls.append((prompt, size, aspect_ratio))
+    def generate_image(
+        self,
+        prompt: str,
+        size: str,
+        aspect_ratio: str,
+        image_input: "list[str] | None" = None,
+    ) -> str:
+        self.image_calls.append((prompt, size, aspect_ratio, image_input))
         return self._next("png")
 
     def animate_video(

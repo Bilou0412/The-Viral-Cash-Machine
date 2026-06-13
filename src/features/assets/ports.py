@@ -27,8 +27,18 @@ class AssetProvider(Protocol):
         """
         ...
 
-    def generate_image(self, prompt: str, size: str, aspect_ratio: str) -> str:
-        """Generate image from prompt. Returns URL."""
+    def generate_image(
+        self,
+        prompt: str,
+        size: str,
+        aspect_ratio: str,
+        image_input: Optional[list[str]] = None,
+    ) -> str:
+        """Generate image from prompt. Returns URL.
+
+        `image_input` : images de référence (image-to-image) pour garder un
+        personnage/une DA cohérents d'une image à l'autre.
+        """
         ...
 
     def animate_video(
