@@ -1,3 +1,90 @@
+# REFONTE v7 — pipeline « fil rouge » (cohérence + sens + uniformité)
+
+> Remodelage demandé après le 1er épisode complet. Objectif : une vidéo qui a
+> du SENS de bout en bout, une DA et un personnage UNIFORMES, un montage propre
+> par la VITESSE (jamais d'allongement). Une phase par session, tests verts.
+
+## Analyse de l'existant (état au 1er épisode complet)
+
+Ce qui marche : génération image-first réelle (Replicate), voix conteur clonée,
+montage MoviePy (timers/sous-titres), intro via le système historique
+(`intro.py`), studio connecté (DB+API+front).
+
+Ce qui cloche (demandes auteur) :
+1. **Intro pauvre** : un seul perso « parle » (clip unique), pas angoissant, pas
+   personnalisé. Manque : les DEUX persos parlent, chacun tente de convaincre
+   (« choisis-moi » / « ne me choisis pas… »), dit son NOM, s'approche lentement
+   en restant cadré ; + un texte qui introduit le CARACTÈRE de chaque perso.
+2. **Transition d'issue manquante** : avant de décrire ce qui se passe, le
+   narrateur doit dire « Si tu as choisi X… » AVEC un ZOOM sur le côté du perso
+   énuméré.
+3. **Timing par allongement (à remplacer)** : on prolongeait avec la photo →
+   désormais on joue sur la VITESSE. Narration trop longue → accélérer la
+   narration. Vidéo trop longue → accélérer la vidéo. JAMAIS allonger/figer.
+4. **DA/perso non uniformes** : chaque image est générée indépendamment → le
+   perso et le décor dérivent. Il faut une RÉFÉRENCE : cropper le perso choisi
+   (modèle de vision / split, sur fond uni) et générer toutes les images en
+   image-to-image (réf perso + décor décrit) → même perso, même DA partout.
+5. **Sens / langage** : les descriptions doivent être en mots SIMPLES et
+   courants ; parfois la narration n'a pas de sens. Besoin d'un FIL ROUGE
+   cohérent du début à la fin.
+6. **Ordre de génération** : générer d'abord TOUS les textes (narration,
+   répliques, actions, environnement) cohérents, PUIS les visuels en CHAÎNANT :
+   photo → vidéo, puis récupérer la DERNIÈRE FRAME de la vidéo pour faire la
+   suivante, et ainsi de suite (continuité visuelle).
+
+## Pipeline remodelé — génération en 3 temps
+
+```
+1) TEXTE (1 passe LLM cohérente, langage simple, fil rouge)
+   → script complet : intro (2 persos : nom + caractère + réplique angoissante),
+     rounds (action/environnement/réplique/choix/issues), lignes narrateur
+     « si tu as choisi X ». Tout se tient, mots courants.
+
+2) RÉFÉRENCE PERSONNAGE (ancre d'uniformité)
+   → générer les 2 persos, cropper chacun sur FOND UNI (modèle de vision /
+     split Grounding DINO) = réf canonique. Le perso suivi devient l'ancre.
+
+3) VISUELS CHAÎNÉS (fil rouge visuel)
+   → 1re image = perso (réf) dans la scène d'ouverture (image-to-image : réf +
+     décor décrit). image→vidéo. Puis DERNIÈRE FRAME de la vidéo = base de la
+     vidéo suivante (continuité), en réinjectant la réf perso + le nouveau
+     décor. Chaînage sur toute l'aventure → DA + perso uniformes.
+```
+
+## Montage remodelé (vitesse, jamais allongement)
+
+- Caler durée d'un plan sur la parole en **accélérant** : `atempo` sur l'audio
+  narration si trop longue, `speed`/setpts sur la vidéo si trop longue. Jamais
+  de figeage/photo de remplissage.
+- **« Si tu as choisi X »** : ZOOM sur le côté de X (depuis l'image intro 2
+  persos ou la réf) juste avant l'issue.
+- **Intro** : les 2 persos parlent (clips séparés, angoissant, nom prononcé,
+  approche lente cadrée), overlay nom + texte de caractère, puis timer de choix.
+
+## Phases de la refonte
+
+| Phase | Sujet | Statut | Commit |
+|---|---|---|---|
+| R1 | **Script v2** : LLM en langage simple + fil rouge ; schéma étendu (intro : par perso `intro_line_fr` angoissante + `personality_fr` + nom ; déjà `char_*_desc/voice`). Fake mis à jour. Tests. | ⬜ | |
+| R2 | **Référence perso** : générer 2 persos → crop fond uni (vision/split) → réf canonique ; helper image-to-image (réf + décor) — VÉRIFIER que seedream-4.5 accepte une image de référence (sinon modèle alternatif). | ⬜ | |
+| R3 | **Génération chaînée** : 1re image (réf) → vidéo → dernière frame → image suivante… continuité ; remplace la génération indépendante par beat. | ⬜ | |
+| R4 | **Montage vitesse + zoom + intro 2 voix** : accélération audio/vidéo (jamais allonger) ; zoom « si tu as choisi X » ; intro 2 persos qui parlent + nom + texte caractère. | ⬜ | |
+| R5 | **Câblage UI + test épisode complet** : tout depuis un bouton ; génération fraîche bout-en-bout validée. | ⬜ | |
+
+**Prochaine étape : R1 — script v2 (sens + langage simple + intro personnalisée).**
+
+## Risques / points à valider
+- **Image-to-image seedream** (R2) : à confirmer (sinon modèle de référence
+  alternatif, ex. un modèle de cohérence de personnage). C'est le pivot de
+  l'uniformité — à valider EN PREMIER dans R2.
+- **Chaînage dernière-frame** (R3) : séquentiel (pas de parallélisme), plus lent ;
+  risque de dérive cumulée → la réf perso recadre à chaque étape.
+- **Accélération** (R4) : garder l'audio intelligible (atempo ≤ ~1.3x) ; au-delà,
+  raccourcir le texte plutôt (boucle qualité).
+
+---
+
 # Plan d'extension — « L'Aventure » (format complet 3 rounds)
 
 > Extension du template intro existant vers le format complet : intro → choix du
