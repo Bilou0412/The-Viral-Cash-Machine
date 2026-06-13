@@ -72,13 +72,16 @@ class OpenAIAdventureDecomposer:
         prompt: str,
         char_left_name: str,
         char_right_name: str,
+        char_left_desc: str = "",
+        char_right_desc: str = "",
     ) -> AdventureScript:
         """Generate and validate a 3-round adventure script.
 
         Args:
             prompt: User-provided theme / pitch.
-            char_left_name: French first name of the left character.
-            char_right_name: French first name of the right character.
+            char_left_name / char_right_name: French first names.
+            char_left_desc / char_right_desc: OPTIONAL creator descriptions
+                (appearance + personality). Respected & adapted if given.
 
         Returns:
             A validated AdventureScript.
@@ -94,12 +97,20 @@ class OpenAIAdventureDecomposer:
             "Produce a complete adventure script as a single JSON object that "
             "validates against the provided JSON Schema. Output JSON only.\n\n"
             f"{_GOLDEN_RULES}\n\n{_STRUCTURE_RULES}\n\n"
+            "CREATOR CHARACTER DESCRIPTIONS: when a description is provided for a "
+            "character, you MUST respect it (its look and personality), adapt it "
+            "to the dark cinematic horror DA, and translate the VISUAL part to "
+            "English for `char_*_desc`; keep the personality for "
+            "`char_*_personality_fr`. When a description is empty, invent a "
+            "fitting character from the theme.\n\n"
             f"JSON Schema:\n{schema}"
         )
         user_msg = (
             f"Theme / pitch: {prompt}\n"
-            f"Left character first name (French): {char_left_name}\n"
-            f"Right character first name (French): {char_right_name}\n"
+            f"Left character — first name: {char_left_name}; "
+            f"creator description: {char_left_desc or '(none, invent it)'}\n"
+            f"Right character — first name: {char_right_name}; "
+            f"creator description: {char_right_desc or '(none, invent it)'}\n"
             "Return the full AdventureScript JSON now."
         )
 

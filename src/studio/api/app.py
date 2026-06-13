@@ -108,9 +108,11 @@ class EpisodeIn(BaseModel):
 
 
 class ScriptGenIn(BaseModel):
-    prompt: str
+    prompt: str                       # l'aventure (thème/pitch) — requis
     char_left_name: str = "Étienne"
     char_right_name: str = "Marc"
+    char_left_desc: str = ""          # description optionnelle du créateur
+    char_right_desc: str = ""
 
 
 class ScriptEditIn(BaseModel):
@@ -185,7 +187,8 @@ def generate_episode_script(
 ) -> dict[str, Any]:
     _require_episode(session, episode_id)
     script = generate_script(
-        body.prompt, body.char_left_name, body.char_right_name
+        body.prompt, body.char_left_name, body.char_right_name,
+        body.char_left_desc, body.char_right_desc,
     )
     ScriptRepo(session).create(episode_id, script.model_dump_json())
     data: dict[str, Any] = json.loads(script.model_dump_json())

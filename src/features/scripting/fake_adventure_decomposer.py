@@ -52,11 +52,14 @@ class FakeAdventureDecomposer:
         prompt: str,
         char_left_name: str = "Étienne",
         char_right_name: str = "Marc",
+        char_left_desc: str = "",
+        char_right_desc: str = "",
     ) -> AdventureScript:
         """Return a fixed, valid 3-round cave-horror adventure script.
 
-        The user prompt and names are accepted for interface compatibility;
-        the names are injected, the prompt is ignored (no network call).
+        Offline/deterministic : le prompt est ignoré (pas de réseau). Les noms
+        sont injectés ; si une description de perso est fournie, elle remplace
+        l'apparence par défaut (pour tester le contrat « créateur décrit »).
         """
         round1 = _round(
             action_desc="descends deeper down the collapsed mine shaft, torch raised",
@@ -183,11 +186,13 @@ class FakeAdventureDecomposer:
             char_left_name=char_left_name,
             char_right_name=char_right_name,
             char_left_desc=(
-                "a gaunt pale man in a soaked miner's jacket, hollow eyes, "
+                char_left_desc
+                or "a gaunt pale man in a soaked miner's jacket, hollow eyes, "
                 "ash-streaked face"
             ),
             char_right_desc=(
-                "a wiry man with a weathered scarred face and a cracked helmet lamp"
+                char_right_desc
+                or "a wiry man with a weathered scarred face and a cracked helmet lamp"
             ),
             char_left_personality_fr=(
                 "Un mineur calme et fatigué, qui connaît la mine par cœur."

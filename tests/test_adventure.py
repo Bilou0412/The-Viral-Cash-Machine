@@ -80,6 +80,23 @@ def test_script_valide():
     assert s.char_left_name == "Étienne"
 
 
+def test_creator_descriptions_respectees():
+    """Contrat de création : si le créateur décrit un perso, c'est respecté."""
+    from src.features.scripting.fake_adventure_decomposer import FakeAdventureDecomposer
+
+    dec = FakeAdventureDecomposer()
+    s = dec.decompose_adventure(
+        "grotte", "Léo", "Sam",
+        char_left_desc="a tall hooded figure with a lantern",
+        char_right_desc="a short nervous man in a raincoat",
+    )
+    assert s.char_left_desc == "a tall hooded figure with a lantern"
+    assert s.char_right_desc == "a short nervous man in a raincoat"
+    # vide → invention par défaut (non vide)
+    s2 = dec.decompose_adventure("grotte", "Léo", "Sam")
+    assert s2.char_left_desc and s2.char_right_desc
+
+
 def test_intro_personnalisee_par_perso():
     """R1 : chaque perso a un texte de caractère + une réplique d'intro (son nom)."""
     s = _script()

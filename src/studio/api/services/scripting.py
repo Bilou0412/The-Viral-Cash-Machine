@@ -35,8 +35,16 @@ def generate_script(
     prompt: str,
     char_left_name: str,
     char_right_name: str,
+    char_left_desc: str = "",
+    char_right_desc: str = "",
     decomposer: Optional[AdventureDecomposer] = None,
 ) -> AdventureScript:
-    """Generate a validated AdventureScript from a prompt + character names."""
+    """Generate a validated AdventureScript from the creator's inputs.
+
+    Creator provides the adventure (prompt) + the 2 characters (name and,
+    optionally, a description). Empty descriptions are invented by the model.
+    """
     dec = decomposer or get_decomposer()
-    return dec.decompose_adventure(prompt, char_left_name, char_right_name)
+    return dec.decompose_adventure(
+        prompt, char_left_name, char_right_name, char_left_desc, char_right_desc
+    )
