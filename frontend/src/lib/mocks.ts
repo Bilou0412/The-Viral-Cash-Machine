@@ -202,6 +202,10 @@ export const mockApi = {
     e.status = "done"; e.duration_s = 57; e.final_path = "exports/x/final.mp4"
     return { episode_id: episodeId, final_path: e.final_path }
   },
+  async produce(episodeId: number) {
+    await delay(400)
+    return { episode_id: episodeId, status: "scheduled" }
+  },
   async getLibrary(): Promise<LibraryItem[]> {
     await delay()
     return episodes

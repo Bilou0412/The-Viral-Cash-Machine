@@ -1,12 +1,13 @@
+import { useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { Clapperboard, Download, Film, Play } from "lucide-react"
+import { Clapperboard, Download, Film, Play, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EpisodeStatusBadge } from "@/components/studio/status-badge"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
 import { useCost, useEpisode, useMontage } from "@/hooks/use-studio"
-import { episodeVideoUrl } from "@/lib/api"
+import { api, episodeVideoUrl } from "@/lib/api"
 import { formatCost, formatDuration } from "@/lib/utils"
 
 export function Montage() {
@@ -15,6 +16,22 @@ export function Montage() {
   const episode = useEpisode(episodeId)
   const cost = useCost(episodeId)
   const montage = useMontage(episodeId)
+  const [producing, setProducing] = useState(false)
+
+  async function produceAll() {
+    setProducing(true)
+    try {
+      await api.produce(episodeId)
+      toast.success("Production lancée 🎬", {
+        description: "Vidéo complète (assets + intro + montage) en cours. " +
+          "~15-20 min — reviens rafraîchir cette page pour voir le résultat.",
+      })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Échec du lancement")
+    } finally {
+      setProducing(false)
+    }
+  }
 
   if (episode.isLoading) return <LoadingState />
   if (episode.isError) return <ErrorState error={episode.error} />
@@ -79,9 +96,13 @@ export function Montage() {
           </Card>
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={assemble} disabled={montage.isPending}>
+            <Button onClick={produceAll} disabled={producing}>
+              {producing ? <Spinner /> : <Wand2 className="h-4 w-4" />}
+              Produire toute la vidéo
+            </Button>
+            <Button variant="outline" onClick={assemble} disabled={montage.isPending}>
               {montage.isPending ? <Spinner /> : <Clapperboard className="h-4 w-4" />}
-              {hasVideo ? "Réassembler" : "Assembler la vidéo"}
+              {hasVideo ? "Réassembler (montage seul)" : "Monter (assets déjà générés)"}
             </Button>
             {hasVideo && (
               <>

@@ -165,4 +165,6 @@ export interface GenerateScriptBody {
   prompt: string
   char_left_name?: string
   char_right_name?: string
+  char_left_desc?: string
+  char_right_desc?: string
 }

@@ -22,6 +22,8 @@ export function NewEpisode() {
   const [prompt, setPrompt] = useState("")
   const [left, setLeft] = useState("Étienne")
   const [right, setRight] = useState("Marc")
+  const [leftDesc, setLeftDesc] = useState("")
+  const [rightDesc, setRightDesc] = useState("")
   const [draftMode, setDraftMode] = useState(true)
   const [working, setWorking] = useState(false)
 
@@ -52,6 +54,8 @@ export function NewEpisode() {
         prompt: prompt.trim(),
         char_left_name: left.trim() || "Étienne",
         char_right_name: right.trim() || "Marc",
+        char_left_desc: leftDesc.trim(),
+        char_right_desc: rightDesc.trim(),
       })
       toast.success("Script généré")
       navigate(`/episodes/${ep.id}/script`)
@@ -121,12 +125,28 @@ export function NewEpisode() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="left">Personnage gauche</Label>
+              <Label htmlFor="left">Personnage gauche — prénom</Label>
               <Input id="left" value={left} onChange={(e) => setLeft(e.target.value)} />
+              <Textarea
+                id="leftDesc"
+                rows={3}
+                maxLength={220}
+                value={leftDesc}
+                onChange={(e) => setLeftDesc(e.target.value)}
+                placeholder="Description (optionnel) : apparence + caractère. Ex. « homme à tête d'horloge, gentil mais vicieux »"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="right">Personnage droite</Label>
+              <Label htmlFor="right">Personnage droite — prénom</Label>
               <Input id="right" value={right} onChange={(e) => setRight(e.target.value)} />
+              <Textarea
+                id="rightDesc"
+                rows={3}
+                maxLength={220}
+                value={rightDesc}
+                onChange={(e) => setRightDesc(e.target.value)}
+                placeholder="Description (optionnel). Ex. « homme à tête de lune, nerveux mais fidèle ». Vide = l'IA invente."
+              />
             </div>
           </div>
 

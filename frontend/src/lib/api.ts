@@ -102,6 +102,13 @@ const realApi = {
       { method: "POST" }
     ),
 
+  // « Un bouton = toute la vidéo » : assets aventure + intro + montage (fond).
+  produce: (episodeId: number) =>
+    request<{ episode_id: number; status: string }>(
+      `/episodes/${episodeId}/produce`,
+      { method: "POST" }
+    ),
+
   getLibrary: () => request<LibraryItem[]>("/library"),
 }
 
