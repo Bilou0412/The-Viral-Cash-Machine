@@ -421,3 +421,29 @@ def episode_video(
     if not episode.final_path or not os.path.exists(episode.final_path):
         raise HTTPException(404, "final video not available")
     return FileResponse(episode.final_path)
+
+
+# ---------------------------------------------------------------------------
+# Front statique (SPA) — servi par FastAPI quand le build existe (Docker/prod).
+# Monté APRÈS toutes les routes /api ; absent en tests (pas de build) → no-op.
+# ---------------------------------------------------------------------------
+
+_DIST = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "dist")
+)
+if os.path.isdir(_DIST):
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(_DIST, "assets")),
+        name="spa-assets",
+    )
+
+    @app.get("/{full_path:path}")
+    def _spa(full_path: str) -> FileResponse:
+        """Sert le SPA : un fichier réel s'il existe, sinon index.html (routing client)."""
+        candidate = os.path.join(_DIST, full_path)
+        if full_path and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(os.path.join(_DIST, "index.html"))

@@ -17,6 +17,22 @@ venv/
 # Sorties générées (montées en volume)
 exports/
 
+# Front : node_modules/dist rebuildés dans l'image (NE PAS copier les 196M)
+frontend/node_modules/
+frontend/dist/
+
+# Sorties / données persistées en volume
+studio_output/
+studio_data/
+studio.db
+series/
+
+# Caches & artefacts
+.pytest_cache/
+.mypy_cache/
+uv.lock
+viral_cash_machine.egg-info/
+
 # Artefacts & docs lourds inutiles à l'image
 graphify-out/
 *.md

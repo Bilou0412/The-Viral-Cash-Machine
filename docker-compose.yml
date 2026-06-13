@@ -1,13 +1,13 @@
 services:
-  viralcashmachine:
+  vcm-studio:
     build: .
-    image: viralcashmachine:v2
-    container_name: viralcashmachine
+    image: vcm-studio:latest
+    container_name: vcm-studio
     ports:
-      - "8501:8501"
+      - "8000:8000"          # studio = http://localhost:8000
     env_file:
-      - .env
+      - .env                 # OPENAI_API_KEY + REPLICATE_API_TOKEN (vrai GPT + génération)
     volumes:
-      # Persiste les vidéos générées sur l'hôte
-      - ./exports:/app/exports
+      # Persiste DB (/data/studio.db) + vidéos/assets (/data/studio_output) sur l'hôte
+      - ./studio_data:/data
     restart: unless-stopped
