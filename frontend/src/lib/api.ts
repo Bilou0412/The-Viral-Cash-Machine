@@ -64,14 +64,7 @@ const realApi = {
     request<Episode[]>(
       projectId == null ? "/episodes" : `/episodes?project_id=${projectId}`
     ),
-  // The backend has no single-episode route (GET /episodes/{id} 404s), so we
-  // resolve from the list. If api-dev adds the direct route, swap this back.
-  getEpisode: async (id: number) => {
-    const all = await request<Episode[]>("/episodes")
-    const ep = all.find((e) => e.id === id)
-    if (!ep) throw new ApiError(404, "Épisode introuvable")
-    return ep
-  },
+  getEpisode: (id: number) => request<Episode>(`/episodes/${id}`),
   createEpisode: (body: CreateEpisodeBody) =>
     request<Episode>("/episodes", { method: "POST", body: JSON.stringify(body) }),
 
