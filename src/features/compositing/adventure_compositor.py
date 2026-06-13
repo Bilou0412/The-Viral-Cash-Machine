@@ -28,7 +28,7 @@ from moviepy import (
     VideoFileClip,
     concatenate_videoclips,
 )
-from moviepy.video.fx import Resize
+from moviepy.video.fx import MultiplySpeed, Resize
 
 from ..transcription.ports import Transcriber
 from .overlays import GaugeOverlay, NameplateOverlay, SubtitleOverlay, TimerOverlay
@@ -123,39 +123,70 @@ def _fit(clip, dur: float):
     return clip.with_duration(dur)
 
 
-def _narrated_video(
-    video_path: str, frame_path: str, narr_path: str, transcriber: Transcriber
-):
-    """Plan vidéo narré : on NE COUPE JAMAIS le narrateur.
+def _atempo(narr_path: str, factor: float, workdir: str) -> str:
+    """Accélère un audio en préservant le pitch (ffmpeg atempo). Renvoie le chemin."""
+    if factor <= 1.01:
+        return narr_path
+    import subprocess
 
-    La vidéo joue sa durée ; si la narration est plus longue, on PROLONGE le plan
-    avec la photo (première frame) en léger zoom — on illustre toujours, jamais du
-    vide. Pas de plaque de nom (réservée à l'intro). Sous-titres mot-à-mot.
+    factor = min(2.0, factor)  # atempo : 0.5–2.0 en une passe
+    out = os.path.join(workdir, "_at_" + os.path.basename(narr_path))
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", narr_path, "-filter:a", f"atempo={factor:.3f}", out],
+            check=True, capture_output=True,
+        )
+        return out
+    except Exception:
+        return narr_path
+
+
+def _narrated_video(
+    video_path: str,
+    frame_path: str,
+    narr_path: str,
+    transcriber: Transcriber,
+    workdir: str = ".",
+):
+    """Plan vidéo narré : narration et vidéo CALÉES À LA MÊME DURÉE par la vitesse.
+
+    cible = min(durée vidéo, durée narration). On accélère SEULEMENT le plus long
+    jusqu'à la cible (l'autre reste à 1×) — jamais de ralenti ni d'allongement.
+    Narrateur jamais coupé. Pas de plaque de nom (réservée à l'intro). Sous-titres.
     """
     v = VideoFileClip(video_path)
-    vdur = float(v.duration)
-    vsafe = max(0.1, vdur - 1.0 / FPS)
-    narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
-    ndur = float(narr.duration) if narr else 0.0
-    seg = max(vdur, ndur + 0.4)
+    t_vid = float(v.duration)
+    narr0 = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
 
-    vbase = _fit(v, vdur)
-    if seg > vdur + 0.05 and frame_path and os.path.exists(frame_path):
-        tail = _ken_burns(frame_path, seg - vdur).with_start(vdur)
-        video_layer = CompositeVideoClip([vbase, tail], size=(W, H)).with_duration(seg)
-    else:
-        video_layer = vbase  # narration rentre dans la vidéo
+    if narr0 is None:  # pas de narration : on garde la vidéo telle quelle
+        base = _fit(v, t_vid)
+        return base
+
+    t_narr = float(narr0.duration)
+    narr0.close()
+    target = max(0.5, min(t_vid, t_narr))
+    narr_atempo = t_narr / target   # >=1 si la narration est la plus longue
+    vid_speed = t_vid / target      # >=1 si la vidéo est la plus longue
+
+    vbase = _fit(v, t_vid)
+    if vid_speed > 1.01:
+        vbase = vbase.with_effects([MultiplySpeed(vid_speed)])
+    seg = float(vbase.duration)
+    safe = max(0.1, seg - 1.0 / FPS)
+
+    narr_file = _atempo(narr_path, narr_atempo, workdir)
+    narr = AudioFileClip(narr_file)
 
     tracks = []
-    if v.audio is not None:
-        tracks.append(_scale_volume(v.audio.with_duration(vsafe), 0.22))
-    if narr is not None:
-        tracks.append(narr.with_start(0.2))  # narration COMPLÈTE, jamais coupée
-    audio = CompositeAudioClip(tracks).with_duration(seg) if tracks else None
+    if vbase.audio is not None:
+        tracks.append(_scale_volume(vbase.audio.with_duration(safe), 0.22))
+    tracks.append(narr.with_duration(min(float(narr.duration), safe)))
+    audio = CompositeAudioClip(tracks).with_duration(safe)
 
-    layers = [video_layer] + _subs_from_audio(transcriber, narr_path, seg)
+    # sous-titres calés sur la narration ACCÉLÉRÉE (timing correct)
+    layers = [vbase] + _subs_from_audio(transcriber, narr_file, seg)
     comp = CompositeVideoClip(layers, size=(W, H)).with_duration(seg)
-    return comp.with_audio(audio) if audio else comp
+    return comp.with_audio(audio)
 
 
 def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir: str):
@@ -255,7 +286,7 @@ def compose_narrated_segment(
     """Monte UN plan vidéo narré (ex. l'épilogue) en fichier autonome."""
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
-    clip = _narrated_video(video_path, frame_path, narr_path, transcriber)
+    clip = _narrated_video(video_path, frame_path, narr_path, transcriber, workdir)
     clip.write_videofile(
         output_path, fps=FPS, codec="libx264", audio_codec="aac",
         temp_audiofile=os.path.join(workdir, "_temp_epi.m4a"), remove_temp=True,
@@ -276,13 +307,13 @@ def compose_round(
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
     segments = [
-        _narrated_video(assets.action_video, assets.action_frame, assets.narr_action, transcriber),
-        _narrated_video(assets.environment_video, assets.environment_frame, assets.narr_environment, transcriber),
+        _narrated_video(assets.action_video, assets.action_frame, assets.narr_action, transcriber, workdir),
+        _narrated_video(assets.environment_video, assets.environment_frame, assets.narr_environment, transcriber, workdir),
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
         _timer_screen(assets.choice_b_image),
-        _narrated_video(assets.fatal_video, assets.fatal_frame, assets.narr_fatal, transcriber),
-        _narrated_video(assets.survival_video, assets.survival_frame, assets.narr_survival, transcriber),
+        _narrated_video(assets.fatal_video, assets.fatal_frame, assets.narr_fatal, transcriber, workdir),
+        _narrated_video(assets.survival_video, assets.survival_frame, assets.narr_survival, transcriber, workdir),
     ]
     final = concatenate_videoclips(segments, method="compose")
     final.write_videofile(
