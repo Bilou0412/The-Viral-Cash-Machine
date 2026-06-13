@@ -12,19 +12,23 @@ import asyncio
 import json
 from typing import Any, Dict, List
 
+Event = Dict[str, Any]
+
 
 class EventBus:
     """Fan-out of per-episode events to any number of async subscribers."""
 
     def __init__(self) -> None:
-        self._subscribers: Dict[int, List[asyncio.Queue]] = {}
+        self._subscribers: Dict[int, List["asyncio.Queue[Event]"]] = {}
 
-    def subscribe(self, episode_id: int) -> asyncio.Queue:
-        queue: asyncio.Queue = asyncio.Queue()
+    def subscribe(self, episode_id: int) -> "asyncio.Queue[Event]":
+        queue: "asyncio.Queue[Event]" = asyncio.Queue()
         self._subscribers.setdefault(episode_id, []).append(queue)
         return queue
 
-    def unsubscribe(self, episode_id: int, queue: asyncio.Queue) -> None:
+    def unsubscribe(
+        self, episode_id: int, queue: "asyncio.Queue[Event]"
+    ) -> None:
         subs = self._subscribers.get(episode_id)
         if not subs:
             return

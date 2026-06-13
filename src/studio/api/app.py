@@ -22,7 +22,7 @@ import json
 import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,12 +47,15 @@ from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
 from .services.scripting import generate_script
 
+if TYPE_CHECKING:
+    from ...features.scripting.adventure import AdventureScript
+
 # ---------------------------------------------------------------------------
 # App + dependency wiring (overridable in tests)
 # ---------------------------------------------------------------------------
 
 @asynccontextmanager
-async def _lifespan(_app: FastAPI):
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     init_db(get_engine())
     yield
 
@@ -178,7 +181,8 @@ def generate_episode_script(
         body.prompt, body.char_left_name, body.char_right_name
     )
     ScriptRepo(session).create(episode_id, script.model_dump_json())
-    return json.loads(script.model_dump_json())
+    data: dict[str, Any] = json.loads(script.model_dump_json())
+    return data
 
 
 @app.get("/api/episodes/{episode_id}/script")
@@ -189,7 +193,8 @@ def get_episode_script(
     row = ScriptRepo(session).latest_for_episode(episode_id)
     if row is None:
         raise HTTPException(404, "no script yet for this episode")
-    return json.loads(row.script_json)
+    data: dict[str, Any] = json.loads(row.script_json)
+    return data
 
 
 @app.put("/api/episodes/{episode_id}/script")
@@ -207,7 +212,8 @@ def edit_episode_script(
     row = ScriptRepo(session).create(
         episode_id, script.model_dump_json(), edited=True
     )
-    return json.loads(row.script_json)
+    data: dict[str, Any] = json.loads(row.script_json)
+    return data
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +221,7 @@ def edit_episode_script(
 # ---------------------------------------------------------------------------
 
 
-def _load_script(session: Session, episode_id: int):
+def _load_script(session: Session, episode_id: int) -> "AdventureScript":
     from ...features.scripting.adventure import AdventureScript
 
     row = ScriptRepo(session).latest_for_episode(episode_id)
@@ -283,7 +289,7 @@ def generate_assets(
     session: Session = Depends(_session),
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
-    downloader=Depends(get_downloader),
+    downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     _require_episode(session, episode_id)
     script = _load_script(session, episode_id)
@@ -298,7 +304,7 @@ def regenerate_one_asset(
     background: BackgroundTasks,
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
-    downloader=Depends(get_downloader),
+    downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     background.add_task(regenerate_asset, engine, asset_id, provider, downloader)
     return {"asset_id": asset_id, "status": "scheduled"}
@@ -332,7 +338,7 @@ def montage_episode(
 
 
 @app.get("/api/library")
-def library(session: Session = Depends(_session)) -> list[dict]:
+def library(session: Session = Depends(_session)) -> list[dict[str, Any]]:
     episodes = EpisodeRepo(session).list()
     return [
         {
@@ -357,7 +363,7 @@ def library(session: Session = Depends(_session)) -> list[dict]:
 async def episode_events(episode_id: int) -> StreamingResponse:
     queue = bus.subscribe(episode_id)
 
-    async def stream():
+    async def stream() -> AsyncIterator[str]:
         try:
             while True:
                 try:

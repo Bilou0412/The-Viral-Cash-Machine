@@ -16,7 +16,7 @@ class FakeAssetProvider(AssetProvider):
     def __init__(self) -> None:
         self.voice_calls: List[Tuple[str, str]] = []
         self.image_calls: List[Tuple[str, str, str]] = []
-        self.video_calls: List[dict] = []
+        self.video_calls: List[dict[str, object]] = []
         self._n = 0
 
     def _next(self, ext: str) -> str:
