@@ -83,6 +83,12 @@ class AdventureScript(_Spec):
     char_right_desc: str           # EN
     char_left_voice: VoiceProfile
     char_right_voice: VoiceProfile
+    # Intro personnalisée (R1) — un texte de caractère + une réplique angoissante
+    # où le perso dit SON nom et tente de te convaincre (« choisis-moi »).
+    char_left_personality_fr: str   # FR simple — qui il est, son caractère (1 phrase)
+    char_right_personality_fr: str  # FR simple
+    char_left_intro_line_fr: str    # FR — réplique d'intro angoissante (dit son nom)
+    char_right_intro_line_fr: str   # FR
     transition_narration_fr: str   # FR — « Si tu as choisi Étienne... »
     rounds: Tuple[Round, Round, Round]   # EXACTEMENT 3
     epilogue_other_desc: str       # EN — slot prompts.epilogue_other_path (glimpse)

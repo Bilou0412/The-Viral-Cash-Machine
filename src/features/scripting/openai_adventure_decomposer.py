@@ -28,7 +28,13 @@ _GOLDEN_RULES = """RULES (each is a hard constraint, not a suggestion):
 6. Horror tone: dark, cinematic, oppressive, tense. Safe horror wording
    (weathered, ashen, pale, aged) over gore.
 7. ALL visual/delivery fields are in ENGLISH; ALL spoken fields (`*_fr`,
-   `label_fr`) are in FRENCH."""
+   `label_fr`) are in FRENCH.
+8. SIMPLE, EVERYDAY French for every spoken field — plain common words, short
+   sentences, no literary or convoluted phrasing. It must sound natural and be
+   instantly understood.
+9. FIL ROUGE (through-line): the whole script MUST make sense as one coherent
+   descent — each round follows logically from the previous survival, the
+   narrator's lines are consistent, nothing is random or absurd."""
 
 _STRUCTURE_RULES = """STRUCTURE:
 - Exactly 3 rounds. Each round has exactly 2 choices and exactly ONE fatal choice
@@ -38,7 +44,14 @@ _STRUCTURE_RULES = """STRUCTURE:
 - `character_delivery` is an English manner of speaking (e.g. "whispering",
   "murmuring", "hissing").
 - Use the provided French first names verbatim for `char_left_name` /
-  `char_right_name`."""
+  `char_right_name`.
+- INTRO personalization (per character):
+  - `char_*_personality_fr`: ONE short, simple French sentence introducing who
+    the character is (their nature/vibe). Plain words.
+  - `char_*_intro_line_fr`: a SHORT anguishing French line the character says to
+    the viewer to be picked — he says his OWN name and pleads/warns
+    (e.g. "Moi, c'est Étienne. Choisis-moi... ou tu ne ressortiras pas.").
+    The two characters must feel DIFFERENT (one pleads, one threatens)."""
 
 
 class OpenAIAdventureDecomposer:

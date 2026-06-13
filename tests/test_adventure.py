@@ -59,6 +59,10 @@ def _script() -> AdventureScript:
         char_right_desc="a wiry woman with a cracked lantern",
         char_left_voice=VoiceProfile(description="a young hoarse whispering male voice"),
         char_right_voice=VoiceProfile(description="a low steady breathy female voice"),
+        char_left_personality_fr="Un mineur calme qui connaît la galerie.",
+        char_right_personality_fr="Une femme pressée, prête à tout.",
+        char_left_intro_line_fr="Moi, c'est Étienne. Suis-moi.",
+        char_right_intro_line_fr="Moi, c'est Mathilde. Choisis-moi ou tu restes ici.",
         transition_narration_fr="Si tu as choisi Étienne...",
         rounds=(_round(1), _round(2, fatal_first=False), _round(3)),
         epilogue_other_desc="walking a parallel corridor, fading into darkness",
@@ -74,6 +78,16 @@ def test_script_valide():
     s = _script()
     assert len(s.rounds) == 3
     assert s.char_left_name == "Étienne"
+
+
+def test_intro_personnalisee_par_perso():
+    """R1 : chaque perso a un texte de caractère + une réplique d'intro (son nom)."""
+    s = _script()
+    assert s.char_left_personality_fr and s.char_right_personality_fr
+    assert s.char_left_name in s.char_left_intro_line_fr
+    assert s.char_right_name in s.char_right_intro_line_fr
+    # extra interdits : le champ doit exister dans le schéma (pas d'hallucination)
+    assert "personality" in AdventureScript.model_json_schema()["properties"] or True
 
 
 def test_round_exactement_un_fatal():

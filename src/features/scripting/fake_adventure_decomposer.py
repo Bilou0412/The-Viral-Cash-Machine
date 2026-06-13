@@ -189,6 +189,20 @@ class FakeAdventureDecomposer:
             char_right_desc=(
                 "a wiry man with a weathered scarred face and a cracked helmet lamp"
             ),
+            char_left_personality_fr=(
+                "Un mineur calme et fatigué, qui connaît la mine par cœur."
+            ),
+            char_right_personality_fr=(
+                "Un homme nerveux et pressé, prêt à tout pour sortir vite."
+            ),
+            char_left_intro_line_fr=(
+                f"Moi, c'est {char_left_name}. Suis-moi, je connais le chemin. "
+                "Lui, il va te perdre."
+            ),
+            char_right_intro_line_fr=(
+                f"Moi, c'est {char_right_name}. Choisis-moi... ou tu restes ici "
+                "pour toujours."
+            ),
             char_left_voice=VoiceProfile(
                 description=(
                     "low breathy male voice, slow and trembling, frequent dry swallows"

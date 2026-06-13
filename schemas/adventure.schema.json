@@ -156,6 +156,22 @@
     "char_right_voice": {
       "$ref": "#/$defs/VoiceProfile"
     },
+    "char_left_personality_fr": {
+      "title": "Char Left Personality Fr",
+      "type": "string"
+    },
+    "char_right_personality_fr": {
+      "title": "Char Right Personality Fr",
+      "type": "string"
+    },
+    "char_left_intro_line_fr": {
+      "title": "Char Left Intro Line Fr",
+      "type": "string"
+    },
+    "char_right_intro_line_fr": {
+      "title": "Char Right Intro Line Fr",
+      "type": "string"
+    },
     "transition_narration_fr": {
       "title": "Transition Narration Fr",
       "type": "string"
@@ -193,6 +209,10 @@
     "char_right_desc",
     "char_left_voice",
     "char_right_voice",
+    "char_left_personality_fr",
+    "char_right_personality_fr",
+    "char_left_intro_line_fr",
+    "char_right_intro_line_fr",
     "transition_narration_fr",
     "rounds",
     "epilogue_other_desc",
