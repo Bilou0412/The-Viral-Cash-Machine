@@ -47,5 +47,9 @@ ou tu meurs (POV) ; le compagnon réagit (il ne « disparaît » pas comme un ch
 ## Statut
 | Patch | Couche | Statut |
 |---|---|---|
-| A — script reframe (P5/P6/P2/P1) | R1 | ⬜ |
-| B — montage/intro (P4/P5/P2/P3) | montage+intro | ⬜ |
+| A — script reframe (P5/P6/P2/P1) | R1 | ✅ `97b408a` |
+| B — montage/intro (P4/P5/P2/P3) | montage+intro | ✅ `f68e77e` |
+
+Reste à vérifier sur une VRAIE génération (les patchs sont codés + tests verts ;
+l'effet visuel — un compagnon suivi, choix d'aventure, intro 2 voix lip-sync,
+entrée « si tu as choisi » + zoom — se confirme à la prochaine production réelle).
