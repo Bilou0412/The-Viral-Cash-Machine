@@ -217,7 +217,8 @@ class FakeAdventureDecomposer:
                 )
             ),
             transition_narration_fr=(
-                f"Si tu as choisi {char_left_name}, l'aventure commence dans le noir."
+                f"Si tu as choisi {char_left_name}, voici la nuit qui t'attend : "
+                "la mine noyée, l'eau qui monte, et chaque pas qui peut être le dernier."
             ),
             rounds=(round1, round2, round3),
             epilogue_other_desc=(

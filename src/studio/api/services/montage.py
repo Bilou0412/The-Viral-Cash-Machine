@@ -205,7 +205,20 @@ class MontageService:
                 )
                 round_files.append(ef)
 
-            # Intro (système historique) en TÊTE si elle a été générée.
+            # P4 — segment d'entrée « Si tu as choisi {nom} » : zoom sur le
+            # compagnon (réf perso) pendant la narration de transition.
+            entry_img = g(None, "char_reference")
+            entry_narr = g(None, "transition.narration")
+            if entry_img and entry_narr:
+                from ....features.compositing.adventure_compositor import (
+                    compose_entry_segment,
+                )
+
+                entry = os.path.join(work, "entry.mp4")
+                compose_entry_segment(entry_img, entry_narr, transcriber, entry, work)
+                round_files.insert(0, entry)
+
+            # Intro (système historique) tout en TÊTE si elle a été générée.
             intro = g(None, "intro")
             if intro:
                 round_files.insert(0, intro)

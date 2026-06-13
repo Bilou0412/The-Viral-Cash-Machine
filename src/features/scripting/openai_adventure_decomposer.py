@@ -53,6 +53,9 @@ _STRUCTURE_RULES = """STRUCTURE & STORY LOGIC (read carefully):
   consistent with his personality (he helps you read the danger).
 - `choice_narration_fr`: the narrator clearly PRESENTS the two options, naming
   each one ("À gauche…, à droite… — choisis"), so each can be shown with its image.
+- `transition_narration_fr`: MUST start with "Si tu as choisi {char_left_name}, "
+  then describe the action/environment the viewer is heading into (this plays over
+  a zoom on the chosen companion at the entry of the adventure).
 - The narrator has a FIXED pre-cloned voice — do NOT invent a narrator voice.
 - `character_delivery` = English manner of speaking ("whispering", "hissing"…).
 - Use the provided French first names verbatim.

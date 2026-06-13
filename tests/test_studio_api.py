@@ -30,6 +30,9 @@ from src.studio.db.engine import init_db  # noqa: E402
 def client(tmp_path, monkeypatch):
     # Run everything from a tmp cwd so exports/ and any db file stay isolated.
     monkeypatch.chdir(tmp_path)
+    # Offline isolation : pas de vraie clé → décomposeur Fake déterministe.
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("REPLICATE_API_TOKEN", raising=False)
 
     db_path = tmp_path / "studio_test.db"
     engine = create_engine(

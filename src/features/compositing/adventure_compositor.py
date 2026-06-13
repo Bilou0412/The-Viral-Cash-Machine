@@ -318,6 +318,32 @@ def compose_narrated_segment(
     return output_path
 
 
+def compose_entry_segment(
+    image_path: str,
+    narr_path: str,
+    transcriber: Transcriber,
+    output_path: str,
+    workdir: Optional[str] = None,
+) -> str:
+    """Entrée d'aventure (P4) : ZOOM sur le compagnon pendant que le narrateur dit
+    « Si tu as choisi {nom}, … ». Écrit un fichier autonome."""
+    workdir = workdir or os.path.dirname(output_path) or "."
+    os.makedirs(workdir, exist_ok=True)
+    narr0 = AudioFileClip(narr_path) if (narr_path and os.path.exists(narr_path)) else None
+    base_dur = (float(narr0.duration) + 0.3) if narr0 else 4.0
+    if narr0:
+        narr0.close()
+    visual = _ken_burns(image_path, base_dur)
+    clip = _narrate_over(visual, narr_path, transcriber, workdir)
+    clip.write_videofile(
+        output_path, fps=FPS, codec="libx264", audio_codec="aac",
+        temp_audiofile=os.path.join(workdir, "_temp_entry.m4a"), remove_temp=True,
+        logger=None,
+    )
+    clip.close()
+    return output_path
+
+
 def compose_round(
     assets: RoundAssets,
     follower_name: str,

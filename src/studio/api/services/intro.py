@@ -27,23 +27,24 @@ from .paths import episode_dir
 
 
 def _intro_image_prompt(script: AdventureScript) -> str:
+    # P3 : plan MOYEN (taille buste) pour que les VISAGES/lèvres soient nets.
     return (
-        f"{VERTICAL} First-person POV horror. Two men stand facing us, full body, "
-        f"at the mouth of a flooded mine. On the LEFT: {script.char_left_desc}. "
-        f"On the RIGHT: {script.char_right_desc}. Both lit, facing the camera, "
-        f"standing upright and still. {POV_HANDS}. {DA}. {NO_TEXT}"
+        f"{VERTICAL} First-person POV horror, MEDIUM shot from the waist up so both "
+        f"FACES are large and clearly visible. Two men face us. On the LEFT: "
+        f"{script.char_left_desc}. On the RIGHT: {script.char_right_desc}. Both lit, "
+        f"facing the camera, faces sharp and detailed. {POV_HANDS}. {DA}. {NO_TEXT}"
     )
 
 
-def _intro_video_prompt(script: AdventureScript) -> str:
+def _intro_video_prompt(script: AdventureScript, first: str, second: str) -> str:
+    # P2 : ordre aléatoire (first/second). P3 : visages nets + lip-sync visible.
     return (
-        "Static locked-off camera, no camera movement. Two men face us in a "
-        f"flooded mine. FIRST the LEFT man ({script.char_left_desc}) speaks "
-        "straight to camera, pleading to be chosen; THEN the RIGHT man "
-        f"({script.char_right_desc}) speaks straight to camera, threatening. "
-        "Each leans SLOWLY toward the camera as he speaks but stays fully in "
-        "frame, roots locked, no walking. Intense eye contact, full lip sync, "
-        f"anguished. {POV_HANDS}. {DA}."
+        "Static locked-off camera, no camera movement, MEDIUM shot (waist up), "
+        f"both faces large and sharp. Two men face us in a flooded mine. FIRST the "
+        f"{first} man speaks straight to camera giving an anguished warning; THEN "
+        f"the {second} man answers with a short line. Mouths clearly visible, full "
+        "natural LIP SYNC, intense eye contact, each leans slightly toward us but "
+        f"stays in frame, roots locked. {POV_HANDS}. {DA}."
     )
 
 
@@ -64,21 +65,24 @@ def generate_intro(engine: Engine, episode_id: int) -> str:
 
     instance_id = f"episode_{episode_id}_intro"
     left, right = script.char_left_name, script.char_right_name
-    # Les DEUX persos parlent (répliques d'intro R1 : chacun dit son nom, angoissant).
-    speech = f"{script.char_left_intro_line_fr} {script.char_right_intro_line_fr}"
-    # La narration conteur introduit le CARACTÈRE des deux + le choix.
-    narration = (
-        f"Voici {left}. {script.char_left_personality_fr} "
-        f"Et voici {right}. {script.char_right_personality_fr} "
-        f"Choisis ton compagnon pour la descente : {left}, ou {right}."
-    )
+    # P2 : ordre ALÉATOIRE (pas toujours gauche puis droite). Conseil + réponse.
+    import random
+
+    if random.random() < 0.5:
+        first, second = "LEFT", "RIGHT"
+        speech = f"{script.char_left_intro_line_fr} {script.char_right_intro_line_fr}"
+    else:
+        first, second = "RIGHT", "LEFT"
+        speech = f"{script.char_right_intro_line_fr} {script.char_left_intro_line_fr}"
+    # P1 : narrateur = PHRASE FIXE du template, seuls les prénoms varient.
+    narration = f"Choisis ton compagnon pour cette nuit : {left} ou {right}."
 
     pipeline = Pipeline()
     # 1) Assets (image 2 persos -> dialogue ; voix perso + narrateur par défaut).
     pipeline.generate_assets(
         project_name,
         instance_id,
-        _intro_video_prompt(script),
+        _intro_video_prompt(script, first, second),
         _intro_image_prompt(script),
         speech,
         narration,
