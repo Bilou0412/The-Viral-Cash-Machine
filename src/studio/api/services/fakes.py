@@ -23,7 +23,9 @@ class FakeAssetProvider(AssetProvider):
         self._n += 1
         return f"https://fake.local/{self._n}.{ext}"
 
-    def synthesize_voice(self, text: str, voice_id: str) -> str:
+    def synthesize_voice(
+        self, text: str, voice_id: str, model: "str | None" = None
+    ) -> str:
         self.voice_calls.append((text, voice_id))
         return self._next("mp3")
 

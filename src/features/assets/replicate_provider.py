@@ -8,10 +8,16 @@ from .ports import AssetProvider
 class ReplicateAssetProvider(AssetProvider):
     """Generate assets using Replicate AI models."""
 
-    def synthesize_voice(self, text: str, voice_id: str) -> str:
-        """Synthesize voice using Minimax Speech model."""
+    def synthesize_voice(
+        self, text: str, voice_id: str, model: Optional[str] = None
+    ) -> str:
+        """Synthesize voice using a Minimax Speech model.
+
+        `model` lets a cloned voice use the model it was cloned with
+        (e.g. "minimax/speech-02-hd"). Default = "minimax/speech-2.8-turbo".
+        """
         result = replicate.run(
-            "minimax/speech-2.8-turbo",
+            model or "minimax/speech-2.8-turbo",
             input={
                 "text": text,
                 "voice_id": voice_id,

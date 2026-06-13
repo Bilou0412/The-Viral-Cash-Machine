@@ -17,8 +17,14 @@ class AssetBundle:
 class AssetProvider(Protocol):
     """Port for generating AI assets (voice, image, video)."""
 
-    def synthesize_voice(self, text: str, voice_id: str) -> str:
-        """Synthesize voice from text. Returns URL."""
+    def synthesize_voice(
+        self, text: str, voice_id: str, model: Optional[str] = None
+    ) -> str:
+        """Synthesize voice from text. Returns URL.
+
+        `model` overrides the TTS model (e.g. a cloned voice needs the model it
+        was cloned with). Default = the provider's standard model.
+        """
         ...
 
     def generate_image(self, prompt: str, size: str, aspect_ratio: str) -> str:

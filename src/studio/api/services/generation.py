@@ -29,9 +29,27 @@ from . import pricing
 from .generation_plan import PlannedAsset, plan_episode_assets
 from .paths import episode_dir
 
-# Default voice ids (mirror Pipeline.generate_assets: narrator vs character).
+# Default voice ids (fallback if the cloned narrator profile is unavailable).
 NARRATOR_VOICE_ID = "Deep_Voice_Man"
 CHARACTER_VOICE_ID = "Deep_Voice_Man"
+
+
+def _narrator_voice() -> tuple[str, Optional[str]]:
+    """(voice_id, model) of the cloned 'conteur' narrator from its profile.
+
+    Reads assets/narrator_voice.json (the durable cloned voice_id + the model it
+    was cloned with). Falls back to the default minimax voice if absent.
+    """
+    import json
+
+    try:
+        data = json.load(open("assets/narrator_voice.json", encoding="utf-8"))
+        vid = data.get("voice_id")
+        if vid:
+            return vid, data.get("tts_model")
+    except Exception:
+        pass
+    return NARRATOR_VOICE_ID, None
 
 # Signature: (url, folder, filename) -> local path or None.
 Downloader = Callable[[str, str, str], Optional[str]]
@@ -208,12 +226,13 @@ class AssetGenerationService:
                 pricing.video_cost(pricing.BEAT_VIDEO_SECONDS, draft=draft),
             )
 
-        # audio
-        voice_id = (
-            NARRATOR_VOICE_ID if planned.beat == "narration" else CHARACTER_VOICE_ID
-        )
+        # audio — narration beats use the cloned 'conteur' narrator voice.
         text = planned.text or ""
-        url = self.provider.synthesize_voice(text, voice_id)
+        if planned.beat.endswith("narration"):
+            voice_id, model = _narrator_voice()
+        else:
+            voice_id, model = CHARACTER_VOICE_ID, None
+        url = self.provider.synthesize_voice(text, voice_id, model)
         return pricing.MODEL_VOICE, url, pricing.voice_cost(len(text))
 
 

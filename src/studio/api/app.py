@@ -338,7 +338,7 @@ def montage_episode(
 ) -> dict[str, Any]:
     _require_episode(session, episode_id)
     try:
-        output_path = MontageService(engine).assemble(episode_id)
+        output_path = MontageService(engine).assemble_rich(episode_id)
     except ValueError as exc:
         raise HTTPException(409, str(exc))
     return {"episode_id": episode_id, "final_path": output_path}

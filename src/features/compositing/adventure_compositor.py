@@ -201,6 +201,27 @@ def _timer_screen(bg_image: str):
     return comp
 
 
+def compose_narrated_segment(
+    video_path: str,
+    narr_path: str,
+    follower_name: str,
+    transcriber: Transcriber,
+    output_path: str,
+    workdir: Optional[str] = None,
+) -> str:
+    """Monte UN plan vidéo narré (ex. l'épilogue) en fichier autonome."""
+    workdir = workdir or os.path.dirname(output_path) or "."
+    os.makedirs(workdir, exist_ok=True)
+    clip = _narrated_video(video_path, narr_path, follower_name, transcriber)
+    clip.write_videofile(
+        output_path, fps=FPS, codec="libx264", audio_codec="aac",
+        temp_audiofile=os.path.join(workdir, "_temp_epi.m4a"), remove_temp=True,
+        logger=None,
+    )
+    clip.close()
+    return output_path
+
+
 def compose_round(
     assets: RoundAssets,
     follower_name: str,

@@ -98,7 +98,7 @@ def test_full_flow(client):
 
     # Beats
     beats = client.get(f"/api/episodes/{episode_id}/beats").json()
-    assert len(beats["assets"]) == 42
+    assert len(beats["assets"]) == 55
 
     # Cost estimate (draft) before generation: actual is 0.
     cost = client.get(f"/api/episodes/{episode_id}/cost").json()
@@ -113,10 +113,10 @@ def test_full_flow(client):
     # Provider was called offline; assets are persisted with local paths.
     assert len(client.fake_provider.image_calls) == 22
     assert len(client.fake_provider.video_calls) == 16
-    assert len(client.fake_provider.voice_calls) == 4
+    assert len(client.fake_provider.voice_calls) == 17
 
     assets = client.get(f"/api/episodes/{episode_id}/assets").json()
-    assert len(assets) == 42
+    assert len(assets) == 55
     assert all(a["status"] == "ready" for a in assets)
     assert all(a["local_path"] for a in assets)
 
@@ -124,9 +124,11 @@ def test_full_flow(client):
     for call in client.fake_provider.video_calls:
         assert call["image"].startswith("https://fake.local/")
 
-    # Actual cost is now recorded and matches the estimate.
+    # Actual cost is recorded and matches the pre-flight estimate (a tiny
+    # divergence is expected: the estimate rounds the total char count once,
+    # while actuals round per narration beat).
     cost2 = client.get(f"/api/episodes/{episode_id}/cost").json()
-    assert cost2["actual_usd"] == pytest.approx(cost2["estimated_usd"], rel=1e-6)
+    assert cost2["actual_usd"] == pytest.approx(cost2["estimated_usd"], rel=1e-3)
 
     # Serve an asset file.
     first_asset_id = assets[0]["id"]

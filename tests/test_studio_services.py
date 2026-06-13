@@ -43,8 +43,8 @@ def test_plan_is_image_first_with_expected_counts(script):
     assert len(images) == 22
     # 3 rounds x 5 beats + 1 epilogue = 16 motions.
     assert len(videos) == 16
-    # 1 narration track + 3 character lines.
-    assert len(audio) == 4
+    # Narration PAR BEAT (voix conteur) : transition + 3 rounds x 5 + epilogue.
+    assert len(audio) == 17
 
 
 def test_every_video_beat_has_a_preceding_frame(script):

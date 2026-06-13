@@ -96,31 +96,28 @@ def plan_episode_assets(
 
 
 def _plan_audio(script: AdventureScript, side: Side) -> List[PlannedAsset]:
-    """Narration (narrator voice) + character lines (followed character voice)."""
-    assets: List[PlannedAsset] = []
+    """Narration PAR BEAT (voix narrateur conteur), pour le montage par plan.
 
-    # Narrator: transition + per-round narrations + epilogue narration.
-    narration_parts = [script.transition_narration_fr]
+    Une piste audio par beat narré, calée sous son plan au montage :
+    transition + (action/environment/choice/fatal/survival) par round + epilogue.
+    Le face-cam n'a PAS d'audio TTS séparé : sa voix est native (générée par
+    p-video depuis le motion prompt qui contient le dialogue).
+    """
+    assets: List[PlannedAsset] = [
+        PlannedAsset(None, "transition.narration", "audio", text=script.transition_narration_fr),
+    ]
     for i, rnd in enumerate(script.rounds):
-        narration_parts += [
-            rnd.action_narration_fr,
-            rnd.environment_narration_fr,
-            rnd.choice_narration_fr,
-            rnd.fatal_narration_fr,
-            rnd.survival_narration_fr,
-        ]
-    narration_parts.append(script.epilogue_narration_fr)
+        for beat, text in (
+            ("action.narration", rnd.action_narration_fr),
+            ("environment.narration", rnd.environment_narration_fr),
+            ("choice.narration", rnd.choice_narration_fr),
+            ("fatal.narration", rnd.fatal_narration_fr),
+            ("survival.narration", rnd.survival_narration_fr),
+        ):
+            assets.append(PlannedAsset(i, beat, "audio", text=text))
     assets.append(
-        PlannedAsset(
-            None, "narration", "audio", text="\n".join(narration_parts)
-        )
+        PlannedAsset(None, "epilogue.narration", "audio", text=script.epilogue_narration_fr)
     )
-
-    # Character: the spoken face-cam lines of the followed character, per round.
-    for i, rnd in enumerate(script.rounds):
-        assets.append(
-            PlannedAsset(i, "character.voice", "audio", text=rnd.character_line_fr)
-        )
     return assets
 
 
