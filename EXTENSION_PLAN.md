@@ -86,9 +86,11 @@ char_left_desc, char_right_desc}` (commit `c0255b9`).
 | R2 | **Référence perso** ✅ : pivot validé — seedream-4.5 `image_input` garde le même perso + DA. Réf perso (fond uni) en tête du plan, passée en image_input à toutes les images. `generate_image(+image_input)`. Tests verts (23 img/56 assets). | ✅ fait | `ca14014` |
 | R3 | **Génération chaînée** ✅ : dernière frame de la vidéo N (ffmpeg + upload) → image_input de la frame N+1, en plus de la réf perso. Mapping timeline (action←survie-1, env←action, char←env, fatal/survival←char). Best-effort (repli R2). 58 passed. | ✅ fait | `77d32f8` |
 | R4 | **Montage vitesse + zoom + intro 2 voix** ✅ : R4a vitesse (narration/vidéo même durée, `6233f59`) ; R4b zoom « si tu as choisi X » sur le choix (`12d671c`) ; R4c intro 2 persos parlent + caractère via narration (`f28beaf`). Golden intact, 58 passed. | ✅ fait | `f28beaf` |
-| R5 | **Câblage UI + test épisode complet** : tout depuis un bouton ; génération fraîche bout-en-bout validée. | ⬜ | |
+| R5 | **Orchestration + test bout-en-bout** ✅ : route `/produce` (assets+intro+montage, R5a) ; contrat créateur (décrire les 2 persos) ; 1re vraie génération GPT (train-grotte, Louis tête d'horloge / Pierre tête de lune) → final 100s. UI (mosaïque/wizard/2 modes) = repris dans STUDIO_V2_PLAN.md. | ✅ fait | `f1ca634` |
 
-**Prochaine étape : R5 — câblage UI (intro dans /generate, 3 paliers) + génération fraîche complète bout-en-bout.**
+**Refonte v7 TERMINÉE (R1→R5).** Prochaines pistes : (a) réglage prompts —
+plans d'aventure plus rapprochés/clairs sur le perso ; (b) front « refonte v7 »
+puis Studio v2 (templates + UX SaaS) → voir STUDIO_V2_PLAN.md.
 
 ## Paliers de modèles choisis (recherchés via le MCP Replicate — prix exacts à
 confirmer sur les pages modèles en phase B)
