@@ -76,6 +76,81 @@ def _filename(asset: PlannedAsset) -> str:
     return f"{prefix}_{safe_beat}.{_ext_for(asset.kind)}"
 
 
+# --- R3 : chaînage par la dernière frame ----------------------------------
+
+# Quel plan précédent nourrit la frame d'un plan donné (continuité timeline).
+_CHAIN_SRC = {
+    "environment": "action",
+    "character": "environment",
+    "fatal": "character",
+    "survival": "character",
+}
+
+
+def _chain_source(round_index, beat: str, last_frame_by_key: dict):
+    """URL de la dernière frame du plan source (None si pas dispo)."""
+    stub = beat[: -len(".frame")] if beat.endswith(".frame") else beat
+    if stub == "action":  # le 1er plan d'un round suit la survie du round précédent
+        if round_index and round_index > 0:
+            return last_frame_by_key.get((round_index - 1, "survival"))
+        return None
+    src = _CHAIN_SRC.get(stub)
+    return last_frame_by_key.get((round_index, src)) if src else None
+
+
+def _upload_to_replicate(path: str) -> Optional[str]:
+    """Upload un fichier local vers la Files API Replicate → URL (best-effort)."""
+    import json as _json
+    import urllib.request
+    import uuid
+
+    token = os.environ.get("REPLICATE_API_TOKEN")
+    if not token:
+        return None
+    boundary = uuid.uuid4().hex
+    data = open(path, "rb").read()
+    body = (
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"content\"; "
+        f"filename=\"{os.path.basename(path)}\"\r\nContent-Type: image/png\r\n\r\n"
+    ).encode() + data + f"\r\n--{boundary}--\r\n".encode()
+    req = urllib.request.Request(
+        "https://api.replicate.com/v1/files",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return _json.load(r)["urls"]["get"]
+
+
+def _last_frame_url(video_path: str) -> Optional[str]:
+    """Extrait la dernière frame d'une vidéo locale et l'upload (best-effort).
+
+    Renvoie None sur toute erreur (ex. fichier factice en test) → pas de
+    chaînage, on retombe sur la seule référence perso (R2).
+    """
+    try:
+        if (
+            not video_path
+            or not os.path.exists(video_path)
+            or os.path.getsize(video_path) < 1000  # ignore les fakes de test
+        ):
+            return None
+        import subprocess
+
+        png = video_path + ".lastframe.png"
+        subprocess.run(
+            ["ffmpeg", "-y", "-sseof", "-0.2", "-i", video_path, "-frames:v", "1", png],
+            check=True,
+            capture_output=True,
+        )
+        return _upload_to_replicate(png)
+    except Exception:
+        return None
+
+
 class AssetGenerationService:
     """Runs the image-first generation plan for an episode and persists results."""
 
@@ -115,10 +190,14 @@ class AssetGenerationService:
         # Image URLs are remembered within this run so a *.motion video can reuse
         # the *.frame image it was generated from (image-first).
         frame_url_by_beat: dict[str, str] = {}
+        # R3 — dernière frame de chaque vidéo (par (round, stub)) : sert de base
+        # à la frame du plan suivant pour la CONTINUITÉ visuelle (fil rouge).
+        last_frame_by_key: dict = {}
 
         for index, planned in enumerate(plan):
             self._generate_one(
-                episode_id, planned, out_dir, draft, frame_url_by_beat, index
+                episode_id, planned, out_dir, draft, frame_url_by_beat,
+                last_frame_by_key, index,
             )
 
         with Session(self.engine) as session:
@@ -132,6 +211,7 @@ class AssetGenerationService:
         out_dir: str,
         draft: bool,
         frame_url_by_beat: dict[str, str],
+        last_frame_by_key: dict,
         index: int,
     ) -> None:
         with Session(self.engine) as session:
@@ -163,7 +243,7 @@ class AssetGenerationService:
             )
 
             model, url, cost_line = self._call_provider(
-                planned, draft, frame_url_by_beat
+                planned, draft, frame_url_by_beat, last_frame_by_key
             )
             job = job_repo.create(asset_id, model, status="running")
             assert job.id is not None
@@ -180,6 +260,16 @@ class AssetGenerationService:
                 return
 
             asset_repo.set_local_path(asset_id, local or "")
+            # R3 — mémorise la dernière frame d'une vidéo pour chaîner la suivante.
+            if planned.kind == "video" and local:
+                lf = _last_frame_url(local)
+                if lf:
+                    stub = (
+                        planned.beat[: -len(".motion")]
+                        if planned.beat.endswith(".motion")
+                        else planned.beat
+                    )
+                    last_frame_by_key[(planned.round_index, stub)] = lf
             job_repo.mark_done(job_id)
             cost_repo.create(
                 job_id,
@@ -203,15 +293,24 @@ class AssetGenerationService:
         planned: PlannedAsset,
         draft: bool,
         frame_url_by_beat: dict[str, str],
+        last_frame_by_key: dict,
     ) -> tuple[str, str, pricing.CostLine]:
         """Dispatch to the right provider method; return (model, url, cost line)."""
         if planned.kind == "image":
-            # La référence perso n'a pas de réf elle-même ; toutes les autres
-            # images la reçoivent en image_input pour rester cohérentes (R2).
+            # image_input = réf perso (R2, cohérence) + dernière frame du plan
+            # précédent (R3, continuité). La réf perso elle-même n'en a pas.
+            refs: list[str] = []
             ref = frame_url_by_beat.get("char_reference")
-            image_input = [ref] if (ref and planned.beat != "char_reference") else None
+            if ref and planned.beat != "char_reference":
+                refs.append(ref)
+            if planned.beat.endswith(".frame"):
+                chain = _chain_source(
+                    planned.round_index, planned.beat, last_frame_by_key
+                )
+                if chain:
+                    refs.append(chain)
             url = self.provider.generate_image(
-                planned.image_prompt or "", "2K", "9:16", image_input=image_input
+                planned.image_prompt or "", "2K", "9:16", image_input=(refs or None)
             )
             frame_url_by_beat[planned.beat] = url
             return pricing.MODEL_IMAGE, url, pricing.image_cost(1)
@@ -280,5 +379,5 @@ def regenerate_asset(
 
     out_dir = svc.export_dir(project_name, episode_id)
     os.makedirs(out_dir, exist_ok=True)
-    svc._generate_one(episode_id, planned, out_dir, draft, {}, 0)
+    svc._generate_one(episode_id, planned, out_dir, draft, {}, {}, 0)
     return episode_id
