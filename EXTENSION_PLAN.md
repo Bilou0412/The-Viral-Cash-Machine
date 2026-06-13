@@ -62,6 +62,22 @@ Ce qui cloche (demandes auteur) :
 - **Intro** : les 2 persos parlent (clips séparés, angoissant, nom prononcé,
   approche lente cadrée), overlay nom + texte de caractère, puis timer de choix.
 
+## Contrat de création (front dashboard — ce que le créateur saisit)
+
+Le wizard « New Episode » doit présenter CLAIREMENT 3 blocs :
+1. **L'aventure** (`prompt`, requis) — 1-3 phrases : décor + danger. Aide :
+   « une descente dans une mine inondée qui s'effondre ».
+2. **Personnage A** : `char_left_name` (requis, prénom FR) + `char_left_desc`
+   (optionnel, ~200 car., apparence concrète + caractère). Placeholder :
+   « homme maigre, veste de mineur trempée, regard fuyant, calme ».
+3. **Personnage B** : idem (`char_right_name` + `char_right_desc`).
+
+Garde-fous à afficher : description COURTE et visuelle (nourrit l'image de réf
+R2) ; si vide → l'IA invente ; tu écris en français, l'IA traduit l'apparence en
+EN ; la voix est auto-générée (2 voix contrastées). Backend prêt : route
+`POST /api/episodes/{id}/script` accepte `{prompt, char_left_name, char_right_name,
+char_left_desc, char_right_desc}` (commit `c0255b9`).
+
 ## Phases de la refonte
 
 | Phase | Sujet | Statut | Commit |
