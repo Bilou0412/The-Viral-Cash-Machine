@@ -68,10 +68,18 @@ class RoundAssets:
     narr_survival: str
 
 
+def _ascii_upper(name: str) -> str:
+    """Majuscules sans accents (la police Minecraft.ttf n'a pas les accentués)."""
+    import unicodedata
+
+    folded = unicodedata.normalize("NFKD", name)
+    return "".join(c for c in folded if not unicodedata.combining(c)).upper()
+
+
 def _nameplate(name: str, dur: float) -> ImageClip:
     """Plaque de nom du perso suivi, en haut de cadre."""
     plate = NameplateOverlay(
-        text=name.upper(), fontsize=46, color="white", duration=dur, stroke_width=4
+        text=_ascii_upper(name), fontsize=46, color="white", duration=dur, stroke_width=4
     ).to_clip((W, H))
     return plate.with_position(("center", 60))
 
