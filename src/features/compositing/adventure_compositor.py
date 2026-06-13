@@ -72,6 +72,8 @@ class RoundAssets:
     environment_frame: str = ""
     fatal_frame: str = ""
     survival_frame: str = ""
+    # index (0/1) du choix FATAL → zoom sur la bonne image au moment des issues.
+    fatal_choice_index: int = 0
 
 
 def _ascii_upper(name: str) -> str:
@@ -141,6 +143,40 @@ def _atempo(narr_path: str, factor: float, workdir: str) -> str:
         return narr_path
 
 
+def _narrate_over(visual, narr_path: str, transcriber: Transcriber, workdir: str):
+    """Cale une narration sur un visuel à LA MÊME DURÉE par la vitesse.
+
+    cible = min(durée visuel, durée narration). On accélère SEULEMENT le plus
+    long jusqu'à la cible (l'autre reste à 1×) — jamais de ralenti ni de coupe.
+    Sous-titres calés sur la narration accélérée.
+    """
+    t_vis = float(visual.duration)
+    narr0 = AudioFileClip(narr_path) if (narr_path and os.path.exists(narr_path)) else None
+    if narr0 is None:
+        return visual
+    t_narr = float(narr0.duration)
+    narr0.close()
+
+    target = max(0.5, min(t_vis, t_narr))
+    narr_atempo = t_narr / target   # >=1 si la narration est la plus longue
+    vis_speed = t_vis / target      # >=1 si le visuel est le plus long
+    if vis_speed > 1.01:
+        visual = visual.with_effects([MultiplySpeed(vis_speed)])
+    seg = float(visual.duration)
+    safe = max(0.1, seg - 1.0 / FPS)
+
+    narr_file = _atempo(narr_path, narr_atempo, workdir)
+    narr = AudioFileClip(narr_file)
+    tracks = []
+    if visual.audio is not None:
+        tracks.append(_scale_volume(visual.audio.with_duration(safe), 0.22))
+    tracks.append(narr.with_duration(min(float(narr.duration), safe)))
+    audio = CompositeAudioClip(tracks).with_duration(safe)
+
+    layers = [visual] + _subs_from_audio(transcriber, narr_file, seg)
+    return CompositeVideoClip(layers, size=(W, H)).with_duration(seg).with_audio(audio)
+
+
 def _narrated_video(
     video_path: str,
     frame_path: str,
@@ -148,45 +184,31 @@ def _narrated_video(
     transcriber: Transcriber,
     workdir: str = ".",
 ):
-    """Plan vidéo narré : narration et vidéo CALÉES À LA MÊME DURÉE par la vitesse.
-
-    cible = min(durée vidéo, durée narration). On accélère SEULEMENT le plus long
-    jusqu'à la cible (l'autre reste à 1×) — jamais de ralenti ni d'allongement.
-    Narrateur jamais coupé. Pas de plaque de nom (réservée à l'intro). Sous-titres.
-    """
+    """Plan vidéo narré : narration et vidéo calées à la même durée (vitesse)."""
     v = VideoFileClip(video_path)
-    t_vid = float(v.duration)
-    narr0 = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
+    return _narrate_over(_fit(v, float(v.duration)), narr_path, transcriber, workdir)
 
-    if narr0 is None:  # pas de narration : on garde la vidéo telle quelle
-        base = _fit(v, t_vid)
-        return base
 
-    t_narr = float(narr0.duration)
-    narr0.close()
-    target = max(0.5, min(t_vid, t_narr))
-    narr_atempo = t_narr / target   # >=1 si la narration est la plus longue
-    vid_speed = t_vid / target      # >=1 si la vidéo est la plus longue
-
-    vbase = _fit(v, t_vid)
-    if vid_speed > 1.01:
-        vbase = vbase.with_effects([MultiplySpeed(vid_speed)])
-    seg = float(vbase.duration)
-    safe = max(0.1, seg - 1.0 / FPS)
-
-    narr_file = _atempo(narr_path, narr_atempo, workdir)
-    narr = AudioFileClip(narr_file)
-
-    tracks = []
-    if vbase.audio is not None:
-        tracks.append(_scale_volume(vbase.audio.with_duration(safe), 0.22))
-    tracks.append(narr.with_duration(min(float(narr.duration), safe)))
-    audio = CompositeAudioClip(tracks).with_duration(safe)
-
-    # sous-titres calés sur la narration ACCÉLÉRÉE (timing correct)
-    layers = [vbase] + _subs_from_audio(transcriber, narr_file, seg)
-    comp = CompositeVideoClip(layers, size=(W, H)).with_duration(seg)
-    return comp.with_audio(audio)
+def _outcome_video(
+    choice_image: str,
+    outcome_video: str,
+    narr_path: str,
+    transcriber: Transcriber,
+    workdir: str = ".",
+):
+    """Issue : ZOOM sur l'image du choix énuméré (« si tu as choisi X »), puis la
+    vidéo de l'issue. La narration (qui commence par « si tu as choisi X… »)
+    court sur l'ensemble, calée à la même durée par la vitesse."""
+    ZOOM = 1.6
+    parts = []
+    if choice_image and os.path.exists(choice_image):
+        parts.append(_ken_burns(choice_image, ZOOM))
+    v = VideoFileClip(outcome_video)
+    parts.append(_fit(v, float(v.duration)))
+    visual = (
+        concatenate_videoclips(parts, method="compose") if len(parts) > 1 else parts[0]
+    )
+    return _narrate_over(visual, narr_path, transcriber, workdir)
 
 
 def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir: str):
@@ -312,8 +334,15 @@ def compose_round(
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
         _timer_screen(assets.choice_b_image),
-        _narrated_video(assets.fatal_video, assets.fatal_frame, assets.narr_fatal, transcriber, workdir),
-        _narrated_video(assets.survival_video, assets.survival_frame, assets.narr_survival, transcriber, workdir),
+        # Issues : zoom sur l'image du choix énuméré, puis la vidéo de l'issue.
+        _outcome_video(
+            assets.choice_a_image if assets.fatal_choice_index == 0 else assets.choice_b_image,
+            assets.fatal_video, assets.narr_fatal, transcriber, workdir,
+        ),
+        _outcome_video(
+            assets.choice_b_image if assets.fatal_choice_index == 0 else assets.choice_a_image,
+            assets.survival_video, assets.narr_survival, transcriber, workdir,
+        ),
     ]
     final = concatenate_videoclips(segments, method="compose")
     final.write_videofile(

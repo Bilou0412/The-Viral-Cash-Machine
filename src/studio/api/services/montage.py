@@ -187,6 +187,9 @@ class MontageService:
                         environment_frame=g(ri, "environment.frame") or "",
                         fatal_frame=g(ri, "fatal.frame") or "",
                         survival_frame=g(ri, "survival.frame") or "",
+                        fatal_choice_index=(
+                            0 if script.rounds[ri].choices[0].is_fatal else 1
+                        ),
                     ),
                     follower, transcriber, rf, workdir=work,
                 )
