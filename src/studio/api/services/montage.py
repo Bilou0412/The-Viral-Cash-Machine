@@ -202,6 +202,11 @@ class MontageService:
                 )
                 round_files.append(ef)
 
+            # Intro (système historique) en TÊTE si elle a été générée.
+            intro = g(None, "intro")
+            if intro:
+                round_files.insert(0, intro)
+
             output_path = os.path.join(out_dir, "final_video.mp4")
             duration = self.concatenator(round_files, output_path)
         except Exception:

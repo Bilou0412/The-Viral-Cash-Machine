@@ -59,7 +59,8 @@ class Pipeline:
         video_type: str = "intro",
     ) -> AssetBundle:
         """Generate all assets (voice, image, video). Returns immutable AssetBundle."""
-        project_dir = os.path.join("exports", project_name, instance_id)
+        base = os.environ.get("VCM_OUTPUT_DIR", "exports")
+        project_dir = os.path.join(base, project_name, instance_id)
         os.makedirs(project_dir, exist_ok=True)
 
         narrator_audio_url = None
@@ -116,7 +117,8 @@ class Pipeline:
         self, project_name: str, instance_id: str
     ) -> HeadLayout:
         """Detect character head positions. Returns immutable HeadLayout."""
-        project_dir = os.path.join("exports", project_name, instance_id)
+        base = os.environ.get("VCM_OUTPUT_DIR", "exports")
+        project_dir = os.path.join(base, project_name, instance_id)
         image_path = os.path.join(project_dir, "base_image.png")
 
         if not os.path.exists(image_path):

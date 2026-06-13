@@ -56,7 +56,8 @@ class RawVideoCompositor:
         """
         print(f"\n--- 🎞️ STARTING RAW COMPILATION: {project_name}/{instance_id} ---")
 
-        project_dir = os.path.join("exports", project_name, instance_id)
+        base = os.environ.get("VCM_OUTPUT_DIR", "exports")
+        project_dir = os.path.join(base, project_name, instance_id)
         paths = {
             "video": os.path.join(project_dir, "video.mp4"),
             "image": os.path.join(project_dir, "base_image.png"),
