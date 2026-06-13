@@ -37,11 +37,13 @@ def _intro_image_prompt(script: AdventureScript) -> str:
 
 def _intro_video_prompt(script: AdventureScript) -> str:
     return (
-        "Static locked-off camera, no movement. Two men facing us in a flooded "
-        f"mine. The LEFT man ({script.char_left_desc}) speaks straight to the "
-        "camera with intense eye contact and full lip sync, urging us to pick him; "
-        f"the RIGHT man ({script.char_right_desc}) stands still, watching us. "
-        f"Roots locked, no walking, no approach. {POV_HANDS}. {DA}."
+        "Static locked-off camera, no camera movement. Two men face us in a "
+        f"flooded mine. FIRST the LEFT man ({script.char_left_desc}) speaks "
+        "straight to camera, pleading to be chosen; THEN the RIGHT man "
+        f"({script.char_right_desc}) speaks straight to camera, threatening. "
+        "Each leans SLOWLY toward the camera as he speaks but stays fully in "
+        "frame, roots locked, no walking. Intense eye contact, full lip sync, "
+        f"anguished. {POV_HANDS}. {DA}."
     )
 
 
@@ -62,10 +64,13 @@ def generate_intro(engine: Engine, episode_id: int) -> str:
 
     instance_id = f"episode_{episode_id}_intro"
     left, right = script.char_left_name, script.char_right_name
-    speech = f"Choisis-moi. Descends avec moi. Lui, il ne te ramènera pas."
+    # Les DEUX persos parlent (répliques d'intro R1 : chacun dit son nom, angoissant).
+    speech = f"{script.char_left_intro_line_fr} {script.char_right_intro_line_fr}"
+    # La narration conteur introduit le CARACTÈRE des deux + le choix.
     narration = (
-        f"Deux hommes. Une seule sortie. Choisis ton compagnon pour la descente : "
-        f"{left}, ou {right}."
+        f"Voici {left}. {script.char_left_personality_fr} "
+        f"Et voici {right}. {script.char_right_personality_fr} "
+        f"Choisis ton compagnon pour la descente : {left}, ou {right}."
     )
 
     pipeline = Pipeline()
