@@ -46,7 +46,11 @@ def _narrator_voice() -> tuple[str, Optional[str]]:
         data = json.load(open("assets/narrator_voice.json", encoding="utf-8"))
         vid = data.get("voice_id")
         if vid:
-            return vid, data.get("tts_model")
+            model = data.get("tts_model")
+            # Replicate exige un ref complet owner/name (ex. minimax/speech-02-hd).
+            if model and "/" not in model:
+                model = f"minimax/{model}"
+            return vid, model
     except Exception:
         pass
     return NARRATOR_VOICE_ID, None

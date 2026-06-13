@@ -109,17 +109,21 @@ def _narrated_video(
 ):
     """Plan vidéo narré : clip + nameplate + narration mixée + sous-titres."""
     v = VideoFileClip(video_path)
-    narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
-    dur = max(v.duration, narr.duration + 0.3) if narr else v.duration
+    # Durée = celle du clip (on n'étend pas : lire l'audio au-delà de sa fin
+    # casse MoviePy). La narration courte rentre dedans ; on la borne par sûreté.
+    dur = float(v.duration)
+    safe = max(0.1, dur - 1.0 / FPS)  # marge anti-erreur de bord
     base = _fit(v, dur)
 
-    # audio : ambiance du clip baissée + narration plein
+    narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
     tracks = []
     if base.audio is not None:
-        tracks.append(_scale_volume(base.audio, 0.22))
+        amb = _scale_volume(base.audio.with_duration(safe), 0.22)
+        tracks.append(amb)
     if narr is not None:
-        tracks.append(narr.with_start(0.2))
-    audio = CompositeAudioClip(tracks) if tracks else None
+        n = narr.with_duration(min(narr.duration, safe - 0.2)).with_start(0.2)
+        tracks.append(n)
+    audio = CompositeAudioClip(tracks).with_duration(safe) if tracks else None
 
     layers = [base, _nameplate(name, dur)]
     layers += _subs_from_audio(transcriber, narr_path, dur)
@@ -130,17 +134,19 @@ def _narrated_video(
 def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir: str):
     """Face-cam : voix native conservée + nameplate + sous-titres de la voix native."""
     v = VideoFileClip(video_path)
-    dur = v.duration
+    dur = float(v.duration)
+    safe = max(0.1, dur - 1.0 / FPS)
     base = _fit(v, dur)
     # sous-titres : transcrire l'audio natif (extrait en wav)
     subs: List[ImageClip] = []
-    if base.audio is not None:
+    native = base.audio
+    if native is not None:
         wav = os.path.join(workdir, "_facecam_audio.wav")
-        base.audio.write_audiofile(wav, logger=None)
+        native.write_audiofile(wav, logger=None)
         subs = _subs_from_audio(transcriber, wav, dur)
     layers = [base, _nameplate(name, dur)] + subs
     comp = CompositeVideoClip(layers, size=(W, H)).with_duration(dur)
-    return comp.with_audio(base.audio) if base.audio is not None else comp
+    return comp.with_audio(native.with_duration(safe)) if native is not None else comp
 
 
 def _ken_burns(image_path: str, dur: float):
