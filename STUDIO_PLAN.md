@@ -78,12 +78,17 @@ Design : thème sombre studio, previews 9:16 partout, barres de progression
 
 ## 7. Phases
 
-| Phase | Sujet | Statut |
-|---|---|---|
-| U0 | **DB** : SQLModel + SQLite, modèles + repositories + migration voices/exports. Tests. | ⬜ |
-| U1 | **API FastAPI** : routes + services au-dessus du pipeline + jobs background + coût/SSE. Tests. | ⬜ |
-| U2 | **Frontend React** : scaffold Vite/TS/Tailwind/shadcn + écrans (dashboard, wizard, script, assets, montage, library) câblés à l'API. | ⬜ |
-| U3 | **Intégration & polish** : thème studio, previews 9:16, progress SSE, HUD coût, responsive. | ⬜ |
+| Phase | Sujet | Statut | Commit |
+|---|---|---|---|
+| U0 | **DB** : SQLModel + SQLite, modèles + repositories + migration voices/exports. | ✅ fait | `0ecb1cd` |
+| U1 | **API FastAPI** : 13 routes + services (pricing, plan image-first, scripting, generation, montage, SSE) au-dessus du pipeline. Boot live confirmé. | ✅ fait | `51b7c23` |
+| U2 | **Frontend React** : Vite/TS/Tailwind/shadcn, 6 écrans, thème studio sombre, previews 9:16, câblé sur l'API réelle, vérifié bout-en-bout. | ✅ fait | `0f57ccf` |
+| U1b | **Correctifs** : route épisode single + `VCM_OUTPUT_DIR` (débloque la génération hors exports/ root-owned). | ✅ fait | `c2a9cae` |
+| U3 | **Polish** (itératif) : thème déjà studio sombre + 9:16 livrés en U2 ; raffinements futurs (animations, responsive avancé) au besoin. | ⬜ futur | |
+
+**Lancement** : `VCM_OUTPUT_DIR=./studio_output .venv/bin/uvicorn src.studio.api.app:app --reload`
+(backend :8000) puis `cd frontend && npm run dev` (studio :5173). Voir `src/studio/README.md`.
+Vérifié live : projet→épisode→script(Fake)→beats→cost ($2.94/épisode estimé)→assets→montage→library.
 
 **Protocole** : par phase → tests/lint verts → démo → commit. Le golden intro et
 les 34 tests Aventure ne cassent jamais (backend additif).
