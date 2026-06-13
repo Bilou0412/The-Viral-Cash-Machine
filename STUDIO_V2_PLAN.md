@@ -100,6 +100,19 @@ un template casserait la conformité.
 | T4 | Front : 2 modes (tout d'un coup / step-by-step) avec progression SSE, régén, coûts | ⬜ |
 | T5 | Polish UX (principes ci-dessus) + préparation SaaS (auth/billing = lot séparé) | ⬜ |
 
+## 7b. Backlog UX (retours live après 1re utilisation Docker)
+
+- **Barre de progression temps réel** pendant la génération d'assets (et la
+  production complète) : afficher l'avancement (n/total assets, beat en cours).
+- **Pas de rafraîchissement manuel** : la page se met à jour seule (vidéo finale
+  qui apparaît automatiquement quand c'est prêt).
+- ✅ Faisable SANS refonte : l'infra SSE existe déjà — `src/studio/api/events.py`
+  (bus), route `GET /api/events/{episode_id}`, hook `frontend/src/hooks/use-job-events.ts`.
+  Le backend publie déjà : `generation_started/asset_started/asset_ready/
+  asset_failed/generation_done` + `produce_started/produce_done`. Reste à :
+  (a) connecter le hook SSE à une barre de progression sur les pages Assets &
+  Montage ; (b) invalider la query épisode/vidéo sur `produce_done` (auto-refresh).
+
 ## 8. Remarques / critiques
 
 - **Garder le squelette PARTAGÉ** : les templates ne changent que la saveur.
