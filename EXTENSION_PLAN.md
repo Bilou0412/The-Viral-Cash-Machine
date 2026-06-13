@@ -66,13 +66,24 @@ Ce qui cloche (demandes auteur) :
 
 | Phase | Sujet | Statut | Commit |
 |---|---|---|---|
-| R1 | **Script v2** : LLM en langage simple + fil rouge ; schéma étendu (intro : par perso `intro_line_fr` angoissante + `personality_fr` + nom ; déjà `char_*_desc/voice`). Fake mis à jour. Tests. | ⬜ | |
+| R1 | **Script v2** : LLM langage simple (règle 8) + fil rouge (règle 9) ; schéma + `char_*_personality_fr` + `char_*_intro_line_fr` (dit son nom, angoissant). Fake + tests + schéma régénéré. 58 passed. | ✅ fait | `7df3ed8` |
 | R2 | **Référence perso** : générer 2 persos → crop fond uni (vision/split) → réf canonique ; helper image-to-image (réf + décor) — VÉRIFIER que seedream-4.5 accepte une image de référence (sinon modèle alternatif). | ⬜ | |
 | R3 | **Génération chaînée** : 1re image (réf) → vidéo → dernière frame → image suivante… continuité ; remplace la génération indépendante par beat. | ⬜ | |
 | R4 | **Montage vitesse + zoom + intro 2 voix** : accélération audio/vidéo (jamais allonger) ; zoom « si tu as choisi X » ; intro 2 persos qui parlent + nom + texte caractère. | ⬜ | |
 | R5 | **Câblage UI + test épisode complet** : tout depuis un bouton ; génération fraîche bout-en-bout validée. | ⬜ | |
 
-**Prochaine étape : R1 — script v2 (sens + langage simple + intro personnalisée).**
+**Prochaine étape : R2 — référence perso + cohérence DA (image-to-image).**
+
+## Paliers de modèles choisis (recherchés via le MCP Replicate — prix exacts à
+confirmer sur les pages modèles en phase B)
+- **Image / référence** : draft `bytedance/seedream-4.5` (2K) · value `seedream-4.5`
+  + `google/nano-banana` (édition par référence) · premium `black-forest-labs/flux-2-pro`
+  (8 images de référence) ou `google/nano-banana-pro`.
+- **Image→vidéo** : draft `prunaai/p-video` (draft) · value `p-video` / `bytedance/seedance-1-lite`
+  · premium `kwaivgi/kling-v2.5-turbo-pro` / `bytedance/seedance-1.5-pro` (audio) /
+  `google/veo-3.1-fast` (support last-frame → chaînage R3).
+- **Voix** : draft `jaaari/kokoro-82m` · value+premium **conteur cloné**
+  `minimax/speech-02-hd` (signature de la chaîne).
 
 ## Risques / points à valider
 - **Image-to-image seedream** (R2) : à confirmer (sinon modèle de référence
