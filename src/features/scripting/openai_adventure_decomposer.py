@@ -36,22 +36,33 @@ _GOLDEN_RULES = """RULES (each is a hard constraint, not a suggestion):
    descent — each round follows logically from the previous survival, the
    narrator's lines are consistent, nothing is random or absurd."""
 
-_STRUCTURE_RULES = """STRUCTURE:
-- Exactly 3 rounds. Each round has exactly 2 choices and exactly ONE fatal choice
-  (`is_fatal: true`), the other survives (`is_fatal: false`).
-- The narrator has a FIXED pre-cloned voice — do NOT invent or describe a narrator
-  voice. Only the two CHARACTER voice profiles are generated.
-- `character_delivery` is an English manner of speaking (e.g. "whispering",
-  "murmuring", "hissing").
-- Use the provided French first names verbatim for `char_left_name` /
-  `char_right_name`.
-- INTRO personalization (per character):
-  - `char_*_personality_fr`: ONE short, simple French sentence introducing who
-    the character is (their nature/vibe). Plain words.
-  - `char_*_intro_line_fr`: a SHORT anguishing French line the character says to
-    the viewer to be picked — he says his OWN name and pleads/warns
-    (e.g. "Moi, c'est Étienne. Choisis-moi... ou tu ne ressortiras pas.").
-    The two characters must feel DIFFERENT (one pleads, one threatens)."""
+_STRUCTURE_RULES = """STRUCTURE & STORY LOGIC (read carefully):
+- The viewer picks ONE companion in the intro, then FOLLOWS that single companion
+  (the LEFT character) through the whole horror adventure. The 3 rounds are that
+  ONE journey — NOT a repeated choice between the two characters.
+- Each round = the viewer + the companion advancing. The round's 2 choices are
+  ADVENTURE DECISIONS (which path / which action), e.g. "le tunnel qui monte" vs
+  "passer par l'eau". NEVER frame a choice as "follow Louis vs follow Pierre".
+- `choices[].label_fr`: a short ADVENTURE option (a path or an action), no name.
+- Exactly ONE choice is fatal (`is_fatal: true`). FATAL = the VIEWER dies (POV);
+  SAFE = the viewer continues. The companion REACTS (warns, pulls you) but does
+  NOT 'disappear' as the outcome.
+- `fatal_narration_fr`: describes the VIEWER's death (POV, what kills you).
+  `survival_narration_fr`: the viewer survives and the journey continues.
+- `character_line_fr`: the companion's spoken advice/reaction for this round,
+  consistent with his personality (he helps you read the danger).
+- `choice_narration_fr`: the narrator clearly PRESENTS the two options, naming
+  each one ("À gauche…, à droite… — choisis"), so each can be shown with its image.
+- The narrator has a FIXED pre-cloned voice — do NOT invent a narrator voice.
+- `character_delivery` = English manner of speaking ("whispering", "hissing"…).
+- Use the provided French first names verbatim.
+- INTRO (per character):
+  - `char_*_personality_fr`: ONE short simple French sentence (their nature).
+  - INTRO DIALOGUE — the two lines form a SHORT exchange (their order is
+    randomized at render): `char_left_intro_line_fr` = an ANGUISHING piece of
+    ADVICE the character gives the viewer about the descent (1 sentence);
+    `char_right_intro_line_fr` = a SHORT reply (a few words). They must feel
+    different. They do NOT say "choisis-moi" (the narrator handles the choice)."""
 
 
 class OpenAIAdventureDecomposer:

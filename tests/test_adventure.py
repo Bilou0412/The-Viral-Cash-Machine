@@ -98,13 +98,15 @@ def test_creator_descriptions_respectees():
 
 
 def test_intro_personnalisee_par_perso():
-    """R1 : chaque perso a un texte de caractère + une réplique d'intro (son nom)."""
+    """R1+P2 : chaque perso a un caractère + une réplique d'intro (conseil/réponse).
+
+    Les répliques ne contiennent plus « choisis-moi » ni le nom (le NARRATEUR dit
+    les noms, P1) ; ce sont un conseil et une réponse, distincts.
+    """
     s = _script()
     assert s.char_left_personality_fr and s.char_right_personality_fr
-    assert s.char_left_name in s.char_left_intro_line_fr
-    assert s.char_right_name in s.char_right_intro_line_fr
-    # extra interdits : le champ doit exister dans le schéma (pas d'hallucination)
-    assert "personality" in AdventureScript.model_json_schema()["properties"] or True
+    assert s.char_left_intro_line_fr and s.char_right_intro_line_fr
+    assert s.char_left_intro_line_fr != s.char_right_intro_line_fr
 
 
 def test_round_exactement_un_fatal():
