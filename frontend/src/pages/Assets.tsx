@@ -1,6 +1,6 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { RefreshCw, Clapperboard, DollarSign, Wand2 } from "lucide-react"
+import { RefreshCw, Clapperboard, DollarSign, Wand2, ListChecks, LayoutGrid } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import { VerticalPreview } from "@/components/studio/vertical-preview"
 import { AssetStatusBadge } from "@/components/studio/status-badge"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
 import { ProjectBreadcrumb } from "@/components/studio/project-breadcrumb"
+import { AssetReview } from "@/components/studio/asset-review"
 import {
   useAssets,
   useBeats,
@@ -21,7 +22,7 @@ import {
 } from "@/hooks/use-studio"
 import { useJobEvents } from "@/hooks/use-job-events"
 import { assetFileUrl } from "@/lib/api"
-import { formatCost } from "@/lib/utils"
+import { cn, formatCost } from "@/lib/utils"
 import { buildDisplayBeats, groupByRound, type DisplayBeat } from "@/lib/beats"
 import type { BeatProgress } from "@/hooks/use-job-events"
 
@@ -35,6 +36,7 @@ export function Assets() {
   const generate = useGenerateAssets(episodeId)
   const regen = useRegenerateAsset(episodeId)
   const progress = useJobEvents(episodeId, episode.data?.status === "assets")
+  const [mode, setMode] = useState<"grid" | "review">("grid")
 
   const displayBeats = useMemo(
     () => buildDisplayBeats(beats.data?.assets ?? [], assets.data ?? []),
@@ -78,6 +80,13 @@ export function Assets() {
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost">
             <Link to={`/episodes/${episodeId}/script`}>Script</Link>
+          </Button>
+          <Button
+            variant={mode === "review" ? "default" : "outline"}
+            onClick={() => setMode((m) => (m === "review" ? "grid" : "review"))}
+          >
+            {mode === "review" ? <LayoutGrid className="h-4 w-4" /> : <ListChecks className="h-4 w-4" />}
+            {mode === "review" ? "Vue grille" : "Revue"}
           </Button>
           <Button asChild variant="outline">
             <Link to={`/episodes/${episodeId}/montage`}>
@@ -139,30 +148,38 @@ export function Assets() {
 
       {assets.isLoading && <LoadingState label="Chargement des assets…" />}
 
-      <Tabs defaultValue={String(rounds[0]?.[0] ?? 0)}>
-        <TabsList>
-          {rounds.map(([idx]) => (
-            <TabsTrigger key={idx} value={String(idx)}>
-              {idx === -1 ? "Épilogue / Narration" : `Round ${idx + 1}`}
-            </TabsTrigger>
+      {mode === "review" ? (
+        <AssetReview
+          episodeId={episodeId}
+          beats={displayBeats}
+          onExit={() => setMode("grid")}
+        />
+      ) : (
+        <Tabs defaultValue={String(rounds[0]?.[0] ?? 0)}>
+          <TabsList>
+            {rounds.map(([idx]) => (
+              <TabsTrigger key={idx} value={String(idx)}>
+                {idx === -1 ? "Épilogue / Narration" : `Round ${idx + 1}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {rounds.map(([idx, list]) => (
+            <TabsContent key={idx} value={String(idx)}>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {list.map((beat) => (
+                  <BeatCard
+                    key={beat.key}
+                    beat={beat}
+                    liveStatus={progress.byGroup[beat.group]}
+                    onRegen={onRegen}
+                    busy={regen.isPending}
+                  />
+                ))}
+              </div>
+            </TabsContent>
           ))}
-        </TabsList>
-        {rounds.map(([idx, list]) => (
-          <TabsContent key={idx} value={String(idx)}>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {list.map((beat) => (
-                <BeatCard
-                  key={beat.key}
-                  beat={beat}
-                  liveStatus={progress.byGroup[beat.group]}
-                  onRegen={onRegen}
-                  busy={regen.isPending}
-                />
-              ))}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+        </Tabs>
+      )}
     </div>
   )
 }
@@ -183,9 +200,10 @@ function BeatCard({
   const hasImage = !!beat.image && beat.image.status === "ready"
   const primary = beat.video ?? beat.image ?? beat.audio
   const isAudioOnly = !beat.image && !beat.video && !!beat.audio
+  const excluded = !!primary?.excluded
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn("overflow-hidden", excluded && "opacity-50")}>
       {!isAudioOnly && (
         <div className="relative">
           <VerticalPreview
@@ -215,7 +233,10 @@ function BeatCard({
           {primary ? <AssetStatusBadge status={primary.status} /> : (
             <Badge variant="secondary">Non généré</Badge>
           )}
-          {primary?.draft && <Badge variant="warning" className="text-[10px]">draft</Badge>}
+          <div className="flex items-center gap-1">
+            {excluded && <Badge variant="destructive" className="text-[10px]">écarté</Badge>}
+            {primary?.draft && <Badge variant="warning" className="text-[10px]">draft</Badge>}
+          </div>
         </div>
 
         {beat.text && (

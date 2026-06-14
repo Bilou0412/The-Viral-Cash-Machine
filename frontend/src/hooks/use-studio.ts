@@ -3,9 +3,15 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import type { AdventureScript, CreateEpisodeBody, GenerateScriptBody } from "@/lib/types"
+import type {
+  AdventureScript,
+  CreateEpisodeBody,
+  GenerateScriptBody,
+  UpdateAssetBody,
+} from "@/lib/types"
 
 export const qk = {
+  themes: ["themes"] as const,
   projects: ["projects"] as const,
   episodes: (projectId?: number) => ["episodes", projectId ?? "all"] as const,
   episode: (id: number) => ["episode", id] as const,
@@ -15,6 +21,9 @@ export const qk = {
   cost: (id: number) => ["cost", id] as const,
   library: ["library"] as const,
 }
+
+export const useThemes = () =>
+  useQuery({ queryKey: qk.themes, queryFn: api.listThemes, staleTime: Infinity })
 
 export const useProjects = () =>
   useQuery({ queryKey: qk.projects, queryFn: api.listProjects })
@@ -98,6 +107,15 @@ export function useRegenerateAsset(episodeId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (assetId: number) => api.regenerateAsset(assetId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.assets(episodeId) }),
+  })
+}
+
+export function useUpdateAsset(episodeId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (args: { assetId: number; body: UpdateAssetBody }) =>
+      api.updateAsset(args.assetId, args.body),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.assets(episodeId) }),
   })
 }

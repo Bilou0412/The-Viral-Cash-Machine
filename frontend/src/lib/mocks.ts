@@ -14,6 +14,8 @@ import type {
   LibraryItem,
   Project,
   Round,
+  Theme,
+  UpdateAssetBody,
 } from "./types"
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms))
@@ -67,15 +69,16 @@ let nextId = 1000
 const projects: Project[] = [
   { id: 1, name: "Horror Shorts FR", created_at: "2026-06-01T10:00:00Z", settings_json: null },
 ]
+const themes: Theme[] = [{ name: "horror", label: "Horreur" }]
 const episodes: Episode[] = [
   {
     id: 1, project_id: 1, title: "Le métro hanté", status: "done", format: "aventure",
-    draft_mode: false, duration_s: 58, final_path: "exports/x/final.mp4",
+    theme: "horror", draft_mode: false, duration_s: 58, final_path: "exports/x/final.mp4",
     created_at: "2026-06-02T10:00:00Z",
   },
   {
     id: 2, project_id: 1, title: "La chaufferie", status: "assets", format: "aventure",
-    draft_mode: true, duration_s: null, final_path: null,
+    theme: "horror", draft_mode: true, duration_s: null, final_path: null,
     created_at: "2026-06-09T10:00:00Z",
   },
 ]
@@ -108,11 +111,13 @@ function seedAssets(episodeId: number): Asset[] {
     id: nextId++, episode_id: episodeId, round_index: b.round_index, beat: b.beat,
     kind: b.kind, prompt: b.image_prompt ?? b.motion_prompt ?? b.text ?? "",
     local_path: b.kind === "image" ? "x.png" : b.kind === "video" ? "x.mp4" : "x.mp3",
-    status: "ready", draft: true, sha: "abc123", created_at: now,
+    status: "ready", draft: true, excluded: false, sha: "abc123", created_at: now,
   }))
 }
 
 export const mockApi = {
+  async listThemes() { await delay(); return [...themes] },
+
   async listProjects() { await delay(); return [...projects] },
   async createProject(name: string) {
     await delay()
@@ -134,8 +139,8 @@ export const mockApi = {
     await delay()
     const e: Episode = {
       id: nextId++, project_id: body.project_id, title: body.title, status: "draft",
-      format: "aventure", draft_mode: body.draft_mode, duration_s: null, final_path: null,
-      created_at: new Date().toISOString(),
+      format: "aventure", theme: body.theme ?? "horror", draft_mode: body.draft_mode,
+      duration_s: null, final_path: null, created_at: new Date().toISOString(),
     }
     episodes.push(e)
     return e
@@ -184,6 +189,18 @@ export const mockApi = {
       if (a) { a.created_at = new Date().toISOString(); break }
     }
     return { asset_id: assetId, status: "scheduled" }
+  },
+  async updateAsset(assetId: number, body: UpdateAssetBody): Promise<Asset> {
+    await delay(300)
+    for (const list of assetsByEpisode.values()) {
+      const a = list.find((x) => x.id === assetId)
+      if (a) {
+        if (body.prompt !== undefined) a.prompt = body.prompt
+        if (body.excluded !== undefined) a.excluded = body.excluded
+        return { ...a }
+      }
+    }
+    throw new Error("asset not found")
   },
   async getCost(episodeId: number): Promise<CostEstimate> {
     await delay()

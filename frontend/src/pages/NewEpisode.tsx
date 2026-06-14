@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { Sparkles, Wand2 } from "lucide-react"
+import { Minus, Plus, Sparkles, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,16 +9,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/studio/states"
-import { useCreateEpisode, useProjects } from "@/hooks/use-studio"
+import { useCreateEpisode, useProjects, useThemes } from "@/hooks/use-studio"
 import { api } from "@/lib/api"
+
+const MIN_ROUNDS = 1
+const MAX_ROUNDS = 8
+const clampRounds = (n: number) =>
+  Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, Math.round(Number.isFinite(n) ? n : 3)))
 
 export function NewEpisode() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const projects = useProjects()
+  const themes = useThemes()
   const createEpisode = useCreateEpisode()
 
   const [projectId, setProjectId] = useState<number | null>(null)
+  const [theme, setTheme] = useState("horror")
+  const [nRounds, setNRounds] = useState(3)
   const [title, setTitle] = useState("")
   const [prompt, setPrompt] = useState("")
   const [left, setLeft] = useState("Étienne")
@@ -52,6 +60,7 @@ export function NewEpisode() {
         project_id: projectId,
         title: title.trim(),
         draft_mode: draftMode,
+        theme,
       })
       toast.message("Épisode créé", { description: "Génération du script…" })
       await api.generateScript(ep.id, {
@@ -60,6 +69,7 @@ export function NewEpisode() {
         char_right_name: right.trim() || "Marc",
         char_left_desc: leftDesc.trim(),
         char_right_desc: rightDesc.trim(),
+        n_rounds: clampRounds(nRounds),
       })
       toast.success("Script généré")
       navigate(`/episodes/${ep.id}/script`)
@@ -88,22 +98,41 @@ export function NewEpisode() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="project">Projet</Label>
-            <select
-              id="project"
-              value={projectId ?? ""}
-              onChange={(e) => setProjectId(Number(e.target.value))}
-              disabled={noProjects}
-              className="flex h-9 w-full rounded-md border border-input bg-background/60 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            >
-              {noProjects && <option>Crée un projet dans le dashboard</option>}
-              {(projects.data ?? []).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="project">Projet</Label>
+              <select
+                id="project"
+                value={projectId ?? ""}
+                onChange={(e) => setProjectId(Number(e.target.value))}
+                disabled={noProjects}
+                className="flex h-9 w-full rounded-md border border-input bg-background/60 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                {noProjects && <option>Crée un projet dans le dashboard</option>}
+                {(projects.data ?? []).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="theme">Thème</Label>
+              <select
+                id="theme"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                disabled={themes.isLoading}
+                className="flex h-9 w-full rounded-md border border-input bg-background/60 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                {(themes.data ?? [{ name: "horror", label: "Horreur" }]).map((t) => (
+                  <option key={t.name} value={t.name}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -125,6 +154,48 @@ export function NewEpisode() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Deux amis explorent un métro abandonné la nuit et doivent survivre à une présence…"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nRounds">Nombre de séquences-choix</Label>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center rounded-md border border-input bg-background/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-r-none"
+                  disabled={nRounds <= MIN_ROUNDS}
+                  onClick={() => setNRounds((n) => clampRounds(n - 1))}
+                  aria-label="Moins de séquences"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  id="nRounds"
+                  type="number"
+                  min={MIN_ROUNDS}
+                  max={MAX_ROUNDS}
+                  value={nRounds}
+                  onChange={(e) => setNRounds(clampRounds(Number(e.target.value)))}
+                  className="h-9 w-14 rounded-none border-x border-y-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-l-none"
+                  disabled={nRounds >= MAX_ROUNDS}
+                  onClick={() => setNRounds((n) => clampRounds(n + 1))}
+                  aria-label="Plus de séquences"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {MIN_ROUNDS}–{MAX_ROUNDS} rounds (défaut 3). Plus de rounds = vidéo plus longue et plus chère.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

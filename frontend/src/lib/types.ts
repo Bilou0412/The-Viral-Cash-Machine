@@ -22,10 +22,18 @@ export interface Episode {
   title: string
   status: EpisodeStatus
   format: string // "aventure"
+  theme: string // "horror" | … (see GET /themes)
   draft_mode: boolean
   duration_s: number | null
   final_path: string | null
   created_at: string
+}
+
+// ── Themes (GET /themes) ───────────────────────────────────────────────
+
+export interface Theme {
+  name: string // machine key, e.g. "horror"
+  label: string // human label (FR), e.g. "Horreur"
 }
 
 // ── AdventureScript (mirror of adventure.py) ───────────────────────────
@@ -102,6 +110,7 @@ export interface Asset {
   local_path: string | null
   status: AssetStatus
   draft: boolean
+  excluded: boolean // écarté du montage par l'utilisateur
   sha: string | null
   created_at: string
 }
@@ -141,6 +150,7 @@ export type JobEventType =
   | "asset_ready"
   | "asset_failed"
   | "generation_done"
+  | "produce_done"
 
 export interface JobEvent {
   type: JobEventType
@@ -159,6 +169,7 @@ export interface CreateEpisodeBody {
   project_id: number
   title: string
   draft_mode: boolean
+  theme?: string // default "horror" server-side
 }
 
 export interface GenerateScriptBody {
@@ -167,4 +178,10 @@ export interface GenerateScriptBody {
   char_right_name?: string
   char_left_desc?: string
   char_right_desc?: string
+  n_rounds?: number // 1..8, default 3
+}
+
+export interface UpdateAssetBody {
+  prompt?: string
+  excluded?: boolean
 }

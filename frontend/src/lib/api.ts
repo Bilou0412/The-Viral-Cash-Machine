@@ -14,6 +14,8 @@ import type {
   GenerateScriptBody,
   LibraryItem,
   Project,
+  Theme,
+  UpdateAssetBody,
 } from "./types"
 import { mockApi } from "./mocks"
 
@@ -56,6 +58,8 @@ export const eventsUrl = (episodeId: number) => `${BASE}/events/${episodeId}`
 // ── Real API surface ───────────────────────────────────────────────────
 
 const realApi = {
+  listThemes: () => request<Theme[]>("/themes"),
+
   listProjects: () => request<Project[]>("/projects"),
   createProject: (name: string) =>
     request<Project>("/projects", { method: "POST", body: JSON.stringify({ name }) }),
@@ -93,6 +97,11 @@ const realApi = {
   regenerateAsset: (assetId: number) =>
     request<{ asset_id: number; status: string }>(`/assets/${assetId}/regenerate`, {
       method: "POST",
+    }),
+  updateAsset: (assetId: number, body: UpdateAssetBody) =>
+    request<Asset>(`/assets/${assetId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
     }),
 
   getCost: (episodeId: number) => request<CostEstimate>(`/episodes/${episodeId}/cost`),

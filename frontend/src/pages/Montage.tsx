@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Clapperboard, Download, Film, Play, Wand2 } from "lucide-react"
 import { toast } from "sonner"
@@ -8,6 +8,7 @@ import { EpisodeStatusBadge } from "@/components/studio/status-badge"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
 import { ProjectBreadcrumb } from "@/components/studio/project-breadcrumb"
 import { useCost, useEpisode, useMontage } from "@/hooks/use-studio"
+import { useJobEvents } from "@/hooks/use-job-events"
 import { api, episodeVideoUrl } from "@/lib/api"
 import { formatCost, formatDuration } from "@/lib/utils"
 
@@ -19,19 +20,31 @@ export function Montage() {
   const montage = useMontage(episodeId)
   const [producing, setProducing] = useState(false)
 
+  // Subscribe to the job stream while a full production is running so the page
+  // auto-refreshes on produce_done (the hook invalidates episode + library).
+  useJobEvents(episodeId, producing)
+
+  // produce_done → episode becomes "done" with a final_path → stop the spinner.
+  useEffect(() => {
+    if (producing && episode.data?.status === "done" && episode.data.final_path) {
+      setProducing(false)
+    }
+  }, [producing, episode.data?.status, episode.data?.final_path])
+
   async function produceAll() {
     setProducing(true)
     try {
       await api.produce(episodeId)
       toast.success("Production lancée 🎬", {
         description: "Vidéo complète (assets + intro + montage) en cours. " +
-          "~15-20 min — reviens rafraîchir cette page pour voir le résultat.",
+          "Cette page se met à jour automatiquement quand c'est prêt (~15-20 min).",
       })
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec du lancement")
-    } finally {
       setProducing(false)
     }
+    // Keep `producing` true: the SSE subscription stays alive until produce_done,
+    // at which point the episode becomes "done" and the effect below clears it.
   }
 
   if (episode.isLoading) return <LoadingState />
@@ -74,6 +87,11 @@ export function Montage() {
                   playsInline
                   className="h-full w-full object-contain"
                 />
+              ) : producing ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <Spinner className="h-7 w-7 text-primary" />
+                  <span className="text-xs uppercase tracking-widest">Production en cours…</span>
+                </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground/50">
                   <Film className="h-8 w-8" />
@@ -102,7 +120,7 @@ export function Montage() {
               {producing ? <Spinner /> : <Wand2 className="h-4 w-4" />}
               Produire toute la vidéo
             </Button>
-            <Button variant="outline" onClick={assemble} disabled={montage.isPending}>
+            <Button variant="outline" onClick={assemble} disabled={montage.isPending || producing}>
               {montage.isPending ? <Spinner /> : <Clapperboard className="h-4 w-4" />}
               {hasVideo ? "Réassembler (montage seul)" : "Monter (assets déjà générés)"}
             </Button>
