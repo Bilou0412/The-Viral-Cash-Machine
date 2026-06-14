@@ -23,6 +23,7 @@ from sqlmodel import Session
 from ....features.assets.ports import AssetProvider
 from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....features.scripting.adventure import AdventureScript
+from ....features.scripting.themes import THEMES, get_theme
 from ...db.repositories import AssetRepo, CostRepo, EpisodeRepo, JobRepo
 from ..events import bus
 from . import pricing
@@ -189,8 +190,11 @@ class AssetGenerationService:
             project = ProjectRepo(session).get(episode.project_id)
             project_name = project.name if project else f"project_{episode.project_id}"
             draft = episode.draft_mode
+            theme_name = episode.theme
 
-        plan = plan_episode_assets(script, side)  # type: ignore[arg-type]
+        # DA de l'épisode (cascade thème) ; repli sur « horror » si inconnu.
+        theme = get_theme(theme_name) if theme_name in THEMES else get_theme()
+        plan = plan_episode_assets(script, side, theme)  # type: ignore[arg-type]
         out_dir = self.export_dir(project_name, episode_id)
         os.makedirs(out_dir, exist_ok=True)
 

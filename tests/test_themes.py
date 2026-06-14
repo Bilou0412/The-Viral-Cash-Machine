@@ -112,3 +112,13 @@ def test_register_theme_roundtrip():
     toy = _toy_theme()
     register_theme(toy)
     assert get_theme("toytheme") is toy
+
+
+def test_list_themes_shape_and_horror_label():
+    """L'API /themes : liste de {name, label} ; horror libellé 'Horreur'."""
+    from src.features.scripting.themes import list_themes
+
+    items = list_themes()
+    assert all(set(it) == {"name", "label"} for it in items)
+    horror = next(it for it in items if it["name"] == "horror")
+    assert horror["label"] == "Horreur"

@@ -34,6 +34,7 @@ class Theme:
     pace_calm: str          # vocabulaire de vitesse — calme
     pace_sudden: str        # vocabulaire de vitesse — brutal
     decomposer_tone: str    # ton injecté au script (prompt système du décomposeur)
+    label: str = ""         # libellé affichable (UI) ; défaut → name
 
 
 # Thème par défaut — valeurs LIFTÉES VERBATIM de prompts.py (garde golden).
@@ -53,6 +54,7 @@ HORROR = Theme(
     pace_calm="slow, calm, unhurried, steady pace",
     pace_sudden="sudden, sharp, violent burst",
     decomposer_tone="dark cinematic horror",
+    label="Horreur",
 )
 
 DEFAULT_THEME_NAME = "horror"
@@ -71,6 +73,14 @@ def get_theme(name: str = DEFAULT_THEME_NAME) -> Theme:
 def register_theme(theme: Theme) -> None:
     """Enregistre (ou remplace) un thème dans le registre."""
     THEMES[theme.name] = theme
+
+
+def list_themes() -> list[dict[str, str]]:
+    """Liste des thèmes pour l'UI : [{name, label}, ...] (label → name si vide)."""
+    return [
+        {"name": t.name, "label": t.label or t.name}
+        for t in THEMES.values()
+    ]
 
 
 T = TypeVar("T")

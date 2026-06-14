@@ -105,6 +105,7 @@ class EpisodeIn(BaseModel):
     project_id: int
     title: str
     draft_mode: bool = True
+    theme: str = "horror"             # DA / thème de l'épisode
 
 
 class ScriptGenIn(BaseModel):
@@ -113,10 +114,18 @@ class ScriptGenIn(BaseModel):
     char_right_name: str = "Marc"
     char_left_desc: str = ""          # description optionnelle du créateur
     char_right_desc: str = ""
+    n_rounds: int = 3                 # nombre de séquences-choix (1..8)
 
 
 class ScriptEditIn(BaseModel):
     script_json: str
+
+
+class AssetUpdateIn(BaseModel):
+    """Édition d'un asset depuis la revue (M1) : prompt et/ou écarté."""
+
+    prompt: Optional[str] = None
+    excluded: Optional[bool] = None
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +167,7 @@ def create_episode(
     if ProjectRepo(session).get(body.project_id) is None:
         raise HTTPException(404, f"project {body.project_id} not found")
     return EpisodeRepo(session).create(
-        body.project_id, body.title, draft_mode=body.draft_mode
+        body.project_id, body.title, draft_mode=body.draft_mode, theme=body.theme
     )
 
 
@@ -177,6 +186,19 @@ def get_episode(
 
 
 # ---------------------------------------------------------------------------
+# Themes (DA) — pour le sélecteur du wizard
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/themes")
+def list_themes_route() -> list[dict[str, str]]:
+    """Thèmes (DA) disponibles : [{name, label}, ...]."""
+    from ...features.scripting.themes import list_themes
+
+    return list_themes()
+
+
+# ---------------------------------------------------------------------------
 # Script
 # ---------------------------------------------------------------------------
 
@@ -188,7 +210,7 @@ def generate_episode_script(
     _require_episode(session, episode_id)
     script = generate_script(
         body.prompt, body.char_left_name, body.char_right_name,
-        body.char_left_desc, body.char_right_desc,
+        body.char_left_desc, body.char_right_desc, n_rounds=body.n_rounds,
     )
     ScriptRepo(session).create(episode_id, script.model_dump_json())
     data: dict[str, Any] = json.loads(script.model_dump_json())
@@ -326,6 +348,19 @@ def list_episode_assets(
 ) -> list[Asset]:
     _require_episode(session, episode_id)
     return list(AssetRepo(session).assets_by_episode(episode_id))
+
+
+@app.patch("/api/assets/{asset_id}")
+def update_asset(
+    asset_id: int, body: AssetUpdateIn, session: Session = Depends(_session)
+) -> Asset:
+    """Revue M1 : éditer le prompt d'un asset et/ou l'écarter du montage."""
+    asset = AssetRepo(session).update(
+        asset_id, prompt=body.prompt, excluded=body.excluded
+    )
+    if asset is None:
+        raise HTTPException(404, f"asset {asset_id} not found")
+    return asset
 
 
 # ---------------------------------------------------------------------------

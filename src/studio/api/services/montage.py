@@ -58,7 +58,10 @@ def _ordered_video_assets(assets: Sequence[Asset]) -> List[Asset]:
     cas spécial elle retombait en dernier (round_index None → 999), ce qui plaçait
     l'intro à la fin de la vidéo lors d'un repli sur la concat simple.
     """
-    videos = [a for a in assets if a.kind == "video" and a.local_path]
+    videos = [
+        a for a in assets
+        if a.kind == "video" and a.local_path and not a.excluded
+    ]
 
     def key(a: Asset) -> tuple[int, int]:
         if a.beat == "intro":      # toujours en tête
@@ -155,11 +158,11 @@ class MontageService:
             )
             return self.assemble(episode_id)
 
-        # (round_index, beat) -> local_path, only files that actually exist.
+        # (round_index, beat) -> local_path, only files that exist AND not écartés.
         by_key = {
             (a.round_index, a.beat): a.local_path
             for a in assets
-            if a.local_path and os.path.exists(a.local_path)
+            if a.local_path and os.path.exists(a.local_path) and not a.excluded
         }
 
         def g(ri: Optional[int], beat: str) -> Optional[str]:

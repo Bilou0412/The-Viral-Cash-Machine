@@ -68,6 +68,7 @@ class EpisodeRepo:
         status: str = "draft",
         format: str = "aventure",
         draft_mode: bool = True,
+        theme: str = "horror",
     ) -> Episode:
         episode = Episode(
             project_id=project_id,
@@ -75,6 +76,7 @@ class EpisodeRepo:
             status=status,
             format=format,
             draft_mode=draft_mode,
+            theme=theme,
         )
         self.session.add(episode)
         self.session.commit()
@@ -200,6 +202,28 @@ class AssetRepo:
         if kind is not None:
             statement = statement.where(Asset.kind == kind)
         return self.session.exec(statement).all()
+
+    def update(
+        self,
+        asset_id: int,
+        prompt: Optional[str] = None,
+        excluded: Optional[bool] = None,
+    ) -> Optional[Asset]:
+        """Édite le prompt et/ou le flag `excluded` d'un asset (M1).
+
+        Seuls les champs non-None sont modifiés (None = inchangé).
+        """
+        asset = self.get(asset_id)
+        if asset is None:
+            return None
+        if prompt is not None:
+            asset.prompt = prompt
+        if excluded is not None:
+            asset.excluded = excluded
+        self.session.add(asset)
+        self.session.commit()
+        self.session.refresh(asset)
+        return asset
 
     def set_local_path(
         self, asset_id: int, local_path: str, sha: Optional[str] = None

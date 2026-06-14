@@ -43,6 +43,34 @@ def get_engine(url: Optional[str] = None) -> Engine:
     return _engine
 
 
+# Colonnes ajoutées après coup (LOT 2) — pour les DB SQLite déjà existantes :
+# create_all ne fait PAS d'ALTER TABLE. (table, colonne, type SQL, défaut SQL).
+_ADDED_COLUMNS = [
+    ("episode", "theme", "VARCHAR", "'horror'"),
+    ("asset", "excluded", "BOOLEAN", "0"),
+]
+
+
+def _ensure_columns(eng: Engine) -> None:
+    """Migration légère idempotente : ajoute les colonnes manquantes (SQLite)."""
+    from sqlalchemy import inspect, text
+
+    insp = inspect(eng)
+    tables = set(insp.get_table_names())
+    with eng.begin() as conn:
+        for table, column, sqltype, default in _ADDED_COLUMNS:
+            if table not in tables:
+                continue  # create_all l'a déjà créée avec la colonne
+            have = {c["name"] for c in insp.get_columns(table)}
+            if column not in have:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {table} ADD COLUMN {column} "
+                        f"{sqltype} DEFAULT {default}"
+                    )
+                )
+
+
 def init_db(engine: Optional[Engine] = None) -> Engine:
     """Create all tables on ``engine`` (or the shared engine). Idempotent."""
     eng = engine if engine is not None else get_engine()
@@ -50,6 +78,7 @@ def init_db(engine: Optional[Engine] = None) -> Engine:
     from src.studio.db import models  # noqa: F401
 
     SQLModel.metadata.create_all(eng)
+    _ensure_columns(eng)  # rattrape les colonnes ajoutées sur une DB existante
     return eng
 
 

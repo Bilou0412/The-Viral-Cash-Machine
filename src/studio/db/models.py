@@ -40,6 +40,8 @@ class Episode(SQLModel, table=True):
     # Lifecycle: draft -> assets -> montage -> done
     status: str = Field(default="draft", index=True)
     format: str = Field(default="aventure")
+    # DA / thème de l'épisode (cf. features.scripting.themes). Défaut « horror ».
+    theme: str = Field(default="horror")
     draft_mode: bool = Field(default=True)
     duration_s: Optional[float] = Field(default=None)
     final_path: Optional[str] = Field(default=None)
@@ -77,6 +79,8 @@ class Asset(SQLModel, table=True):
     local_path: Optional[str] = Field(default=None)
     status: str = Field(default="pending")
     draft: bool = Field(default=True)
+    # M1/M2 : asset écarté par l'auteur → exclu du montage (jamais supprimé).
+    excluded: bool = Field(default=False)
     sha: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
 
