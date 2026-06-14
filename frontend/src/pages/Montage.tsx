@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EpisodeStatusBadge } from "@/components/studio/status-badge"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
+import { ProjectBreadcrumb } from "@/components/studio/project-breadcrumb"
 import { useCost, useEpisode, useMontage } from "@/hooks/use-studio"
 import { api, episodeVideoUrl } from "@/lib/api"
 import { formatCost, formatDuration } from "@/lib/utils"
@@ -49,6 +50,7 @@ export function Montage() {
 
   return (
     <div className="space-y-6">
+      <ProjectBreadcrumb episodeId={episodeId} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Montage & Preview</h1>

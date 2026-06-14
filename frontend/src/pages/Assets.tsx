@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { VerticalPreview } from "@/components/studio/vertical-preview"
 import { AssetStatusBadge } from "@/components/studio/status-badge"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
+import { ProjectBreadcrumb } from "@/components/studio/project-breadcrumb"
 import {
   useAssets,
   useBeats,
@@ -66,6 +67,7 @@ export function Assets() {
 
   return (
     <div className="space-y-6">
+      <ProjectBreadcrumb episodeId={episodeId} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Assets</h1>

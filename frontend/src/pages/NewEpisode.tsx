@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Sparkles, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { api } from "@/lib/api"
 
 export function NewEpisode() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const projects = useProjects()
   const createEpisode = useCreateEpisode()
 
@@ -27,10 +28,13 @@ export function NewEpisode() {
   const [draftMode, setDraftMode] = useState(true)
   const [working, setWorking] = useState(false)
 
-  // Default to the first project once loaded (adjust state during render — runs
-  // after all hooks above, so hook order stays stable).
+  // Default the project once loaded (adjust state during render — runs after all
+  // hooks above, so hook order stays stable). Prefer a ?project= query param
+  // (e.g. from a project detail page) if it matches a real project.
   if (projectId == null && projects.data && projects.data.length > 0) {
-    setProjectId(projects.data[0].id)
+    const requested = Number(searchParams.get("project"))
+    const preselect = projects.data.find((p) => p.id === requested)
+    setProjectId(preselect ? preselect.id : projects.data[0].id)
   }
 
   async function submit() {

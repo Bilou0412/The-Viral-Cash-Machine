@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { ErrorState, LoadingState, Spinner } from "@/components/studio/states"
+import { ProjectBreadcrumb } from "@/components/studio/project-breadcrumb"
 import { useGenerateScript, useSaveScript, useScript } from "@/hooks/use-studio"
 import type { AdventureScript, Choice, Round } from "@/lib/types"
 
@@ -108,6 +109,7 @@ export function ScriptEditor() {
 
   return (
     <div className="space-y-6">
+      <ProjectBreadcrumb episodeId={episodeId} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Script & Casting</h1>

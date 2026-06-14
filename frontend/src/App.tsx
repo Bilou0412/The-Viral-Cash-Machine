@@ -8,6 +8,8 @@ import { ScriptEditor } from "@/pages/ScriptEditor"
 import { Assets } from "@/pages/Assets"
 import { Montage } from "@/pages/Montage"
 import { LibraryPage } from "@/pages/LibraryPage"
+import { Projects } from "@/pages/Projects"
+import { ProjectDetail } from "@/pages/ProjectDetail"
 import { EpisodeRedirect } from "@/pages/EpisodeRedirect"
 
 const queryClient = new QueryClient({
@@ -21,6 +23,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: "new", element: <NewEpisode /> },
+      { path: "projects", element: <Projects /> },
+      { path: "projects/:id", element: <ProjectDetail /> },
       { path: "library", element: <LibraryPage /> },
       { path: "episodes/:id", element: <EpisodeRedirect /> },
       { path: "episodes/:id/script", element: <ScriptEditor /> },
