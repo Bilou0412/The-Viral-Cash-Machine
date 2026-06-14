@@ -40,9 +40,13 @@ export function BrickPalette({ onAdd }: BrickPaletteProps) {
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
-      <div className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="px-4 pt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Briques
       </div>
+      <p className="px-4 pb-2 text-[10px] leading-snug text-muted-foreground/70">
+        Glisse une brique sur la timeline, ou clique pour l'ajouter. Clique un bloc
+        pour ses réglages.
+      </p>
       <div className="flex flex-col gap-2 overflow-y-auto px-3 pb-4">
         {isLoading && <div className="px-1 text-xs text-muted-foreground">Chargement…</div>}
         {items.map((item) => {

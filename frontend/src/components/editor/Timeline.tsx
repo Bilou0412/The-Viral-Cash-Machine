@@ -1,9 +1,10 @@
-// Bottom timeline: horizontal tracks with absolutely-positioned brick blocks on
-// a px-per-second scale. Drag a block to move it (snaps start, clamps to >=0).
-// Drop a palette chip onto a track to add a brick. Click selects. Deliberately a
-// lightweight NLE — robust over feature-complete.
+// Bottom timeline: horizontal lanes with absolutely-positioned brick blocks on a
+// px-per-second scale. Drag a block to move it; drag its right edge to change its
+// duration; drop a palette chip (or click one) to add a brick. Click selects.
+// Lanes are ALWAYS shown (even on an empty doc) so there is always a visible drop
+// target. Deliberately a lightweight NLE — robust over feature-complete.
 
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Link2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -18,18 +19,22 @@ import { isGenerativeBrick, type Brick, type EditorDoc } from "@/lib/types"
 const PX_PER_SEC = 64
 const TRACK_H = 56
 const RULER_H = 22
+const MIN_DUR = 0.5
+
+// Lanes always present, even with no tracks saved on the doc yet.
+const DEFAULT_ROLES: Record<number, string> = { 0: "vidéo", 1: "overlay", 2: "audio" }
+const roleFor = (i: number): string => DEFAULT_ROLES[i] ?? "vidéo"
 
 interface TimelineProps {
   doc: EditorDoc
   selectedId: string | null
-  /** Ids of bricks with a ready generated asset. */
   generatedIds: Set<string>
   onSelect: (id: string) => void
   onMoveBrick: (id: string, start: number, track: number) => void
+  onResizeBrick: (id: string, duration: number) => void
   onDropPalette: (item: PaletteItem, track: number, start: number) => void
 }
 
-// Ids of bricks this brick is connected to via "{brick:<id>}" params.
 function brickConnections(b: Brick): string[] {
   if (!isGenerativeBrick(b)) return []
   const out: string[] = []
@@ -42,8 +47,10 @@ function brickConnections(b: Brick): string[] {
 
 interface DragState {
   brickId: string
+  mode: "move" | "resize"
   pointerStartX: number
   origStart: number
+  origDuration: number
   track: number
 }
 
@@ -53,10 +60,11 @@ function brickLabel(b: Brick): string {
     return typeof t === "string" && t ? t : "Texte"
   }
   if (b.type === "media") return "Média"
-  // generative
   const ref = b.model_ref || b.type
   return ref.split("/").pop() ?? b.type
 }
+
+const snap = (v: number) => Math.max(0, Math.round(v * 2) / 2)
 
 export function Timeline({
   doc,
@@ -64,6 +72,7 @@ export function Timeline({
   generatedIds,
   onSelect,
   onMoveBrick,
+  onResizeBrick,
   onDropPalette,
 }: TimelineProps) {
   const labelFor = (id: string) => {
@@ -73,6 +82,19 @@ export function Timeline({
   const laneRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
+  // Lanes = default 0/1/2 ∪ doc.tracks ∪ any track referenced by a brick.
+  const lanes = useMemo(() => {
+    const idx = new Set<number>([0, 1, 2])
+    doc.tracks.forEach((t) => idx.add(t.index))
+    doc.bricks.forEach((b) => idx.add(b.placement.track))
+    return [...idx]
+      .sort((a, b) => a - b)
+      .map((i) => ({
+        index: i,
+        role: doc.tracks.find((t) => t.index === i)?.role ?? roleFor(i),
+      }))
+  }, [doc.tracks, doc.bricks])
+
   const totalSec = Math.max(
     12,
     ...doc.bricks.map((b) => b.placement.start + b.placement.duration)
@@ -81,9 +103,12 @@ export function Timeline({
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag) return
-    const dx = e.clientX - drag.pointerStartX
-    const next = Math.max(0, Math.round((drag.origStart + dx / PX_PER_SEC) * 2) / 2)
-    onMoveBrick(drag.brickId, next, drag.track)
+    const dx = (e.clientX - drag.pointerStartX) / PX_PER_SEC
+    if (drag.mode === "move") {
+      onMoveBrick(drag.brickId, snap(drag.origStart + dx), drag.track)
+    } else {
+      onResizeBrick(drag.brickId, Math.max(MIN_DUR, snap(drag.origDuration + dx)))
+    }
   }
 
   const endDrag = () => setDrag(null)
@@ -91,7 +116,7 @@ export function Timeline({
   const xFromEvent = (e: React.DragEvent): number => {
     const rect = laneRef.current?.getBoundingClientRect()
     const x = rect ? e.clientX - rect.left + (laneRef.current?.scrollLeft ?? 0) : 0
-    return Math.max(0, Math.round((x / PX_PER_SEC) * 2) / 2)
+    return snap(x / PX_PER_SEC)
   }
 
   return (
@@ -122,8 +147,8 @@ export function Timeline({
               </div>
             ))}
           </div>
-          {/* tracks */}
-          {doc.tracks.map((track) => (
+          {/* lanes */}
+          {lanes.map((track) => (
             <div
               key={track.index}
               className="relative border-t border-border/40"
@@ -165,24 +190,24 @@ export function Timeline({
                         onSelect(b.id)
                         setDrag({
                           brickId: b.id,
+                          mode: "move",
                           pointerStartX: e.clientX,
                           origStart: b.placement.start,
+                          origDuration: b.placement.duration,
                           track: track.index,
                         })
                       }}
                       className={cn(
-                        "absolute top-2 flex h-[calc(100%-1rem)] cursor-grab select-none items-center overflow-hidden rounded-md border px-2 text-[11px] font-medium active:cursor-grabbing",
+                        "absolute top-2 flex h-[calc(100%-1rem)] cursor-grab select-none items-center overflow-hidden rounded-md border pl-2 pr-3 text-[11px] font-medium active:cursor-grabbing",
                         c.bg,
                         c.text,
                         selected ? "border-primary ring-1 ring-primary" : c.border
                       )}
                       style={{
                         left: b.placement.start * PX_PER_SEC,
-                        width: Math.max(24, b.placement.duration * PX_PER_SEC - 4),
+                        width: Math.max(28, b.placement.duration * PX_PER_SEC - 4),
                       }}
-                      title={
-                        connTip ? `${brickLabel(b)} — ${connTip}` : brickLabel(b)
-                      }
+                      title={connTip ? `${brickLabel(b)} — ${connTip}` : brickLabel(b)}
                     >
                       <span
                         className={cn(
@@ -193,17 +218,40 @@ export function Timeline({
                       />
                       <span className="truncate">{brickLabel(b)}</span>
                       {connections.length > 0 && (
-                        <Link2
-                          className="ml-1 h-3 w-3 shrink-0 opacity-80"
-                          aria-label={connTip}
-                        />
+                        <Link2 className="ml-1 h-3 w-3 shrink-0 opacity-80" aria-label={connTip} />
                       )}
+                      {/* resize handle (right edge) → change duration */}
+                      <span
+                        onPointerDown={(e) => {
+                          e.stopPropagation()
+                          onSelect(b.id)
+                          setDrag({
+                            brickId: b.id,
+                            mode: "resize",
+                            pointerStartX: e.clientX,
+                            origStart: b.placement.start,
+                            origDuration: b.placement.duration,
+                            track: track.index,
+                          })
+                        }}
+                        className="absolute right-0 top-0 h-full w-2 cursor-ew-resize bg-foreground/20 hover:bg-foreground/40"
+                        title="Glisser pour changer la durée"
+                      />
                     </div>
                   )
                 })}
             </div>
           ))}
         </div>
+
+        {/* Empty-state hint */}
+        {doc.bricks.length === 0 && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <p className="rounded-md border border-dashed border-border px-4 py-2 text-xs text-muted-foreground">
+              Glisse une brique depuis la gauche sur une piste — ou clique-la pour l'ajouter.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

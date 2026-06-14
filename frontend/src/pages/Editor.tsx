@@ -118,6 +118,21 @@ export function Editor() {
     [draft, update]
   )
 
+  const resizeBrick = useCallback(
+    (id: string, duration: number) => {
+      if (!draft) return
+      update({
+        ...draft,
+        bricks: draft.bricks.map((b) =>
+          b.id === id
+            ? ({ ...b, placement: { ...b.placement, duration } } as Brick)
+            : b
+        ),
+      })
+    },
+    [draft, update]
+  )
+
   const removeBrick = useCallback(
     (id: string) => {
       if (!draft) return
@@ -221,6 +236,7 @@ export function Editor() {
               generatedIds={generatedIds}
               onSelect={setSelectedId}
               onMoveBrick={moveBrick}
+              onResizeBrick={resizeBrick}
               onDropPalette={(item, track, start) => addBrick(item, track, start)}
             />
           </div>
