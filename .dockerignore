@@ -21,6 +21,11 @@ exports/
 frontend/node_modules/
 frontend/dist/
 
+# Render (Remotion) : node_modules/dist rebuildés dans le stage `render`
+render/node_modules/
+render/dist/
+render/out/
+
 # Sorties / données persistées en volume
 studio_output/
 studio_data/
