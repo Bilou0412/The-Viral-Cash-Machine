@@ -82,6 +82,8 @@ class Asset(SQLModel, table=True):
     # M1/M2 : asset écarté par l'auteur → exclu du montage (jamais supprimé).
     excluded: bool = Field(default=False)
     sha: Optional[str] = Field(default=None)
+    # E5 : asset issu d'une brique de l'éditeur timeline (None = asset Aventure).
+    editor_document_id: Optional[int] = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -118,6 +120,26 @@ class VoiceProfile(SQLModel, table=True):
     description: Optional[str] = Field(default=None)
     voice_id: Optional[str] = Field(default=None)
     sample_path: Optional[str] = Field(default=None)
+
+
+class EditorDocumentRow(SQLModel, table=True):
+    """E5 : un document d'autoring de l'éditeur timeline, sérialisé en JSON.
+
+    Le ``doc_json`` est un :class:`~src.editor.document.EditorDocument` dumpé ;
+    il est ré-hydraté/migré via ``upgrade_document`` à la lecture. Versionné par
+    ``schema_version`` pour les migrations futures.
+    """
+
+    __tablename__ = "editor_document"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id", index=True)
+    episode_id: Optional[int] = Field(default=None, foreign_key="episode.id")
+    title: str
+    schema_version: int = Field(default=1)
+    doc_json: str
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
 
 
 class CostEntry(SQLModel, table=True):

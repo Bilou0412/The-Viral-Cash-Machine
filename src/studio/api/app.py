@@ -37,11 +37,16 @@ from ..db.models import Asset, Episode, Project
 from ..db.repositories import (
     AssetRepo,
     CostRepo,
+    EditorDocRepo,
     EpisodeRepo,
     ProjectRepo,
     ScriptRepo,
 )
 from .events import bus
+from .services.editor_generation import (
+    EditorGenerationService,
+    regenerate_brick,
+)
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
@@ -133,6 +138,20 @@ class AssetUpdateIn(BaseModel):
 
     prompt: Optional[str] = None
     excluded: Optional[bool] = None
+
+
+class EditorDocIn(BaseModel):
+    """Création d'un document de l'éditeur timeline (E5)."""
+
+    project_id: int
+    title: str = "Sans titre"
+
+
+class EditorDocSaveIn(BaseModel):
+    """Sauvegarde d'un document : le doc d'autoring (+ titre optionnel)."""
+
+    title: Optional[str] = None
+    doc: dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
@@ -466,6 +485,140 @@ def library(session: Session = Depends(_session)) -> list[dict[str, Any]]:
         for e in episodes
         if e.final_path
     ]
+
+
+# ---------------------------------------------------------------------------
+# Éditeur timeline — documents, génération, render-model (E5)
+# ---------------------------------------------------------------------------
+
+
+def _require_editor_doc(session: Session, doc_id: int) -> Any:
+    row = EditorDocRepo(session).get(doc_id)
+    if row is None:
+        raise HTTPException(404, f"editor document {doc_id} not found")
+    return row
+
+
+@app.get("/api/editor/documents")
+def list_editor_documents(
+    project_id: Optional[int] = None, session: Session = Depends(_session)
+) -> list[dict[str, Any]]:
+    repo = EditorDocRepo(session)
+    rows = repo.by_project(project_id) if project_id is not None else repo.list()
+    return [
+        {"id": r.id, "project_id": r.project_id, "title": r.title} for r in rows
+    ]
+
+
+@app.post("/api/editor/documents")
+def create_editor_document(
+    body: EditorDocIn, session: Session = Depends(_session)
+) -> dict[str, Any]:
+    if ProjectRepo(session).get(body.project_id) is None:
+        raise HTTPException(404, f"project {body.project_id} not found")
+    from ...editor.document import EditorDocument
+
+    doc = EditorDocument(title=body.title)
+    row = EditorDocRepo(session).create(
+        body.project_id, body.title, doc.model_dump_json()
+    )
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "title": row.title,
+        "doc": json.loads(row.doc_json),
+    }
+
+
+@app.get("/api/editor/documents/{doc_id}")
+def get_editor_document(
+    doc_id: int, session: Session = Depends(_session)
+) -> dict[str, Any]:
+    row = _require_editor_doc(session, doc_id)
+    from ...editor import upgrade_document
+
+    doc = upgrade_document(json.loads(row.doc_json))
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "title": row.title,
+        "doc": json.loads(doc.model_dump_json()),
+    }
+
+
+@app.put("/api/editor/documents/{doc_id}")
+def save_editor_document(
+    doc_id: int, body: EditorDocSaveIn, session: Session = Depends(_session)
+) -> dict[str, Any]:
+    _require_editor_doc(session, doc_id)
+    from ...editor.document import EditorDocument
+
+    try:
+        doc = EditorDocument.model_validate(body.doc)
+    except Exception as exc:
+        raise HTTPException(422, f"invalid EditorDocument: {exc}")
+    row = EditorDocRepo(session).save(
+        doc_id, doc.model_dump_json(), title=body.title
+    )
+    assert row is not None  # existence checked above
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "title": row.title,
+        "doc": json.loads(row.doc_json),
+    }
+
+
+@app.post("/api/editor/documents/{doc_id}/generate")
+def generate_editor_document(
+    doc_id: int,
+    background: BackgroundTasks,
+    session: Session = Depends(_session),
+    engine: Engine = Depends(get_db_engine),
+    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    downloader: Any = Depends(get_downloader),
+) -> dict[str, Any]:
+    _require_editor_doc(session, doc_id)
+    service = EditorGenerationService(
+        engine, provider=provider, downloader=downloader
+    )
+    background.add_task(service.generate_document, doc_id)
+    return {"id": doc_id, "status": "scheduled"}
+
+
+@app.post("/api/editor/documents/{doc_id}/bricks/{brick_id}/regenerate")
+def regenerate_editor_brick(
+    doc_id: int,
+    brick_id: str,
+    background: BackgroundTasks,
+    session: Session = Depends(_session),
+    engine: Engine = Depends(get_db_engine),
+    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    downloader: Any = Depends(get_downloader),
+) -> dict[str, Any]:
+    _require_editor_doc(session, doc_id)
+    background.add_task(
+        regenerate_brick, engine, doc_id, brick_id, provider, downloader
+    )
+    return {"id": doc_id, "brick_id": brick_id, "status": "scheduled"}
+
+
+@app.get("/api/editor/documents/{doc_id}/render-model")
+def editor_render_model(
+    doc_id: int, session: Session = Depends(_session)
+) -> dict[str, Any]:
+    row = _require_editor_doc(session, doc_id)
+    from ...editor import upgrade_document
+    from ...editor.resolve import resolve
+
+    doc = upgrade_document(json.loads(row.doc_json))
+    asset_src = {
+        a.beat: f"/api/assets/{a.id}/file"
+        for a in AssetRepo(session).assets_by_document(doc_id)
+        if a.status == "ready" and not a.excluded
+    }
+    model = resolve(doc, asset_src)
+    return json.loads(model.model_dump_json())
 
 
 # ---------------------------------------------------------------------------

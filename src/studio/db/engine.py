@@ -48,6 +48,7 @@ def get_engine(url: Optional[str] = None) -> Engine:
 _ADDED_COLUMNS = [
     ("episode", "theme", "VARCHAR", "'horror'"),
     ("asset", "excluded", "BOOLEAN", "0"),
+    ("asset", "editor_document_id", "INTEGER", "NULL"),
 ]
 
 

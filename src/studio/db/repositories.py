@@ -11,10 +11,13 @@ from typing import Optional, Sequence
 
 from sqlmodel import Session, select
 
+from datetime import datetime, timezone
+
 from src.studio.db.models import (
     AdventureScriptRow,
     Asset,
     CostEntry,
+    EditorDocumentRow,
     Episode,
     GenerationJob,
     Project,
@@ -175,6 +178,7 @@ class AssetRepo:
         status: str = "pending",
         draft: bool = True,
         sha: Optional[str] = None,
+        editor_document_id: Optional[int] = None,
     ) -> Asset:
         asset = Asset(
             episode_id=episode_id,
@@ -186,6 +190,7 @@ class AssetRepo:
             status=status,
             draft=draft,
             sha=sha,
+            editor_document_id=editor_document_id,
         )
         self.session.add(asset)
         self.session.commit()
@@ -202,6 +207,27 @@ class AssetRepo:
         if kind is not None:
             statement = statement.where(Asset.kind == kind)
         return self.session.exec(statement).all()
+
+    def assets_by_document(
+        self, editor_document_id: int
+    ) -> Sequence[Asset]:
+        """E5 : tous les assets générés pour un document de l'éditeur."""
+        return self.session.exec(
+            select(Asset).where(
+                Asset.editor_document_id == editor_document_id
+            )
+        ).all()
+
+    def by_document_and_beat(
+        self, editor_document_id: int, beat: str
+    ) -> Optional[Asset]:
+        """E5 : l'asset d'une brique donnée (beat == brick id) dans un document."""
+        return self.session.exec(
+            select(Asset)
+            .where(Asset.editor_document_id == editor_document_id)
+            .where(Asset.beat == beat)
+            .order_by(Asset.id.desc())  # type: ignore[union-attr]
+        ).first()
 
     def update(
         self,
@@ -398,3 +424,73 @@ class CostRepo:
         )
         entries = self.session.exec(statement).all()
         return float(sum(e.amount_usd for e in entries))
+
+
+class EditorDocRepo:
+    """CRUD for :class:`EditorDocumentRow` (E5) plus per-project listing."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self,
+        project_id: int,
+        title: str,
+        doc_json: str,
+        episode_id: Optional[int] = None,
+        schema_version: int = 1,
+    ) -> EditorDocumentRow:
+        row = EditorDocumentRow(
+            project_id=project_id,
+            title=title,
+            doc_json=doc_json,
+            episode_id=episode_id,
+            schema_version=schema_version,
+        )
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def get(self, doc_id: int) -> Optional[EditorDocumentRow]:
+        return self.session.get(EditorDocumentRow, doc_id)
+
+    def by_project(self, project_id: int) -> Sequence[EditorDocumentRow]:
+        return self.session.exec(
+            select(EditorDocumentRow).where(
+                EditorDocumentRow.project_id == project_id
+            )
+        ).all()
+
+    def list(self) -> Sequence[EditorDocumentRow]:
+        return self.session.exec(select(EditorDocumentRow)).all()
+
+    def save(
+        self,
+        doc_id: int,
+        doc_json: str,
+        title: Optional[str] = None,
+        schema_version: Optional[int] = None,
+    ) -> Optional[EditorDocumentRow]:
+        """Update the stored ``doc_json`` (and optionally title/version)."""
+        row = self.get(doc_id)
+        if row is None:
+            return None
+        row.doc_json = doc_json
+        if title is not None:
+            row.title = title
+        if schema_version is not None:
+            row.schema_version = schema_version
+        row.updated_at = datetime.now(timezone.utc)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def delete(self, doc_id: int) -> bool:
+        row = self.get(doc_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
