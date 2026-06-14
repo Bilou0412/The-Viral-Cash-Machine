@@ -1,7 +1,7 @@
 """Asset generation ports."""
 
 from dataclasses import dataclass
-from typing import Protocol, Optional
+from typing import Any, Dict, List, Protocol, Optional
 
 
 @dataclass(frozen=True)
@@ -52,4 +52,12 @@ class AssetProvider(Protocol):
         draft: bool = False,
     ) -> str:
         """Generate animated video from image and prompt. Returns URL."""
+        ...
+
+    def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
+        """Run an arbitrary Replicate model with arbitrary params.
+
+        Generic escape hatch for the video editor: any `owner/name` model ref
+        plus an arbitrary `input` dict. Returns the normalized output URL(s).
+        """
         ...

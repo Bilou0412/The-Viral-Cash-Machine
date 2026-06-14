@@ -112,3 +112,47 @@ def test_fake_provider_records_calls_no_network():
     vurl = fake.animate_video("move", url, 7, "9:16", "720p")
     assert vurl.endswith(".mp4")
     assert fake.video_calls[0]["image"] == url
+
+
+def test_fake_run_model_records_and_returns_list():
+    fake = FakeAssetProvider()
+    out = fake.run_model("owner/name", {"prompt": "x"})
+    assert isinstance(out, list) and len(out) >= 1
+    assert out[0].startswith("https://fake.local/")
+    assert fake.run_calls == [("owner/name", {"prompt": "x"})]
+
+
+def test_normalize_outputs_handles_str_list_and_object_with_url():
+    pytest.importorskip("replicate")
+    from src.features.assets.replicate_provider import _normalize_outputs
+
+    # Plain str / URL.
+    assert _normalize_outputs("https://x/a.png") == ["https://x/a.png"]
+
+    # List of strings (e.g. seedream image output).
+    assert _normalize_outputs(["https://x/a.png", "https://x/b.png"]) == [
+        "https://x/a.png",
+        "https://x/b.png",
+    ]
+
+    # FileOutput-like object exposing `.url`.
+    class _FileOutput:
+        url = "https://x/file.mp4"
+
+        def __str__(self) -> str:  # pragma: no cover - guards against str() path
+            return "wrong"
+
+    assert _normalize_outputs(_FileOutput()) == ["https://x/file.mp4"]
+
+    # List containing a FileOutput-like object.
+    assert _normalize_outputs([_FileOutput()]) == ["https://x/file.mp4"]
+
+    # Object without `.url` falls back to str().
+    class _Plain:
+        def __str__(self) -> str:
+            return "https://x/plain.mp3"
+
+    assert _normalize_outputs(_Plain()) == ["https://x/plain.mp3"]
+
+    # Dict with a url field.
+    assert _normalize_outputs({"url": "https://x/d.mp4"}) == ["https://x/d.mp4"]
