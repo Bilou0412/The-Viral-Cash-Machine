@@ -12,10 +12,6 @@ Cache en mémoire par `model_ref` (schémas immuables par version).
 
 from __future__ import annotations
 
-import json
-import os
-import urllib.parse
-import urllib.request
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 from pydantic import BaseModel
@@ -65,39 +61,49 @@ class CatalogClient(Protocol):
         ...
 
 
-_API = "https://api.replicate.com/v1"
-
-
 class ReplicateCatalogClient:
-    """Client HTTP Replicate (prod). Token via REPLICATE_API_TOKEN."""
+    """Client catalogue via le **SDK** `replicate` (auth + User-Agent corrects).
 
-    def _get(self, path: str) -> Dict[str, Any]:
-        token = os.environ.get("REPLICATE_API_TOKEN", "")
-        req = urllib.request.Request(
-            f"{_API}{path}", headers={"Authorization": f"Bearer {token}"}
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            data: Dict[str, Any] = json.load(r)
-            return data
+    On NE fait PAS d'appel urllib brut : l'API Replicate est derrière Cloudflare qui
+    renvoie 403 sur le User-Agent par défaut `Python-urllib`. Le SDK (déjà utilisé par
+    la génération) gère auth, UA, pagination et recherche. Token via REPLICATE_API_TOKEN.
+    """
 
     def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
-        owner, name = model_ref.split("/", 1)
-        data = self._get(f"/models/{owner}/{name}")
-        version = data.get("latest_version") or {}
-        version_id = str(version.get("id", ""))
-        schema = (
-            version.get("openapi_schema", {})
-            .get("components", {})
-            .get("schemas", {})
-            .get("Input", {})
-        )
+        import replicate
+
+        model = replicate.models.get(model_ref)
+        version = getattr(model, "latest_version", None)
+        if version is None:  # certains modèles : prendre la 1re version listée
+            versions = list(model.versions.list())
+            version = versions[0] if versions else None
+        version_id = str(getattr(version, "id", "")) if version else ""
+        schema: Dict[str, Any] = {}
+        if version is not None:
+            openapi = getattr(version, "openapi_schema", None) or {}
+            schema = (
+                openapi.get("components", {}).get("schemas", {}).get("Input", {})
+            )
         return version_id, schema
 
     def search(self, query: str) -> List[Dict[str, Any]]:
-        # Replicate model search (best-effort ; le résultat est filtré ensuite).
-        data = self._get(f"/models?query={urllib.parse.quote(query)}")
-        results = data.get("results", [])
-        return list(results) if isinstance(results, list) else []
+        import replicate
+
+        try:
+            page = replicate.models.search(query)
+        except Exception:
+            return []  # SDK sans search / erreur réseau → pas de résultat
+        out: List[Dict[str, Any]] = []
+        for m in page:
+            out.append(
+                {
+                    "owner": getattr(m, "owner", ""),
+                    "name": getattr(m, "name", ""),
+                    "cover_image_url": getattr(m, "cover_image_url", None),
+                    "description": getattr(m, "description", "") or "",
+                }
+            )
+        return out
 
 
 # ---------------------------------------------------------------------------
