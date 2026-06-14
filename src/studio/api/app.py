@@ -86,6 +86,13 @@ def get_downloader() -> Any:
     return None
 
 
+def get_catalog_client() -> Any:
+    """Provide the Replicate model-catalog client (overridden with a fake in tests)."""
+    from .services.model_catalog import ReplicateCatalogClient
+
+    return ReplicateCatalogClient()
+
+
 def _session(engine: Engine = Depends(get_db_engine)) -> Iterator[Session]:
     with Session(engine) as session:
         yield session
@@ -196,6 +203,52 @@ def list_themes_route() -> list[dict[str, str]]:
     from ...features.scripting.themes import list_themes
 
     return list_themes()
+
+
+# ---------------------------------------------------------------------------
+# Éditeur — catalogue de briques & modèles (inspecteur dynamique, E4)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/bricks")
+def list_bricks_route() -> list[dict[str, Any]]:
+    """Briques génératives : contrat (champs requis) + 3 modèles préférés."""
+    from ...features.compositing.registry import CONTRACTS
+
+    return [
+        {
+            "kind": c.kind,
+            "required_fields": [f.name for f in c.fields if f.required],
+            "preferred_models": list(c.preferred_models),
+        }
+        for c in CONTRACTS.values()
+    ]
+
+
+@app.get("/api/models/search")
+def model_search_route(
+    kind: str, q: str = "", client: Any = Depends(get_catalog_client)
+) -> list[Any]:
+    """Modèles satisfaisant le contrat de la brique `kind` et la requête `q`."""
+    from .services.model_catalog import search_models
+
+    try:
+        return search_models(kind, q, client)
+    except KeyError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.get("/api/models/{owner}/{name}/form")
+def model_form_route(
+    owner: str, name: str, client: Any = Depends(get_catalog_client)
+) -> Any:
+    """Descripteur de formulaire (tous les arguments du modèle) pour l'inspecteur."""
+    from .services.model_catalog import form_descriptor
+
+    try:
+        return form_descriptor(f"{owner}/{name}", client)
+    except Exception as exc:
+        raise HTTPException(502, f"impossible de lire le schéma du modèle: {exc}")
 
 
 # ---------------------------------------------------------------------------
