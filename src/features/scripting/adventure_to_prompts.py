@@ -12,10 +12,11 @@ fatal_kill_desc/fatal_pov_reaction, survival_outcome_desc.
 POV : on suit UN perso (chemin choisi) ; l'épilogue montre l'AUTRE.
 """
 
-from typing import List, Literal, NamedTuple
+from typing import List, Literal, NamedTuple, Optional
 
 from . import prompts as P
 from .adventure import AdventureScript, Round
+from .themes import Theme
 
 Side = Literal["left", "right"]
 
@@ -46,41 +47,63 @@ class RoundPrompts(NamedTuple):
 
 
 def round_prompts(
-    rnd: Round, character_name: str, character_desc: str, voice_desc: str
+    rnd: Round,
+    character_name: str,
+    character_desc: str,
+    voice_desc: str,
+    theme: Optional[Theme] = None,
 ) -> RoundPrompts:
-    """Mappe un round + le perso suivi vers ses VideoBeat + images de choix."""
+    """Mappe un round + le perso suivi vers ses VideoBeat + images de choix.
+
+    `theme` (optionnel) porte la DA ; None → thème par défaut « horror » (sortie
+    identique à l'ancien comportement, garde golden).
+    """
     return RoundPrompts(
         action=VideoBeat(
-            frame=P.frame_action(character_name, character_desc, rnd.environment_desc),
-            motion=P.motion_action(character_name, rnd.action_desc),
+            frame=P.frame_action(
+                character_name, character_desc, rnd.environment_desc, theme
+            ),
+            motion=P.motion_action(character_name, rnd.action_desc, theme),
         ),
         environment=VideoBeat(
             frame=P.frame_environment(
-                character_name, rnd.environment_desc, rnd.danger_desc
+                character_name, rnd.environment_desc, rnd.danger_desc, theme
             ),
-            motion=P.motion_environment(character_name),
+            motion=P.motion_environment(character_name, theme),
         ),
         character=VideoBeat(
             frame=P.frame_character(
-                character_name, character_desc, rnd.environment_desc
+                character_name, character_desc, rnd.environment_desc, theme
             ),
             motion=P.motion_character(
-                character_name, voice_desc, rnd.character_delivery, rnd.character_line_fr
+                character_name,
+                voice_desc,
+                rnd.character_delivery,
+                rnd.character_line_fr,
+                theme,
             ),
         ),
         choice_images=(
-            P.choice_image(character_name, rnd.choices[0].image_desc, rnd.environment_desc),
-            P.choice_image(character_name, rnd.choices[1].image_desc, rnd.environment_desc),
+            P.choice_image(
+                character_name, rnd.choices[0].image_desc, rnd.environment_desc, theme
+            ),
+            P.choice_image(
+                character_name, rnd.choices[1].image_desc, rnd.environment_desc, theme
+            ),
         ),
         fatal=VideoBeat(
-            frame=P.frame_fatal(character_name, character_desc, rnd.environment_desc),
+            frame=P.frame_fatal(
+                character_name, character_desc, rnd.environment_desc, theme
+            ),
             motion=P.motion_fatal(
-                character_name, rnd.fatal_kill_desc, rnd.fatal_pov_reaction
+                character_name, rnd.fatal_kill_desc, rnd.fatal_pov_reaction, theme
             ),
         ),
         survival=VideoBeat(
-            frame=P.frame_survival(character_name, character_desc, rnd.environment_desc),
-            motion=P.motion_survival(character_name, rnd.survival_outcome_desc),
+            frame=P.frame_survival(
+                character_name, character_desc, rnd.environment_desc, theme
+            ),
+            motion=P.motion_survival(character_name, rnd.survival_outcome_desc, theme),
         ),
     )
 
@@ -104,17 +127,21 @@ def _followed(script: AdventureScript, side: Side) -> tuple[str, str, str, str, 
     )
 
 
-def script_prompts(script: AdventureScript, side: Side) -> List[RoundPrompts]:
-    """Les 3 RoundPrompts du chemin suivi (`side`)."""
+def script_prompts(
+    script: AdventureScript, side: Side, theme: Optional[Theme] = None
+) -> List[RoundPrompts]:
+    """Les N RoundPrompts du chemin suivi (`side`), sous la DA de `theme`."""
     name, desc, voice, _, _ = _followed(script, side)
-    return [round_prompts(r, name, desc, voice) for r in script.rounds]
+    return [round_prompts(r, name, desc, voice, theme) for r in script.rounds]
 
 
-def epilogue_beat(script: AdventureScript, side: Side) -> VideoBeat:
+def epilogue_beat(
+    script: AdventureScript, side: Side, theme: Optional[Theme] = None
+) -> VideoBeat:
     """L'épilogue (l'AUTRE perso) — frame + motion, comme tout plan vidéo."""
     _, _, _, other_name, other_desc = _followed(script, side)
     env = "a parallel passage fading into darkness"
     return VideoBeat(
-        frame=P.frame_survival(other_name, other_desc, env),
-        motion=P.motion_survival(other_name, script.epilogue_other_desc),
+        frame=P.frame_survival(other_name, other_desc, env, theme),
+        motion=P.motion_survival(other_name, script.epilogue_other_desc, theme),
     )

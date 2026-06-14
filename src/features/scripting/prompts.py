@@ -10,6 +10,11 @@ Pour chaque plan vidéo :
 
 Tout le format est une IMMERSION POV/FPS (le spectateur suit le protagoniste).
 
+DA / thème : chaque builder accepte un `theme` optionnel (cf. `themes.py`). Par
+défaut (`theme=None`) il utilise le thème « horror », et les fragments produits
+sont IDENTIQUES à l'ancien comportement (les constantes de module DA/POV/… sont
+dérivées de ce thème) — garde golden. Passer un autre `Theme` change la DA.
+
 RÈGLES D'OR :
 1. Une ligne = une contrainte. Court et dense.
 2. Dialogue exact entre guillemets, manière de dire AVANT la réplique.
@@ -21,25 +26,34 @@ RÈGLES D'OR :
 8. La VITESSE du mouvement est explicite (calme par défaut) — corrige la dérive.
 """
 
+from typing import Optional
+
+from .themes import Theme, get_theme
+
 # ---------------------------------------------------------------------------
-# Constantes partagées
+# Constantes partagées — DÉRIVÉES du thème par défaut (« horror »).
+# Conservées pour la compat (imports existants `from .prompts import DA`, tests).
 # ---------------------------------------------------------------------------
 
-DA = (
-    "dark cinematic horror, photorealistic, heavily desaturated cold palette, "
-    "deep crushed shadows, a single harsh handheld torch as the only light, "
-    "wet glistening surfaces, drifting dust, fine film grain"
-)
-POV_HANDS = "our own bare hands visible at the lower edge of the frame"
-POV = "First-person POV, immersive FPS video-game framing"
-NO_TEXT = "No text, no lettering, no logos in the frame."
-VOICE_ONLY_AUDIO = "Audio: voice only, no music, no ambience."
-AMBIENT_AUDIO = "Audio: ambience of the place, no music."
-VERTICAL = "Vertical 9:16."
+_DEFAULT_THEME = get_theme("horror")
+
+
+def _theme(theme: Optional[Theme]) -> Theme:
+    """Le thème effectif (fallback : « horror »)."""
+    return theme if theme is not None else _DEFAULT_THEME
+
+
+DA = _DEFAULT_THEME.da
+POV_HANDS = _DEFAULT_THEME.pov_hands
+POV = _DEFAULT_THEME.pov
+NO_TEXT = _DEFAULT_THEME.no_text
+VOICE_ONLY_AUDIO = _DEFAULT_THEME.voice_only_audio
+AMBIENT_AUDIO = _DEFAULT_THEME.ambient_audio
+VERTICAL = _DEFAULT_THEME.vertical
 
 # Vocabulaire de vitesse (best practice : contrôler explicitement le mouvement).
-PACE_CALM = "slow, calm, unhurried, steady pace"
-PACE_SUDDEN = "sudden, sharp, violent burst"
+PACE_CALM = _DEFAULT_THEME.pace_calm
+PACE_SUDDEN = _DEFAULT_THEME.pace_sudden
 
 
 def _join(*parts: str) -> str:
@@ -50,87 +64,123 @@ def _join(*parts: str) -> str:
 # 1) PREMIÈRE FRAME — images riches (seedream). Tout le visuel vit ici.
 # ===========================================================================
 
-def frame_action(character_name: str, character_desc: str, environment_desc: str) -> str:
+def frame_action(
+    character_name: str,
+    character_desc: str,
+    environment_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Première frame d'un plan d'action : on est juste derrière le perso."""
+    t = _theme(theme)
     return _join(
-        f"{POV}.",
+        f"{t.pov}.",
         f"We stand just behind {character_name} ({character_desc}), seen from "
         f"behind, a few steps ahead of us, about to move off through "
         f"{environment_desc}.",
-        f"{POV_HANDS}.",
-        DA + ".",
+        f"{t.pov_hands}.",
+        t.da + ".",
         "Depth, leading lines into darkness, cinematic composition.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
 
 
-def frame_environment(character_name: str, environment_desc: str, danger_desc: str) -> str:
+def frame_environment(
+    character_name: str,
+    environment_desc: str,
+    danger_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Première frame du plan d'environnement : le perso arrêté, le danger visible."""
+    t = _theme(theme)
     return _join(
-        f"{POV}.",
+        f"{t.pov}.",
         f"{character_name} stands still a few steps ahead of us in "
         f"{environment_desc}.",
         f"The danger dominates the frame: {danger_desc}.",
-        f"{POV_HANDS}.",
-        DA + ".",
+        f"{t.pov_hands}.",
+        t.da + ".",
         "Wide oppressive composition.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
 
 
-def frame_character(character_name: str, character_desc: str, environment_desc: str) -> str:
+def frame_character(
+    character_name: str,
+    character_desc: str,
+    environment_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Première frame du face-cam : le perso retourné, face à nous, proche."""
+    t = _theme(theme)
     return _join(
-        f"{POV}, close shot.",
+        f"{t.pov}, close shot.",
         f"{character_name} ({character_desc}) has turned to face us, very close, "
         f"locking eyes with the camera, in {environment_desc}.",
-        f"Tense urgent expression, mouth starting to speak. {POV_HANDS}.",
-        DA + ".",
+        f"Tense urgent expression, mouth starting to speak. {t.pov_hands}.",
+        t.da + ".",
         "Tight intimate framing.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
 
 
-def frame_fatal(character_name: str, character_desc: str, environment_desc: str) -> str:
+def frame_fatal(
+    character_name: str,
+    character_desc: str,
+    environment_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Première frame de la mort POV : la menace juste sur nous."""
+    t = _theme(theme)
     return _join(
-        f"{POV}, we are the victim.",
+        f"{t.pov}, we are the victim.",
         f"{character_name} ({character_desc}) looms right over us in "
         f"{environment_desc}, about to strike.",
-        f"{POV_HANDS} raised in defense.",
-        DA + ".",
+        f"{t.pov_hands} raised in defense.",
+        t.da + ".",
         "Claustrophobic low angle, terror.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
 
 
-def frame_survival(character_name: str, character_desc: str, environment_desc: str) -> str:
+def frame_survival(
+    character_name: str,
+    character_desc: str,
+    environment_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Première frame de la survie : le perso devant nous, le calme précaire."""
+    t = _theme(theme)
     return _join(
-        f"{POV}.",
+        f"{t.pov}.",
         f"{character_name} ({character_desc}) is a few steps ahead of us, having "
         f"just reached safer ground in {environment_desc}, glancing back.",
-        f"{POV_HANDS}.",
-        DA + ".",
+        f"{t.pov_hands}.",
+        t.da + ".",
         "Lingering threat in the shadows behind.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
 
 
-def choice_image(character_name: str, option_desc: str, environment_desc: str) -> str:
+def choice_image(
+    character_name: str,
+    option_desc: str,
+    environment_desc: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Image d'UNE option de choix (pas de vidéo) — POV, le perso la désigne."""
+    t = _theme(theme)
     return _join(
-        f"{POV}, still frame. Ahead of us in {environment_desc}: {option_desc}.",
-        f"{character_name} is in frame, gesturing toward it. {POV_HANDS}.",
+        f"{t.pov}, still frame. Ahead of us in {environment_desc}: {option_desc}.",
+        f"{character_name} is in frame, gesturing toward it. {t.pov_hands}.",
         "Strong central composition, readable in half a second.",
-        DA + ".",
-        NO_TEXT,
-        VERTICAL,
+        t.da + ".",
+        t.no_text,
+        t.vertical,
     )
 
 
@@ -138,69 +188,92 @@ def choice_image(character_name: str, option_desc: str, environment_desc: str) -
 # 2) MOUVEMENT — vidéos image→vidéo (p-video). Mouvement + dialogue UNIQUEMENT.
 # ===========================================================================
 
-def motion_action(character_name: str, action_motion: str) -> str:
+def motion_action(
+    character_name: str, action_motion: str, theme: Optional[Theme] = None
+) -> str:
     """Animation du plan d'action : on suit, tranquille. Le look vient de l'image."""
+    t = _theme(theme)
     return _join(
         f"Animate from the first frame. We follow {character_name} as he "
         f"{action_motion}.",
-        f"{PACE_CALM}; we keep our distance and never overtake, gentle handheld "
+        f"{t.pace_calm}; we keep our distance and never overtake, gentle handheld "
         f"sway, no running, no sprint.",
-        AMBIENT_AUDIO,
+        t.ambient_audio,
     )
 
 
-def motion_environment(character_name: str) -> str:
+def motion_environment(
+    character_name: str, theme: Optional[Theme] = None
+) -> str:
     """Animation du plan d'environnement : presque immobile, micro-menace."""
+    t = _theme(theme)
     return _join(
         "Animate from the first frame.",
         f"Very slight first-person sway as we look at the danger; {character_name} "
         "barely shifts.",
-        f"{PACE_CALM}; dust drifts, faint tremor, distant creaks.",
-        AMBIENT_AUDIO,
+        f"{t.pace_calm}; dust drifts, faint tremor, distant creaks.",
+        t.ambient_audio,
     )
 
 
 def motion_character(
-    character_name: str, voice_desc: str, delivery: str, line_fr: str
+    character_name: str,
+    voice_desc: str,
+    delivery: str,
+    line_fr: str,
+    theme: Optional[Theme] = None,
 ) -> str:
     """Animation du face-cam : il parle. Voix native, look déjà verrouillé."""
+    t = _theme(theme)
     return _join(
         f"Animate from the first frame. {character_name} speaks straight to us in "
         f"French, {delivery}, with {voice_desc}, pressing us to choose fast, and "
         f'says exactly: "{line_fr}"',
         "Natural lip sync, intense eye contact, minimal head movement.",
-        VOICE_ONLY_AUDIO,
+        t.voice_only_audio,
     )
 
 
-def motion_fatal(character_name: str, kill_motion: str, pov_reaction: str) -> str:
+def motion_fatal(
+    character_name: str,
+    kill_motion: str,
+    pov_reaction: str,
+    theme: Optional[Theme] = None,
+) -> str:
     """Animation de la mort POV : brutal."""
+    t = _theme(theme)
     return _join(
         f"Animate from the first frame. {character_name} {kill_motion}; we "
         f"{pov_reaction}.",
-        f"{PACE_SUDDEN}, then stillness.",
-        AMBIENT_AUDIO,
+        f"{t.pace_sudden}, then stillness.",
+        t.ambient_audio,
     )
 
 
-def motion_survival(character_name: str, survival_motion: str) -> str:
+def motion_survival(
+    character_name: str, survival_motion: str, theme: Optional[Theme] = None
+) -> str:
     """Animation de la survie : on suit, méfiant."""
+    t = _theme(theme)
     return _join(
         f"Animate from the first frame. We follow {character_name} as he "
         f"{survival_motion}.",
-        f"{PACE_CALM}, wary; the threat lingers behind.",
-        AMBIENT_AUDIO,
+        f"{t.pace_calm}, wary; the threat lingers behind.",
+        t.ambient_audio,
     )
 
 
-def narrator_audition(voice_desc: str, line_fr: str) -> str:
+def narrator_audition(
+    voice_desc: str, line_fr: str, theme: Optional[Theme] = None
+) -> str:
     """Clip jetable d'audition narrateur (texte→vidéo, visuel minimal)."""
+    t = _theme(theme)
     return _join(
         "Almost black screen: faint embers drifting in darkness.",
         f"A narrator speaks in French, off-screen, with {voice_desc}, "
         f'and says exactly: "{line_fr}"',
-        VOICE_ONLY_AUDIO,
+        t.voice_only_audio,
         "Static shot.",
-        NO_TEXT,
-        VERTICAL,
+        t.no_text,
+        t.vertical,
     )
