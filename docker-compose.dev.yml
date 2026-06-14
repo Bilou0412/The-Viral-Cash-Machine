@@ -1,0 +1,29 @@
+# Conteneur de DEV pilotable par Claude : code source monté EN LIVE, outils de
+# test/type installés. Sert à lancer la vraie suite (sqlalchemy/moviepy/fastapi)
+# + mypy authoritatif (toutes les deps présentes), sans rebuild de l'image de prod.
+#
+#   docker compose -f docker-compose.dev.yml up -d --build
+#   docker compose -f docker-compose.dev.yml exec -T dev pytest -q
+#
+# (ou via le Makefile : `make dev-up`, `make test`, `make verify`)
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: vcm-dev:latest
+    container_name: vcm-dev
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./render:/app/render
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./assets:/app/assets
+    environment:
+      PYTHONPATH: /app:/app/src
+      # DB + sorties isolées et jetables (jamais la prod montée en volume).
+      VCM_STUDIO_DB: "sqlite:////tmp/dev.db"
+      VCM_OUTPUT_DIR: /tmp/dev_out
+    working_dir: /app
+    command: sleep infinity

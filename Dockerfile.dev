@@ -1,0 +1,7 @@
+# Image de DEV : l'image de prod + les outils de test/type/lint.
+# Le code source est monté en live par docker-compose.dev.yml (pas de COPY ici),
+# donc éditer un fichier suffit — aucun rebuild pour relancer les tests.
+FROM vcm-studio:latest
+
+COPY requirements-dev.txt /tmp/requirements-dev.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-dev.txt

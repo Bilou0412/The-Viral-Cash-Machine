@@ -1,3 +1,6 @@
 # Dev/test deps (the runtime app uses requirements.txt).
-# The golden characterization suite needs only pytest + ffmpeg on PATH.
+# Installées dans l'image de DEV (Dockerfile.dev) — pas dans l'image de prod.
 pytest>=8.0
+pytest-timeout
+mypy
+ruff
