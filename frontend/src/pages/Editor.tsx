@@ -132,6 +132,17 @@ export function Editor() {
     [draft, selectedId]
   )
 
+  // A brick is "généré" when the derived render model has a clip for it with a
+  // non-null src (a ready asset). Audio/voice may legitimately have a null src,
+  // so this is a best-effort signal (see report caveat for mock mode).
+  const generatedIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const clip of renderModel?.clips ?? []) {
+      if (clip.src != null) ids.add(clip.id)
+    }
+    return ids
+  }, [renderModel])
+
   const onGenerate = () => {
     generate.mutate(undefined, {
       onSuccess: () => {
@@ -207,6 +218,7 @@ export function Editor() {
             <Timeline
               doc={draft}
               selectedId={selectedId}
+              generatedIds={generatedIds}
               onSelect={setSelectedId}
               onMoveBrick={moveBrick}
               onDropPalette={(item, track, start) => addBrick(item, track, start)}
@@ -216,7 +228,9 @@ export function Editor() {
 
         <Inspector
           brick={selected}
+          allBricks={draft.bricks}
           specs={specs}
+          generatedIds={generatedIds}
           onChange={upsertBrick}
           onRemove={removeBrick}
           onRegenerate={onRegenerate}

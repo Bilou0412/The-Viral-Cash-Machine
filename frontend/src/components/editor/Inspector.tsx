@@ -7,13 +7,13 @@
 //  - TextBrick: text payload + placement.
 
 import { useEffect, useRef } from "react"
-import { RefreshCw, Trash2 } from "lucide-react"
+import { Sparkles, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useModelForm } from "@/hooks/use-editor"
-import { BRICK_COLORS, BRICK_LABELS } from "./brick-helpers"
+import { BRICK_COLORS, BRICK_LABELS, isConnectableSource } from "./brick-helpers"
 import { ModelSelector } from "./ModelSelector"
 import { FormFieldInput } from "./FormFieldInput"
 import {
@@ -32,11 +32,31 @@ import { cn } from "@/lib/utils"
 
 interface InspectorProps {
   brick: Brick | null
+  /** All bricks in the doc — used to offer connection sources. */
+  allBricks: Brick[]
   specs: BrickSpec[] | undefined
+  /** Ids of bricks that already have a ready generated asset. */
+  generatedIds: Set<string>
   onChange: (next: Brick) => void
   onRemove: (id: string) => void
   onRegenerate: (id: string) => void
   regenerating: boolean
+}
+
+// Small "non généré" / « généré » status pill, shared by header.
+function StatusBadge({ generated }: { generated: boolean }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[10px] font-medium",
+        generated
+          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+          : "border-border bg-muted/40 text-muted-foreground"
+      )}
+    >
+      {generated ? "généré" : "non généré"}
+    </span>
+  )
 }
 
 // Apply form defaults, keeping params that still match a field name.
@@ -84,19 +104,28 @@ function PlacementEditor({
 
 function GenerativeInspector({
   brick,
+  allBricks,
   specs,
+  generated,
   onChange,
   onRegenerate,
   regenerating,
 }: {
   brick: GenerativeBrick
+  allBricks: Brick[]
   specs: BrickSpec[] | undefined
+  generated: boolean
   onChange: (next: Brick) => void
   onRegenerate: (id: string) => void
   regenerating: boolean
 }) {
   const spec = specs?.find((s) => s.kind === brick.type)
   const { data: form, isLoading } = useModelForm(brick.model_ref || null)
+
+  // Valid connection sources = other bricks that produce an output.
+  const connectableBricks = allBricks.filter(
+    (b) => b.id !== brick.id && isConnectableSource(b)
+  )
 
   // When the form arrives for a NEW model, reconcile params (keep overlapping
   // names, default the rest). Track the model_ref we've reconciled to avoid loops.
@@ -154,6 +183,7 @@ function GenerativeInspector({
                 field={f}
                 value={brick.params[f.name] ?? f.default}
                 onChange={(v) => setParam(f.name, v)}
+                connectableBricks={connectableBricks}
               />
             ))}
         </div>
@@ -183,15 +213,21 @@ function GenerativeInspector({
         <PlacementEditor brick={brick} onChange={onChange} />
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onRegenerate(brick.id)}
-        disabled={regenerating || !brick.model_ref}
-      >
-        <RefreshCw className={cn("h-4 w-4", regenerating && "animate-spin")} />
-        Régénérer
-      </Button>
+      <div className="flex flex-col gap-2 border-t border-border pt-3">
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => onRegenerate(brick.id)}
+          disabled={regenerating || !brick.model_ref}
+        >
+          <Sparkles className={cn("h-4 w-4", regenerating && "animate-pulse")} />
+          {generated ? "Régénérer cette brique" : "Générer cette brique"}
+        </Button>
+        <p className="text-[10px] leading-snug text-muted-foreground/70">
+          Composer la timeline ne génère rien. Lance « Générer » (toutes les
+          briques) ou génère cette brique seule quand tu es prêt.
+        </p>
+      </div>
     </div>
   )
 }
@@ -248,7 +284,9 @@ function TextInspector({
 
 export function Inspector({
   brick,
+  allBricks,
   specs,
+  generatedIds,
   onChange,
   onRemove,
   onRegenerate,
@@ -268,6 +306,7 @@ export function Inspector({
   }
 
   const c = BRICK_COLORS[brick.type]
+  const generated = generatedIds.has(brick.id)
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card/40">
@@ -275,6 +314,7 @@ export function Inspector({
         <span className="flex items-center gap-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", c.dot)} />
           <span className="text-sm font-semibold">{BRICK_LABELS[brick.type]}</span>
+          <StatusBadge generated={generated} />
         </span>
         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
           onClick={() => onRemove(brick.id)} title="Supprimer">
@@ -285,7 +325,9 @@ export function Inspector({
         {isGenerativeBrick(brick) && (
           <GenerativeInspector
             brick={brick}
+            allBricks={allBricks}
             specs={specs}
+            generated={generated}
             onChange={onChange}
             onRegenerate={onRegenerate}
             regenerating={regenerating}

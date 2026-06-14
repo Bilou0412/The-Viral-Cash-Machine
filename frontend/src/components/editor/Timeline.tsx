@@ -4,9 +4,16 @@
 // lightweight NLE — robust over feature-complete.
 
 import { useRef, useState } from "react"
+import { Link2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { BRICK_COLORS, MIME, type PaletteItem } from "./brick-helpers"
-import type { Brick, EditorDoc } from "@/lib/types"
+import {
+  BRICK_COLORS,
+  MIME,
+  asBrickRef,
+  brickRefLabel,
+  type PaletteItem,
+} from "./brick-helpers"
+import { isGenerativeBrick, type Brick, type EditorDoc } from "@/lib/types"
 
 const PX_PER_SEC = 64
 const TRACK_H = 56
@@ -15,9 +22,22 @@ const RULER_H = 22
 interface TimelineProps {
   doc: EditorDoc
   selectedId: string | null
+  /** Ids of bricks with a ready generated asset. */
+  generatedIds: Set<string>
   onSelect: (id: string) => void
   onMoveBrick: (id: string, start: number, track: number) => void
   onDropPalette: (item: PaletteItem, track: number, start: number) => void
+}
+
+// Ids of bricks this brick is connected to via "{brick:<id>}" params.
+function brickConnections(b: Brick): string[] {
+  if (!isGenerativeBrick(b)) return []
+  const out: string[] = []
+  for (const v of Object.values(b.params)) {
+    const ref = asBrickRef(v)
+    if (ref) out.push(ref)
+  }
+  return out
 }
 
 interface DragState {
@@ -41,10 +61,15 @@ function brickLabel(b: Brick): string {
 export function Timeline({
   doc,
   selectedId,
+  generatedIds,
   onSelect,
   onMoveBrick,
   onDropPalette,
 }: TimelineProps) {
+  const labelFor = (id: string) => {
+    const b = doc.bricks.find((x) => x.id === id)
+    return b ? brickRefLabel(b) : id
+  }
   const laneRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
@@ -127,6 +152,12 @@ export function Timeline({
                 .map((b) => {
                   const c = BRICK_COLORS[b.type]
                   const selected = b.id === selectedId
+                  const generated = generatedIds.has(b.id)
+                  const connections = brickConnections(b)
+                  const connTip =
+                    connections.length > 0
+                      ? `Connecté à : ${connections.map(labelFor).join(", ")}`
+                      : ""
                   return (
                     <div
                       key={b.id}
@@ -149,10 +180,24 @@ export function Timeline({
                         left: b.placement.start * PX_PER_SEC,
                         width: Math.max(24, b.placement.duration * PX_PER_SEC - 4),
                       }}
-                      title={brickLabel(b)}
+                      title={
+                        connTip ? `${brickLabel(b)} — ${connTip}` : brickLabel(b)
+                      }
                     >
-                      <span className={cn("mr-1.5 h-2 w-2 shrink-0 rounded-full", c.dot)} />
+                      <span
+                        className={cn(
+                          "mr-1.5 h-2 w-2 shrink-0 rounded-full",
+                          generated ? c.dot : "border border-current bg-transparent opacity-50"
+                        )}
+                        title={generated ? "généré" : "non généré"}
+                      />
                       <span className="truncate">{brickLabel(b)}</span>
+                      {connections.length > 0 && (
+                        <Link2
+                          className="ml-1 h-3 w-3 shrink-0 opacity-80"
+                          aria-label={connTip}
+                        />
+                      )}
                     </div>
                   )
                 })}

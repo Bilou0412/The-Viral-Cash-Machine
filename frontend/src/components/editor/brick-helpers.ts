@@ -86,3 +86,69 @@ export function createBrick(item: PaletteItem, bricks: Brick[]): Brick {
 }
 
 export const MIME = "application/x-vcm-brick"
+
+// ── Brick connections (« brique → brique ») ───────────────────────────────
+// A connection is encoded directly in a param value as the string
+// "{brick:<id>}". The backend resolves it at generation time by substituting
+// the referenced brick's generated output (topological order). Composing the
+// timeline only mutates the draft; nothing generates.
+
+const BRICK_REF_RE = /^\{brick:([^}]+)\}$/
+
+/** If `value` is a "{brick:<id>}" connection string, return the id; else null. */
+export function asBrickRef(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  const m = BRICK_REF_RE.exec(value)
+  return m ? m[1] : null
+}
+
+/** Encode a connection to a brick id as its param-value string. */
+export function makeBrickRef(id: string): string {
+  return `{brick:${id}}`
+}
+
+/** Field names that accept a media input even when their form type isn't "file". */
+const MEDIA_INPUT_NAMES = new Set([
+  "image",
+  "image_input",
+  "first_frame",
+  "start_image",
+  "init_image",
+  "audio",
+  "audio_input",
+  "reference",
+])
+
+/** Whether a form field can be wired to another brick's output. */
+export function isConnectableField(fieldName: string, fieldType: string): boolean {
+  return fieldType === "file" || MEDIA_INPUT_NAMES.has(fieldName)
+}
+
+/** Only generative bricks (image/video/voice) and imported media produce outputs. */
+export function isConnectableSource(b: Brick): boolean {
+  return b.type !== "text"
+}
+
+/** Short, human-friendly id suffix for labels (e.g. "…a1b2"). */
+function shortId(id: string): string {
+  return id.length > 6 ? `#${id.slice(-4)}` : `#${id}`
+}
+
+/** Friendly label for a brick option in a connection dropdown / chip. */
+export function brickRefLabel(b: Brick): string {
+  const payloadTitle =
+    "payload" in b && b.payload && typeof b.payload.title === "string"
+      ? b.payload.title
+      : undefined
+  if (payloadTitle) return `${payloadTitle} ${shortId(b.id)}`
+  if (b.type === "text") {
+    const t = b.payload.text
+    const txt = typeof t === "string" && t ? t : "Texte"
+    return `${txt.slice(0, 24)} ${shortId(b.id)}`
+  }
+  if (b.type === "media") {
+    return `${BRICK_LABELS.media} ${shortId(b.id)}`
+  }
+  const model = b.model_ref ? b.model_ref.split("/").pop() : BRICK_LABELS[b.type]
+  return `${BRICK_LABELS[b.type]} · ${model} ${shortId(b.id)}`
+}
