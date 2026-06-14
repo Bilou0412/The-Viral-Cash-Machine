@@ -621,6 +621,37 @@ def editor_render_model(
     return json.loads(model.model_dump_json())
 
 
+@app.post("/api/editor/documents/{doc_id}/render")
+def render_editor_document(
+    doc_id: int,
+    background: BackgroundTasks,
+    session: Session = Depends(_session),
+    engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Export MP4 via Remotion (subprocess Node) — planifié en tâche de fond."""
+    _require_editor_doc(session, doc_id)
+    from .services.remotion_render import render_document
+
+    background.add_task(render_document, engine, doc_id)
+    return {"id": doc_id, "status": "scheduled"}
+
+
+@app.get("/api/editor/documents/{doc_id}/video")
+def editor_document_video(
+    doc_id: int, session: Session = Depends(_session)
+) -> FileResponse:
+    """Sert le MP4 final d'un document éditeur (rendu Remotion)."""
+    row = _require_editor_doc(session, doc_id)
+    project = ProjectRepo(session).get(row.project_id)
+    project_name = project.name if project else f"project_{row.project_id}"
+    from .services.paths import editor_dir
+
+    path = os.path.join(editor_dir(project_name, doc_id), "final_video.mp4")
+    if not os.path.exists(path):
+        raise HTTPException(404, "final video not available")
+    return FileResponse(path)
+
+
 # ---------------------------------------------------------------------------
 # SSE progress + file serving
 # ---------------------------------------------------------------------------
