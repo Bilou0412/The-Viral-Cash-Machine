@@ -6,7 +6,13 @@ n'est pas disponible. Respecte les règles d'or : visuels EN, dialogues FR court
 voix distinctives, aucun texte demandé à l'image.
 """
 
-from .adventure import AdventureScript, Choice, Round, VoiceProfile
+from .adventure import (
+    DEFAULT_ROUNDS,
+    AdventureScript,
+    Choice,
+    Round,
+    VoiceProfile,
+)
 
 
 def _round(
@@ -54,12 +60,17 @@ class FakeAdventureDecomposer:
         char_right_name: str = "Marc",
         char_left_desc: str = "",
         char_right_desc: str = "",
+        n_rounds: int = DEFAULT_ROUNDS,
     ) -> AdventureScript:
-        """Return a fixed, valid 3-round cave-horror adventure script.
+        """Return a fixed, valid N-round cave-horror adventure script.
 
         Offline/deterministic : le prompt est ignoré (pas de réseau). Les noms
         sont injectés ; si une description de perso est fournie, elle remplace
         l'apparence par défaut (pour tester le contrat « créateur décrit »).
+
+        Les rounds sont tirés d'un pool de 3 rounds écrits à la main, répétés en
+        boucle pour atteindre `n_rounds`. À n_rounds=3 (défaut), le résultat est
+        IDENTIQUE à l'ancien comportement (round1, round2, round3) — garde golden.
         """
         round1 = _round(
             action_desc="descends deeper down the collapsed mine shaft, torch raised",
@@ -220,7 +231,10 @@ class FakeAdventureDecomposer:
                 f"Si tu as choisi {char_left_name}, voici la nuit qui t'attend : "
                 "la mine noyée, l'eau qui monte, et chaque pas qui peut être le dernier."
             ),
-            rounds=(round1, round2, round3),
+            # Pool de 3 rounds répété en boucle jusqu'à n_rounds (n=3 → identique).
+            rounds=tuple(
+                (round1, round2, round3)[i % 3] for i in range(n_rounds)
+            ),
             epilogue_other_desc=(
                 "the other character standing alone at the mine entrance, fading into mist"
             ),

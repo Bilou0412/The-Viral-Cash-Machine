@@ -1,4 +1,4 @@
-"""Schéma du script d'aventure complet (format « L'Aventure », 3 rounds + épilogue).
+"""Schéma du script d'aventure complet (format « L'Aventure », N rounds + épilogue).
 
 FONDATION de la phase S : le structured output GPT remplit un `AdventureScript`,
 qui à son tour remplit les slots des templates de `prompts.py`.
@@ -18,6 +18,12 @@ from pathlib import Path
 from typing import Tuple
 
 from pydantic import BaseModel, ConfigDict, model_validator
+
+# Bornes du nombre de séquences-choix (rounds). Le défaut produit par les
+# décomposeurs reste 3 (compat golden) ; la composition permet d'aller de 1 à MAX.
+MIN_ROUNDS = 1
+MAX_ROUNDS = 8
+DEFAULT_ROUNDS = 3
 
 
 class _Spec(BaseModel):
@@ -75,7 +81,7 @@ class Round(_Spec):
 
 
 class AdventureScript(_Spec):
-    """Script complet d'une vidéo « Aventure » : 2 persos, 3 rounds, 1 épilogue."""
+    """Script complet d'une vidéo « Aventure » : 2 persos, N rounds, 1 épilogue."""
 
     char_left_name: str            # prénom FR
     char_right_name: str           # prénom FR
@@ -90,14 +96,18 @@ class AdventureScript(_Spec):
     char_left_intro_line_fr: str    # FR — réplique d'intro angoissante (dit son nom)
     char_right_intro_line_fr: str   # FR
     transition_narration_fr: str   # FR — « Si tu as choisi Étienne... »
-    rounds: Tuple[Round, Round, Round]   # EXACTEMENT 3
+    rounds: Tuple[Round, ...]      # N séquences-choix (défaut produit 3 ; borné 1..MAX_ROUNDS)
     epilogue_other_desc: str       # EN — slot prompts.epilogue_other_path (glimpse)
     epilogue_narration_fr: str     # FR — « Si tu avais choisi l'autre... »
 
     @model_validator(mode="after")
     def _check_rounds(self) -> "AdventureScript":
-        if len(self.rounds) != 3:
-            raise ValueError("un script d'aventure doit avoir exactement 3 rounds")
+        n = len(self.rounds)
+        if not (MIN_ROUNDS <= n <= MAX_ROUNDS):
+            raise ValueError(
+                f"un script d'aventure doit avoir entre {MIN_ROUNDS} et "
+                f"{MAX_ROUNDS} rounds (trouvé {n})"
+            )
         return self
 
 

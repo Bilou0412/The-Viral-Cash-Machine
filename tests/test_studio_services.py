@@ -35,16 +35,38 @@ def test_generate_script_uses_fake_offline(script):
 
 def test_plan_is_image_first_with_expected_counts(script):
     plan = plan_episode_assets(script)
+    n = len(script.rounds)
     images = [a for a in plan if a.kind == "image"]
     videos = [a for a in plan if a.kind == "video"]
     audio = [a for a in plan if a.kind == "audio"]
 
-    # 1 réf perso + 3 rounds x (5 frames + 2 choix) + 1 epilogue frame = 23.
-    assert len(images) == 23
-    # 3 rounds x 5 beats + 1 epilogue = 16 motions.
-    assert len(videos) == 16
-    # Narration PAR BEAT (voix conteur) : transition + 3 rounds x 5 + epilogue.
-    assert len(audio) == 17
+    # 1 réf perso + N rounds x (5 frames + 2 choix) + 1 epilogue frame.
+    assert len(images) == 1 + n * 7 + 1
+    # N rounds x 5 beats + 1 epilogue motion.
+    assert len(videos) == n * 5 + 1
+    # Narration PAR BEAT (voix conteur) : transition + N rounds x 5 + epilogue.
+    assert len(audio) == 1 + n * 5 + 1
+    # Garde de non-régression sur le défaut N=3 (anciens compteurs).
+    assert (len(images), len(videos), len(audio)) == (23, 16, 17)
+
+
+@pytest.mark.parametrize("n", [1, 2, 5])
+def test_plan_scales_with_n_rounds(n):
+    """Le plan d'assets suit N : composabilité du nombre de séquences-choix."""
+    from src.features.scripting.fake_adventure_decomposer import (
+        FakeAdventureDecomposer,
+    )
+
+    s = FakeAdventureDecomposer().decompose_adventure(
+        "cave horror", "Étienne", "Marc", n_rounds=n
+    )
+    assert len(s.rounds) == n
+    for rnd in s.rounds:  # invariant 1 fatal/round préservé par le pool
+        assert sum(1 for c in rnd.choices if c.is_fatal) == 1
+    plan = plan_episode_assets(s)
+    assert len([a for a in plan if a.kind == "image"]) == 1 + n * 7 + 1
+    assert len([a for a in plan if a.kind == "video"]) == n * 5 + 1
+    assert len([a for a in plan if a.kind == "audio"]) == 1 + n * 5 + 1
 
 
 def test_every_video_beat_has_a_preceding_frame(script):

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from .adventure import AdventureScript
+from .adventure import DEFAULT_ROUNDS, AdventureScript
 
 
 @dataclass(frozen=True)
@@ -42,8 +42,9 @@ class AdventureDecomposer(Protocol):
         char_right_name: str,
         char_left_desc: str = "",
         char_right_desc: str = "",
+        n_rounds: int = DEFAULT_ROUNDS,
     ) -> AdventureScript:
-        """Decompose a user prompt into a validated 3-round adventure script.
+        """Decompose a user prompt into a validated N-round adventure script.
 
         Args:
             prompt: User-provided theme / pitch for the adventure (required).
@@ -53,8 +54,10 @@ class AdventureDecomposer(Protocol):
                 (appearance + personality, FR or EN). If given, it is respected
                 and adapted to the dark DA; if empty, the model invents it.
             char_right_desc: OPTIONAL creator description of the right character.
+            n_rounds: number of choice-sequences (rounds) to produce. Defaults to
+                DEFAULT_ROUNDS (3) for backward compatibility.
 
         Returns:
-            A validated AdventureScript (3 rounds + epilogue, 2 character voices).
+            A validated AdventureScript (N rounds + epilogue, 2 character voices).
         """
         ...

@@ -8,7 +8,7 @@ This keeps the route handler ignorant of provider selection.
 import os
 from typing import Optional
 
-from ....features.scripting.adventure import AdventureScript
+from ....features.scripting.adventure import DEFAULT_ROUNDS, AdventureScript
 from ....features.scripting.fake_adventure_decomposer import FakeAdventureDecomposer
 from ....features.scripting.ports import AdventureDecomposer
 
@@ -37,14 +37,21 @@ def generate_script(
     char_right_name: str,
     char_left_desc: str = "",
     char_right_desc: str = "",
+    n_rounds: int = DEFAULT_ROUNDS,
     decomposer: Optional[AdventureDecomposer] = None,
 ) -> AdventureScript:
     """Generate a validated AdventureScript from the creator's inputs.
 
     Creator provides the adventure (prompt) + the 2 characters (name and,
-    optionally, a description). Empty descriptions are invented by the model.
+    optionally, a description) + the number of choice-sequences (`n_rounds`).
+    Empty descriptions are invented by the model.
     """
     dec = decomposer or get_decomposer()
     return dec.decompose_adventure(
-        prompt, char_left_name, char_right_name, char_left_desc, char_right_desc
+        prompt,
+        char_left_name,
+        char_right_name,
+        char_left_desc,
+        char_right_desc,
+        n_rounds=n_rounds,
     )

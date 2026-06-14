@@ -20,6 +20,7 @@ from src.features.scripting import (  # noqa: E402
     VoiceProfile,
     export_schema,
 )
+from src.features.scripting.adventure import MAX_ROUNDS  # noqa: E402
 from src.features.scripting import adventure_to_prompts as A2P  # noqa: E402
 from src.features.scripting import prompts as P  # noqa: E402
 
@@ -130,10 +131,29 @@ def test_round_exactement_un_fatal():
         })
 
 
-def test_script_exige_trois_rounds():
+def test_script_accepte_n_rounds():
+    """Composition libre : N rounds (plus seulement 3) sont valides."""
     s = _script()
-    with pytest.raises(Exception):
-        AdventureScript(**{**s.model_dump(), "rounds": (s.rounds[0], s.rounds[1])})
+    two = AdventureScript(**{**s.model_dump(), "rounds": (_round(1), _round(2))})
+    assert len(two.rounds) == 2
+    five = AdventureScript(
+        **{**s.model_dump(), "rounds": tuple(_round(i) for i in range(1, 6))}
+    )
+    assert len(five.rounds) == 5
+
+
+def test_script_rejette_rounds_hors_bornes():
+    """0 round, ou plus que MAX_ROUNDS, restent rejetés."""
+    s = _script()
+    with pytest.raises(Exception):  # aucun round
+        AdventureScript(**{**s.model_dump(), "rounds": ()})
+    with pytest.raises(Exception):  # au-delà de la borne haute
+        AdventureScript(
+            **{
+                **s.model_dump(),
+                "rounds": tuple(_round(i) for i in range(MAX_ROUNDS + 1)),
+            }
+        )
 
 
 def test_extra_fields_interdits():

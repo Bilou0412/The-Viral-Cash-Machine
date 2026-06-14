@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from .adventure import AdventureScript
+from .adventure import DEFAULT_ROUNDS, AdventureScript
 
 if TYPE_CHECKING:  # `openai` n'est pas installé hors conteneur — import paresseux.
     from openai import OpenAI
@@ -38,7 +38,7 @@ _GOLDEN_RULES = """RULES (each is a hard constraint, not a suggestion):
 
 _STRUCTURE_RULES = """STRUCTURE & STORY LOGIC (read carefully):
 - The viewer picks ONE companion in the intro, then FOLLOWS that single companion
-  (the LEFT character) through the whole horror adventure. The 3 rounds are that
+  (the LEFT character) through the whole horror adventure. The rounds are that
   ONE journey — NOT a repeated choice between the two characters.
 - Each round = the viewer + the companion advancing. The round's 2 choices are
   ADVENTURE DECISIONS (which path / which action), e.g. "le tunnel qui monte" vs
@@ -88,14 +88,18 @@ class OpenAIAdventureDecomposer:
         char_right_name: str,
         char_left_desc: str = "",
         char_right_desc: str = "",
+        n_rounds: int = DEFAULT_ROUNDS,
     ) -> AdventureScript:
-        """Generate and validate a 3-round adventure script.
+        """Generate and validate an N-round adventure script.
 
         Args:
             prompt: User-provided theme / pitch.
             char_left_name / char_right_name: French first names.
             char_left_desc / char_right_desc: OPTIONAL creator descriptions
                 (appearance + personality). Respected & adapted if given.
+            n_rounds: number of choice-sequences (rounds). The JSON Schema now
+                allows a variable-length array, so the count is enforced in prose
+                here and arbitrated by Pydantic (with the existing retry pass).
 
         Returns:
             A validated AdventureScript.
@@ -110,6 +114,7 @@ class OpenAIAdventureDecomposer:
             "You are a master architect of interactive horror short-form videos.\n"
             "Produce a complete adventure script as a single JSON object that "
             "validates against the provided JSON Schema. Output JSON only.\n\n"
+            f"Produce EXACTLY {n_rounds} rounds in `rounds` — no more, no less.\n\n"
             f"{_GOLDEN_RULES}\n\n{_STRUCTURE_RULES}\n\n"
             "CREATOR CHARACTER DESCRIPTIONS: when a description is provided for a "
             "character, you MUST respect it (its look and personality), adapt it "

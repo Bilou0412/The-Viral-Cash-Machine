@@ -90,6 +90,7 @@ def plan_episode_assets(
         )
     )
 
+    # N-safe : on itère les rounds du script (1..N), aucun nombre codé en dur.
     rounds = script_prompts(script, side)
     for i, rp in enumerate(rounds):
         for beat_name, beat in (
