@@ -39,7 +39,7 @@ export function BrickPalette({ onAdd }: BrickPaletteProps) {
   const items = [...generative, ...STATIC_PALETTE]
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
+    <aside data-testid="brick-palette" className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
       <div className="px-4 pt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Briques
       </div>
@@ -57,6 +57,7 @@ export function BrickPalette({ onAdd }: BrickPaletteProps) {
               key={`${item.type}-${item.label}`}
               type="button"
               draggable
+              data-testid={`palette-item-${item.type}`}
               onClick={() => onAdd(item)}
               onDragStart={(e) => {
                 e.dataTransfer.setData(MIME, JSON.stringify(item))

@@ -10,7 +10,7 @@ MYPY := $(DC) exec -T -e PYTHONPATH=/app dev sh -c "cd /app && python -m mypy sr
 # `verify` échoue si on DÉPASSE ce nombre (cliquet : à faire baisser, jamais monter).
 MYPY_BASELINE := 40
 
-.PHONY: help dev-up dev-down sh test typecheck lint build-front verify
+.PHONY: help dev-up dev-down sh test typecheck lint build-front verify e2e
 
 help:
 	@echo "make dev-up      # démarre le conteneur de dev (build si besoin)"
@@ -19,6 +19,7 @@ help:
 	@echo "make lint        # ruff"
 	@echo "make build-front # build du front (tsc + vite, sur l'hôte)"
 	@echo "make verify      # dev-up + mypy(cliquet) + pytest + build-front"
+	@echo "make e2e         # tests navigateur Playwright (front mock, sur l'hôte)"
 
 dev-up:
 	$(DC) up -d --build
@@ -55,3 +56,12 @@ verify: dev-up
 	@echo "── build front ───────────────────────────────────────"
 	cd frontend && npm run build
 	@echo "✅ verify OK"
+
+# Tests E2E navigateur (AUTONOMY_PLAN V3) — Playwright pilote le front en mode
+# mock (VITE_USE_MOCKS=true), aucun backend Python requis. Tourne sur l'HÔTE
+# (Node), pas dans le conteneur de dev. Installe deps + chromium si absents.
+# NB : volontairement HORS de `verify` pour l'instant.
+e2e:
+	cd e2e && [ -d node_modules ] || npm install
+	cd e2e && npx playwright install chromium
+	cd e2e && npm test

@@ -186,6 +186,8 @@ export function Timeline({
                   return (
                     <div
                       key={b.id}
+                      data-testid={`timeline-block-${b.id}`}
+                      data-brick-type={b.type}
                       onPointerDown={(e) => {
                         onSelect(b.id)
                         setDrag({

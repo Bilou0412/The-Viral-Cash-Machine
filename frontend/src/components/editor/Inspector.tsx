@@ -294,7 +294,7 @@ export function Inspector({
 }: InspectorProps) {
   if (!brick) {
     return (
-      <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card/40">
+      <aside data-testid="inspector" className="flex w-80 shrink-0 flex-col border-l border-border bg-card/40">
         <div className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Inspecteur
         </div>
@@ -309,7 +309,7 @@ export function Inspector({
   const generated = generatedIds.has(brick.id)
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card/40">
+    <aside data-testid="inspector" className="flex w-80 shrink-0 flex-col border-l border-border bg-card/40">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <span className="flex items-center gap-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", c.dot)} />

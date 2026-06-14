@@ -1,0 +1,13 @@
+{
+  "name": "vcm-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "End-to-end browser tests (Playwright, mock front) for VCM Studio.",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

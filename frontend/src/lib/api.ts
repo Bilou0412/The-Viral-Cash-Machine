@@ -26,7 +26,7 @@ import type {
   Theme,
   UpdateAssetBody,
 } from "./types"
-import { mockApi } from "./mocks"
+import { mockApi, MOCK_PLACEHOLDER_IMG } from "./mocks"
 
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true"
 const BASE = "/api"
@@ -60,8 +60,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // URL helpers for media that <img>/<video>/<audio> fetch directly.
-export const assetFileUrl = (assetId: number) => `${BASE}/assets/${assetId}/file`
-export const episodeVideoUrl = (episodeId: number) => `${BASE}/episodes/${episodeId}/video`
+// In mock mode there is no backend, so point at an inline placeholder rather
+// than a real /api URL (which the dev proxy would 404).
+export const assetFileUrl = (assetId: number) =>
+  USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/assets/${assetId}/file`
+export const episodeVideoUrl = (episodeId: number) =>
+  USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/episodes/${episodeId}/video`
 export const eventsUrl = (episodeId: number) => `${BASE}/events/${episodeId}`
 // SSE for any job id (editor documents use string ids).
 export const eventsUrlFor = (id: string | number) => `${BASE}/events/${id}`

@@ -85,8 +85,8 @@ export function EditorIndex() {
             </select>
           </div>
           <div className="flex flex-1 flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Titre</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            <label htmlFor="editor-doc-title" className="text-xs text-muted-foreground">Titre</label>
+            <Input id="editor-doc-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <Button onClick={onCreate} disabled={create.isPending}>
             <Plus className="h-4 w-4" /> Nouveau document
