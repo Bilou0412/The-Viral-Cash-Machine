@@ -95,6 +95,38 @@ Pattern « plan d'arc puis expansion procédurale » :
 
 ---
 
+## PARTIE D — Design & modèle économique
+
+### D1 — Design / maquette (via agent designer dans l'équipe)
+- Agent **UX/UI designer** instanciable dans l'équipe (+ back, BDD, front,
+  paiement, devops).
+- Forme retenue de la maquette : **prototype React cliquable dans la stack
+  existante** (React/Vite/Tailwind/shadcn), données factices d'abord, modifiable
+  en live, puis câblé back + BDD par l'équipe. Pas de travail jetable.
+- Livrables designer : design system (tokens + composants), wireframes, prototype
+  cliquable couvrant TOUT le plan (thème → composition → revue step-by-step →
+  accès projets → écrans de paiement/tokens).
+
+### D2 — Modèle économique : open-core + économie de tokens
+- **Open-core** : OSS = moteur créatif (palette, composition, compositeur,
+  chronologie, **self-host BYOK**). SaaS propriétaire = hébergé (multi-tenant,
+  auth, billing, file gérée, thèmes premium, marketplace, pub récompensée).
+- **Unité = token de génération** (= coût réel Replicate/OpenAI + marge).
+- **Rails de financement** : BYOK/self-host (gratuit) · packs pay-as-you-go ·
+  abonnement (tokens inclus + perks) · pub récompensée (pub → tokens gratuits).
+- **Garde-fous** : plafond dur/génération · estimation coût avant dépense ·
+  réservation tokens + remboursement si échec · idempotence (no double-débit) ·
+  quotas/rate-limit par tier · anti-fraude pub (validation serveur + cap quotidien)
+  · journal `CostEntry` = base du billing · séparation stricte OSS/SaaS ·
+  modération contenu · paiement via Stripe (PCI géré).
+
+### Décisions en attente (D)
+- Forme maquette : prototype React cliquable (reco) / HTML statique d'abord / design-system seul ?
+- Licence OSS : cœur permissif MIT-Apache (adoption) / cœur AGPL (protège le SaaS) / tout proprio d'abord ?
+- Rails de financement v1 : lesquels d'abord (BYOK / packs / abonnement / pub) ?
+
+---
+
 ## Questions ouvertes
 - M1 : actions par asset (valider / régénérer / éditer prompt / écarter / suivant)
   + récap final avant montage ?
