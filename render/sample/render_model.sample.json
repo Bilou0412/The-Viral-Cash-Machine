@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "canvas": { "width": 1080, "height": 1920, "fps": 24 },
+  "total_duration": 6.0,
+  "clips": [
+    {
+      "id": "bg-video",
+      "media": "video",
+      "src": "https://example.com/assets/hook.mp4",
+      "start": 0.0,
+      "duration": 6.0,
+      "track": 0,
+      "z": 0,
+      "subtitles": [
+        { "text": "Tu", "start": 0.2, "end": 0.5 },
+        { "text": "ne", "start": 0.5, "end": 0.7 },
+        { "text": "devineras", "start": 0.7, "end": 1.3 },
+        { "text": "jamais.", "start": 1.3, "end": 2.0 }
+      ]
+    },
+    {
+      "id": "narration",
+      "media": "audio",
+      "src": "https://example.com/assets/narrator.mp3",
+      "start": 0.0,
+      "duration": 6.0,
+      "track": 1
+    },
+    {
+      "id": "title-card",
+      "media": "text",
+      "text": "LA COLOC",
+      "start": 0.0,
+      "duration": 1.5,
+      "track": 2,
+      "z": 10,
+      "style": { "fontSize": 96, "color": "#ffcc00" }
+    }
+  ]
+}

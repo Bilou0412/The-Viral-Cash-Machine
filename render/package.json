@@ -1,0 +1,29 @@
+{
+  "name": "vcm-render",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ViralCashMachine V2 — Remotion render package. Renders a resolved RenderModel JSON to MP4 and provides the composition used by the editor's @remotion/player.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "render": "node dist/cli.js",
+    "validate:sample": "tsx src/validateSample.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.477",
+    "@remotion/cli": "4.0.477",
+    "@remotion/player": "4.0.477",
+    "@remotion/renderer": "4.0.477",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.477",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.7.0"
+  }
+}
