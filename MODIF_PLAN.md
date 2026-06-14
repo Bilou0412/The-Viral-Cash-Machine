@@ -120,10 +120,13 @@ Pattern « plan d'arc puis expansion procédurale » :
   · journal `CostEntry` = base du billing · séparation stricte OSS/SaaS ·
   modération contenu · paiement via Stripe (PCI géré).
 
-### Décisions en attente (D)
-- Forme maquette : prototype React cliquable (reco) / HTML statique d'abord / design-system seul ?
-- Licence OSS : cœur permissif MIT-Apache (adoption) / cœur AGPL (protège le SaaS) / tout proprio d'abord ?
-- Rails de financement v1 : lesquels d'abord (BYOK / packs / abonnement / pub) ?
+### Décisions prises (D) ✅
+- **Maquette = prototype React cliquable** dans la stack (mock d'abord → câblé back/BDD). Non jetable.
+- **Licence = cœur OSS permissif (MIT/Apache)** + SaaS propriétaire par-dessus (adoption max).
+- **Rails de financement v1 = LES 4** : BYOK/self-host · packs de tokens (PAYG) ·
+  abonnement · pub récompensée. Ordre d'implémentation suggéré : (1) BYOK +
+  économie de tokens (socle) → (2) packs PAYG (Stripe) → (3) abonnement →
+  (4) pub récompensée (avec anti-fraude). Tous reposent sur le **moteur de tokens**.
 
 ---
 
