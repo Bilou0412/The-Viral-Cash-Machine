@@ -7,16 +7,29 @@ import type {
   Asset,
   BeatEntry,
   BeatsResponse,
+  BrickSpec,
   CostEstimate,
+  CreateEditorDocumentBody,
   CreateEpisodeBody,
+  EditorDoc,
+  EditorDocument,
+  EditorDocumentSummary,
   Episode,
+  FormField,
   GenerateScriptBody,
+  GenerativeBrick,
+  GenerativeKind,
   LibraryItem,
+  ModelForm,
+  ModelSearchResult,
   Project,
+  RenderClip,
+  RenderModel,
   Round,
   Theme,
   UpdateAssetBody,
 } from "./types"
+import { isGenerativeBrick, isTextBrick } from "./types"
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms))
 
@@ -113,6 +126,152 @@ function seedAssets(episodeId: number): Asset[] {
     local_path: b.kind === "image" ? "x.png" : b.kind === "video" ? "x.mp4" : "x.mp3",
     status: "ready", draft: true, excluded: false, sha: "abc123", created_at: now,
   }))
+}
+
+// ── Editor (E5) mocks ──────────────────────────────────────────────────
+
+const BRICK_SPECS: BrickSpec[] = [
+  {
+    kind: "image",
+    required_fields: ["prompt"],
+    preferred_models: [
+      "bytedance/seedream-4.5",
+      "black-forest-labs/flux-1.1-pro",
+      "google/imagen-4",
+    ],
+  },
+  {
+    kind: "video",
+    required_fields: ["prompt", "image"],
+    preferred_models: [
+      "prunaai/p-video",
+      "kwaivgi/kling-v2.1",
+      "minimax/hailuo-02",
+    ],
+  },
+  {
+    kind: "voice",
+    required_fields: ["text"],
+    preferred_models: [
+      "minimax/speech-2.8-turbo",
+      "resemble-ai/chatterbox",
+      "jaaari/kokoro-82m",
+    ],
+  },
+]
+
+// Per-model dynamic form. Keyed by model_ref; falls back to a generic schema.
+function mockFormFields(modelRef: string): FormField[] {
+  const common: FormField[] = [
+    {
+      name: "prompt", type: "string", required: true, default: "",
+      enum: null, description: "Text prompt (EN).", order: 0,
+    },
+  ]
+  if (modelRef.includes("video") || modelRef.includes("kling") || modelRef.includes("hailuo")) {
+    return [
+      ...common,
+      { name: "image", type: "file", required: true, default: null, enum: null, description: "First-frame image.", order: 1 },
+      { name: "duration", type: "integer", required: false, default: 5, enum: null, description: "Clip length (s).", order: 2 },
+      { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1"], description: "Aspect ratio.", order: 3 },
+      { name: "loop", type: "boolean", required: false, default: false, enum: null, description: "Loop the motion.", order: 4 },
+    ]
+  }
+  if (modelRef.includes("speech") || modelRef.includes("chatterbox") || modelRef.includes("kokoro")) {
+    return [
+      { name: "text", type: "string", required: true, default: "", enum: null, description: "Text to speak (FR).", order: 0 },
+      { name: "voice_id", type: "string", required: false, default: "male-conteur", enum: null, description: "Voice reference id.", order: 1 },
+      { name: "speed", type: "number", required: false, default: 1.0, enum: null, description: "Speech rate.", order: 2 },
+      { name: "emotion", type: "enum", required: false, default: "neutral", enum: ["neutral", "fearful", "tense", "calm"], description: "Delivery.", order: 3 },
+    ]
+  }
+  // image
+  return [
+    ...common,
+    { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1", "4:3"], description: "Aspect ratio.", order: 1 },
+    { name: "guidance", type: "number", required: false, default: 3.5, enum: null, description: "Prompt adherence.", order: 2 },
+    { name: "seed", type: "integer", required: false, default: 0, enum: null, description: "Random seed (0 = random).", order: 3 },
+  ]
+}
+
+const MODEL_CATALOG: ModelSearchResult[] = [
+  { owner: "bytedance", name: "seedream-4.5", cover: null, description: "Photoreal image gen, strong at 9:16." },
+  { owner: "black-forest-labs", name: "flux-1.1-pro", cover: null, description: "High-fidelity image model." },
+  { owner: "google", name: "imagen-4", cover: null, description: "Google Imagen 4 text-to-image." },
+  { owner: "stability-ai", name: "sdxl", cover: null, description: "Open SDXL base." },
+  { owner: "prunaai", name: "p-video", cover: null, description: "Fast image-to-video animation." },
+  { owner: "kwaivgi", name: "kling-v2.1", cover: null, description: "Cinematic image-to-video." },
+  { owner: "minimax", name: "hailuo-02", cover: null, description: "Image-to-video with strong motion." },
+  { owner: "minimax", name: "speech-2.8-turbo", cover: null, description: "Multilingual TTS, voice cloning." },
+  { owner: "resemble-ai", name: "chatterbox", cover: null, description: "Expressive TTS." },
+  { owner: "jaaari", name: "kokoro-82m", cover: null, description: "Lightweight local-style TTS." },
+]
+
+function newEditorDoc(title: string): EditorDoc {
+  return {
+    schema_version: 1,
+    title,
+    canvas: { width: 1080, height: 1920, fps: 30 },
+    global_context: {
+      text: "Un court-métrage d'horreur vertical.",
+      characters: { Conteur: "a deep, calm male narrator voice" },
+      art_direction: "cinematic, high contrast, cold tones, film grain",
+      extra: {},
+    },
+    tracks: [
+      { index: 0, role: "main" },
+      { index: 1, role: "overlay" },
+      { index: 2, role: "audio" },
+    ],
+    bricks: [
+      {
+        id: "brk-img-1", type: "image", model_ref: "bytedance/seedream-4.5",
+        params: { prompt: "an abandoned subway tunnel, dim flickering light", aspect_ratio: "9:16" },
+        layers: [], placement: { track: 0, start: 0, duration: 4 },
+      } as GenerativeBrick,
+      {
+        id: "brk-voice-1", type: "voice", model_ref: "minimax/speech-2.8-turbo",
+        params: { text: "Tu cours dans le noir, le souffle court.", voice_id: "male-conteur" },
+        layers: [], placement: { track: 2, start: 0, duration: 4 },
+      } as GenerativeBrick,
+    ],
+  }
+}
+
+let nextDocId = 1
+const editorDocuments = new Map<string, EditorDocument>()
+
+function seedEditorDocs() {
+  if (editorDocuments.size) return
+  const id = `doc-${nextDocId++}`
+  editorDocuments.set(id, { id, project_id: 1, title: "Métro hanté — montage", doc: newEditorDoc("Métro hanté — montage") })
+}
+
+// Derive a RenderModel from a doc's bricks (mirrors backend derivation).
+function deriveRenderModel(doc: EditorDoc): RenderModel {
+  const clips: RenderClip[] = []
+  let total = 0
+  for (const b of doc.bricks) {
+    const { start, duration, track } = b.placement
+    total = Math.max(total, start + duration)
+    let media: RenderClip["media"]
+    let text: string | undefined
+    let src: string | null
+    if (isGenerativeBrick(b)) {
+      if (b.type === "video") { media = "video"; src = PLACEHOLDER_IMG }
+      else if (b.type === "voice") { media = "audio"; src = null }
+      else { media = "image"; src = PLACEHOLDER_IMG }
+    } else if (isTextBrick(b)) {
+      media = "text"
+      src = null
+      text = typeof b.payload.text === "string" ? b.payload.text : ""
+    } else {
+      media = "video"
+      src = b.source_path ?? PLACEHOLDER_IMG
+    }
+    clips.push({ id: b.id, media, src, start, duration, track, z: 0, text })
+  }
+  return { version: "1.0", canvas: doc.canvas, clips, total_duration: total }
 }
 
 export const mockApi = {
@@ -231,6 +390,88 @@ export const mockApi = {
         episode_id: e.id, title: e.title, project_id: e.project_id,
         status: e.status, duration_s: e.duration_s, final_path: e.final_path,
       }))
+  },
+
+  // ── Editor (E5) ──────────────────────────────────────────────────────
+  async listBricks(): Promise<BrickSpec[]> { await delay(); return BRICK_SPECS.map((b) => ({ ...b })) },
+
+  async getModelForm(owner: string, name: string): Promise<ModelForm> {
+    await delay()
+    const ref = `${owner}/${name}`
+    return { model_ref: ref, version_id: `mock-${name}-v1`, fields: mockFormFields(ref) }
+  },
+
+  async searchModels(kind: GenerativeKind, q: string): Promise<ModelSearchResult[]> {
+    await delay()
+    const wantImage = kind === "image"
+    const wantVideo = kind === "video"
+    const wantVoice = kind === "voice"
+    const term = q.trim().toLowerCase()
+    return MODEL_CATALOG.filter((m) => {
+      const ref = `${m.owner}/${m.name}`
+      const isVideo = /video|kling|hailuo/.test(ref)
+      const isVoice = /speech|chatterbox|kokoro/.test(ref)
+      const isImage = !isVideo && !isVoice
+      const kindOk = (wantImage && isImage) || (wantVideo && isVideo) || (wantVoice && isVoice)
+      if (!kindOk) return false
+      if (!term) return true
+      return ref.includes(term) || m.description.toLowerCase().includes(term)
+    }).map((m) => ({ ...m }))
+  },
+
+  async listEditorDocuments(projectId: number): Promise<EditorDocumentSummary[]> {
+    await delay()
+    seedEditorDocs()
+    return [...editorDocuments.values()]
+      .filter((d) => d.project_id === projectId)
+      .map((d) => ({ id: d.id, project_id: d.project_id, title: d.title }))
+  },
+
+  async createEditorDocument(body: CreateEditorDocumentBody): Promise<EditorDocument> {
+    await delay()
+    const id = `doc-${nextDocId++}`
+    const docu: EditorDocument = { id, project_id: body.project_id, title: body.title, doc: newEditorDoc(body.title) }
+    editorDocuments.set(id, docu)
+    return structuredClone(docu)
+  },
+
+  async getEditorDocument(id: string): Promise<EditorDocument> {
+    await delay()
+    seedEditorDocs()
+    const d = editorDocuments.get(id)
+    if (!d) throw new Error("editor document not found")
+    return structuredClone(d)
+  },
+
+  async saveEditorDocument(id: string, doc: EditorDoc): Promise<EditorDocument> {
+    await delay(150)
+    const existing = editorDocuments.get(id)
+    if (!existing) throw new Error("editor document not found")
+    existing.doc = structuredClone(doc)
+    existing.title = doc.title
+    return structuredClone(existing)
+  },
+
+  async generateEditorDocument(id: string) {
+    await delay(400)
+    return { id, status: "scheduled" }
+  },
+
+  async regenerateBrick(id: string, brickId: string) {
+    await delay(400)
+    return { id, brick_id: brickId, status: "scheduled" }
+  },
+
+  async getRenderModel(id: string): Promise<RenderModel> {
+    await delay()
+    const d = editorDocuments.get(id)
+    if (!d) throw new Error("editor document not found")
+    return deriveRenderModel(d.doc)
+  },
+
+  async renderEditorDocument(id: string) {
+    await delay(400)
+    return { id, status: "scheduled" }
   },
 }
 

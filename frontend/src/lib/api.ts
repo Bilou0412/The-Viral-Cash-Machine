@@ -8,12 +8,21 @@ import type {
   AdventureScript,
   Asset,
   BeatsResponse,
+  BrickSpec,
   CostEstimate,
+  CreateEditorDocumentBody,
   CreateEpisodeBody,
+  EditorDoc,
+  EditorDocument,
+  EditorDocumentSummary,
   Episode,
   GenerateScriptBody,
+  GenerativeKind,
   LibraryItem,
+  ModelForm,
+  ModelSearchResult,
   Project,
+  RenderModel,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -54,6 +63,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const assetFileUrl = (assetId: number) => `${BASE}/assets/${assetId}/file`
 export const episodeVideoUrl = (episodeId: number) => `${BASE}/episodes/${episodeId}/video`
 export const eventsUrl = (episodeId: number) => `${BASE}/events/${episodeId}`
+// SSE for any job id (editor documents use string ids).
+export const eventsUrlFor = (id: string | number) => `${BASE}/events/${id}`
 
 // ── Real API surface ───────────────────────────────────────────────────
 
@@ -119,6 +130,47 @@ const realApi = {
     ),
 
   getLibrary: () => request<LibraryItem[]>("/library"),
+
+  // ── Editor (E5) ──────────────────────────────────────────────────────
+  listBricks: () => request<BrickSpec[]>("/bricks"),
+
+  getModelForm: (owner: string, name: string) =>
+    request<ModelForm>(`/models/${owner}/${name}/form`),
+
+  searchModels: (kind: GenerativeKind, q: string) =>
+    request<ModelSearchResult[]>(
+      `/models/search?kind=${encodeURIComponent(kind)}&q=${encodeURIComponent(q)}`
+    ),
+
+  listEditorDocuments: (projectId: number) =>
+    request<EditorDocumentSummary[]>(`/editor/documents?project_id=${projectId}`),
+  createEditorDocument: (body: CreateEditorDocumentBody) =>
+    request<EditorDocument>("/editor/documents", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  getEditorDocument: (id: string) =>
+    request<EditorDocument>(`/editor/documents/${id}`),
+  saveEditorDocument: (id: string, doc: EditorDoc) =>
+    request<EditorDocument>(`/editor/documents/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ doc }),
+    }),
+  generateEditorDocument: (id: string) =>
+    request<{ id: string; status: string }>(`/editor/documents/${id}/generate`, {
+      method: "POST",
+    }),
+  regenerateBrick: (id: string, brickId: string) =>
+    request<{ id: string; brick_id: string; status: string }>(
+      `/editor/documents/${id}/bricks/${brickId}/regenerate`,
+      { method: "POST" }
+    ),
+  getRenderModel: (id: string) =>
+    request<RenderModel>(`/editor/documents/${id}/render-model`),
+  renderEditorDocument: (id: string) =>
+    request<{ id: string; status: string }>(`/editor/documents/${id}/render`, {
+      method: "POST",
+    }),
 }
 
 export type StudioApi = typeof realApi

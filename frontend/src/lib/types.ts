@@ -185,3 +185,181 @@ export interface UpdateAssetBody {
   prompt?: string
   excluded?: boolean
 }
+
+// ── Editor (E5) — node-based brick editor ──────────────────────────────
+// Mirrors the backend EditorDocument + RenderModel contracts. The editor lets
+// the user assemble a video from "bricks" (generative or media/text/layer)
+// laid out on tracks, then derives a RenderModel for preview/render.
+
+// Brick palette (GET /api/bricks). Generative kinds only; media/text/layer are
+// hardcoded client-side.
+export type GenerativeKind = "image" | "video" | "voice"
+
+export interface BrickSpec {
+  kind: GenerativeKind
+  required_fields: string[]
+  preferred_models: string[]
+}
+
+// Dynamic model form (GET /api/models/{owner}/{name}/form).
+export type FormFieldType =
+  | "string"
+  | "integer"
+  | "number"
+  | "boolean"
+  | "enum"
+  | "file"
+  | "array"
+
+export interface FormField {
+  name: string
+  type: FormFieldType
+  required: boolean
+  default: unknown
+  enum: string[] | null
+  description: string
+  order: number
+}
+
+export interface ModelForm {
+  model_ref: string
+  version_id: string
+  fields: FormField[]
+}
+
+// Model search (GET /api/models/search?kind=&q=).
+export interface ModelSearchResult {
+  owner: string
+  name: string
+  cover: string | null
+  description: string
+}
+
+// ── EditorDocument ─────────────────────────────────────────────────────
+
+export interface Canvas {
+  width: number
+  height: number
+  fps: number
+}
+
+export interface GlobalContext {
+  text: string
+  characters: Record<string, string>
+  art_direction: string
+  extra: Record<string, string>
+}
+
+export interface TrackDef {
+  index: number
+  role: string
+}
+
+export type LayerType = "text" | "imported_media" | "png_overlay" | "narration"
+
+export interface Layer {
+  type: LayerType
+  z: number
+  payload: Record<string, unknown>
+}
+
+export interface Placement {
+  track: number
+  start: number
+  duration: number
+}
+
+export type BrickType = "image" | "video" | "voice" | "media" | "text"
+
+export interface GenerativeBrick {
+  id: string
+  type: GenerativeKind
+  model_ref: string
+  params: Record<string, unknown>
+  context_overrides?: Partial<GlobalContext>
+  preset_id?: string
+  layers: Layer[]
+  placement: Placement
+}
+
+export interface MediaBrick {
+  id: string
+  type: "media"
+  asset_ref?: string
+  source_path?: string
+  layers: Layer[]
+  placement: Placement
+}
+
+export interface TextBrick {
+  id: string
+  type: "text"
+  payload: Record<string, unknown>
+  placement: Placement
+}
+
+export type Brick = GenerativeBrick | MediaBrick | TextBrick
+
+export interface EditorDoc {
+  schema_version: number
+  title: string
+  canvas: Canvas
+  global_context: GlobalContext
+  tracks: TrackDef[]
+  bricks: Brick[]
+}
+
+export interface EditorDocument {
+  id: string
+  project_id: number
+  title: string
+  doc: EditorDoc
+}
+
+export interface EditorDocumentSummary {
+  id: string
+  project_id: number
+  title: string
+}
+
+export interface CreateEditorDocumentBody {
+  project_id: number
+  title: string
+}
+
+// ── RenderModel (GET /api/editor/documents/{id}/render-model) ──────────
+
+export type RenderMedia = "video" | "image" | "audio" | "text" | "overlay"
+
+export interface RenderSubtitle {
+  text: string
+  start: number
+  end: number
+}
+
+export interface RenderClip {
+  id: string
+  media: RenderMedia
+  src?: string | null
+  start: number
+  duration: number
+  track?: number
+  z?: number
+  text?: string
+  style?: Record<string, unknown>
+  subtitles?: RenderSubtitle[]
+  transform?: Record<string, unknown>
+}
+
+export interface RenderModel {
+  version: "1.0"
+  canvas: Canvas
+  clips: RenderClip[]
+  total_duration: number
+}
+
+// Type guards — narrow Brick on its discriminant.
+export const isGenerativeBrick = (b: Brick): b is GenerativeBrick =>
+  b.type === "image" || b.type === "video" || b.type === "voice"
+export const isMediaBrick = (b: Brick): b is MediaBrick => b.type === "media"
+export const isTextBrick = (b: Brick): b is TextBrick => b.type === "text"

@@ -11,6 +11,7 @@ import { LibraryPage } from "@/pages/LibraryPage"
 import { Projects } from "@/pages/Projects"
 import { ProjectDetail } from "@/pages/ProjectDetail"
 import { EpisodeRedirect } from "@/pages/EpisodeRedirect"
+import { Editor } from "@/pages/Editor"
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 10_000 } },
@@ -32,6 +33,8 @@ const router = createBrowserRouter([
       { path: "episodes/:id/montage", element: <Montage /> },
     ],
   },
+  // The editor is a full-screen NLE — rendered outside the studio Layout chrome.
+  { path: "/editor/:docId", element: <Editor /> },
 ])
 
 export default function App() {
