@@ -20,6 +20,7 @@ from ....features.scripting.adventure_to_prompts import (
     epilogue_beat,
     script_prompts,
 )
+from ....features.scripting.themes import Theme
 from . import pricing
 
 AssetKind = Literal["image", "video", "audio"]
@@ -61,13 +62,14 @@ def _video_pair(
 
 
 def plan_episode_assets(
-    script: AdventureScript, side: Side = "left"
+    script: AdventureScript, side: Side = "left", theme: Optional[Theme] = None
 ) -> List[PlannedAsset]:
     """Full ordered asset plan for one episode along the followed `side`.
 
     Order follows the timeline: per round (action, environment, character,
     2 choice images, fatal, survival) then the epilogue, then the audio track
-    (narration + the followed character's spoken lines).
+    (narration + the followed character's spoken lines). `theme` (optional) drives
+    the DA of the visual prompts ; None → thème par défaut « horror ».
     """
     assets: List[PlannedAsset] = []
 
@@ -91,7 +93,7 @@ def plan_episode_assets(
     )
 
     # N-safe : on itère les rounds du script (1..N), aucun nombre codé en dur.
-    rounds = script_prompts(script, side)
+    rounds = script_prompts(script, side, theme)
     for i, rp in enumerate(rounds):
         for beat_name, beat in (
             ("action", rp.action),
@@ -107,7 +109,7 @@ def plan_episode_assets(
             )
 
     # Epilogue (the OTHER character) — one more video beat at episode level.
-    epi = epilogue_beat(script, side)
+    epi = epilogue_beat(script, side, theme)
     assets += _video_pair(None, "epilogue", epi.frame, epi.motion)
 
     # Audio: narrator track + the followed character's spoken lines.

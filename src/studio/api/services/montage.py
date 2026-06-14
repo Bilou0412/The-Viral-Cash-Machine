@@ -11,6 +11,7 @@ The concatenation backend is injectable so tests run without MoviePy/FFmpeg.
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Callable, List, Optional, Sequence
 
@@ -20,6 +21,8 @@ from sqlmodel import Session
 from ...db.models import Asset
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
 from .paths import episode_dir
+
+logger = logging.getLogger(__name__)
 
 # (ordered local video paths, output path) -> duration seconds.
 Concatenator = Callable[[Sequence[str], str], float]
@@ -49,10 +52,17 @@ def _moviepy_concat(paths: Sequence[str], output_path: str) -> float:
 
 
 def _ordered_video_assets(assets: Sequence[Asset]) -> List[Asset]:
-    """Episode video assets in timeline order: rounds then epilogue, beat order."""
+    """Episode video assets in timeline order: intro, rounds, then epilogue.
+
+    M2 : l'intro (beat="intro", round_index=None) DOIT passer en premier — sans ce
+    cas spécial elle retombait en dernier (round_index None → 999), ce qui plaçait
+    l'intro à la fin de la vidéo lors d'un repli sur la concat simple.
+    """
     videos = [a for a in assets if a.kind == "video" and a.local_path]
 
     def key(a: Asset) -> tuple[int, int]:
+        if a.beat == "intro":      # toujours en tête
+            return (-1, 0)
         # round_index None (epilogue) sorts last.
         r = a.round_index if a.round_index is not None else 999
         return (r, _BEAT_ORDER.get(a.beat, 99))
@@ -130,10 +140,19 @@ class MontageService:
             row = ScriptRepo(session).latest_for_episode(episode_id)
 
         if row is None:
+            logger.warning(
+                "assemble_rich(ep=%s): pas de script → repli sur concat simple "
+                "(les assets riches narration/choix/timer NE seront PAS montés)",
+                episode_id,
+            )
             return self.assemble(episode_id)
         try:
             script = AdventureScript.model_validate_json(row.script_json)
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "assemble_rich(ep=%s): script invalide (%s) → repli concat simple",
+                episode_id, exc,
+            )
             return self.assemble(episode_id)
 
         # (round_index, beat) -> local_path, only files that actually exist.
@@ -160,7 +179,13 @@ class MontageService:
             "choice.0", "choice.1", "fatal.motion", "survival.motion",
         )
         for ri in range(n_rounds):
-            if any(g(ri, b) is None for b in req_video_beats):
+            missing = [b for b in req_video_beats if g(ri, b) is None]
+            if missing:
+                logger.warning(
+                    "assemble_rich(ep=%s): round %s incomplet, beats manquants %s "
+                    "→ repli concat simple (montage riche abandonné)",
+                    episode_id, ri, missing,
+                )
                 return self.assemble(episode_id)
 
         # Rich compositing (MoviePy). On any failure (e.g. unreadable media in
@@ -225,7 +250,11 @@ class MontageService:
 
             output_path = os.path.join(out_dir, "final_video.mp4")
             duration = self.concatenator(round_files, output_path)
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "assemble_rich(ep=%s): échec du compositing riche (%s) → repli "
+                "concat simple", episode_id, exc,
+            )
             return self.assemble(episode_id)
 
         with Session(self.engine) as session:

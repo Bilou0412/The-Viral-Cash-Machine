@@ -168,9 +168,18 @@ class AssetGenerationService:
         return episode_dir(project_name, episode_id)
 
     def generate_episode(
-        self, episode_id: int, script: AdventureScript, side: str = "left"
+        self,
+        episode_id: int,
+        script: AdventureScript,
+        side: str = "left",
+        with_intro: bool = True,
     ) -> None:
-        """Generate every asset of an episode (blocking; run in a background task)."""
+        """Generate every asset of an episode (blocking; run in a background task).
+
+        L'INTRO est générée ici (en fin de passe) pour qu'elle soit TOUJOURS
+        présente au montage, quel que soit le chemin choisi côté UI (« Monter »
+        OU « Produire ») — corrige le bug « pas d'intro dans la vidéo finale ».
+        """
         with Session(self.engine) as session:
             episode = EpisodeRepo(session).get(episode_id)
             if episode is None:
@@ -200,9 +209,30 @@ class AssetGenerationService:
                 last_frame_by_key, index,
             )
 
+        # Intro — best-effort, TOUJOURS tentée en prod pour qu'elle soit présente
+        # quel que soit le chemin de montage. Ignorée hors-ligne/en test (pas de
+        # token Replicate) et jamais bloquante (le reste de l'épisode est déjà là).
+        if (
+            with_intro
+            and os.environ.get("REPLICATE_API_TOKEN")
+            and not self._has_intro(episode_id)
+        ):
+            try:
+                from .intro import generate_intro
+
+                generate_intro(self.engine, episode_id)
+            except Exception:  # l'intro ne doit jamais faire échouer la génération
+                pass
+
         with Session(self.engine) as session:
             EpisodeRepo(session).update_status(episode_id, "assets")
         bus.publish(episode_id, {"type": "generation_done", "total": len(plan)})
+
+    def _has_intro(self, episode_id: int) -> bool:
+        """True si un asset d'intro a déjà été enregistré pour cet épisode."""
+        with Session(self.engine) as session:
+            assets = AssetRepo(session).assets_by_episode(episode_id)
+        return any(a.beat == "intro" for a in assets)
 
     def _generate_one(
         self,

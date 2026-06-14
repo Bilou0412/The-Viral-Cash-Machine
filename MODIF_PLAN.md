@@ -130,12 +130,35 @@ Pattern « plan d'arc puis expansion procédurale » :
 
 ---
 
+## Audit M2 — assets inutiles / mal utilisés (résultat)
+
+Comparaison `plan_episode_assets` (généré) ↔ `assemble_rich`/`compose_round` (consommé) :
+
+- **Aucun asset réellement orphelin dans le montage RICHE** : motions, images de
+  choix, 4 frames (action/env/fatal/survival), narrations, char_reference,
+  épilogue, intro sont tous consommés. `character.frame` n'est pas affiché
+  directement mais sert de SEED image-first à la face-cam (donc pas un gaspillage).
+- **Cause racine « assets mal utilisés » = le REPLI SILENCIEUX.** Si un beat
+  manque (ou compositing échoue), `assemble_rich` retombait **sans bruit** sur la
+  concat simple `assemble`, qui **n'inclut QUE les `*.motion`** → narration, images
+  de choix, timer, frames, intro **disparaissent** ⇒ vidéo qui paraît « cassée ».
+  → CORRIGÉ : chaque repli est désormais **loggé** avec sa raison (beats manquants,
+  script invalide, échec compositing).
+- **Intro mal placée dans le repli.** En concat simple, `beat="intro"`
+  (`round_index=None`) était trié **en dernier** au lieu d'en tête.
+  → CORRIGÉ : cas spécial `intro` → toujours en premier.
+- **Bug intro absente** (signalé par l'auteur) : l'intro n'était générée que par
+  `/produce`. → CORRIGÉ : intro générée dans `generate_episode` (best-effort,
+  gardée par `REPLICATE_API_TOKEN`), donc présente même via « Monter ».
+
+Reste (LOT 2) : exposer la **revue step-by-step (M1)** + le champ « écarter » pour
+que l'auteur retire lui-même un asset jugé inutile, et le câblage `Episode.theme`.
+
 ## Questions ouvertes
 - M1 : actions par asset (valider / régénérer / éditer prompt / écarter / suivant)
   + récap final avant montage ?
-- M2 : lesquels précisément sont inutiles / mal utilisés ?
-- M3 : dashboard projets cliquables → épisodes → épisode ?
-- Thème : on part de « horreur » comme 1er thème extrait du code existant ?
+- M3 : dashboard projets cliquables → épisodes → épisode ? → ✅ livré (LOT 0/M3).
+- Thème : « horreur » comme 1er thème extrait du code → ✅ fait (themes.HORROR).
 
 ## À compléter (l'auteur continue de dicter)
 - …
