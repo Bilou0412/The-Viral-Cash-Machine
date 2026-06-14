@@ -167,11 +167,18 @@ export function Editor() {
       ? `Génération ${events.done}/${events.total}`
       : null
 
+  if (isError) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 p-8 text-center">
+        <p className="text-sm text-destructive">Document éditeur introuvable.</p>
+        <a href="/editor" className="text-sm text-primary underline">
+          ← Retour aux documents éditeur
+        </a>
+      </div>
+    )
+  }
   if (isLoading || !draft) {
     return <div className="p-8 text-sm text-muted-foreground">Chargement de l'éditeur…</div>
-  }
-  if (isError) {
-    return <div className="p-8 text-sm text-destructive">Document introuvable.</div>
   }
 
   return (
