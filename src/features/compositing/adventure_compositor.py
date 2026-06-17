@@ -382,13 +382,17 @@ def compose_round(
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
     segments = [
-        _narrated_video(assets.action_video, assets.narr_action, transcriber, workdir),
+        # C1 — mise en scène (décor + le perso dedans) EN TÊTE de scène.
         _narrated_video(assets.environment_video, assets.narr_environment, transcriber, workdir),
+        # C2 — le perso AGIT + PARLE (voix native + sous-titres). Le plan d'action
+        # narrateur séparé est supprimé du montage → scène canonique en 6 clips.
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
+        # C3 — les deux choix en photo.
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
+        # C4 — compte à rebours.
         _timer_screen(assets.choice_b_image),
-        # Issues : court zoom sur la dernière frame du clip perso (C2), puis la
-        # vidéo de l'issue — plus d'arrêt tenu sur la photo de choix.
+        # C5/C6 — issues : court zoom sur la dernière frame du clip perso (C2),
+        # puis la vidéo de l'issue — plus d'arrêt tenu sur la photo de choix.
         _outcome_video(
             assets.facecam_video, assets.fatal_video, assets.narr_fatal, transcriber, workdir,
         ),

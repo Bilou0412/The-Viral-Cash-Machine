@@ -234,7 +234,13 @@ class RawVideoCompositor:
         if os.path.exists(paths["narrator"]):
             narrator_audio = AudioFileClip(paths["narrator"])
             narr_dur = narrator_audio.duration
-            img_bg_narr = base_img.with_duration(narr_dur)
+            # Plus de gel sur base_image : fond = DERNIÈRE FRAME de la vidéo intro
+            # (continuité visuelle) zoomée doucement sous la narration.
+            try:
+                bg_narr_src = video_clip.to_ImageClip(t=max(0.0, vid_dur - 0.05))
+            except Exception:
+                bg_narr_src = base_img
+            img_bg_narr = bg_narr_src.with_duration(narr_dur)
             img_bg_narr = img_bg_narr.with_effects(
                 [Resize(lambda t: 1.0 + 0.15 * (t / narr_dur))]
             )
