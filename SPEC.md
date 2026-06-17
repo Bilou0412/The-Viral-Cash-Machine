@@ -63,8 +63,8 @@ interchangeables et empilables à la suite.
 
 | # | Beat | Visuel | Son |
 |---|------|--------|-----|
-| C1 | **Décor** : description du lieu (hangar / toile / nacelles-cercueils…) | **VIDÉO(s)** — 1 par élément décrit | voix narrateur |
-| C2 | **Beat histoire** : le perso agit + parle (« Francis murmure… ») | **VIDÉO** | voix narrateur + voix perso |
+| C1 | **Mise en scène** : le lieu **et/ou** le perso dedans (décor, le perso qui marche devant, ambiance…) | **VIDÉO(s)** — 1 à 3, 1 par élément décrit | voix narrateur |
+| C2 | **Beat histoire** : le perso **agit + parle** dans le MÊME clip — gestes liés à ce qu'il dit (montre les choix, manipule un objet, action en rapport avec les options) | **VIDÉO** (1) | voix narrateur + voix perso (native) |
 | C3 | **Les 2 choix** énoncés par le narrateur (option A / option B) | **PHOTO** — 1 par option, calée sur la narration | voix narrateur |
 | C4 | **Timer 3 s** (comme I3) | overlay | SFX tic ×3 + bip |
 | C5 | **Conséquence MORT** : enchaînement fatal décrit (action par action) | **VIDÉO(s)** — 1 par action | voix narrateur |
@@ -72,6 +72,21 @@ interchangeables et empilables à la suite.
 
 > **Photo vs vidéo n'est pas un détail** : C3 (les choix) = PHOTO ; tout le reste
 > = VIDÉO. C'est une règle du template, pas une décision manuelle.
+
+**Compte d'une scène** : **6 clips** nominaux à la suite — C1(1) · C2(1) · C3(2 photos)
+· C4(timer) · C5(1) · C6(1) ; jusqu'à 12 si le fan-out 1-3 est plein. La narration
+**se superpose** (jamais un clip séparé). Pour N=3 scènes : ≈ 22 clips (+ intro 3).
+
+### 3.2.1 Règle de production (anti-gaspillage)
+
+- **Une image n'est générée que si elle est montrée** (photo C3) **ou** sert de
+  **référence i2i** (cohérence perso/DA). Les `*.frame` des beats vidéo servent
+  UNIQUEMENT d'image-source de l'animation — **jamais re-montées figées sous la
+  narration** (c'était le doublon « images inutiles »).
+- **Pas de plan « face-cam » séparé** : la réplique du perso est dans le clip C2.
+  → on **supprime** la génération de `character.frame`.
+- **La durée d'un clip = la durée de SA phrase de narration** (colonne vertébrale),
+  pas une vidéo unique accélérée pour remplir.
 
 ### 3.3 PARTIE FINALE
 

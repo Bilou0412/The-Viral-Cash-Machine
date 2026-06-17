@@ -66,14 +66,11 @@ class RoundAssets:
     narr_choice: str
     narr_fatal: str
     narr_survival: str
-    # premières frames (images) des plans narrés — servent à PROLONGER le plan
-    # quand la narration est plus longue que la vidéo (on n'illustre jamais du vide).
-    action_frame: str = ""
-    environment_frame: str = ""
-    fatal_frame: str = ""
-    survival_frame: str = ""
     # index (0/1) du choix FATAL → zoom sur la bonne image au moment des issues.
     fatal_choice_index: int = 0
+    # NB : les *.frame des beats vidéo NE sont PAS montées ici — elles servent
+    # uniquement de première image (seed i2v) à leur .motion lors de la génération.
+    # Ne jamais re-monter une frame figée sous la narration (doublon banni, SPEC §3.2.1).
 
 
 def _ascii_upper(name: str) -> str:
@@ -179,7 +176,6 @@ def _narrate_over(visual, narr_path: str, transcriber: Transcriber, workdir: str
 
 def _narrated_video(
     video_path: str,
-    frame_path: str,
     narr_path: str,
     transcriber: Transcriber,
     workdir: str = ".",
@@ -299,7 +295,6 @@ def _timer_screen(bg_image: str):
 
 def compose_narrated_segment(
     video_path: str,
-    frame_path: str,
     narr_path: str,
     transcriber: Transcriber,
     output_path: str,
@@ -308,7 +303,7 @@ def compose_narrated_segment(
     """Monte UN plan vidéo narré (ex. l'épilogue) en fichier autonome."""
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
-    clip = _narrated_video(video_path, frame_path, narr_path, transcriber, workdir)
+    clip = _narrated_video(video_path, narr_path, transcriber, workdir)
     clip.write_videofile(
         output_path, fps=FPS, codec="libx264", audio_codec="aac",
         temp_audiofile=os.path.join(workdir, "_temp_epi.m4a"), remove_temp=True,
@@ -355,8 +350,8 @@ def compose_round(
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
     segments = [
-        _narrated_video(assets.action_video, assets.action_frame, assets.narr_action, transcriber, workdir),
-        _narrated_video(assets.environment_video, assets.environment_frame, assets.narr_environment, transcriber, workdir),
+        _narrated_video(assets.action_video, assets.narr_action, transcriber, workdir),
+        _narrated_video(assets.environment_video, assets.narr_environment, transcriber, workdir),
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
         _timer_screen(assets.choice_b_image),
