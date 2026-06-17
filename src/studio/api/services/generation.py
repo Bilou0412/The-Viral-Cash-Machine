@@ -198,8 +198,6 @@ class AssetGenerationService:
         out_dir = self.export_dir(project_name, episode_id)
         os.makedirs(out_dir, exist_ok=True)
 
-        bus.publish(episode_id, {"type": "generation_started", "total": len(plan)})
-
         # Image URLs are remembered within this run so a *.motion video can reuse
         # the *.frame image it was generated from (image-first).
         frame_url_by_beat: dict[str, str] = {}
@@ -207,7 +205,19 @@ class AssetGenerationService:
         # à la frame du plan suivant pour la CONTINUITÉ visuelle (fil rouge).
         last_frame_by_key: dict = {}
 
-        for index, planned in enumerate(plan):
+        # IDEMPOTENCE : ne JAMAIS regénérer (donc re-payer) un asset déjà prêt sur
+        # disque. « Produire » après « Générer » ne relance plus toute la passe.
+        done = self._existing_done(episode_id)
+        todo = [p for p in plan if (p.round_index, p.beat) not in done]
+        skipped = len(plan) - len(todo)
+        if skipped:
+            bus.publish(episode_id, {"type": "generation_skipped", "count": skipped})
+        # Réamorce les URLs des frames déjà présentes dont une vidéo À FAIRE a
+        # besoin (image-first) + la réf perso pour la cohérence i2i des images.
+        self._preseed_frame_urls(todo, done, frame_url_by_beat)
+
+        bus.publish(episode_id, {"type": "generation_started", "total": len(todo)})
+        for index, planned in enumerate(todo):
             self._generate_one(
                 episode_id, planned, out_dir, draft, frame_url_by_beat,
                 last_frame_by_key, index,
@@ -237,6 +247,58 @@ class AssetGenerationService:
         with Session(self.engine) as session:
             assets = AssetRepo(session).assets_by_episode(episode_id)
         return any(a.beat == "intro" for a in assets)
+
+    def _existing_done(
+        self, episode_id: int
+    ) -> dict[tuple[Optional[int], str], str]:
+        """{(round_index, beat): local_path} des assets DÉJÀ prêts sur disque.
+
+        Sert à l'idempotence : un asset déjà généré et téléchargé n'est ni recréé
+        ni repayé. On garde le DERNIER chemin valide par (round, beat).
+        """
+        out: dict[tuple[Optional[int], str], str] = {}
+        with Session(self.engine) as session:
+            assets = AssetRepo(session).assets_by_episode(episode_id)
+        for a in assets:
+            if (
+                a.status == "ready"
+                and a.local_path
+                and os.path.exists(a.local_path)
+                and os.path.getsize(a.local_path) > 0
+            ):
+                out[(a.round_index, a.beat)] = a.local_path
+        return out
+
+    def _preseed_frame_urls(
+        self,
+        todo: list[PlannedAsset],
+        done: dict[tuple[Optional[int], str], str],
+        frame_url_by_beat: dict[str, str],
+    ) -> None:
+        """Amorce frame_url_by_beat depuis les fichiers déjà présents.
+
+        Quand une VIDÉO à (re)faire a sa première frame déjà sur disque (sautée),
+        on ré-uploade cette frame locale → URL, pour que l'image-to-video garde sa
+        source. Idem pour la réf perso (image_input i2i) si des images sont à faire.
+        Aucun upload quand il n'y a rien à faire (todo vide) → coût nul.
+        """
+        need_ref = any(
+            p.kind == "image" and p.beat != "char_reference" for p in todo
+        )
+        ref_key = (None, "char_reference")
+        if need_ref and ref_key in done and "char_reference" not in frame_url_by_beat:
+            url = _upload_to_replicate(done[ref_key])
+            if url:
+                frame_url_by_beat["char_reference"] = url
+        for p in todo:
+            if p.kind != "video":
+                continue
+            frame_beat = p.beat.replace(".motion", ".frame")
+            key = (p.round_index, frame_beat)
+            if frame_beat not in frame_url_by_beat and key in done:
+                url = _upload_to_replicate(done[key])
+                if url:
+                    frame_url_by_beat[frame_beat] = url
 
     def _generate_one(
         self,
