@@ -60,6 +60,14 @@ def _join(*parts: str) -> str:
     return " ".join(p.strip() for p in parts if p and p.strip())
 
 
+def _solo(character_name: str) -> str:
+    """Scène déserte : seul le compagnon est là (anti « gens en plus » à l'image)."""
+    return (
+        f"Deserted, empty place: only {character_name} is here with us — "
+        "no other people, no crowd, no bystanders, no extra figures."
+    )
+
+
 # ===========================================================================
 # 1) PREMIÈRE FRAME — images riches (seedream). Tout le visuel vit ici.
 # ===========================================================================
@@ -80,6 +88,7 @@ def frame_action(
         f"{t.pov_hands}.",
         t.da + ".",
         "Depth, leading lines into darkness, cinematic composition.",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )
@@ -101,6 +110,7 @@ def frame_environment(
         f"{t.pov_hands}.",
         t.da + ".",
         "Wide oppressive composition.",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )
@@ -121,6 +131,7 @@ def frame_character(
         f"Tense urgent expression, mouth starting to speak. {t.pov_hands}.",
         t.da + ".",
         "Tight intimate framing.",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )
@@ -136,11 +147,12 @@ def frame_fatal(
     t = _theme(theme)
     return _join(
         f"{t.pov}, we are the victim.",
-        f"{character_name} ({character_desc}) looms right over us in "
-        f"{environment_desc}, about to strike.",
+        f"{character_name} ({character_desc}) turns ON us, now the aggressor, "
+        f"looming right over us in {environment_desc}, deliberately about to strike.",
         f"{t.pov_hands} raised in defense.",
         t.da + ".",
         "Claustrophobic low angle, terror.",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )
@@ -161,6 +173,7 @@ def frame_survival(
         f"{t.pov_hands}.",
         t.da + ".",
         "Lingering threat in the shadows behind.",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )
@@ -179,6 +192,7 @@ def choice_image(
         f"{character_name} is in frame, gesturing toward it. {t.pov_hands}.",
         "Strong central composition, readable in half a second.",
         t.da + ".",
+        _solo(character_name),
         t.no_text,
         t.vertical,
     )

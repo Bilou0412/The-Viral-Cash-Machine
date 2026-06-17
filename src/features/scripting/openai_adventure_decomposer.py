@@ -45,13 +45,26 @@ _STRUCTURE_RULES = """STRUCTURE & STORY LOGIC (read carefully):
   ADVENTURE DECISIONS (which path / which action), e.g. "le tunnel qui monte" vs
   "passer par l'eau". NEVER frame a choice as "follow Louis vs follow Pierre".
 - `choices[].label_fr`: a short ADVENTURE option (a path or an action), no name.
-- Exactly ONE choice is fatal (`is_fatal: true`). FATAL = the VIEWER dies (POV);
-  SAFE = the viewer continues. The companion REACTS (warns, pulls you) but does
-  NOT 'disappear' as the outcome.
-- `fatal_narration_fr`: describes the VIEWER's death (POV, what kills you).
-  `survival_narration_fr`: the viewer survives and the journey continues.
-- `character_line_fr`: the companion's spoken advice/reaction for this round,
-  consistent with his personality (he helps you read the danger).
+- HARD CHOICES — create real doubt: BOTH options must look reasonable and
+  tempting. The fatal one is a TRAP: it must NOT look more dangerous than the
+  other — often the "safer-looking" option is the deadly one. Never an obvious
+  right answer; the viewer must genuinely hesitate.
+- Exactly ONE choice is fatal (`is_fatal: true`). FATAL TWIST = the chosen
+  COMPANION turns on the viewer and CAUSES the death. At that instant he is
+  malicious: HE provokes it himself (shoves you, traps you, locks you in, triggers
+  the danger onto you). The kill may be a bit far-fetched, but it is HIS doing —
+  not bad luck nor the environment alone. POV: the viewer is his victim.
+- `fatal_kill_desc` (EN): what the COMPANION physically does to kill/doom the
+  viewer (he is the aggressor). `fatal_pov_reaction` (EN): our POV reaction as
+  his victim.
+- `fatal_narration_fr`: starts with "Si tu as choisi <l'option fatale>, " then
+  tells how the companion turns on you and causes your death.
+  `survival_narration_fr`: the viewer survives; the companion's chance to strike is
+  denied; the journey continues, uneasy.
+- `character_line_fr`: his spoken line for this round — helpful on the surface, but
+  he may subtly steer you toward the fatal option (he is NOT fully trustworthy).
+- DESERTED visuals: every `*_desc` / `image_desc` shows ONLY the companion and the
+  place — NEVER other people, crowds, bystanders or extra figures.
 - `choice_narration_fr`: the narrator clearly PRESENTS the two options, naming
   each one ("À gauche…, à droite… — choisis"), so each can be shown with its image.
 - `transition_narration_fr`: MUST start with "Si tu as choisi {char_left_name}, "
