@@ -140,6 +140,30 @@ def _atempo(narr_path: str, factor: float, workdir: str) -> str:
         return narr_path
 
 
+def _last_frame_path(video_path: str, workdir: str) -> str:
+    """Chemin d'une image = DERNIÈRE FRAME d'une vidéo (pour un zoom de transition).
+
+    Réutilise le `.lastframe.png` déjà produit à la génération s'il existe, sinon
+    l'extrait via ffmpeg. Renvoie "" si indisponible → pas de pont, on enchaîne
+    direct sur la vidéo suivante (jamais de gel sur une photo générée)."""
+    if not video_path or not os.path.exists(video_path):
+        return ""
+    cand = video_path + ".lastframe.png"
+    if os.path.exists(cand):
+        return cand
+    import subprocess
+
+    out = os.path.join(workdir, "_lf_" + os.path.basename(video_path) + ".png")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-sseof", "-0.3", "-i", video_path, "-frames:v", "1", out],
+            check=True, capture_output=True,
+        )
+        return out if os.path.exists(out) else ""
+    except Exception:
+        return ""
+
+
 def _narrate_over(visual, narr_path: str, transcriber: Transcriber, workdir: str):
     """Cale une narration sur un visuel à LA MÊME DURÉE par la vitesse.
 
@@ -186,19 +210,20 @@ def _narrated_video(
 
 
 def _outcome_video(
-    choice_image: str,
+    prev_video_path: str,
     outcome_video: str,
     narr_path: str,
     transcriber: Transcriber,
     workdir: str = ".",
 ):
-    """Issue : ZOOM sur l'image du choix énuméré (« si tu as choisi X »), puis la
-    vidéo de l'issue. La narration (qui commence par « si tu as choisi X… »)
-    court sur l'ensemble, calée à la même durée par la vitesse."""
-    ZOOM = 1.6
+    """Issue : court ZOOM sur la DERNIÈRE FRAME de la vidéo précédente (le perso),
+    puis la vidéo de l'issue — JAMAIS un arrêt tenu sur une photo de choix. La
+    narration court sur l'ensemble, calée à la même durée par la vitesse."""
+    BRIDGE = 1.0
     parts = []
-    if choice_image and os.path.exists(choice_image):
-        parts.append(_ken_burns(choice_image, ZOOM))
+    lf = _last_frame_path(prev_video_path, workdir)
+    if lf:
+        parts.append(_ken_burns(lf, BRIDGE))
     v = VideoFileClip(outcome_video)
     parts.append(_fit(v, float(v.duration)))
     visual = (
@@ -314,21 +339,28 @@ def compose_narrated_segment(
 
 
 def compose_entry_segment(
-    image_path: str,
+    prev_video_path: str,
     narr_path: str,
     transcriber: Transcriber,
     output_path: str,
     workdir: Optional[str] = None,
+    fallback_image: str = "",
 ) -> str:
-    """Entrée d'aventure (P4) : ZOOM sur le compagnon pendant que le narrateur dit
-    « Si tu as choisi {nom}, … ». Écrit un fichier autonome."""
+    """Entrée « Si tu as choisi {nom}, … » : court ZOOM sur la DERNIÈRE FRAME de la
+    vidéo précédente (le perso), puis la narration par-dessus. Pas d'arrêt tenu sur
+    une photo de référence ; repli sur `fallback_image` s'il n'y a pas de vidéo."""
     workdir = workdir or os.path.dirname(output_path) or "."
     os.makedirs(workdir, exist_ok=True)
     narr0 = AudioFileClip(narr_path) if (narr_path and os.path.exists(narr_path)) else None
     base_dur = (float(narr0.duration) + 0.3) if narr0 else 4.0
     if narr0:
         narr0.close()
-    visual = _ken_burns(image_path, base_dur)
+    lf = _last_frame_path(prev_video_path, workdir)
+    img = lf or fallback_image
+    if img and os.path.exists(img):
+        visual = _ken_burns(img, base_dur)
+    else:
+        visual = ColorClip(size=(W, H), color=(15, 8, 8)).with_duration(base_dur)
     clip = _narrate_over(visual, narr_path, transcriber, workdir)
     clip.write_videofile(
         output_path, fps=FPS, codec="libx264", audio_codec="aac",
@@ -355,14 +387,13 @@ def compose_round(
         _facecam_video(assets.facecam_video, follower_name, transcriber, workdir),
         _choice_screen(assets.choice_a_image, assets.choice_b_image, assets.narr_choice, follower_name, transcriber),
         _timer_screen(assets.choice_b_image),
-        # Issues : zoom sur l'image du choix énuméré, puis la vidéo de l'issue.
+        # Issues : court zoom sur la dernière frame du clip perso (C2), puis la
+        # vidéo de l'issue — plus d'arrêt tenu sur la photo de choix.
         _outcome_video(
-            assets.choice_a_image if assets.fatal_choice_index == 0 else assets.choice_b_image,
-            assets.fatal_video, assets.narr_fatal, transcriber, workdir,
+            assets.facecam_video, assets.fatal_video, assets.narr_fatal, transcriber, workdir,
         ),
         _outcome_video(
-            assets.choice_b_image if assets.fatal_choice_index == 0 else assets.choice_a_image,
-            assets.survival_video, assets.narr_survival, transcriber, workdir,
+            assets.facecam_video, assets.survival_video, assets.narr_survival, transcriber, workdir,
         ),
     ]
     final = concatenate_videoclips(segments, method="compose")

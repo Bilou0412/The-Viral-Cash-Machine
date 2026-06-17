@@ -231,15 +231,19 @@ class MontageService:
 
             # P4 — segment d'entrée « Si tu as choisi {nom} » : zoom sur le
             # compagnon (réf perso) pendant la narration de transition.
-            entry_img = g(None, "char_reference")
+            entry_prev = g(None, "intro")  # la vidéo qui précède l'entrée (intro)
+            entry_img = g(None, "char_reference")  # repli si pas d'intro
             entry_narr = g(None, "transition.narration")
-            if entry_img and entry_narr:
+            if entry_narr and (entry_prev or entry_img):
                 from ....features.compositing.adventure_compositor import (
                     compose_entry_segment,
                 )
 
                 entry = os.path.join(work, "entry.mp4")
-                compose_entry_segment(entry_img, entry_narr, transcriber, entry, work)
+                compose_entry_segment(
+                    entry_prev or "", entry_narr, transcriber, entry, work,
+                    fallback_image=entry_img or "",
+                )
                 round_files.insert(0, entry)
 
             # Intro (système historique) tout en TÊTE si elle a été générée.
