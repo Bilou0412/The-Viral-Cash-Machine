@@ -20,9 +20,11 @@ services:
       - ./render:/app/render
       - ./pyproject.toml:/app/pyproject.toml
       - ./assets:/app/assets
+      # Sorties RÉELLES (CLI prompt→vidéo) persistées sur l'hôte sous ./exports.
+      - ./exports:/app/exports
     environment:
       PYTHONPATH: /app:/app/src
-      # DB + sorties isolées et jetables (jamais la prod montée en volume).
+      # DB isolée et jetable (jamais la prod montée en volume).
       VCM_STUDIO_DB: "sqlite:////tmp/dev.db"
       VCM_OUTPUT_DIR: /tmp/dev_out
     working_dir: /app
