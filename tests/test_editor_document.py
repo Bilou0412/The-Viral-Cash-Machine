@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("pydantic")
 
 from src.editor import (  # noqa: E402
+    ClipBrick,
     EditorDocument,
     GenerativeBrick,
     MediaBrick,
@@ -124,3 +125,102 @@ def test_upgrade_document_sets_schema_version():
 def test_canvas_default_is_vertical():
     d = EditorDocument()
     assert (d.canvas.width, d.canvas.height) == (1080, 1920)
+
+
+# --- ClipBrick : brique composite VIDÉO/PHOTO (B0) -------------------------
+
+
+def _video_clip() -> dict:
+    return {
+        "id": "clip1",
+        "type": "clip",
+        "kind": "video",
+        "image": {"model_ref": "bytedance/seedream-4.5", "params": {"prompt": "a cave"}},
+        "motion": {"model_ref": "prunaai/p-video", "params": {"duration": 5}},
+        "children": [
+            {
+                "id": "n1",
+                "role": "narration",
+                "model_ref": "minimax/speech-2.8-turbo",
+                "params": {"text": "tu avances", "voice_id": "X"},
+            },
+            {"id": "d1", "role": "dialogue", "params": {"text": "qui est là ?"}},
+        ],
+        "placement": {"track": 0, "start": 0.0, "duration": 5.0},
+    }
+
+
+def test_clip_brick_discriminated_in_document():
+    d = EditorDocument(bricks=[_video_clip()])
+    clip = d.bricks[0]
+    assert isinstance(clip, ClipBrick)
+    assert clip.kind == "video"
+    assert clip.image.params["prompt"] == "a cave"
+    assert clip.motion is not None and clip.motion.params["duration"] == 5
+    assert [c.role for c in clip.children] == ["narration", "dialogue"]
+
+
+def test_clip_brick_json_round_trip():
+    d = EditorDocument(bricks=[_video_clip()])
+    restored = EditorDocument.model_validate_json(d.model_dump_json())
+    assert restored == d
+
+
+def test_photo_clip_with_zoom():
+    clip = ClipBrick(
+        id="p1",
+        kind="photo",
+        image={"model_ref": "bytedance/seedream-4.5", "params": {"prompt": "ruins"}},
+        zoom={"from_scale": 1.0, "to_scale": 1.3},
+    )
+    assert clip.zoom is not None and clip.zoom.to_scale == 1.3
+    assert clip.motion is None
+
+
+def test_photo_clip_rejects_motion():
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", motion={"model_ref": "prunaai/p-video"})
+
+
+def test_video_clip_rejects_zoom():
+    with pytest.raises(Exception):
+        ClipBrick(id="v", kind="video", zoom={"from_scale": 1.0, "to_scale": 1.2})
+
+
+def test_clip_duplicate_child_ids_rejected():
+    with pytest.raises(Exception):
+        ClipBrick(
+            id="v",
+            kind="video",
+            children=[
+                {"id": "dup", "role": "narration"},
+                {"id": "dup", "role": "dialogue"},
+            ],
+        )
+
+
+def test_v1_flat_bricks_still_valid_under_v2():
+    """Additif : un doc v1 (briques plates) se charge tel quel sous SCHEMA_VERSION 2."""
+    raw = {
+        "schema_version": 1,
+        "title": "legacy",
+        "bricks": [
+            {"id": "img1", "type": "image", "model_ref": "x", "params": {"prompt": "p"}},
+            {"id": "narr1", "type": "voice", "params": {"text": "t"}},
+        ],
+    }
+    d = upgrade_document(raw)
+    assert d.schema_version == SCHEMA_VERSION == 2
+    by_id = {b.id: b for b in d.bricks}
+    assert isinstance(by_id["img1"], GenerativeBrick)
+
+
+def test_clip_and_flat_bricks_coexist():
+    d = EditorDocument(
+        bricks=[
+            _video_clip(),
+            {"id": "old", "type": "image", "params": {"prompt": "legacy"}},
+        ]
+    )
+    kinds = {type(b).__name__ for b in d.bricks}
+    assert kinds == {"ClipBrick", "GenerativeBrick"}

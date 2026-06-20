@@ -14,7 +14,11 @@ def upgrade_document(raw: Dict[str, Any]) -> EditorDocument:
     data = dict(raw)
     version = int(data.get("schema_version", 1))
 
-    # (futurs paliers : `if version < 2: ...` — transformations additives ici.)
+    # v1 → v2 : introduction de `ClipBrick` (briques composites VIDÉO/PHOTO).
+    # Additif : les briques plates v1 (image/video/voice) restent VALIDES dans
+    # l'union, donc rien à transformer ici — un doc v1 se charge tel quel sous v2.
+    # Le repli briques-plates → ClipBrick interviendra avec B1 (quand `resolve.py`
+    # et `editor_generation.py` consommeront les clips).
     _ = version
 
     data["schema_version"] = SCHEMA_VERSION

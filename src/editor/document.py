@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..videospec.models import Canvas
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class _Doc(BaseModel):
@@ -51,8 +51,43 @@ class Layer(_Doc):
     payload: Dict[str, Any] = Field(default_factory=dict)
 
 
+class GenNode(_Doc):
+    """Un nœud de génération = les **arguments d'UN appel API** (image ou vidéo).
+
+    `model_ref` désigne le modèle (registry / "owner/name[:version]") et `params`
+    porte ses arguments bruts (prompt, taille, durée…), NON contraints par pydantic
+    — validés ailleurs contre le schéma du modèle (contrat de capacité, étape B2).
+    """
+
+    model_ref: str = ""
+    params: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ZoomSpec(_Doc):
+    """Effet Ken Burns d'une brique PHOTO : agencement de rendu, PAS un appel API."""
+
+    from_scale: float = 1.0
+    to_scale: float = 1.2
+    focus_x: float = 0.5
+    focus_y: float = 0.5
+
+
+class AudioChild(_Doc):
+    """Enfant audio d'une brique (narration off / dialogue perso) = un appel TTS."""
+
+    id: str
+    role: Literal["narration", "dialogue"]
+    model_ref: str = ""
+    params: Dict[str, Any] = Field(default_factory=dict)
+
+
 class GenerativeBrick(_Doc):
-    """Brique générée par un modèle (image / vidéo / voix) — `params` libres."""
+    """Brique générée par un modèle (image / vidéo / voix) — `params` libres.
+
+    LEGACY (schema v1, à plat) : conservée valide pour ne pas casser
+    `resolve.py` / `editor_generation.py`. Le nouveau format composite est
+    `ClipBrick` ; le repli v1→clip viendra avec B1 (réécâblage des consommateurs).
+    """
 
     id: str
     type: Literal["image", "video", "voice"]
@@ -84,8 +119,46 @@ class TextBrick(_Doc):
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
+class ClipBrick(_Doc):
+    """Brique média composite posée sur la timeline : VIDÉO ou PHOTO.
+
+    Porte les deux rôles d'une brique :
+    1. **les arguments des appels API** qui la génèrent — `image` (text→image : la
+       photo, ou la first-frame d'une vidéo), `motion` (image→video, vidéo seule),
+       enfants audio (narration / dialogue) ;
+    2. **l'agencement** — `placement` (piste, début, durée) + l'imbrication
+       parent/enfants.
+
+    Se compile vers un `Segment` de `VideoSpec` à l'étape B1 (PHOTO+zoom →
+    `NarrationSegment`, VIDÉO → `FootageSegment`, etc.).
+    """
+
+    id: str
+    type: Literal["clip"] = "clip"
+    kind: Literal["video", "photo"]
+    image: GenNode = Field(default_factory=GenNode)   # toujours présent
+    motion: Optional[GenNode] = None                  # kind=video uniquement
+    zoom: Optional[ZoomSpec] = None                   # kind=photo uniquement (Ken Burns)
+    children: List[AudioChild] = Field(default_factory=list)
+    context_overrides: Optional[NarrativeContext] = None
+    preset_id: Optional[int] = None
+    layers: List[Layer] = Field(default_factory=list)
+    placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
+
+    @model_validator(mode="after")
+    def _check_kind(self) -> "ClipBrick":
+        if self.kind == "photo" and self.motion is not None:
+            raise ValueError("une brique PHOTO ne peut pas porter de 'motion' (image→video)")
+        if self.kind == "video" and self.zoom is not None:
+            raise ValueError("'zoom' (Ken Burns) est réservé aux briques PHOTO")
+        child_ids = [c.id for c in self.children]
+        if len(child_ids) != len(set(child_ids)):
+            raise ValueError("ids d'enfants dupliqués dans la brique")
+        return self
+
+
 Brick = Annotated[
-    Union[GenerativeBrick, MediaBrick, TextBrick],
+    Union[ClipBrick, GenerativeBrick, MediaBrick, TextBrick],
     Field(discriminator="type"),
 ]
 

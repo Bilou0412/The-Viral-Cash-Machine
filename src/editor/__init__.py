@@ -7,28 +7,36 @@ conteneur. Les services réseau vivent dans `src/studio/api/services/`.
 
 from .document import (
     SCHEMA_VERSION,
+    AudioChild,
     Brick,
+    ClipBrick,
     EditorDocument,
     GenerativeBrick,
+    GenNode,
     Layer,
     MediaBrick,
     NarrativeContext,
     TextBrick,
     TimelinePlacement,
     Track,
+    ZoomSpec,
 )
 from .migrations import upgrade_document
 
 __all__ = [
     "SCHEMA_VERSION",
+    "AudioChild",
     "Brick",
+    "ClipBrick",
     "EditorDocument",
     "GenerativeBrick",
+    "GenNode",
     "Layer",
     "MediaBrick",
     "NarrativeContext",
     "TextBrick",
     "TimelinePlacement",
     "Track",
+    "ZoomSpec",
     "upgrade_document",
 ]
