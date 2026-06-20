@@ -21,6 +21,7 @@ from .document import (
     Track,
     ZoomSpec,
 )
+from .compile_spec import document_to_spec
 from .migrations import upgrade_document
 
 __all__ = [
@@ -38,5 +39,6 @@ __all__ = [
     "TimelinePlacement",
     "Track",
     "ZoomSpec",
+    "document_to_spec",
     "upgrade_document",
 ]

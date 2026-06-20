@@ -155,6 +155,22 @@ But : *« sans faire de teste trop poussé, que le test sur la génération de s
 
 ---
 
+## 3 bis. État d'avancement — POINT DE REPRISE
+
+| Étape | Statut | Sujet | Commit |
+|-------|--------|-------|--------|
+| B0 | ✅ FAIT | Modèle `ClipBrick` composite + migration v1→v2 | `63df007` |
+| B1 | ✅ FAIT | Compilateur `document_to_spec` : ClipBrick → VideoSpec | (en cours) |
+| B2 | ⬜ | Catalogue briques + contrats de capacité + 3 modèles/type | |
+| B3 | ⬜ | Frontend React : brique parente dépliable + inspecteur | |
+| B4 | ⬜ | Génération idempotente câblée par nœud | |
+| T  | ⬜ | Markers pytest (golden_regression/render en opt-in) | |
+
+Protocole/étape : modèle/code → tests cheap offline → `mypy src/editor` +
+`pytest tests/` (dans `vcm-dev`) → `graphify update .` → commit → cocher la table.
+
+---
+
 ## 4. Ce qu'on ne touche PAS (anti-régression)
 - `AdventureScript` et `openai_adventure_decomposer` (le script reste le cœur testé).
 - `VideoSpec`/`Segment`/ports de rendu (IR de rendu inchangée ; on compile vers elle).
