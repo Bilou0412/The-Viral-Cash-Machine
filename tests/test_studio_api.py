@@ -17,6 +17,9 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("sqlmodel")
 
+# Intégration FastAPI/DB lourde → skippée par défaut (cf. conftest, --runheavy).
+pytestmark = pytest.mark.slow
+
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import create_engine  # noqa: E402
 

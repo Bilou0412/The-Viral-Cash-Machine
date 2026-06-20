@@ -18,6 +18,9 @@ pytest.importorskip("moviepy")
 pytest.importorskip("PIL")
 pytest.importorskip("numpy")
 
+# Rendu MoviePy réel → lourd : skippé par défaut (cf. conftest, --runheavy).
+pytestmark = pytest.mark.render
+
 from src.features.scripting.adventure_to_spec import adventure_to_spec  # noqa: E402
 from src.features.scripting.fake_adventure_decomposer import (  # noqa: E402
     FakeAdventureDecomposer,

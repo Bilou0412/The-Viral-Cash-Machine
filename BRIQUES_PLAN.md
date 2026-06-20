@@ -160,14 +160,16 @@ But : *« sans faire de teste trop poussé, que le test sur la génération de s
 | Étape | Statut | Sujet | Commit |
 |-------|--------|-------|--------|
 | B0 | ✅ FAIT | Modèle `ClipBrick` composite + migration v1→v2 | `63df007` |
-| B1 | ✅ FAIT | Compilateur `document_to_spec` : ClipBrick → VideoSpec | (en cours) |
+| B1 | ✅ FAIT | Compilateur `document_to_spec` : ClipBrick → VideoSpec | `9f67668` |
+| T  | ✅ FAIT | Markers `render`/`slow` + `conftest --runheavy` (run par défaut 6 s) | (en cours) |
 | B2 | ⬜ | Catalogue briques + contrats de capacité + 3 modèles/type | |
 | B3 | ⬜ | Frontend React : brique parente dépliable + inspecteur | |
 | B4 | ⬜ | Génération idempotente câblée par nœud | |
-| T  | ⬜ | Markers pytest (golden_regression/render en opt-in) | |
 
 Protocole/étape : modèle/code → tests cheap offline → `mypy src/editor` +
-`pytest tests/` (dans `vcm-dev`) → `graphify update .` → commit → cocher la table.
+`pytest tests/` (rapide, ~6 s — les tests lourds render/intégration sont skippés ;
+`pytest --runheavy` pour tout, dans `vcm-dev`) → `graphify update .` → commit →
+cocher la table.
 
 ---
 
