@@ -83,13 +83,15 @@ posé, tout le reste (compiler → spec → rendu) existe déjà.
 
 ## 5. Étapes restantes (ordonnées — 1 étape / session)
 
-### R1 — `adventure_to_bricks` : script → arbre de `ClipBrick` éditable  ⬜
-Le connecteur manquant. Adaptateur **pur, hors-ligne** (comme `adventure_to_spec`)
-qui transforme un `AdventureScript` en une **liste de `ClipBrick`** (VIDÉO/PHOTO +
-enfants narration/dialogue + zoom), avec ids stables et agencement (placement).
-Invariant à tester : `document_to_spec(adventure_to_bricks(s))` produit un
-`VideoSpec` cohérent avec `adventure_to_spec(s)` (mêmes assets/segments, aux ids
-près). Tests cheap offline.
+### R1 — `adventure_to_bricks` : script → arbre de `ClipBrick` éditable  ✅
+FAIT (`src/features/scripting/adventure_to_bricks.py` + `adventure_to_document`).
+Adaptateur **pur, hors-ligne**, ancré sur `plan_episode_assets` : groupe les
+`PlannedAsset` en briques (beat vidéo = VIDÉO image+motion ; image seule = PHOTO ;
+narration = enfant). **Invariant testé** : les assets génératifs (prompts image/
+motion, textes narration) de `document_to_spec(adventure_to_bricks(s))` sont
+IDENTIQUES à ceux d'`adventure_to_spec(s)` — couverture 1:1, rien perdu/ajouté.
+Toutes les briques sortent `clip_is_ready`. Overlays montage (countdown, plaques,
+eye-open) restent hors briques. mypy clean, +8 tests.
 
 ### R2 — UI de REVUE (React)  ⬜
 Présenter l'arbre de briques généré : timeline avec briques parentes **dépliables**
