@@ -81,6 +81,7 @@ posé, tout le reste (compiler → spec → rendu) existe déjà.
 | **`adventure_to_bricks`** : script → arbre `ClipBrick` éditable | ✅ | `src/features/scripting/adventure_to_bricks.py` (R1) |
 | **Durcissement `ClipBrick`** : bornes, `allow_inf_nan`, ids non vides | ✅ | `src/editor/document.py` |
 | **Entrée du rail câblée** : `POST /api/episodes/{id}/editor-document` | ✅ | `src/studio/api/app.py` |
+| **Génération des `ClipBrick`** (image→motion→narration) + idempotence | ✅ | `src/studio/api/services/editor_generation.py` (R1b) |
 
 ---
 
@@ -100,18 +101,19 @@ eye-open) restent hors briques. mypy clean, +8 tests.
 depuis le script. + durcissement `ClipBrick` (le bug inf/NaN → doc irrechargeable
 est corrigé). R1 n'est plus du code mort côté entrée.
 
-### R1b — Génération des `ClipBrick` (`EditorGenerationService`) + idempotence  ⬜
-**La moitié manquante du câblage** (constat équipe) : aujourd'hui
-`EditorGenerationService` ne sait exécuter que les briques PLATES legacy
-(`GenerativeBrick`), pas les `ClipBrick`. Étendre `_ordered_generative_bricks` /
-`_generate_one` pour exécuter un `ClipBrick` = image (first-frame) → motion
-(image→video) → narration (TTS), mapper en lignes `Asset`
-(`editor_document_id`, `beat=brick.id` + sous-beat), et **porter l'idempotence**
-`(editor_document_id, beat)` de `generation.py:_existing_done`. Débloque alors
-`POST .../generate`, la régénération ciblée `.../bricks/{id}/regenerate` (déjà là)
-et le rendu. À faire AVANT R2 (sinon le front afficherait un document non
-générable). Décision actée : le rail `ClipBrick` devient le chemin éditable
+### R1b — Génération des `ClipBrick` (`EditorGenerationService`) + idempotence  ✅
+FAIT (`src/studio/api/services/editor_generation.py`). `generate_document`
+dispatche désormais `ClipBrick` (image first-frame → motion image→video → enfants
+narration TTS) et briques plates legacy. Chaque nœud = une ligne `Asset`
+(`beat = {id}.image|{id}.motion|{child.id}`), via un cœur partagé `_run_node`
+(Asset/Job/Cost/SSE). **Idempotence** `_existing_done` : un nœud `ready` + fichier
+présent n'est ni régénéré ni repayé. Image-first câblé (URL image → entrée i2v du
+motion). `regenerate_brick` gère les `ClipBrick` (force). Test offline bout-en-bout :
+56 nœuds générés, 2ᵉ run = 0 appel, régénération ciblée = 3 nœuds. mypy baseline
+inchangé (40), suite complète 204 passed. Le rail `ClipBrick` est le chemin éditable
 canonique ; le monde `PlannedAsset` reste le « chemin rapide sans revue ».
+**Le rail tourne maintenant de bout en bout en backend** : script → briques →
+génération idempotente → assets. Reste R2 (le front de revue).
 
 ### R2 — UI de REVUE (React)  ⬜
 Présenter l'arbre de briques généré : timeline avec briques parentes **dépliables**

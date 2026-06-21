@@ -177,6 +177,48 @@ def test_editor_document_requires_script(client):
     assert r.status_code == 404  # pas de script encore
 
 
+def test_generate_editor_document_clips_idempotent(client):
+    """R1b : le document de briques se génère (image→motion→narration), idempotent."""
+    from sqlmodel import Session as _S
+
+    from src.studio.db.repositories import AssetRepo
+
+    pid = client.post("/api/projects", json={"name": "g"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    client.post(f"/api/episodes/{eid}/script", json={"prompt": "cave"})
+    doc_id = client.post(f"/api/episodes/{eid}/editor-document").json()["id"]
+
+    # 1re génération : un appel run_model par nœud (couverture 1:1 du plan = 56).
+    assert client.post(f"/api/editor/documents/{doc_id}/generate").status_code == 200
+    n_calls = len(client.fake_provider.run_calls)
+    assert n_calls == 56
+
+    with _S(client.engine) as s:
+        assets = AssetRepo(s).assets_by_document(doc_id)
+    assert len(assets) == 56
+    assert all(a.status == "ready" and a.local_path for a in assets)
+    assert {a.kind for a in assets} == {"image", "video", "audio"}
+    beats = [a.beat for a in assets]
+    assert any(b.endswith(".image") for b in beats)
+    assert any(b.endswith(".motion") for b in beats)
+    assert any(b.endswith("__narr") for b in beats)
+
+    # image-first : chaque motion a reçu l'URL d'une image en entrée.
+    motion_calls = [p for _m, p in client.fake_provider.run_calls if "duration" in p]
+    assert motion_calls
+    assert all(c["image"].startswith("https://fake.local/") for c in motion_calls)
+
+    # IDEMPOTENCE : re-générer ne relance AUCUN appel (tout est prêt + sur disque).
+    client.post(f"/api/editor/documents/{doc_id}/generate")
+    assert len(client.fake_provider.run_calls) == n_calls
+
+    # Régénération ciblée d'une brique VIDÉO + narration → exactement 3 nœuds.
+    client.post(f"/api/editor/documents/{doc_id}/bricks/r0_action/regenerate")
+    assert len(client.fake_provider.run_calls) == n_calls + 3
+
+
 def test_regenerate_single_asset(client):
     pid = client.post("/api/projects", json={"name": "p"}).json()["id"]
     eid = client.post(

@@ -26,8 +26,14 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
+from ....editor._fields import field_value
 from ....editor.context import compile_prompt
-from ....editor.document import EditorDocument, GenerativeBrick
+from ....editor.document import (
+    ClipBrick,
+    EditorDocument,
+    GenNode,
+    GenerativeBrick,
+)
 from ....features.assets.ports import AssetProvider
 from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....features.compositing.registry import validate_params
@@ -172,33 +178,42 @@ class EditorGenerationService:
     # -- public API -------------------------------------------------------
 
     def generate_document(self, doc_id: int) -> None:
-        """Generate every generative brick of a document (blocking; bg task)."""
+        """Generate a document's bricks (blocking; bg task).
+
+        Dispatch : briques composites `ClipBrick` (image → motion → narration, R1b)
+        et briques plates `GenerativeBrick` legacy. **Idempotent** : un nœud dont
+        l'`Asset` (editor_document_id, beat) est déjà `ready` + fichier présent
+        n'est ni régénéré ni repayé (cœur du « pas cher »).
+        """
         doc, out_dir = self._load(doc_id)
-        bricks = _ordered_generative_bricks(doc)
-        bus.publish(doc_id, {"type": "generation_started", "total": len(bricks)})
+        clips = [b for b in doc.bricks if isinstance(b, ClipBrick)]
+        flats = _ordered_generative_bricks(doc)
+        total = sum(_clip_node_count(c) for c in clips) + len(flats)
+        bus.publish(doc_id, {"type": "generation_started", "total": total})
 
-        # brick id -> local path of its downloaded output (for cross-brick refs).
+        done = self._existing_done(doc_id)
         outputs: Dict[str, str] = {}
-        for index, brick in enumerate(bricks):
+        index = 0
+        for clip in clips:
+            index = self._generate_clip(doc, doc_id, clip, out_dir, done, index)
+        for brick in flats:
             self._generate_one(doc, doc_id, brick, out_dir, outputs, index)
+            index += 1
 
-        bus.publish(doc_id, {"type": "generation_done", "total": len(bricks)})
+        bus.publish(doc_id, {"type": "generation_done", "total": total})
 
     def regenerate_brick(self, doc_id: int, brick_id: str) -> None:
-        """Regenerate a single brick of a document in place."""
+        """Regenerate a single brick of a document in place (force, no skip)."""
         doc, out_dir = self._load(doc_id)
-        brick = next(
-            (
-                b
-                for b in doc.bricks
-                if isinstance(b, GenerativeBrick) and b.id == brick_id
-            ),
-            None,
-        )
+        brick = next((b for b in doc.bricks if b.id == brick_id), None)
         if brick is None:
-            raise ValueError(
-                f"generative brick {brick_id!r} not found in document {doc_id}"
-            )
+            raise ValueError(f"brick {brick_id!r} not found in document {doc_id}")
+        if isinstance(brick, ClipBrick):
+            # force : aucune table `done` → tous les nœuds du clip régénérés.
+            self._generate_clip(doc, doc_id, brick, out_dir, {}, 0)
+            return
+        if not isinstance(brick, GenerativeBrick):
+            raise ValueError(f"brick {brick_id!r} is not generative")
         # Reuse already-downloaded outputs of OTHER bricks for cross-brick refs.
         outputs: Dict[str, str] = {}
         with Session(self.engine) as session:
@@ -209,6 +224,135 @@ class EditorGenerationService:
 
     # -- core -------------------------------------------------------------
 
+    def _existing_done(self, doc_id: int) -> Dict[str, str]:
+        """beat -> chemin local des Assets déjà `ready` ET présents sur disque."""
+        out: Dict[str, str] = {}
+        with Session(self.engine) as session:
+            for a in AssetRepo(session).assets_by_document(doc_id):
+                p = a.local_path
+                if (
+                    a.status == "ready"
+                    and p
+                    and os.path.exists(p)
+                    and os.path.getsize(p) > 0
+                ):
+                    out[a.beat] = p
+        return out
+
+    def _generate_clip(
+        self,
+        doc: EditorDocument,
+        doc_id: int,
+        clip: ClipBrick,
+        out_dir: str,
+        done: Dict[str, str],
+        index: int,
+    ) -> int:
+        """Exécute un `ClipBrick` : image (first-frame) → motion → enfants narration.
+
+        Idempotent via `done` (beat déjà prêt = sauté). Renvoie l'index après les
+        nœuds exécutés. L'URL de l'image alimente l'entrée i2v du motion.
+        """
+        cid = clip.id
+        img_beat = f"{cid}.image"
+        img_prompt = str(field_value(clip.image.params, "image", "prompt") or "")
+        img_url = self._run_or_skip(
+            doc_id, out_dir, done, index, beat=img_beat,
+            contract_kind="image", asset_kind="image",
+            model_ref=clip.image.model_ref, params={"prompt": img_prompt},
+            prompt=img_prompt,
+        )
+        index += 1
+
+        if clip.kind == "video":
+            image_input = img_url or _url_for_local(done.get(img_beat))
+            motion = clip.motion or GenNode()
+            mot_prompt = str(
+                field_value(motion.params, "video", "prompt") or img_prompt
+            )
+            duration = _as_float(
+                field_value(motion.params, "video", "duration"),
+                clip.placement.duration or pricing.BEAT_VIDEO_SECONDS,
+            )
+            mot_beat = f"{cid}.motion"
+            if not image_input:
+                self._fail_node(
+                    doc_id, mot_beat, "video",
+                    "image source manquante (la first-frame a échoué)", index,
+                )
+            else:
+                self._run_or_skip(
+                    doc_id, out_dir, done, index, beat=mot_beat,
+                    contract_kind="video", asset_kind="video",
+                    model_ref=motion.model_ref,
+                    params={
+                        "prompt": mot_prompt,
+                        "image": image_input,
+                        "duration": duration,
+                    },
+                    prompt=mot_prompt,
+                )
+            index += 1
+
+        for child in clip.children:
+            text = str(field_value(child.params, "voice", "text") or "")
+            voice_id = str(
+                field_value(child.params, "voice", "voice_id") or "Deep_Voice_Man"
+            )
+            self._run_or_skip(
+                doc_id, out_dir, done, index, beat=child.id,
+                contract_kind="voice", asset_kind="audio",
+                model_ref=child.model_ref,
+                params={"text": text, "voice_id": voice_id}, prompt=text,
+            )
+            index += 1
+        return index
+
+    def _run_or_skip(
+        self,
+        doc_id: int,
+        out_dir: str,
+        done: Dict[str, str],
+        index: int,
+        *,
+        beat: str,
+        contract_kind: str,
+        asset_kind: str,
+        model_ref: str,
+        params: Dict[str, Any],
+        prompt: str,
+    ) -> Optional[str]:
+        """Saute le nœud si déjà `ready` (idempotence), sinon le génère."""
+        if beat in done:
+            bus.publish(
+                doc_id,
+                {"type": "asset_skipped", "beat": beat,
+                 "local_path": done[beat], "index": index},
+            )
+            return None
+        url, _local = self._run_node(
+            doc_id, out_dir, beat=beat, contract_kind=contract_kind,
+            asset_kind=asset_kind, model_ref=model_ref, params=params,
+            prompt=prompt, index=index,
+        )
+        return url
+
+    def _fail_node(
+        self, doc_id: int, beat: str, asset_kind: str, error: str, index: int
+    ) -> None:
+        """Persiste un Asset en échec pour un nœud non exécutable (dépendance KO)."""
+        with Session(self.engine) as session:
+            asset = AssetRepo(session).create(
+                episode_id=0, beat=beat, kind=asset_kind, prompt="",
+                status="failed", editor_document_id=doc_id,
+            )
+            assert asset.id is not None
+            bus.publish(
+                doc_id,
+                {"type": "asset_failed", "asset_id": asset.id,
+                 "beat": beat, "error": error, "index": index},
+            )
+
     def _generate_one(
         self,
         doc: EditorDocument,
@@ -218,9 +362,35 @@ class EditorGenerationService:
         outputs: Dict[str, str],
         index: int,
     ) -> None:
+        """Brique PLATE legacy : un appel, un Asset (chaînage via outputs)."""
         params, prompt = self._final_params(doc, brick, outputs)
-        asset_kind = _ASSET_KIND[brick.type]
+        _url, local = self._run_node(
+            doc_id, out_dir, beat=brick.id, contract_kind=brick.type,
+            asset_kind=_ASSET_KIND[brick.type], model_ref=brick.model_ref,
+            params=params, prompt=prompt, index=index,
+        )
+        if local:
+            outputs[brick.id] = local
 
+    def _run_node(
+        self,
+        doc_id: int,
+        out_dir: str,
+        *,
+        beat: str,
+        contract_kind: str,
+        asset_kind: str,
+        model_ref: str,
+        params: Dict[str, Any],
+        prompt: str,
+        index: int,
+    ) -> "tuple[Optional[str], Optional[str]]":
+        """Génère UN nœud → Asset/Job/Cost/SSE. Renvoie (url distante, chemin local).
+
+        `contract_kind` ∈ image/video/voice (validation + coût + extension) ;
+        `asset_kind` = `Asset.kind` persistée (image/video/audio). L'url distante
+        (sortie `run_model`) sert au chaînage i2v ; le local est téléchargé.
+        """
         with Session(self.engine) as session:
             asset_repo = AssetRepo(session)
             job_repo = JobRepo(session)
@@ -228,47 +398,38 @@ class EditorGenerationService:
 
             asset = asset_repo.create(
                 episode_id=0,  # editor assets are not tied to an episode
-                beat=brick.id,
-                kind=asset_kind,
-                prompt=prompt,
-                status="generating",
-                editor_document_id=doc_id,
+                beat=beat, kind=asset_kind, prompt=prompt,
+                status="generating", editor_document_id=doc_id,
             )
             assert asset.id is not None
             asset_id = asset.id
             bus.publish(
                 doc_id,
-                {
-                    "type": "asset_started",
-                    "asset_id": asset_id,
-                    "beat": brick.id,
-                    "kind": asset_kind,
-                    "index": index,
-                },
+                {"type": "asset_started", "asset_id": asset_id,
+                 "beat": beat, "kind": asset_kind, "index": index},
             )
 
-            # Validate required params (after prompt/ref resolution).
-            missing = validate_params(brick.type, params)
+            missing = validate_params(contract_kind, params)
             if missing:
                 error = (
-                    f"champs requis manquants pour la brique {brick.id!r} "
-                    f"({brick.type}): {', '.join(missing)}"
+                    f"champs requis manquants pour {beat!r} "
+                    f"({contract_kind}): {', '.join(missing)}"
                 )
-                job = job_repo.create(asset_id, brick.model_ref, status="running")
+                job = job_repo.create(asset_id, model_ref, status="running")
                 assert job.id is not None
                 job_repo.mark_failed(job.id, error)
                 bus.publish(
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": error},
                 )
-                return
+                return None, None
 
-            job = job_repo.create(asset_id, brick.model_ref, status="running")
+            job = job_repo.create(asset_id, model_ref, status="running")
             assert job.id is not None
             job_id = job.id
 
             try:
-                outs = self.provider.run_model(brick.model_ref, params)
+                outs = self.provider.run_model(model_ref, params)
                 url = outs[0] if outs else ""
             except Exception as exc:  # provider failure -> mark failed
                 job_repo.mark_failed(job_id, str(exc))
@@ -276,9 +437,9 @@ class EditorGenerationService:
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": str(exc)},
                 )
-                return
+                return None, None
 
-            filename = f"{_safe(brick.id)}.{_EXT[brick.type]}"
+            filename = f"{_safe(beat)}.{_EXT[contract_kind]}"
             try:
                 local = self.downloader(url, out_dir, filename) if url else None
             except Exception as exc:
@@ -287,35 +448,39 @@ class EditorGenerationService:
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": str(exc)},
                 )
-                return
+                return None, None
 
             asset_repo.set_local_path(asset_id, local or "")
-            if local:
-                outputs[brick.id] = local
             job_repo.mark_done(job_id)
 
-            cost_line = _best_effort_cost(brick.model_ref, brick.type, params)
+            cost_line = _best_effort_cost(model_ref, contract_kind, params)
             cost_repo.create(
-                job_id,
-                cost_line.model,
-                cost_line.amount_usd,
-                units=cost_line.units,
-                unit_kind=cost_line.unit_kind,
+                job_id, cost_line.model, cost_line.amount_usd,
+                units=cost_line.units, unit_kind=cost_line.unit_kind,
             )
             bus.publish(
                 doc_id,
-                {
-                    "type": "asset_ready",
-                    "asset_id": asset_id,
-                    "local_path": local,
-                    "amount_usd": cost_line.amount_usd,
-                },
+                {"type": "asset_ready", "asset_id": asset_id,
+                 "local_path": local, "amount_usd": cost_line.amount_usd},
             )
+            return url, local
 
 
 def _safe(brick_id: str) -> str:
     """Filesystem-safe stem from a brick id."""
     return re.sub(r"[^A-Za-z0-9_-]", "_", brick_id)
+
+
+def _clip_node_count(clip: ClipBrick) -> int:
+    """Nombre de nœuds génératifs d'un clip : image (+ motion si vidéo) + enfants."""
+    return 1 + (1 if clip.kind == "video" else 0) + len(clip.children)
+
+
+def _url_for_local(path: Optional[str]) -> Optional[str]:
+    """URL utilisable pour un fichier local (upload Replicate, repli sur le chemin)."""
+    if path and os.path.exists(path):
+        return _upload_to_replicate(path) or path
+    return None
 
 
 def _best_effort_cost(
