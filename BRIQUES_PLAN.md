@@ -161,8 +161,8 @@ But : *« sans faire de teste trop poussé, que le test sur la génération de s
 |-------|--------|-------|--------|
 | B0 | ✅ FAIT | Modèle `ClipBrick` composite + migration v1→v2 | `63df007` |
 | B1 | ✅ FAIT | Compilateur `document_to_spec` : ClipBrick → VideoSpec | `9f67668` |
-| T  | ✅ FAIT | Markers `render`/`slow` + `conftest --runheavy` (run par défaut 6 s) | (en cours) |
-| B2 | ⬜ | Catalogue briques + contrats de capacité + 3 modèles/type | |
+| T  | ✅ FAIT | Markers `render`/`slow` + `conftest --runheavy` (run par défaut 6 s) | `cb5375d` |
+| B2 | ✅ FAIT | Contrats/catalogue/form **déjà présents** (registry+model_catalog) ; ajout du pont `validate_clip` composite-aware | (en cours) |
 | B3 | ⬜ | Frontend React : brique parente dépliable + inspecteur | |
 | B4 | ⬜ | Génération idempotente câblée par nœud | |
 
