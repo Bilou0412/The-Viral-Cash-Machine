@@ -224,3 +224,33 @@ def test_clip_and_flat_bricks_coexist():
     )
     kinds = {type(b).__name__ for b in d.bricks}
     assert kinds == {"ClipBrick", "GenerativeBrick"}
+
+
+# --- Durcissement B0 (revue multi-agents) ---------------------------------
+
+
+def test_inf_nan_floats_rejected():
+    """inf/NaN sérialisent en null → doc irrechargeable : rejet à la construction."""
+    for bad in (float("inf"), float("nan")):
+        with pytest.raises(Exception):
+            ClipBrick(id="p", kind="photo", zoom={"from_scale": 1.0, "to_scale": bad})
+        with pytest.raises(Exception):
+            ClipBrick(id="p", kind="photo", placement={"duration": bad})
+
+
+def test_numeric_bounds_enforced():
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", placement={"duration": -1.0})
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", placement={"track": -1})
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", zoom={"from_scale": 0.0, "to_scale": 1.2})
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", zoom={"from_scale": 1.0, "to_scale": 1.2, "focus_x": 9.0})
+
+
+def test_empty_ids_rejected():
+    with pytest.raises(Exception):
+        ClipBrick(id="", kind="photo")
+    with pytest.raises(Exception):
+        ClipBrick(id="p", kind="photo", children=[{"id": "", "role": "narration"}])

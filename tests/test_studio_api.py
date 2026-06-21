@@ -143,6 +143,40 @@ def test_full_flow(client):
     assert rf.content == b"fake-bytes"
 
 
+def test_editor_document_from_script(client):
+    """R1 câblé : le script d'un épisode → document de briques ClipBrick persistant."""
+    pid = client.post("/api/projects", json={"name": "p"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    client.post(f"/api/episodes/{eid}/script", json={"prompt": "cave"})
+
+    r = client.post(f"/api/episodes/{eid}/editor-document")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["episode_id"] == eid and body["project_id"] == pid
+
+    bricks = body["doc"]["bricks"]
+    assert all(b["type"] == "clip" for b in bricks)  # arbre ClipBrick, pas de plat
+    assert {b["kind"] for b in bricks} == {"video", "photo"}
+    ids = [b["id"] for b in bricks]
+    assert ids[0] == "ep_intro" and ids[-1] == "ep_epilogue"
+
+    # persisté + relisible via la route éditeur générique
+    doc_id = body["id"]
+    got = client.get(f"/api/editor/documents/{doc_id}").json()
+    assert [b["id"] for b in got["doc"]["bricks"]] == ids
+
+
+def test_editor_document_requires_script(client):
+    pid = client.post("/api/projects", json={"name": "p2"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e2"}
+    ).json()["id"]
+    r = client.post(f"/api/episodes/{eid}/editor-document")
+    assert r.status_code == 404  # pas de script encore
+
+
 def test_regenerate_single_asset(client):
     pid = client.post("/api/projects", json={"name": "p"}).json()["id"]
     eid = client.post(

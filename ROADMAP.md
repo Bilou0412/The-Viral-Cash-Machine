@@ -78,6 +78,9 @@ posé, tout le reste (compiler → spec → rendu) existe déjà.
 | **`document_to_spec`** : briques → `VideoSpec` | ✅ | `src/editor/compile_spec.py` (B1) |
 | **`validate_clip`** cohérent avec le compilateur (`_fields`) | ✅ | `src/editor/capabilities.py` (B2) |
 | **Tests allégés** : défaut ~6 s, `--runheavy` pour tout | ✅ | `tests/conftest.py` (T) |
+| **`adventure_to_bricks`** : script → arbre `ClipBrick` éditable | ✅ | `src/features/scripting/adventure_to_bricks.py` (R1) |
+| **Durcissement `ClipBrick`** : bornes, `allow_inf_nan`, ids non vides | ✅ | `src/editor/document.py` |
+| **Entrée du rail câblée** : `POST /api/episodes/{id}/editor-document` | ✅ | `src/studio/api/app.py` |
 
 ---
 
@@ -92,6 +95,23 @@ motion, textes narration) de `document_to_spec(adventure_to_bricks(s))` sont
 IDENTIQUES à ceux d'`adventure_to_spec(s)` — couverture 1:1, rien perdu/ajouté.
 Toutes les briques sortent `clip_is_ready`. Overlays montage (countdown, plaques,
 eye-open) restent hors briques. mypy clean, +8 tests.
+**Entrée du rail câblée** (revue multi-agents 2026-06-21) : `POST
+/api/episodes/{id}/editor-document` matérialise et persiste le document de briques
+depuis le script. + durcissement `ClipBrick` (le bug inf/NaN → doc irrechargeable
+est corrigé). R1 n'est plus du code mort côté entrée.
+
+### R1b — Génération des `ClipBrick` (`EditorGenerationService`) + idempotence  ⬜
+**La moitié manquante du câblage** (constat équipe) : aujourd'hui
+`EditorGenerationService` ne sait exécuter que les briques PLATES legacy
+(`GenerativeBrick`), pas les `ClipBrick`. Étendre `_ordered_generative_bricks` /
+`_generate_one` pour exécuter un `ClipBrick` = image (first-frame) → motion
+(image→video) → narration (TTS), mapper en lignes `Asset`
+(`editor_document_id`, `beat=brick.id` + sous-beat), et **porter l'idempotence**
+`(editor_document_id, beat)` de `generation.py:_existing_done`. Débloque alors
+`POST .../generate`, la régénération ciblée `.../bricks/{id}/regenerate` (déjà là)
+et le rendu. À faire AVANT R2 (sinon le front afficherait un document non
+générable). Décision actée : le rail `ClipBrick` devient le chemin éditable
+canonique ; le monde `PlannedAsset` reste le « chemin rapide sans revue ».
 
 ### R2 — UI de REVUE (React)  ⬜
 Présenter l'arbre de briques généré : timeline avec briques parentes **dépliables**
@@ -121,10 +141,10 @@ et confirmation explicite avant un run « final ». Tableau de coût par épisod
 
 - **Multi-format** : aventure d'abord ; la série « La Coloc » (`series/bible.md`)
   réutilisera le même rail briques plus tard (pas maintenant).
-- **Durcissement du modèle `ClipBrick`** (revue multi-agents) : bornes numériques
-  (durée ≥ 0, zoom > 0, focus ∈ [0,1]), `allow_inf_nan=False`, `id` non vide.
-  Non bloquant tant que l'UI écrit des valeurs sensées → à faire avant d'exposer
-  l'édition libre (donc avant/pendant R2).
+- **Durcissement du modèle `ClipBrick`** — ✅ FAIT : bornes numériques (durée ≥ 0,
+  zoom > 0, focus ∈ [0,1]), `allow_inf_nan=False`, `id` non vide (`Annotated[...]`).
+  Reste optionnel : `validate_assignment=True` (revalider à la mutation en place),
+  à peser quand l'éditeur mutera des briques.
 - **Retrait des briques plates** : quand R2 consomme les `ClipBrick`, retirer le
   chemin `resolve.py`/preview basé sur les briques plates.
 

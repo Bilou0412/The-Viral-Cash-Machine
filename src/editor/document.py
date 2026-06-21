@@ -38,9 +38,9 @@ class NarrativeContext(_Doc):
 class TimelinePlacement(_Doc):
     """Position d'une brique sur la timeline (secondes)."""
 
-    track: int = 0
-    start: float = 0.0
-    duration: float = 0.0
+    track: Annotated[int, Field(ge=0)] = 0
+    start: Annotated[float, Field(ge=0, allow_inf_nan=False)] = 0.0
+    duration: Annotated[float, Field(ge=0, allow_inf_nan=False)] = 0.0
 
 
 class Layer(_Doc):
@@ -66,16 +66,16 @@ class GenNode(_Doc):
 class ZoomSpec(_Doc):
     """Effet Ken Burns d'une brique PHOTO : agencement de rendu, PAS un appel API."""
 
-    from_scale: float = 1.0
-    to_scale: float = 1.2
-    focus_x: float = 0.5
-    focus_y: float = 0.5
+    from_scale: Annotated[float, Field(gt=0, allow_inf_nan=False)] = 1.0
+    to_scale: Annotated[float, Field(gt=0, allow_inf_nan=False)] = 1.2
+    focus_x: Annotated[float, Field(ge=0, le=1)] = 0.5
+    focus_y: Annotated[float, Field(ge=0, le=1)] = 0.5
 
 
 class AudioChild(_Doc):
     """Enfant audio d'une brique (narration off / dialogue perso) = un appel TTS."""
 
-    id: str
+    id: Annotated[str, Field(min_length=1)]
     role: Literal["narration", "dialogue"]
     model_ref: str = ""
     params: Dict[str, Any] = Field(default_factory=dict)
@@ -89,7 +89,7 @@ class GenerativeBrick(_Doc):
     `ClipBrick` ; le repli v1→clip viendra avec B1 (réécâblage des consommateurs).
     """
 
-    id: str
+    id: Annotated[str, Field(min_length=1)]
     type: Literal["image", "video", "voice"]
     model_ref: str = ""                  # "owner/name" ou "owner/name:version"
     params: Dict[str, Any] = Field(default_factory=dict)
@@ -102,7 +102,7 @@ class GenerativeBrick(_Doc):
 class MediaBrick(_Doc):
     """Média fourni par l'utilisateur (non généré) — réf asset ou chemin local."""
 
-    id: str
+    id: Annotated[str, Field(min_length=1)]
     type: Literal["media"] = "media"
     asset_ref: Optional[int] = None
     source_path: Optional[str] = None
@@ -113,7 +113,7 @@ class MediaBrick(_Doc):
 class TextBrick(_Doc):
     """Texte pur posé sur la timeline (titre, carton…)."""
 
-    id: str
+    id: Annotated[str, Field(min_length=1)]
     type: Literal["text"] = "text"
     payload: Dict[str, Any] = Field(default_factory=dict)
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
@@ -133,7 +133,7 @@ class ClipBrick(_Doc):
     `NarrationSegment`, VIDÉO → `FootageSegment`, etc.).
     """
 
-    id: str
+    id: Annotated[str, Field(min_length=1)]
     type: Literal["clip"] = "clip"
     kind: Literal["video", "photo"]
     image: GenNode = Field(default_factory=GenNode)   # toujours présent

@@ -530,6 +530,37 @@ def create_editor_document(
     }
 
 
+@app.post("/api/episodes/{episode_id}/editor-document")
+def create_editor_document_from_script(
+    episode_id: int, session: Session = Depends(_session)
+) -> dict[str, Any]:
+    """Matérialise le script de l'épisode en document de briques ÉDITABLE (R1).
+
+    C'est le chaînon « l'IA écrit → je révise en briques » : on lit le script
+    (`AdventureScript`), on le transforme en arbre `ClipBrick` via
+    `adventure_to_document`, et on persiste le document pour la revue/édition.
+    """
+    episode = _require_episode(session, episode_id)
+    script = _load_script(session, episode_id)
+    from ...features.scripting.adventure_to_bricks import adventure_to_document
+
+    doc = adventure_to_document(script, title=f"Épisode {episode_id}")
+    row = EditorDocRepo(session).create(
+        episode.project_id,
+        doc.title,
+        doc.model_dump_json(),
+        episode_id=episode_id,
+        schema_version=doc.schema_version,
+    )
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "episode_id": row.episode_id,
+        "title": row.title,
+        "doc": json.loads(row.doc_json),
+    }
+
+
 @app.get("/api/editor/documents/{doc_id}")
 def get_editor_document(
     doc_id: int, session: Session = Depends(_session)
