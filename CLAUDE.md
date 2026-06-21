@@ -21,13 +21,16 @@ python scripts/generate_assets.py
 
 On Windows, use `setup.bat` and `start.bat` instead.
 
-## Ongoing refactor (resume point)
+## Resume point — single source of truth
 
-A feature-driven + ports refactor is in progress on branch **`refactor/feature-driven`**.
-If the user says "reprends le refactor" / "resume the refactor", open `ARCHITECTURE_PLAN.md`
-and read the **« État d'avancement — POINT DE REPRISE »** table: the first ⬜ row is the next
-step. One step per session; per-step protocol (mypy + golden diff + commit + tick the table)
-is in that section. Step −1 (golden oracle, `tests/`) is done; next is **Étape 0 (scaffold + infra)**.
+Work happens on branch **`refactor/feature-driven`**. The single consolidated plan is
+**`ROADMAP.md`** (it supersedes the now-archived `ARCHITECTURE_PLAN.md`, `EDITOR_PLAN.md`,
+`MODIF_PLAN.md`, `EXTENSION_PLAN.md`, `BRIQUES_PLAN.md`). If the user says "reprends" /
+"resume", open `ROADMAP.md`: read **§4 (état consolidé, déjà fait)** then **§5 (étapes
+restantes)** — the first ⬜ row is the next step (currently **R1 — `adventure_to_bricks`**).
+One step per session; per-step protocol (mypy + fast tests + golden + commit + tick the
+table) is in §7. Product direction (tranchée) : **« l'IA écrit → je révise en briques »**,
+pas un éditeur vierge.
 
 ## Architecture
 

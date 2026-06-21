@@ -1,5 +1,8 @@
 # Plan de modification (vivant) — co-construit avec l'auteur
 
+> ⚠️ **ARCHIVE — supersédé par [`ROADMAP.md`](ROADMAP.md).** LOT 0/1/2 faits ; le wizard
+> guidé est abandonné. Conservé pour l'historique.
+
 > Processus : l'auteur dicte ses souhaits → on précise ensemble → une équipe
 > d'agents implémente (front + back). Document VIVANT : il grossit à chaque retour.
 

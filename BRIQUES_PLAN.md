@@ -1,5 +1,9 @@
 # BRIQUES_PLAN.md — Présentation en briques composables (vidéo/photo)
 
+> ⚠️ **ARCHIVE — absorbé par [`ROADMAP.md`](ROADMAP.md).** B0/B1/B2/T sont faits et
+> repris dans le ROADMAP (§4) ; B3/B4 deviennent R2/R3 du rail unique. Conservé pour
+> le détail de conception des briques.
+
 > Plan validé par équipe d'agents (exploration UI + assets + plans + tests).
 > **Décisions utilisateur** : surface = **frontend React** (Timeline/Palette existants) ;
 > hiérarchie = **VIDÉO et PHOTO sont les briques parentes**, les appels API enfants

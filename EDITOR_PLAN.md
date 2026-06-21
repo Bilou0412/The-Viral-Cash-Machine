@@ -1,5 +1,10 @@
 # EDITOR_PLAN — Éditeur de vidéo par briques (le vrai produit)
 
+> ⚠️ **ARCHIVE — supersédé par [`ROADMAP.md`](ROADMAP.md).** L'idée « éditeur vierge à
+> composer de zéro » est **abandonnée** ; le front devient une **surface de revue** de
+> l'arbre de briques généré par l'IA (ROADMAP §3, R2). E2/E3/E4 (contrats, catalogue,
+> form) sont faits et réutilisés. Conservé pour l'historique.
+
 > Correction de cap (2026-06-14). Le produit n'est PAS un wizard guidé : c'est un
 > **éditeur** type Remotion/DaVinci pour briques IA. Palette à gauche → glisser-
 > déposer sur une **timeline** → cliquer une brique → éditer **tous** ses arguments

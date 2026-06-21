@@ -1,5 +1,9 @@
 # Refactor : procédural → feature-driven + ports (typing.Protocol)
 
+> ⚠️ **ARCHIVE — supersédé par [`ROADMAP.md`](ROADMAP.md).** Le refactor feature-driven
+> et la phase IR décrits ici sont **faits** ; pour reprendre le travail, voir ROADMAP.md.
+> Conservé pour l'historique.
+
 > Feuille de route persistante entre sessions. **Une étape (−1 → 9) par session**, commit + diff contre le golden à chaque fois.
 
 > **Changement de périmètre (2026-06-09)** : l'**upscale IA (Step 3)** a été retiré du projet — `ai_upscale`,

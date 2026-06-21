@@ -1,5 +1,9 @@
 # REFONTE v7 — pipeline « fil rouge » (cohérence + sens + uniformité)
 
+> ⚠️ **ARCHIVE — supersédé par [`ROADMAP.md`](ROADMAP.md).** Le format Aventure (script,
+> voix) est intégré au rail unique ; l'image-first restant est la R4 du ROADMAP.
+> Conservé pour l'historique.
+
 > Remodelage demandé après le 1er épisode complet. Objectif : une vidéo qui a
 > du SENS de bout en bout, une DA et un personnage UNIFORMES, un montage propre
 > par la VITESSE (jamais d'allongement). Une phase par session, tests verts.
