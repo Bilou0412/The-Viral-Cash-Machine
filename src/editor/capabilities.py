@@ -28,55 +28,57 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from ..features.compositing.registry import get_contract, validate_params
+from ._fields import field_present, missing_required
 from .document import ClipBrick, GenNode
 
 # Quel contrat de capacité s'applique à chaque type de nœud d'un clip.
 _NODE_KIND = {"image": "image", "motion": "video", "audio": "voice"}
 
 
-def _has(params: Dict[str, object], contract_kind: str, field_name: str) -> bool:
-    """True si ``field_name`` (ou un de ses alias du contrat) est présent et non None."""
-    present = {k for k, v in params.items() if v is not None}
-    for fld in get_contract(contract_kind).fields:
-        if fld.name == field_name:
-            return bool(present.intersection((fld.name, *fld.aliases)))
-    return field_name in present
-
-
 def validate_clip(clip: ClipBrick) -> Dict[str, List[str]]:
     """Champs REQUIS manquants par nœud du clip. Dict vide = clip prêt à générer.
 
     Clés : ``"image"``, ``"motion"`` (clips vidéo), ``"child:<id>"`` (enfants
-    audio). Valeurs : la liste des champs canoniques manquants pour ce nœud.
+    audio), ``"zoom"`` (PHOTO zoomée sans narration). Valeurs : la liste des
+    champs canoniques manquants pour ce nœud.
+
+    INVARIANT garanti : ``validate_clip(c) == {}`` ⟹ ``document_to_spec`` réussit
+    sur ``c`` sans lever ni produire d'asset au prompt/texte vide. Le validateur
+    et le compilateur partagent ``_fields`` (mêmes alias, même règle « vide »).
     """
     issues: Dict[str, List[str]] = {}
 
-    img_missing = validate_params("image", clip.image.params)
+    img_missing = missing_required(clip.image.params, "image")
     if img_missing:
         issues["image"] = img_missing
-    has_image_prompt = _has(clip.image.params, "image", "prompt")
+    has_image_prompt = field_present(clip.image.params, "image", "prompt")
 
     if clip.kind == "video":
         motion = clip.motion or GenNode()
         eff = dict(motion.params)
         eff["image"] = "<frame frère>"  # fourni par le nœud image, pas par le motion
-        if not _has(eff, "video", "prompt") and has_image_prompt:
+        if not field_present(eff, "video", "prompt") and has_image_prompt:
             eff["prompt"] = "<repli image>"
-        if not _has(eff, "video", "duration") and clip.placement.duration > 0:
+        if not field_present(eff, "video", "duration") and clip.placement.duration > 0:
             eff["duration"] = clip.placement.duration
-        motion_missing = validate_params("video", eff)
+        motion_missing = missing_required(eff, "video")
         if motion_missing:
             issues["motion"] = motion_missing
 
     for child in clip.children:
         missing: List[str] = []
-        if not _has(child.params, "voice", "text"):
+        if not field_present(child.params, "voice", "text"):
             missing.append("text")
-        if child.role == "narration" and not _has(child.params, "voice", "voice_id"):
+        if child.role == "narration" and not field_present(child.params, "voice", "voice_id"):
             missing.append("voice_id")
         if missing:
             issues[f"child:{child.id}"] = missing
+
+    # PHOTO zoomée sans aucun enfant audio : non rendable (NarrationSegment exige
+    # un audio, IntroSegment n'a pas de zoom) → le compilateur lèverait. On le
+    # signale ici pour garantir l'invariant « ready ⟹ compile réussit ».
+    if clip.kind == "photo" and clip.zoom is not None and not clip.children:
+        issues["zoom"] = ["narration"]
 
     return issues
 

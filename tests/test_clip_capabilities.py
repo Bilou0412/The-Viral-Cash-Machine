@@ -115,6 +115,41 @@ def test_voice_id_alias_satisfies():
     assert validate_clip(clip) == {}  # `voice` est un alias de `voice_id`
 
 
+def test_photo_zoom_without_narration_is_not_ready():
+    """Invariant : ce que le compilateur refuserait est jugé non-prêt en amont."""
+    clip = ClipBrick(
+        id="p", kind="photo", image={"params": {"prompt": "x"}},
+        zoom={"from_scale": 1.0, "to_scale": 1.2},
+    )
+    assert validate_clip(clip) == {"zoom": ["narration"]}
+    assert clip_is_ready(clip) is False
+    # avec un enfant audio, la photo zoomée redevient rendable
+    ok = ClipBrick(
+        id="p2", kind="photo", image={"params": {"prompt": "x"}},
+        zoom={"from_scale": 1.0, "to_scale": 1.2},
+        children=[{"id": "n", "role": "narration", "params": {"text": "t", "voice_id": "V"}}],
+    )
+    assert clip_is_ready(ok) is True
+
+
+def test_empty_string_prompt_counts_as_missing():
+    clip = ClipBrick(id="v", kind="video", image={"params": {"prompt": "   "}},
+                     motion={"params": {"prompt": "m", "duration": 3}})
+    assert validate_clip(clip)["image"] == ["prompt"]
+
+
+def test_empty_string_child_text_counts_as_missing():
+    clip = ClipBrick(id="p", kind="photo", image={"params": {"prompt": "x"}},
+                     children=[{"id": "n", "role": "dialogue", "params": {"text": ""}}])
+    assert validate_clip(clip)["child:n"] == ["text"]
+
+
+def test_text_alias_satisfies():
+    clip = ClipBrick(id="p", kind="photo", image={"params": {"prompt": "x"}},
+                     children=[{"id": "d", "role": "dialogue", "params": {"input_text": "salut"}}])
+    assert validate_clip(clip) == {}  # `input_text` est un alias de `text`
+
+
 def test_node_kinds_map_for_form_lookup():
     clip = _ready_video()
     assert clip_node_kinds(clip) == {"image": "image", "motion": "video", "child:d1": "voice"}

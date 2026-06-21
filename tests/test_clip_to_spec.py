@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("pydantic")
 
 from src.editor import ClipBrick, EditorDocument, document_to_spec  # noqa: E402
+from src.editor.capabilities import clip_is_ready  # noqa: E402
 from src.videospec.models import (  # noqa: E402
     FootageSegment,
     ImageAsset,
@@ -138,3 +139,55 @@ def test_canvas_is_reused_from_document():
     spec = document_to_spec(EditorDocument(bricks=[]))
     assert (spec.canvas.width, spec.canvas.height) == (1080, 1920)
     assert spec.assets == () and spec.segments == ()
+
+
+def test_child_text_alias_not_dropped_by_compiler():
+    """Un enfant renseigné via l'alias `input_text` ne compile PAS en voix vide."""
+    clip = {
+        "id": "p", "type": "clip", "kind": "photo",
+        "image": {"params": {"prompt": "x"}},
+        "children": [{"id": "n", "role": "narration",
+                      "params": {"input_text": "le silence", "voice": "V"}}],
+    }
+    spec = document_to_spec(EditorDocument(bricks=[clip]))
+    voice = next(a for a in spec.assets if isinstance(a, VoiceAsset))
+    assert voice.text == "le silence"  # alias honoré, pas de texte vide
+    assert voice.voice_id == "V"        # alias `voice` → voice_id
+
+
+def test_duration_alias_num_frames_honored():
+    clip = _video_clip(motion={"params": {"prompt": "m", "num_frames": 8}}, placement={"track": 0, "start": 0.0, "duration": 0.0})
+    spec = document_to_spec(EditorDocument(bricks=[clip]))
+    vid = next(a for a in spec.assets if isinstance(a, VideoAsset))
+    assert vid.duration == 8.0
+
+
+# -- INVARIANT de cohérence validate_clip ↔ compilateur ---------------------
+
+_INVARIANT_CLIPS = [
+    {"id": "v", "type": "clip", "kind": "video", "image": {"params": {"prompt": "p"}},
+     "motion": {"params": {"prompt": "m", "duration": 3}}},
+    {"id": "vfb", "type": "clip", "kind": "video", "image": {"params": {"prompt": "p"}},
+     "motion": {"params": {"duration": 3}}},  # prompt motion via repli image
+    {"id": "pn", "type": "clip", "kind": "photo", "image": {"params": {"prompt": "p"}},
+     "zoom": {"from_scale": 1.0, "to_scale": 1.2},
+     "children": [{"id": "n", "role": "narration", "params": {"text": "t", "voice_id": "V"}}]},
+    {"id": "pf", "type": "clip", "kind": "photo", "image": {"params": {"prompt": "p"}}},
+    {"id": "alias", "type": "clip", "kind": "photo", "image": {"params": {"prompt": "p"}},
+     "children": [{"id": "d", "role": "dialogue", "params": {"input_text": "hi"}}]},
+]
+
+
+@pytest.mark.parametrize("raw", _INVARIANT_CLIPS, ids=lambda r: r["id"])
+def test_ready_implies_compile_succeeds(raw):
+    """clip_is_ready(c) ⟹ document_to_spec(c) réussit sans lever."""
+    clip = EditorDocument(bricks=[raw]).bricks[0]
+    if clip_is_ready(clip):
+        spec = document_to_spec(EditorDocument(bricks=[clip]))
+        assert len(spec.segments) == 1
+        # aucun asset au prompt/texte vide n'est produit
+        for a in spec.assets:
+            if isinstance(a, ImageAsset):
+                assert a.prompt.strip() != ""
+            if isinstance(a, VoiceAsset):
+                assert a.text.strip() != ""

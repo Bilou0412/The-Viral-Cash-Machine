@@ -37,14 +37,15 @@ from ..videospec.models import (
     VoiceAsset,
     ZoomEffect,
 )
+from ._fields import field_value
 from .document import AudioChild, ClipBrick, EditorDocument, GenNode
 
 _DEFAULT_VIDEO_DURATION = 7.0
 
 
-def _prompt(node: GenNode) -> str:
-    """Prompt d'un nœud de génération (params libres) — défaut chaîne vide."""
-    value = node.params.get("prompt")
+def _prompt(node: GenNode, kind: str) -> str:
+    """Prompt d'un nœud (alias-conscient via le contrat ``kind``, vide par défaut)."""
+    value = field_value(node.params, kind, "prompt")
     return value if isinstance(value, str) else ""
 
 
@@ -60,8 +61,8 @@ def _single_audio_child(clip: ClipBrick) -> Optional[AudioChild]:
 
 def _voice_asset(clip: ClipBrick, child: AudioChild) -> VoiceAsset:
     params = child.params
-    text = params.get("text")
-    voice_id = params.get("voice_id")
+    text = field_value(params, "voice", "text")
+    voice_id = field_value(params, "voice", "voice_id")
     kwargs: Dict[str, Any] = {"id": f"{clip.id}__voice", "text": text or ""}
     if isinstance(voice_id, str) and voice_id:
         kwargs["voice_id"] = voice_id
@@ -70,7 +71,7 @@ def _voice_asset(clip: ClipBrick, child: AudioChild) -> VoiceAsset:
 
 def _image_asset(clip: ClipBrick) -> ImageAsset:
     params = clip.image.params
-    kwargs: Dict[str, Any] = {"id": f"{clip.id}__img", "prompt": _prompt(clip.image)}
+    kwargs: Dict[str, Any] = {"id": f"{clip.id}__img", "prompt": _prompt(clip.image, "image")}
     for key in ("size", "aspect_ratio"):
         val = params.get(key)
         if isinstance(val, str) and val:
@@ -81,12 +82,12 @@ def _image_asset(clip: ClipBrick) -> ImageAsset:
 def _video_asset(clip: ClipBrick, image_id: str, audio_id: Optional[str]) -> VideoAsset:
     motion = clip.motion or GenNode()
     params = motion.params
-    duration = params.get("duration")
-    if not isinstance(duration, (int, float)) or duration <= 0:
+    duration = field_value(params, "video", "duration")
+    if isinstance(duration, bool) or not isinstance(duration, (int, float)) or duration <= 0:
         duration = clip.placement.duration if clip.placement.duration > 0 else _DEFAULT_VIDEO_DURATION
     kwargs: Dict[str, Any] = {
         "id": f"{clip.id}__vid",
-        "prompt": _prompt(motion) or _prompt(clip.image),
+        "prompt": _prompt(motion, "video") or _prompt(clip.image, "image"),
         "image": image_id,
         "duration": float(duration),
     }
