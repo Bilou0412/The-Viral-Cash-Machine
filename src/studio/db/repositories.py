@@ -7,7 +7,7 @@ session lifecycle (commit happens inside the mutating methods).
 
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 
 from sqlmodel import Session, select
 
@@ -393,6 +393,8 @@ class CostRepo:
         amount_usd: float,
         units: float = 0.0,
         unit_kind: str = "units",
+        source: str = "estimate",
+        predict_time_s: Optional[float] = None,
     ) -> CostEntry:
         entry = CostEntry(
             job_id=job_id,
@@ -400,6 +402,9 @@ class CostRepo:
             amount_usd=amount_usd,
             units=units,
             unit_kind=unit_kind,
+            source=source,
+            is_estimate=(source == "estimate"),
+            predict_time_s=predict_time_s,
         )
         self.session.add(entry)
         self.session.commit()
@@ -416,14 +421,31 @@ class CostRepo:
 
     def cost_total_by_episode(self, episode_id: int) -> float:
         """Total USD spent on an episode, joining CostEntry -> Job -> Asset."""
+        return float(sum(e["amount_usd"] for e in self.actual_by_episode(episode_id)))
+
+    def actual_by_episode(self, episode_id: int) -> list[dict[str, Any]]:
+        """Per-node ACTUAL cost rows for an episode (CostEntry ⋈ Job ⋈ Asset)."""
         statement = (
-            select(CostEntry)
+            select(CostEntry, Asset)
             .join(GenerationJob, GenerationJob.id == CostEntry.job_id)  # type: ignore[arg-type]
             .join(Asset, Asset.id == GenerationJob.asset_id)  # type: ignore[arg-type]
             .where(Asset.episode_id == episode_id)
         )
-        entries = self.session.exec(statement).all()
-        return float(sum(e.amount_usd for e in entries))
+        rows = self.session.exec(statement).all()
+        return [
+            {
+                "asset_id": a.id,
+                "beat": a.beat,
+                "kind": a.kind,
+                "model": c.model,
+                "amount_usd": round(c.amount_usd, 6),
+                "units": c.units,
+                "unit_kind": c.unit_kind,
+                "source": c.source,
+                "is_estimate": c.is_estimate,
+            }
+            for c, a in rows
+        ]
 
 
 class EditorDocRepo:

@@ -82,6 +82,9 @@ _ADDED_COLUMNS = [
     ("episode", "theme", "VARCHAR", "'horror'"),
     ("asset", "excluded", "BOOLEAN", "0"),
     ("asset", "editor_document_id", "INTEGER", "NULL"),
+    ("cost_entry", "source", "VARCHAR", "'estimate'"),
+    ("cost_entry", "is_estimate", "BOOLEAN", "1"),
+    ("cost_entry", "predict_time_s", "FLOAT", "NULL"),
 ]
 
 

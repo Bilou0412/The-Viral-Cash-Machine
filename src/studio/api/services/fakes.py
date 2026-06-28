@@ -7,7 +7,7 @@ the image-first ordering and counts. Used whenever tests exercise generation.
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from ....features.assets.ports import AssetProvider
+from ....features.assets.ports import AssetProvider, RunResult
 
 
 class FakeAssetProvider(AssetProvider):
@@ -18,7 +18,14 @@ class FakeAssetProvider(AssetProvider):
         self.image_calls: List[Tuple[str, str, str]] = []
         self.video_calls: List[dict[str, object]] = []
         self.run_calls: List[Tuple[str, Dict[str, Any]]] = []
+        self.last_run: Optional[RunResult] = None
         self._n = 0
+
+    def _metered(self, url: str) -> str:
+        # No provider cost offline; a fake predict_time exercises the
+        # "compute / estimate fallback" branch of cost_actual.
+        self.last_run = RunResult(urls=[url], predict_time=1.0, metrics={"predict_time": 1.0})
+        return url
 
     def _next(self, ext: str) -> str:
         self._n += 1
@@ -28,7 +35,7 @@ class FakeAssetProvider(AssetProvider):
         self, text: str, voice_id: str, model: "str | None" = None
     ) -> str:
         self.voice_calls.append((text, voice_id))
-        return self._next("mp3")
+        return self._metered(self._next("mp3"))
 
     def generate_image(
         self,
@@ -38,7 +45,7 @@ class FakeAssetProvider(AssetProvider):
         image_input: "list[str] | None" = None,
     ) -> str:
         self.image_calls.append((prompt, size, aspect_ratio, image_input))
-        return self._next("png")
+        return self._metered(self._next("png"))
 
     def animate_video(
         self,
@@ -59,8 +66,16 @@ class FakeAssetProvider(AssetProvider):
                 "audio": audio_url,
             }
         )
-        return self._next("mp4")
+        return self._metered(self._next("mp4"))
+
+    def run_model_metered(self, model_ref: str, params: Dict[str, Any]) -> RunResult:
+        self.run_calls.append((model_ref, params))
+        self.last_run = RunResult(
+            urls=[f"https://fake.local/{model_ref}/0.out"],
+            predict_time=1.0,
+            metrics={"predict_time": 1.0},
+        )
+        return self.last_run
 
     def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
-        self.run_calls.append((model_ref, params))
-        return [f"https://fake.local/{model_ref}/0.out"]
+        return self.run_model_metered(model_ref, params).urls

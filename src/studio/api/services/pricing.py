@@ -11,21 +11,23 @@ they are NOT a contract with the provider, only a planning aid for the cost HUD.
 
 from dataclasses import dataclass
 
+from . import price_table
+
 # Replicate model identifiers (kept in sync with features/assets/replicate_provider).
 MODEL_IMAGE = "bytedance/seedream-4.5"
 MODEL_VIDEO = "prunaai/p-video"
 MODEL_VOICE = "minimax/speech-2.8-turbo"
 
 # Default motion duration per video beat (seconds). Mirrors Pipeline.generate_assets.
-BEAT_VIDEO_SECONDS = 7.0
+BEAT_VIDEO_SECONDS = price_table.beat_video_seconds()
 
-# Rate card (USD). unit_kind is recorded on each CostEntry alongside the amount.
-RATE_IMAGE_USD = 0.03          # per generated image
-RATE_VIDEO_USD_PER_S = 0.05    # per second of generated video
-RATE_VOICE_USD_PER_KCHAR = 0.02  # per 1000 characters of synthesized speech
-
-# A draft pass is cheaper (lower resolution / fewer steps); applied to video only.
-DRAFT_VIDEO_MULTIPLIER = 0.4
+# Estimate rates now live in prices.json (editable). These module names are kept
+# for back-compat but resolve to the table; the real post-flight cost is in
+# cost_actual.py.
+RATE_IMAGE_USD = price_table.estimate_image_usd()
+RATE_VIDEO_USD_PER_S = price_table.estimate_video_usd_per_s()
+RATE_VOICE_USD_PER_KCHAR = price_table.estimate_voice_usd_per_kchar()
+DRAFT_VIDEO_MULTIPLIER = price_table.draft_video_multiplier()
 
 
 @dataclass(frozen=True)
