@@ -1,93 +1,75 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code working in this repository. Keep this file a **map + pointers**,
+not a copy of the code. Branche de travail : **`refactor/feature-driven`**.
 
-## Project Overview
+## Reprendre le travail (« reprends » / « resume »)
 
-ViralCashMachine V2 is a Streamlit dashboard that automates AI-powered vertical video (9:16) generation for TikTok/Shorts/Reels. It orchestrates multiple AI services (OpenAI, Replicate) to produce horror-themed short videos with character dialogues, narration, and interactive choices.
+La **source unique de vérité** est **`ROADMAP.md`**. Pour reprendre : ouvrir `ROADMAP.md`,
+lire **§4 (état consolidé, déjà fait)** puis **§5 (étapes restantes)** — la première ligne
+⬜ = la prochaine étape (actuellement **R2 — UI de revue React**). **Une étape par session**,
+protocole de l'étape en **§7**. Direction produit tranchée : **« l'IA écrit → je révise en
+briques »**, pas un éditeur de montage vierge.
 
-## Commands
+## Le produit en une phrase
+
+Générateur de **vidéos verticales 9:16** (format aventure à choix) pour TikTok/Shorts/Reels.
+L'IA écrit un script, le décompose en **briques éditables** (`ClipBrick` vidéo/photo + enfants
+narration/dialogue), on **révise les briques** dans une UI React et on **ne régénère que ce
+qu'on touche** (maîtrise du coût). Dialogues en **français**, prompts visuels en **anglais**.
+
+## Le rail (pipeline unique)
+
+```
+idée/thème
+  → [IA]  openai_adventure_decomposer   → AdventureScript      src/features/scripting/
+  → [R1]  adventure_to_bricks           → arbre de ClipBrick   src/features/scripting/adventure_to_bricks.py
+  → [R2]  UI de revue React (déplier/éditer les args, régénérer ciblé)   frontend/
+  → [B1]  document_to_spec              → VideoSpec (IR)       src/editor/compile_spec.py
+  → [IR]  resolve_real + MoviePyRenderEngine → MP4 final       src/videospec/
+```
+
+## Carte du code (le vrai index — préférer la lecture ciblée d'un module au grep large)
+
+Backend Python (`src/`, ~10,5k LOC, mypy strict par zones) :
+- `src/features/` — features à **ports `typing.Protocol`** : `assets/` (Replicate provider),
+  `scripting/` (décomposeur LLM aventure, `adventure_to_bricks`, prompts/themes),
+  `transcription/` (Whisper), `compositing/` (overlays, heads, srt, `registry` capacités).
+- `src/videospec/` — IR déclarative **`VideoSpec`** (immuable) + ports `RenderEngine`/
+  `AssetResolver`, `render_moviepy.py`, `resolve_real.py`/`resolve_fake.py`.
+- `src/editor/` — **`ClipBrick`** (`document.py`), `document_to_spec` (`compile_spec.py`),
+  `capabilities.py` (`validate_clip`), `resolve.py`, `migrations.py`.
+- `src/studio/api/` — backend **FastAPI** : `app.py`, `events.py` (SSE), `services/`
+  (génération, `editor_generation`, montage, `model_catalog`, pricing…), `db/` (sqlmodel :
+  models, repositories, migrate).
+- `src/infra/` — `download.py`, `env.py`, `logging.py`. `src/pipeline.py` — séquence pure.
+- `src/app.py` — **legacy Streamlit (562 LOC, en cours de retrait, mypy tolérant)**. Ne pas
+  étendre ; le produit vit dans `src/studio/api` + `frontend/`.
+
+Frontend (`frontend/`, React/TS/Vite/Tailwind, ~6k LOC) — surface de **revue** de briques
+(`src/components/editor/`, `src/pages/`). Rendu vidéo Remotion : `render/`.
+Tests (`tests/`, ~3,9k LOC) — golden tests + split cheap/`--runheavy` (cf. `conftest.py`).
+Scripts/legacy : `scripts/` (`compiler.py`, `generate_assets.py`).
+
+## Commandes
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Boucle de vérif complète (Docker dev) — mypy cliquet (baseline 40) + pytest + build front
+make verify
+make e2e            # tests navigateur Playwright (front en mock)
 
-# Run the app
-python -m streamlit run src/app.py
-
-# Generate audio assets (tick/beep sound effects)
-python scripts/generate_assets.py
+# Chemin natif (sans Docker, p.ex. conteneur web) :
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -q            # tests rapides (~6 s) ; --runheavy pour tout
+python -m mypy src             # type-check
+# Front : cd frontend && npm install && npm run build
 ```
 
-On Windows, use `setup.bat` and `start.bat` instead.
+## Conventions (non déductibles du code)
 
-## Resume point — single source of truth
-
-Work happens on branch **`refactor/feature-driven`**. The single consolidated plan is
-**`ROADMAP.md`** (it supersedes the now-archived `ARCHITECTURE_PLAN.md`, `EDITOR_PLAN.md`,
-`MODIF_PLAN.md`, `EXTENSION_PLAN.md`, `BRIQUES_PLAN.md`). If the user says "reprends" /
-"resume", open `ROADMAP.md`: read **§4 (état consolidé, déjà fait)** then **§5 (étapes
-restantes)** — the first ⬜ row is the next step (currently **R1 — `adventure_to_bricks`**).
-One step per session; per-step protocol (mypy + fast tests + golden + commit + tick the
-table) is in §7. Product direction (tranchée) : **« l'IA écrit → je révise en briques »**,
-pas un éditeur vierge.
-
-## Architecture
-
-### 2-Step Production Pipeline
-
-The core workflow is a 2-step pipeline, each triggered by a button in the Streamlit UI:
-
-1. **Step 1 - Asset Generation** (`app.py`): Calls Replicate APIs to generate voice audio (`minimax/speech-2.8-turbo`), base image (`bytedance/seedream-4.5`), and video animation (`prunaai/p-video`). Downloads all assets to `exports/{project}/{instance_id}/`.
-
-2. **Step 2 - Raw Compilation** (`compiler.py:compile_video_raw`): Assembles the final video using MoviePy. This step:
-   - Runs Whisper (OpenAI) for word-level subtitle extraction
-   - Uses Grounding DINO (Replicate) via `get_ai_head_positions_split()` to detect character head positions for nameplate placement — splits the image into left/right halves and runs detection in parallel
-   - Builds a multi-segment video: cinematic intro → video hook with subtitles → narration with zoom → countdown timer with choices
-   - Output: `final_video.mp4` (the final deliverable)
-
-### Data Model
-
-`VideoInstance` (dataclass in `app.py`) holds all state for one video unit: script, character config, AI-generated prompts, asset URLs, subtitle data, and head detection coordinates. Serialized as `metadata.json` in each instance directory.
-
-### Key File Roles
-
-- **`src/app.py`** — Streamlit UI, session state management, OpenAI prompt decomposition, Replicate API calls for asset generation
-- **`scripts/compiler.py`** — All post-processing: MoviePy video assembly, Whisper subtitles, AI head detection
-- **`scripts/generate_assets.py`** — One-off script to create `assets/tick.wav` and `assets/final.wav` sound effects
-
-### External Dependencies
-
-- **Replicate API** (`REPLICATE_API_TOKEN`): video gen, image gen, voice synthesis, Grounding DINO detection
-- **OpenAI API** (`OPENAI_API_KEY`): script decomposition (GPT), Whisper transcription
-- **FFmpeg**: Required by MoviePy
-
-### Storage Layout
-
-```
-exports/{project_name}/{instance_id}/
-├── video.mp4          # Raw AI-generated video
-├── base_image.png     # AI-generated freeze frame
-├── character.mp3      # Character voice audio
-├── narrator.mp3       # Narrator voice audio
-├── metadata.json      # Serialized VideoInstance
-└── final_video.mp4    # Step 2 output (final deliverable)
-```
-
-## Important Conventions
-
-- All visual prompts must be in English; dialogue/narration is in French
-- Character names are French human names (never placeholders like "Monster A")
-- Video prompts enforce strict static camera rules to prevent AI model drift
-- The `compile_video_raw` function is the most complex piece — it handles intro animation, subtitle overlay, cinematic zoom, nameplate positioning, and countdown timer assembly in one pass
-- Session state keys use short abbreviations (e.g., `inst_v_p`, `c_l_n`) to sync between widgets and the `VideoInstance` dataclass
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- Prompts visuels en **anglais** ; dialogues/narration en **français**.
+- Noms de personnages = **prénoms humains français** (jamais « Monster A »).
+- Les prompts vidéo imposent une **caméra statique stricte** (évite le drift du modèle).
+- Backend : respecter les **ports** (`ports.py`) et l'**immutabilité** de l'IR `VideoSpec` ;
+  **idempotence** de génération (un asset `ready` n'est ni régénéré ni repayé).
+- Zones **mypy strict** : `src.infra.*`, `src.features.*`, `src.studio.db.*` (cf. `pyproject.toml`).
