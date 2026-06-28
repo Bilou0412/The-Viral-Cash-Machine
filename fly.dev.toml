@@ -9,7 +9,9 @@ primary_region = "cdg"
   dockerfile = "Dockerfile"
 
 [env]
-  VCM_STUDIO_DB = ""                       # → DATABASE_URL (Postgres dev)
+  # 1re vidéo sans Postgres : SQLite persistant sur le volume /data.
+  # Pour passer à Postgres plus tard : remettre "" puis `fly mpg attach`.
+  VCM_STUDIO_DB = "sqlite:////data/studio.db"
   VCM_OUTPUT_DIR = "/data/studio_output"
   VCM_RENDER_BASE = "https://vcm-studio-dev.fly.dev"
   # DEV autorise aussi le front local pour itérer contre l'API déployée.
