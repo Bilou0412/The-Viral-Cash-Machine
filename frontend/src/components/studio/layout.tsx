@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom"
-import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film } from "lucide-react"
+import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usingMocks } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ const nav = [
   { to: "/projects", label: "Projets", icon: FolderKanban, end: false },
   { to: "/editor", label: "Éditeur", icon: Film, end: true },
   { to: "/library", label: "Bibliothèque", icon: Library, end: false },
+  { to: "/settings", label: "Réglages", icon: KeyRound, end: false },
 ]
 
 export function Layout() {

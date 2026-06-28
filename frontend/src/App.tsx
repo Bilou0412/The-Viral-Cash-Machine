@@ -13,6 +13,7 @@ import { ProjectDetail } from "@/pages/ProjectDetail"
 import { EpisodeRedirect } from "@/pages/EpisodeRedirect"
 import { Editor } from "@/pages/Editor"
 import { EditorIndex } from "@/pages/EditorIndex"
+import { Settings } from "@/pages/Settings"
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 10_000 } },
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: "projects", element: <Projects /> },
       { path: "projects/:id", element: <ProjectDetail /> },
       { path: "library", element: <LibraryPage /> },
+      { path: "settings", element: <Settings /> },
       { path: "editor", element: <EditorIndex /> },
       { path: "episodes/:id", element: <EpisodeRedirect /> },
       { path: "episodes/:id/script", element: <ScriptEditor /> },

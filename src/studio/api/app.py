@@ -49,6 +49,7 @@ from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
 )
+from .services import secrets
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
@@ -63,7 +64,9 @@ if TYPE_CHECKING:
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    init_db(get_engine())
+    eng = get_engine()
+    init_db(eng)
+    secrets.apply_to_env(eng)  # load BYOK keys (entered in the UI) into the env
     yield
 
 
@@ -385,6 +388,30 @@ def get_episode_cost(
         # Coût réel par nœud (après génération) : montant + provenance.
         "nodes": nodes,
     }
+
+
+# ---------------------------------------------------------------------------
+# Réglages : clés API saisies dans l'app (BYOK). Jamais renvoyées en clair.
+# ---------------------------------------------------------------------------
+
+class KeysIn(BaseModel):
+    openai: Optional[str] = None
+    replicate: Optional[str] = None
+
+
+@app.get("/api/settings/keys")
+def get_keys(engine: Engine = Depends(get_db_engine)) -> dict[str, bool]:
+    """Statut des clés (configurées ou non). Ne renvoie jamais la valeur."""
+    return secrets.keys_status(engine)
+
+
+@app.put("/api/settings/keys")
+def put_keys(
+    body: KeysIn, engine: Engine = Depends(get_db_engine)
+) -> dict[str, bool]:
+    """Enregistre les clés non vides (DB + os.environ) et renvoie le statut."""
+    secrets.set_keys(engine, openai=body.openai, replicate=body.replicate)
+    return secrets.keys_status(engine)
 
 
 # ---------------------------------------------------------------------------

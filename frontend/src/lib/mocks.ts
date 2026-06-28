@@ -274,6 +274,9 @@ function deriveRenderModel(doc: EditorDoc): RenderModel {
   return { version: "1.0", canvas: doc.canvas, clips, total_duration: total }
 }
 
+// In-memory BYOK key status for mock/e2e mode (no backend).
+const mockKeys = { openai_set: false, replicate_set: false }
+
 export const mockApi = {
   async listThemes() { await delay(); return [...themes] },
 
@@ -472,6 +475,18 @@ export const mockApi = {
   async renderEditorDocument(id: string) {
     await delay(400)
     return { id, status: "scheduled" }
+  },
+
+  async getKeysStatus() {
+    await delay()
+    return { ...mockKeys }
+  },
+
+  async saveKeys(body: { openai?: string; replicate?: string }) {
+    await delay()
+    if (body.openai) mockKeys.openai_set = true
+    if (body.replicate) mockKeys.replicate_set = true
+    return { ...mockKeys }
   },
 }
 

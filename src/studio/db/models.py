@@ -160,3 +160,17 @@ class CostEntry(SQLModel, table=True):
     is_estimate: bool = Field(default=True)
     predict_time_s: Optional[float] = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
+
+
+class AppSetting(SQLModel, table=True):
+    """Generic key/value app config — notably the BYOK API keys entered in the UI.
+
+    Stored on the DB volume so they survive redeploys. Single-tenant (self-host):
+    the value is the secret itself; per-user + encryption come with auth (Phase B/E).
+    """
+
+    __tablename__ = "app_setting"
+
+    key: str = Field(primary_key=True)
+    value: str = Field(default="")
+    updated_at: datetime = Field(default_factory=_utcnow)

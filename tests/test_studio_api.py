@@ -303,3 +303,27 @@ def test_errors(client):
     # Montage with no assets -> conflict.
     client.post(f"/api/episodes/{eid}/script", json={"prompt": "x"})
     assert client.post(f"/api/episodes/{eid}/montage").status_code == 409
+
+
+def test_settings_keys(client):
+    # set_keys writes into os.environ (intended in prod); clean up afterwards so
+    # the saved key can't leak into other tests (which expect no OpenAI key).
+    try:
+        # No keys initially (fixture deletes env keys).
+        assert client.get("/api/settings/keys").json() == {
+            "openai_set": False,
+            "replicate_set": False,
+        }
+        # Save one key — the value is never echoed back.
+        r = client.put("/api/settings/keys", json={"openai": "sk-test-123"})
+        assert r.status_code == 200
+        assert r.json() == {"openai_set": True, "replicate_set": False}
+        # Persisted + masked: status says set, the secret never appears in the body.
+        assert client.get("/api/settings/keys").json()["openai_set"] is True
+        assert "sk-test-123" not in client.get("/api/settings/keys").text
+        # An empty field must NOT wipe an existing key.
+        client.put("/api/settings/keys", json={"openai": ""})
+        assert client.get("/api/settings/keys").json()["openai_set"] is True
+    finally:
+        os.environ.pop("OPENAI_API_KEY", None)
+        os.environ.pop("REPLICATE_API_TOKEN", None)
