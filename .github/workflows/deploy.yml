@@ -26,12 +26,18 @@ jobs:
     name: deploy dev
     runs-on: ubuntu-latest
     concurrency: { group: deploy-dev, cancel-in-progress: true }
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
+      - name: Skip si FLY_API_TOKEN absent
+        if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN absent → déploiement sauté (pose le secret pour activer la CD, cf. docs/DEPLOY.md)."
       - uses: actions/checkout@v4
+        if: env.FLY_API_TOKEN != ''
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: env.FLY_API_TOKEN != ''
       - run: flyctl deploy --remote-only --config fly.dev.toml
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        if: env.FLY_API_TOKEN != ''
 
   deploy-prod:
     # uniquement sur tag v* ou déclenchement manuel
@@ -39,9 +45,15 @@ jobs:
     name: deploy prod
     runs-on: ubuntu-latest
     concurrency: { group: deploy-prod, cancel-in-progress: false }
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
+      - name: Skip si FLY_API_TOKEN absent
+        if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN absent → déploiement sauté (pose le secret pour activer la CD, cf. docs/DEPLOY.md)."
       - uses: actions/checkout@v4
+        if: env.FLY_API_TOKEN != ''
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: env.FLY_API_TOKEN != ''
       - run: flyctl deploy --remote-only --config fly.toml
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        if: env.FLY_API_TOKEN != ''
