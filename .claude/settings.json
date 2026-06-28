@@ -6,7 +6,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -m pip install -q -r requirements.txt -r requirements-dev.txt 2>&1 | tail -1; if command -v ffmpeg >/dev/null 2>&1; then echo '[env] ffmpeg OK'; else echo '[env] WARN ffmpeg manquant (MoviePy en a besoin)'; fi; echo '[env] deps prêtes. Vérif: python -m pytest -q (+ --runheavy) ; python -m mypy src. Docker dev (make verify) indisponible sur le web.'"
+            "command": "python -m pip install -q -r requirements.txt -r requirements-dev.txt 2>&1 | tail -1; if command -v ffmpeg >/dev/null 2>&1; then echo '[env] ffmpeg OK'; else echo '[env] WARN ffmpeg manquant (golden/render skippés sans lui)'; fi; echo '[env] Python prêt. Vérif: bash scripts/verify.sh [--fast|--heavy|--e2e]. Docker (make verify) indisponible sur le web.'"
+          },
+          {
+            "type": "command",
+            "async": true,
+            "command": "( cd frontend && npm ci ) >/dev/null 2>&1; ( cd e2e && npm install ) >/dev/null 2>&1; echo '[env] deps Node (front+e2e) prêtes'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/stop_verify.sh"
           }
         ]
       }

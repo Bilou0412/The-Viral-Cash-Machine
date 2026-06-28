@@ -1,27 +1,28 @@
 ---
 name: verify
-description: Lancer la boucle de vérification (mypy cliquet + pytest + build front) et résumer pass/fail. Utilise make verify si Docker est dispo, sinon le chemin natif.
+description: Lancer la boucle de vérification native (mypy cliquet + pytest + build front, +e2e en option) et résumer pass/fail. Source unique = scripts/verify.sh.
 ---
 
 # /verify — boucle de vérification
 
-But : confirmer qu'on n'a rien cassé, de façon déterministe.
+But : confirmer qu'on n'a rien cassé, de façon déterministe. **Une seule source** :
+`scripts/verify.sh` (la même qu'utilisent la CI et le hook de session).
 
-## Choix du chemin
+## Commande
 
-1. **Docker dispo** (`docker compose` présent et utilisable) → `make verify` :
-   mypy (cliquet, **baseline 40** — échoue si on dépasse) + `pytest` + build front.
-   `make e2e` pour les tests navigateur Playwright (optionnel, hors `verify`).
-2. **Sinon (conteneur web, pas de Docker)** → chemin natif :
-   ```bash
-   pip install -q -r requirements.txt -r requirements-dev.txt   # si pas déjà fait
-   python -m mypy src              # compter les erreurs, comparer à la baseline 40
-   python -m pytest -q             # rapide (~6 s) ; --runheavy si rendu touché
-   cd frontend && npm run build    # si le front a changé
-   ```
+```bash
+bash scripts/verify.sh            # mypy cliquet (baseline 40) + pytest rapide + build front
+bash scripts/verify.sh --fast     # mypy + pytest rapide seulement (~20 s)
+bash scripts/verify.sh --heavy    # pytest complet (--runheavy : render + intégration)
+bash scripts/verify.sh --e2e      # + Playwright (front en mock)
+```
+
+(En local avec Docker, `make verify` reste équivalent ; `make verify-native ARGS="--heavy"`
+appelle ce même script sans Docker.)
 
 ## Rapport attendu
-- Nombre d'erreurs mypy vs baseline 40 (régression si > 40).
-- Résultat pytest (passed/failed ; nommer les tests rouges).
-- Build front OK/KO si lancé.
-- Conclusion nette : **vert** (rien cassé) ou **liste précise** de ce qui casse.
+- mypy : nombre d'erreurs vs **baseline 40** (régression si > 40).
+- pytest : passed/failed (nommer les tests rouges) ; skipped attendus sans ffmpeg.
+- build front / e2e : OK/KO si lancés.
+- Conclusion : le script imprime un bloc `VERIFY` avec `✅ PASS` ou `❌ FAIL` et un exit code.
+  Relayer ce verdict ; si FAIL, lister précisément ce qui casse.
