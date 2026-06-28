@@ -155,5 +155,4 @@ et confirmation explicite avant un run « final ». Tableau de coût par épisod
 ## 7. Protocole par étape
 
 modèle/code → tests cheap offline → `mypy src/editor` + `pytest tests/` (rapide ~6 s ;
-`pytest --runheavy` pour tout, dans `vcm-dev`) → `graphify update .` → commit → cocher
-la table de la section 5.
+`pytest --runheavy` pour tout, dans `vcm-dev`) → commit → cocher la table de la section 5.

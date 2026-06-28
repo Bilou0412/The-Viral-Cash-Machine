@@ -19,6 +19,7 @@ Needs only ffmpeg/ffprobe on PATH + pytest. No moviepy / GPU / Replicate / OpenA
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 
 import pytest
@@ -41,6 +42,13 @@ requires_candidate = pytest.mark.skipif(
     not CANDIDATE_DIR, reason="set GOLDEN_CANDIDATE=<export instance dir> to diff a fresh render"
 )
 
+# These probes shell out to ffprobe/ffmpeg; skip cleanly where the binary is
+# absent (e.g. the ephemeral web container) instead of failing the cheap suite.
+requires_ffprobe = pytest.mark.skipif(
+    shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None,
+    reason="ffprobe/ffmpeg not on PATH",
+)
+
 
 @pytest.fixture(scope="module")
 def invariants() -> dict:
@@ -51,11 +59,13 @@ def invariants() -> dict:
 
 # --- golden self-integrity (no candidate needed) --------------------------
 
+@requires_ffprobe
 def test_golden_video_matches_recorded_probe(invariants):
     probe = gt.probe_to_dict(gt.probe_video(GOLDEN_VIDEO))
     assert probe == invariants["final_video"]
 
 
+@requires_ffprobe
 def test_golden_key_frames_unchanged(invariants):
     """Re-extract each key frame from the frozen video and confirm its checksum."""
     for name, rec in invariants["key_frames"].items():

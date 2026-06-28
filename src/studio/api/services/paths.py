@@ -20,3 +20,8 @@ def exports_base() -> str:
 def episode_dir(project_name: str, episode_id: int) -> str:
     """On-disk directory for one episode's assets."""
     return os.path.join(exports_base(), project_name, f"episode_{episode_id}")
+
+
+def editor_dir(project_name: str, doc_id: int) -> str:
+    """On-disk directory for one editor document's generated assets."""
+    return os.path.join(exports_base(), project_name, f"editor_{doc_id}")

@@ -10,16 +10,22 @@ MYPY := $(DC) exec -T -e PYTHONPATH=/app dev sh -c "cd /app && python -m mypy sr
 # `verify` échoue si on DÉPASSE ce nombre (cliquet : à faire baisser, jamais monter).
 MYPY_BASELINE := 40
 
-.PHONY: help dev-up dev-down sh test typecheck lint build-front verify e2e
+.PHONY: help dev-up dev-down sh test typecheck lint build-front verify verify-native e2e
 
 help:
-	@echo "make dev-up      # démarre le conteneur de dev (build si besoin)"
-	@echo "make test        # pytest (suite complète, dans le conteneur)"
-	@echo "make typecheck   # mypy src (rapport complet)"
-	@echo "make lint        # ruff"
-	@echo "make build-front # build du front (tsc + vite, sur l'hôte)"
-	@echo "make verify      # dev-up + mypy(cliquet) + pytest + build-front"
-	@echo "make e2e         # tests navigateur Playwright (front mock, sur l'hôte)"
+	@echo "make dev-up        # démarre le conteneur de dev (build si besoin)"
+	@echo "make test          # pytest (suite complète, dans le conteneur)"
+	@echo "make typecheck     # mypy src (rapport complet)"
+	@echo "make lint          # ruff"
+	@echo "make build-front   # build du front (tsc + vite, sur l'hôte)"
+	@echo "make verify        # dev-up + mypy(cliquet) + pytest + build-front (Docker)"
+	@echo "make verify-native # même boucle SANS Docker (scripts/verify.sh) — web/CI"
+	@echo "make e2e           # tests navigateur Playwright (front mock, sur l'hôte)"
+
+# Boucle de vérif NATIVE (zéro Docker) — réutilise le script unique partagé avec la CI
+# et le hook de session. Passer des options : make verify-native ARGS="--heavy --e2e".
+verify-native:
+	MYPY_BASELINE=$(MYPY_BASELINE) bash scripts/verify.sh $(ARGS)
 
 dev-up:
 	$(DC) up -d --build
