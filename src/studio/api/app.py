@@ -444,15 +444,23 @@ def update_asset(
 @app.post("/api/episodes/{episode_id}/montage")
 def montage_episode(
     episode_id: int,
+    background: BackgroundTasks,
     session: Session = Depends(_session),
     engine: Engine = Depends(get_db_engine),
 ) -> dict[str, Any]:
+    """Lance le montage HORS du cycle requête (MoviePy = plusieurs minutes).
+
+    Sync : valide l'épisode + les prérequis (409 si pas d'assets vidéo prêts).
+    Puis planifie `assemble_rich` en tâche de fond ; le client suit l'avancement
+    via SSE /api/events/{id} et récupère le résultat sur /api/episodes/{id}/video.
+    (Un montage synchrone dépasserait le timeout proxy ~60s en prod.)
+    """
     _require_episode(session, episode_id)
-    try:
-        output_path = MontageService(engine).assemble_rich(episode_id)
-    except ValueError as exc:
-        raise HTTPException(409, str(exc))
-    return {"episode_id": episode_id, "final_path": output_path}
+    svc = MontageService(engine)
+    if not svc.has_renderable_inputs(episode_id):
+        raise HTTPException(409, f"episode {episode_id} has no ready video assets to assemble")
+    background.add_task(svc.assemble_rich, episode_id)
+    return {"episode_id": episode_id, "status": "scheduled"}
 
 
 @app.post("/api/episodes/{episode_id}/produce")

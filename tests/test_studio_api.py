@@ -263,8 +263,10 @@ def test_montage_and_library(client):
     finally:
         montage_mod._moviepy_concat = orig
     assert r.status_code == 200
-    final_path = r.json()["final_path"]
-    assert final_path.endswith("final_video.mp4")
+    assert r.json()["status"] == "scheduled"
+    # Montage runs as a BackgroundTask; the TestClient completes it before the
+    # POST returns (still under the fake_concat patch), so the final video and
+    # library entry below are already produced.
 
     lib = client.get("/api/library").json()
     assert len(lib) == 1

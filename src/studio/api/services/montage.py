@@ -82,6 +82,16 @@ class MontageService:
         self.engine = engine
         self.concatenator = concatenator or _moviepy_concat
 
+    def has_renderable_inputs(self, episode_id: int) -> bool:
+        """True if the episode has ≥1 ready video asset to montage.
+
+        Mirrors ``assemble``'s precondition so the API can validate synchronously
+        (and return 409) BEFORE scheduling the montage off the request cycle.
+        """
+        with Session(self.engine) as session:
+            assets = AssetRepo(session).assets_by_episode(episode_id)
+        return bool(_ordered_video_assets(assets))
+
     def assemble(self, episode_id: int) -> str:
         """Concatenate the episode's video beats; record + return the final path."""
         with Session(self.engine) as session:
