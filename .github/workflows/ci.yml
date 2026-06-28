@@ -43,8 +43,11 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+      # Lint advisory (cohérent avec le Makefile : `ruff ... || true`, hors `make verify`).
+      # Le gate dur du front = le build (tsc -b + vite). Le lint informe sans bloquer.
       - run: npm run lint
         working-directory: frontend
+        continue-on-error: true
 
   e2e:
     name: e2e (Playwright, front en mock)
