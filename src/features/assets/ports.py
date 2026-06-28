@@ -1,6 +1,6 @@
 """Asset generation ports."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Protocol, Optional
 
 
@@ -14,8 +14,33 @@ class AssetBundle:
     video_url: Optional[str] = None
 
 
+@dataclass(frozen=True)
+class RunResult:
+    """Output of a metered model run + whatever real-cost signal the provider gave.
+
+    ``cost_usd`` is the provider's billed amount when available (often absent);
+    ``predict_time`` (seconds of compute, from ``metrics.predict_time``) lets us
+    compute the real cost as ``predict_time × hardware_rate``. See cost_actual.py.
+    """
+
+    urls: List[str]
+    cost_usd: Optional[float] = None
+    predict_time: Optional[float] = None
+    metrics: Optional[Dict[str, Any]] = None
+
+
 class AssetProvider(Protocol):
     """Port for generating AI assets (voice, image, video)."""
+
+    # The last metered run, stashed by run_model / the typed helpers so the
+    # generation service can read the real cost without changing return types.
+    last_run: Optional[RunResult]
+
+    def run_model_metered(
+        self, model_ref: str, params: Dict[str, Any]
+    ) -> RunResult:
+        """Run a model and return URLs + real-cost signal (cost/metrics)."""
+        ...
 
     def synthesize_voice(
         self, text: str, voice_id: str, model: Optional[str] = None

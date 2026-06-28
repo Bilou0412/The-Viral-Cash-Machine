@@ -26,7 +26,8 @@ from ....features.scripting.adventure import AdventureScript
 from ....features.scripting.themes import THEMES, get_theme
 from ...db.repositories import AssetRepo, CostRepo, EpisodeRepo, JobRepo
 from ..events import bus
-from . import pricing
+from . import cost_actual, pricing
+from .cost_actual import ActualCost
 from .generation_plan import PlannedAsset, plan_episode_assets
 from .paths import episode_dir
 
@@ -337,7 +338,7 @@ class AssetGenerationService:
                 },
             )
 
-            model, url, cost_line = self._call_provider(
+            model, url, ac = self._call_provider(
                 planned, draft, frame_url_by_beat, last_frame_by_key
             )
             job = job_repo.create(asset_id, model, status="running")
@@ -368,10 +369,12 @@ class AssetGenerationService:
             job_repo.mark_done(job_id)
             cost_repo.create(
                 job_id,
-                cost_line.model,
-                cost_line.amount_usd,
-                units=cost_line.units,
-                unit_kind=cost_line.unit_kind,
+                ac.line.model,
+                ac.line.amount_usd,
+                units=ac.line.units,
+                unit_kind=ac.line.unit_kind,
+                source=ac.source,
+                predict_time_s=ac.predict_time_s,
             )
             bus.publish(
                 episode_id,
@@ -379,7 +382,8 @@ class AssetGenerationService:
                     "type": "asset_ready",
                     "asset_id": asset_id,
                     "local_path": local,
-                    "amount_usd": cost_line.amount_usd,
+                    "amount_usd": ac.line.amount_usd,
+                    "cost_source": ac.source,
                 },
             )
 
@@ -389,8 +393,12 @@ class AssetGenerationService:
         draft: bool,
         frame_url_by_beat: dict[str, str],
         last_frame_by_key: dict,
-    ) -> tuple[str, str, pricing.CostLine]:
-        """Dispatch to the right provider method; return (model, url, cost line)."""
+    ) -> tuple[str, str, ActualCost]:
+        """Dispatch to the right provider; return (model, url, ACTUAL cost).
+
+        The estimate line is the pre-flight rate-card; ``cost_actual`` upgrades it
+        to the real cost from the provider's metered run (``provider.last_run``).
+        """
         if planned.kind == "image":
             # image_input = réf perso (R2, cohérence) + dernière frame du plan
             # précédent (R3, continuité). La réf perso elle-même n'en a pas.
@@ -408,7 +416,10 @@ class AssetGenerationService:
                 planned.image_prompt or "", "2K", "9:16", image_input=(refs or None)
             )
             frame_url_by_beat[planned.beat] = url
-            return pricing.MODEL_IMAGE, url, pricing.image_cost(1)
+            ac = cost_actual.actual_cost(
+                pricing.MODEL_IMAGE, pricing.image_cost(1), self.provider.last_run
+            )
+            return pricing.MODEL_IMAGE, url, ac
 
         if planned.kind == "video":
             # Reuse the frame generated just before (image-first).
@@ -422,11 +433,12 @@ class AssetGenerationService:
                 resolution="720p",
                 draft=draft,
             )
-            return (
+            ac = cost_actual.actual_cost(
                 pricing.MODEL_VIDEO,
-                url,
                 pricing.video_cost(pricing.BEAT_VIDEO_SECONDS, draft=draft),
+                self.provider.last_run,
             )
+            return pricing.MODEL_VIDEO, url, ac
 
         # audio — narration beats use the cloned 'conteur' narrator voice.
         text = planned.text or ""
@@ -435,7 +447,10 @@ class AssetGenerationService:
         else:
             voice_id, model = CHARACTER_VOICE_ID, None
         url = self.provider.synthesize_voice(text, voice_id, model)
-        return pricing.MODEL_VOICE, url, pricing.voice_cost(len(text))
+        ac = cost_actual.actual_cost(
+            pricing.MODEL_VOICE, pricing.voice_cost(len(text)), self.provider.last_run
+        )
+        return pricing.MODEL_VOICE, url, ac
 
 
 def regenerate_asset(

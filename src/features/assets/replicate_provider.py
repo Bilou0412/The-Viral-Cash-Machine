@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 import replicate
-from .ports import AssetProvider
+from .ports import AssetProvider, RunResult
 
 
 def _normalize_outputs(result: Any) -> List[str]:
@@ -41,10 +41,43 @@ def _normalize_outputs(result: Any) -> List[str]:
 class ReplicateAssetProvider(AssetProvider):
     """Generate assets using Replicate AI models."""
 
+    last_run: Optional[RunResult] = None
+
+    def run_model_metered(
+        self, model_ref: str, params: Dict[str, Any]
+    ) -> RunResult:
+        """Run a model via the predictions API to capture real cost/metrics.
+
+        Defensive: if the predictions path fails for any SDK-shape reason, fall
+        back to the plain ``replicate.run`` (outputs only, no metrics) so
+        generation never breaks — the cost layer then falls back to the estimate.
+        """
+        result: RunResult
+        try:
+            from replicate.client import Client
+
+            client: Any = Client()
+            pred = client.models.predictions.create(model_ref, input=params)
+            pred.wait()
+            metrics: Dict[str, Any] = dict(pred.metrics or {})
+            predict_time = metrics.get("predict_time")
+            cost = getattr(pred, "cost", None)
+            result = RunResult(
+                urls=_normalize_outputs(pred.output),
+                cost_usd=float(cost) if cost is not None else None,
+                predict_time=(
+                    float(predict_time) if predict_time is not None else None
+                ),
+                metrics=metrics,
+            )
+        except Exception:
+            result = RunResult(urls=_normalize_outputs(replicate.run(model_ref, input=params)))
+        self.last_run = result
+        return result
+
     def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
         """Run an arbitrary Replicate model and normalize its output URL(s)."""
-        result = replicate.run(model_ref, input=params)
-        return _normalize_outputs(result)
+        return self.run_model_metered(model_ref, params).urls
 
     def synthesize_voice(
         self, text: str, voice_id: str, model: Optional[str] = None

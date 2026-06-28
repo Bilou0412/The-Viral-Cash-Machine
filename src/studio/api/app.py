@@ -366,11 +366,13 @@ def get_episode_cost(
     episode = _require_episode(session, episode_id)
     script = _load_script(session, episode_id)
     est = estimate_cost(script, draft=episode.draft_mode)
-    actual = CostRepo(session).cost_total_by_episode(episode_id)
+    repo = CostRepo(session)
+    nodes = repo.actual_by_episode(episode_id)
+    actual = sum(n["amount_usd"] for n in nodes)
     return {
         "episode_id": episode_id,
-        "estimated_usd": est.total_usd,
-        "actual_usd": round(actual, 4),
+        "estimated_usd": est.total_usd,        # pré-vol (avant génération)
+        "actual_usd": round(actual, 4),        # somme des coûts RÉELS enregistrés
         "breakdown": [
             {
                 "model": line.model,
@@ -380,6 +382,8 @@ def get_episode_cost(
             }
             for line in est.lines
         ],
+        # Coût réel par nœud (après génération) : montant + provenance.
+        "nodes": nodes,
     }
 
 

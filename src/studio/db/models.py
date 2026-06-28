@@ -154,4 +154,9 @@ class CostEntry(SQLModel, table=True):
     # What ``units`` counts: e.g. "seconds", "images", "characters"
     unit_kind: str = Field(default="units")
     amount_usd: float = Field(default=0.0)
+    # Provenance of amount_usd: "provider" (billed) | "compute" (predict_time ×
+    # rate) | "estimate" (rate-card fallback). is_estimate flags non-real costs.
+    source: str = Field(default="estimate")
+    is_estimate: bool = Field(default=True)
+    predict_time_s: Optional[float] = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)

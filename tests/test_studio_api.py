@@ -135,6 +135,16 @@ def test_full_flow(client):
     # while actuals round per narration beat).
     cost2 = client.get(f"/api/episodes/{episode_id}/cost").json()
     assert cost2["actual_usd"] == pytest.approx(cost2["estimated_usd"], rel=1e-3)
+    # Per-node ACTUAL cost (after generation): one row per generated asset, each
+    # tagged with its source, and the total is the sum of the real node costs
+    # (not a re-derived estimate).
+    nodes = cost2["nodes"]
+    assert len(nodes) == 56
+    assert all(n["source"] in ("provider", "compute", "estimate") for n in nodes)
+    assert all(isinstance(n["is_estimate"], bool) for n in nodes)
+    assert cost2["actual_usd"] == pytest.approx(
+        sum(n["amount_usd"] for n in nodes), rel=1e-9
+    )
 
     # Serve an asset file.
     first_asset_id = assets[0]["id"]

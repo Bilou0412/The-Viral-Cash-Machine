@@ -45,7 +45,7 @@ from ...db.repositories import (
     ProjectRepo,
 )
 from ..events import bus
-from . import pricing
+from . import cost_actual, pricing
 from .generation import Downloader, _default_downloader, _upload_to_replicate
 from .paths import editor_dir
 
@@ -453,15 +453,21 @@ class EditorGenerationService:
             asset_repo.set_local_path(asset_id, local or "")
             job_repo.mark_done(job_id)
 
-            cost_line = _best_effort_cost(model_ref, contract_kind, params)
+            ac = cost_actual.actual_cost(
+                model_ref,
+                _best_effort_cost(model_ref, contract_kind, params),
+                self.provider.last_run,
+            )
             cost_repo.create(
-                job_id, cost_line.model, cost_line.amount_usd,
-                units=cost_line.units, unit_kind=cost_line.unit_kind,
+                job_id, ac.line.model, ac.line.amount_usd,
+                units=ac.line.units, unit_kind=ac.line.unit_kind,
+                source=ac.source, predict_time_s=ac.predict_time_s,
             )
             bus.publish(
                 doc_id,
                 {"type": "asset_ready", "asset_id": asset_id,
-                 "local_path": local, "amount_usd": cost_line.amount_usd},
+                 "local_path": local, "amount_usd": ac.line.amount_usd,
+                 "cost_source": ac.source},
             )
             return url, local
 

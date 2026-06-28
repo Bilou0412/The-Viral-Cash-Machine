@@ -1,0 +1,22 @@
+{
+  "_comment": "Prix éditables sans redéploiement (surchargeable par VCM_PRICES_PATH). 'estimate' = pré-vol (défauts = valeurs historiques). 'compute_usd_per_s' = tarif hardware Replicate par modèle pour le coût RÉEL (= predict_time × tarif) ; 0 = inconnu → on retombe sur l'estimation. OpenAI/Whisper sont aux prix publics réels (coût exact).",
+  "estimate": {
+    "image_usd": 0.03,
+    "video_usd_per_s": 0.05,
+    "voice_usd_per_kchar": 0.02,
+    "draft_video_multiplier": 0.4,
+    "beat_video_seconds": 7.0
+  },
+  "compute_usd_per_s": {
+    "default": 0.0,
+    "bytedance/seedream-4.5": 0.0,
+    "prunaai/p-video": 0.0,
+    "minimax/speech-2.8-turbo": 0.0
+  },
+  "openai_per_mtoken": {
+    "default": { "in": 0.15, "out": 0.60 },
+    "gpt-4o-mini": { "in": 0.15, "out": 0.60 },
+    "gpt-4o": { "in": 2.50, "out": 10.00 }
+  },
+  "whisper_usd_per_minute": 0.006
+}
