@@ -3,6 +3,9 @@
 Une ligne par décision transverse (la plus récente en haut). Pour le plan d'exécution, voir
 `ROADMAP.md`.
 
+- **2026-06-28** · Durcissement fait : **montage async** (BackgroundTask, plus de 502) +
+  **R2 flux épisode** (storage port local/R2, serving proxifié par l'API). Reliquat : flux
+  éditeur/briques sur R2 (chemins recalculés) avant scale horizontal. Cf. `docs/DEPLOY.md`.
 - **2026-06-28** · Infra dev/prod sur **Fly.io** + **Postgres managé** + CD GitHub (push
   dev / tag prod) · 1 image Docker → 2 apps ; `engine.py` rendu dialect-agnostique (défaut
   SQLite intact). Détails et runbook : `docs/DEPLOY.md`.

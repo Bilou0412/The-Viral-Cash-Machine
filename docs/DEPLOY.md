@@ -67,19 +67,36 @@ Garde-fous :
 - **Ne pas `fly scale count > 1`** sur le web tant que les assets sont sur le volume :
   chaque machine a son propre `/data` → *split-brain* (404 assets). Voir « Étape suivante ».
 
-## Étape suivante (PR de durcissement « production-grade »)
+## Durcissement « production-grade » — état
 
-Deux chantiers identifiés et **vérifiés** par la conception, à finir avant d'ouvrir le
-trafic prod / d'activer l'autoscaling :
+- ✅ **Montage asynchrone** — `POST /api/episodes/{id}/montage` valide les prérequis en
+  synchrone (409 si pas d'assets) puis planifie le montage en `BackgroundTask` (plus de 502
+  sur le timeout Fly).
+- ✅ **Object storage R2 (flux épisode)** — `src/features/storage/` : `StoragePort` +
+  `LocalStorage` (défaut, byte-identique) + `R2Storage` (boto3) + factory `STORAGE_BACKEND`.
+  Câblé sur génération (persistance + idempotence), montage (materialize + persist) et
+  serving (`/api/assets/{id}/file`, `/api/episodes/{id}/video` → `storage.serve`, proxifié
+  par l'API, **pas d'URL signée au navigateur**). Activer avec les env R2 ci-dessous.
+- ⬜ **R2 pour le flux ÉDITEUR/briques** (reliquat) — `editor_generation.py`,
+  `remotion_render.py` et `GET /api/editor/documents/{id}/video` utilisent encore des chemins
+  locaux recalculés (pas un ref stocké). À aligner sur le même port avant de servir le
+  rendu briques depuis R2 / de scaler le web > 1 machine. (C'est le R-step R2 du ROADMAP.)
 
-1. **Object storage R2 (assets)** — introduire un *storage port* (`src/features/storage/`)
-   avec backends `local` (défaut) et `r2` (boto3), servir les fichiers **proxifiés par
-   l'API** (on garde le same-origin `FileResponse`/redirect, pas d'URL signée au
-   navigateur → zéro piège CORS). Débloque le scale horizontal (web stateless).
-2. **Montage asynchrone** — `POST /api/episodes/{id}/montage` exécute aujourd'hui MoviePy
-   **dans la requête** (plusieurs minutes) → **502 garanti** sur le timeout proxy Fly ~60s.
-   Le passer en `BackgroundTasks` + événements SSE comme `produce`/`render` (valider les
-   prérequis en synchrone pour conserver le 409, puis planifier). Touche 2 tests à adapter.
+### Activer R2 (par app)
+```bash
+# Buckets : vcm-assets-prod / vcm-assets-dev. Token R2 « Object Read & Write » → noter
+# Secret Access Key (affiché 1 fois) + Account ID (endpoint = https://<ACCOUNT_ID>.r2...).
+fly secrets set R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... -a vcm-studio-prod
+# Non-secrets dans [env] des fly.toml : STORAGE_BACKEND='r2', R2_ENDPOINT, R2_BUCKET,
+# R2_PUBLIC_BASE (custom domain Cloudflare pour des URLs stables/cachées).
+```
+CORS bucket (si un jour on sert R2 directement au navigateur, pas le cas actuel — on
+proxifie) : AllowedOrigins = origine front exacte, AllowedMethods GET/HEAD, ExposeHeaders
+`Content-Range, Accept-Ranges, Content-Length, ETag`. Tant qu'on proxifie via l'API,
+aucune config CORS R2 n'est requise.
+
+> **Scale horizontal** : possible une fois (a) DB=Postgres (fait) **et** (b) flux éditeur
+> aussi sur R2 (reliquat ci-dessus). Avant ça, garder le web à **1 machine**.
 
 Migrations de schéma : aujourd'hui `create_all` (schéma neuf OK). Dès la 2ᵉ évolution de
 schéma en prod, introduire **Alembic** (+ `release_command = "alembic upgrade head"` dans
