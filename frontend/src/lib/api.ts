@@ -18,6 +18,7 @@ import type {
   Episode,
   GenerateScriptBody,
   GenerativeKind,
+  KeysStatus,
   LibraryItem,
   ModelForm,
   ModelSearchResult,
@@ -174,6 +175,14 @@ const realApi = {
   renderEditorDocument: (id: string) =>
     request<{ id: string; status: string }>(`/editor/documents/${id}/render`, {
       method: "POST",
+    }),
+
+  // BYOK API keys (entered in Settings). GET = status only; PUT saves non-empty.
+  getKeysStatus: () => request<KeysStatus>("/settings/keys"),
+  saveKeys: (body: { openai?: string; replicate?: string }) =>
+    request<KeysStatus>("/settings/keys", {
+      method: "PUT",
+      body: JSON.stringify(body),
     }),
 }
 

@@ -303,3 +303,21 @@ def test_errors(client):
     # Montage with no assets -> conflict.
     client.post(f"/api/episodes/{eid}/script", json={"prompt": "x"})
     assert client.post(f"/api/episodes/{eid}/montage").status_code == 409
+
+
+def test_settings_keys(client):
+    # No keys initially (fixture deletes env keys).
+    assert client.get("/api/settings/keys").json() == {
+        "openai_set": False,
+        "replicate_set": False,
+    }
+    # Save one key — the value is never echoed back.
+    r = client.put("/api/settings/keys", json={"openai": "sk-test-123"})
+    assert r.status_code == 200
+    assert r.json() == {"openai_set": True, "replicate_set": False}
+    # Persisted + masked: status says set, the secret never appears in the body.
+    assert client.get("/api/settings/keys").json()["openai_set"] is True
+    assert "sk-test-123" not in client.get("/api/settings/keys").text
+    # An empty field must NOT wipe an existing key.
+    client.put("/api/settings/keys", json={"openai": ""})
+    assert client.get("/api/settings/keys").json()["openai_set"] is True

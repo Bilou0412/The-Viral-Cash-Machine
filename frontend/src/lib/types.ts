@@ -363,3 +363,9 @@ export const isGenerativeBrick = (b: Brick): b is GenerativeBrick =>
   b.type === "image" || b.type === "video" || b.type === "voice"
 export const isMediaBrick = (b: Brick): b is MediaBrick => b.type === "media"
 export const isTextBrick = (b: Brick): b is TextBrick => b.type === "text"
+
+// Settings — BYOK API keys (status only; the secret is never returned).
+export interface KeysStatus {
+  openai_set: boolean
+  replicate_set: boolean
+}

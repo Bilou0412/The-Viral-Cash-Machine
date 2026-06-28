@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 from src.studio.db.models import (
     AdventureScriptRow,
+    AppSetting,
     Asset,
     CostEntry,
     EditorDocumentRow,
@@ -516,3 +517,24 @@ class EditorDocRepo:
         self.session.delete(row)
         self.session.commit()
         return True
+
+
+class SettingRepo:
+    """CRUD for :class:`AppSetting` (generic key/value, incl. BYOK API keys)."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def get(self, key: str) -> Optional[str]:
+        row = self.session.get(AppSetting, key)
+        return row.value if row else None
+
+    def set(self, key: str, value: str) -> None:
+        row = self.session.get(AppSetting, key)
+        if row is None:
+            row = AppSetting(key=key, value=value)
+        else:
+            row.value = value
+            row.updated_at = datetime.now(timezone.utc)
+        self.session.add(row)
+        self.session.commit()
