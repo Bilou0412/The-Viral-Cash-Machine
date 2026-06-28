@@ -3,7 +3,6 @@ __pycache__/
 *.pyc
 .streamlit/
 .pytest_cache/
-graphify-out/.rebuild.lock
 # Generated pipeline output (Docker volume). The golden lives in tests/fixtures/.
 /exports/
 # VCM Studio: local SQLite DB and dev virtualenv (deps live in requirements.txt).
