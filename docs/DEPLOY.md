@@ -1,7 +1,7 @@
 # DEPLOY — deux environnements Fly.io (dev + prod)
 
 Cible : **Fly.io** (1 image Docker → 2 apps), **Postgres managé**, assets sur **volume**
-(R2 en étape suivante), **CD GitHub Actions** (push `refactor/feature-driven` → dev ;
+(R2 en étape suivante), **CD GitHub Actions** (push `dev` → dev ;
 tag `v*` → prod).
 
 > Le repo ne déploie rien tout seul : la config est inerte tant que tu n'as pas exécuté le
@@ -58,7 +58,7 @@ fly logs -a vcm-studio-prod                      # vérifier le healthcheck /api
 # 6) CD GitHub : token + secret repo
 fly tokens create org
 gh secret set FLY_API_TOKEN --body '<token>'
-#   Ensuite : push refactor/feature-driven → deploy dev ; git tag v1.0.0 && git push --tags → deploy prod
+#   Ensuite : push sur dev → deploy dev ; merge dev->main + git tag v1.0.0 && git push --tags → deploy prod
 ```
 
 Garde-fous :

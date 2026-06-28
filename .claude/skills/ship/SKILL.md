@@ -17,11 +17,10 @@ Livraison sûre d'un incrément. **Ne jamais pousser du rouge.**
    - si plusieurs sujets distincts, **plusieurs commits** (rester revert-able).
 3. **Pousser** : `git push -u origin <branche-courante>` (retries avec backoff si erreur
    réseau). Ne **pas** pousser vers une autre branche que la branche de travail.
-4. **PR** : proposer d'ouvrir une PR vers `refactor/feature-driven` **mais ne la créer
+4. **PR** : proposer d'ouvrir une PR vers `main` **mais ne la créer
    qu'avec l'accord explicite** de l'auteur. Si une PR existe déjà, proposer de s'abonner aux
    événements (`subscribe_pr_activity`) pour auto-corriger les échecs CI.
 
 ## Garde-fous
-- Branche de travail uniquement ; jamais de push direct sur `master`/`refactor/feature-driven`
-  sans accord.
+- Pousser uniquement sur `dev` ; **jamais de push direct sur `main`** (passer par une PR).
 - Respecter la baseline mypy (40) et la suite verte : le gate, c'est `scripts/verify.sh`.

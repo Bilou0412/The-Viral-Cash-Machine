@@ -1,7 +1,9 @@
 # CLAUDE.md
 
 Guidance for Claude Code working in this repository. Keep this file a **map + pointers**,
-not a copy of the code. Branche de travail : **`refactor/feature-driven`**.
+not a copy of the code. Modèle de branches : **`main`** (canonique, protégée) ←
+PR depuis **`dev`** (branche de développement, on push ici). Une release = merge
+`dev`→`main` puis tag `v*` (déploie prod). `master` = ancien monolithe, archivé.
 
 ## Reprendre le travail (« reprends » / « resume »)
 
