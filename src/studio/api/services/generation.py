@@ -61,9 +61,11 @@ Downloader = Callable[[str, str, str], Optional[str]]
 
 
 def _default_downloader(url: str, folder: str, filename: str) -> Optional[str]:
-    from ....infra.download import download_file
+    # Routes through the storage backend: local (default — identical to the old
+    # download_file) or R2 (uploads, returns an object key). See features/storage.
+    from ....features import storage
 
-    return download_file(url, folder, filename)
+    return storage.persist_from_url(url, folder, filename)
 
 
 def _ext_for(kind: str) -> str:
@@ -259,13 +261,10 @@ class AssetGenerationService:
         out: dict[tuple[Optional[int], str], str] = {}
         with Session(self.engine) as session:
             assets = AssetRepo(session).assets_by_episode(episode_id)
+        from ....features import storage
+
         for a in assets:
-            if (
-                a.status == "ready"
-                and a.local_path
-                and os.path.exists(a.local_path)
-                and os.path.getsize(a.local_path) > 0
-            ):
+            if a.status == "ready" and a.local_path and storage.exists(a.local_path):
                 out[(a.round_index, a.beat)] = a.local_path
         return out
 

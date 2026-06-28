@@ -9,8 +9,10 @@ imageio-ffmpeg
 numpy
 pillow
 
-# VCM Studio (FastAPI backend + SQLite DB)
+# VCM Studio (FastAPI backend + SQLite par défaut ; Postgres managé en prod)
 sqlmodel
+psycopg[binary]>=3.2   # driver Postgres v3 (prod) ; SQLite reste le défaut local/CI
 fastapi
 uvicorn[standard]
 httpx
+boto3   # backend object storage R2/S3 (import paresseux ; actif si STORAGE_BACKEND=r2)

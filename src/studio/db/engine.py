@@ -1,7 +1,10 @@
-"""SQLite engine, schema init and session factory for VCM Studio.
+"""Database engine, schema init and session factory for VCM Studio.
 
-Default database lives at the repo root as ``studio.db``. Override with the
-``VCM_STUDIO_DB`` environment variable (e.g. ``sqlite:///:memory:`` for tests).
+Default database is SQLite at the repo root (``studio.db``) — used everywhere by
+default (local, tests, CI). Override with ``VCM_STUDIO_DB`` *or* ``DATABASE_URL``
+(Fly Managed Postgres / Neon / Supabase inject the latter). A bare
+``postgres://`` / ``postgresql://`` URL is rewritten to ``postgresql+psycopg://``
+so SQLAlchemy uses psycopg v3 (psycopg2 is intentionally not a dependency).
 """
 
 from __future__ import annotations
@@ -9,7 +12,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
@@ -20,9 +23,43 @@ DEFAULT_DB_URL = "sqlite:///studio.db"
 _engine: Optional[Engine] = None
 
 
+def _normalize_url(url: str) -> str:
+    """Rewrite bare Postgres URLs to use the psycopg v3 driver.
+
+    Managed providers hand out ``postgres://`` or ``postgresql://`` which make
+    SQLAlchemy pick the (absent) psycopg2 driver. Force the psycopg v3 driver.
+    Leaves any explicit ``+driver`` and non-Postgres URLs untouched.
+    """
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
 def _db_url() -> str:
-    """Resolve the database URL from the environment, falling back to default."""
-    return os.environ.get("VCM_STUDIO_DB", DEFAULT_DB_URL)
+    """Resolve the database URL: VCM_STUDIO_DB, then DATABASE_URL, then default."""
+    raw = (
+        os.environ.get("VCM_STUDIO_DB")
+        or os.environ.get("DATABASE_URL")
+        or DEFAULT_DB_URL
+    )
+    return _normalize_url(raw)
+
+
+def _make_engine(url: str) -> Engine:
+    """Build an engine with dialect-appropriate args (SQLite vs Postgres)."""
+    is_sqlite = url.startswith("sqlite")
+    kwargs: dict[str, Any] = {}
+    if is_sqlite:
+        # Allow cross-thread use of the single SQLite connection (FastAPI).
+        kwargs["connect_args"] = {"check_same_thread": False}
+    else:
+        # Postgres over a managed proxy: validate connections before use and
+        # recycle them so dropped server-side connections don't surface as errors.
+        kwargs["pool_pre_ping"] = True
+        kwargs["pool_recycle"] = 1800
+    return create_engine(url, **kwargs)
 
 
 def get_engine(url: Optional[str] = None) -> Engine:
@@ -33,13 +70,9 @@ def get_engine(url: Optional[str] = None) -> Engine:
     """
     global _engine
     if url is not None:
-        return create_engine(
-            url, connect_args={"check_same_thread": False}
-        )
+        return _make_engine(_normalize_url(url))
     if _engine is None:
-        _engine = create_engine(
-            _db_url(), connect_args={"check_same_thread": False}
-        )
+        _engine = _make_engine(_db_url())
     return _engine
 
 
@@ -53,8 +86,16 @@ _ADDED_COLUMNS = [
 
 
 def _ensure_columns(eng: Engine) -> None:
-    """Migration légère idempotente : ajoute les colonnes manquantes (SQLite)."""
+    """Migration légère idempotente : ajoute les colonnes manquantes (SQLite).
+
+    SQLite-only : le SQL ``ALTER TABLE ... DEFAULT`` est SQLite-flavored. Sur
+    Postgres, ``create_all`` crée déjà toutes les colonnes sur un schéma neuf
+    (les évolutions ultérieures relèveront d'Alembic, cf. docs/DEPLOY.md).
+    """
     from sqlalchemy import inspect, text
+
+    if eng.dialect.name != "sqlite":
+        return
 
     insp = inspect(eng)
     tables = set(insp.get_table_names())
