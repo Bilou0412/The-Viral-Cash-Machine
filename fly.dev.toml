@@ -1,0 +1,36 @@
+# Fly.io — environnement DEV (vcm-studio-dev). Même image, secrets/buckets distincts.
+# Déploie : flyctl deploy --remote-only --config fly.dev.toml
+# Secrets via `fly secrets set ... -a vcm-studio-dev`. Voir docs/DEPLOY.md.
+
+app = "vcm-studio-dev"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  VCM_STUDIO_DB = ""                       # → DATABASE_URL (Postgres dev)
+  VCM_OUTPUT_DIR = "/data/studio_output"
+  VCM_RENDER_BASE = "https://vcm-studio-dev.fly.dev"
+  # DEV autorise aussi le front local pour itérer contre l'API déployée.
+  CORS_ORIGINS = "https://vcm-studio-dev.fly.dev,http://localhost:5173"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0                 # DEV s'éteint à vide (coût ~0)
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2048mb"                        # chromium+ffmpeg ont besoin de RAM
+
+[mounts]
+  source = "vcm_data_dev"
+  destination = "/data"

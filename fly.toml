@@ -1,0 +1,43 @@
+# Fly.io — environnement PROD (vcm-studio-prod). Même image Docker que dev.
+# Déploie : flyctl deploy --remote-only --config fly.toml
+# Secrets (JAMAIS ici) via `fly secrets set` : DATABASE_URL, OPENAI_API_KEY,
+# REPLICATE_API_TOKEN (+ R2_* quand l'object storage sera câblé). Voir docs/DEPLOY.md.
+
+app = "vcm-studio-prod"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Neutralise le défaut SQLite baké dans le Dockerfile : "" est falsy → l'app
+  # bascule sur DATABASE_URL (secret Postgres posé par `fly mpg attach`).
+  VCM_STUDIO_DB = ""
+  # Assets/sorties sur le volume persistant (tant que R2 n'est pas câblé).
+  VCM_OUTPUT_DIR = "/data/studio_output"
+  # URL EXTERNE atteignable par le process Remotion pour charger les assets.
+  VCM_RENDER_BASE = "https://vcm-studio-prod.fly.dev"
+  CORS_ORIGINS = "https://vcm-studio-prod.fly.dev"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # PROD reste à 1 machine web : DB=Postgres mais assets sur volume mono-machine.
+  # NE PAS scaler count>1 tant que les assets ne sont pas sur object storage (R2)
+  # — sinon split-brain (chaque machine son /data) → 404 assets. Cf. docs/DEPLOY.md.
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  size = "performance-2x"
+  memory = "2048mb"   # chromium (Remotion) + ffmpeg/MoviePy
+
+[mounts]
+  source = "vcm_data"
+  destination = "/data"

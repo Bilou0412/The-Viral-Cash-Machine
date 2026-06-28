@@ -1,0 +1,44 @@
+name: Deploy (Fly.io)
+
+# Déploiement continu, séparé du gate qualité (ci.yml).
+#   push sur refactor/feature-driven   -> déploie l'env DEV  (vcm-studio-dev)
+#   tag v*  OU  déclenchement manuel    -> déploie l'env PROD (vcm-studio-prod)
+#
+# Secret requis (repo) : FLY_API_TOKEN  (org-scoped, couvre dev+prod).
+#   fly tokens create org   →   gh secret set FLY_API_TOKEN --body '<token>'
+#
+# Gate qualité : ci.yml tourne en parallèle. Pour bloquer un deploy tant que la CI
+# n'est pas verte, activer la protection de branche « require status checks: CI ».
+
+on:
+  push:
+    branches: ["refactor/feature-driven"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    # uniquement sur push de branche (pas sur tag)
+    if: startsWith(github.ref, 'refs/heads/')
+    name: deploy dev
+    runs-on: ubuntu-latest
+    concurrency: { group: deploy-dev, cancel-in-progress: true }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --config fly.dev.toml
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-prod:
+    # uniquement sur tag v* ou déclenchement manuel
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    name: deploy prod
+    runs-on: ubuntu-latest
+    concurrency: { group: deploy-prod, cancel-in-progress: false }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --config fly.toml
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
