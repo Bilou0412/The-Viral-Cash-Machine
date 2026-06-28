@@ -26,11 +26,12 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
+from ...features import storage
 from ...features.assets.ports import AssetProvider
 from ..db.engine import get_engine, init_db
 from ..db.models import Asset, Episode, Project
@@ -718,21 +719,21 @@ async def episode_events(episode_id: int) -> StreamingResponse:
 @app.get("/api/assets/{asset_id}/file")
 def asset_file(
     asset_id: int, session: Session = Depends(_session)
-) -> FileResponse:
+) -> Response:
     asset = AssetRepo(session).get(asset_id)
-    if asset is None or not asset.local_path or not os.path.exists(asset.local_path):
+    if asset is None or not asset.local_path or not storage.exists(asset.local_path):
         raise HTTPException(404, "asset file not available")
-    return FileResponse(asset.local_path)
+    return storage.serve(asset.local_path)
 
 
 @app.get("/api/episodes/{episode_id}/video")
 def episode_video(
     episode_id: int, session: Session = Depends(_session)
-) -> FileResponse:
+) -> Response:
     episode = _require_episode(session, episode_id)
-    if not episode.final_path or not os.path.exists(episode.final_path):
+    if not episode.final_path or not storage.exists(episode.final_path):
         raise HTTPException(404, "final video not available")
-    return FileResponse(episode.final_path)
+    return storage.serve(episode.final_path)
 
 
 # ---------------------------------------------------------------------------

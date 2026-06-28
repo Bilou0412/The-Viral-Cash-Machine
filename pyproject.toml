@@ -53,7 +53,7 @@ module = "src.app"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "replicate.*", "openai.*", "moviepy.*"]
+module = ["streamlit.*", "replicate.*", "openai.*", "moviepy.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

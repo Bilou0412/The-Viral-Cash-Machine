@@ -15,3 +15,4 @@ psycopg[binary]>=3.2   # driver Postgres v3 (prod) ; SQLite reste le défaut loc
 fastapi
 uvicorn[standard]
 httpx
+boto3   # backend object storage R2/S3 (import paresseux ; actif si STORAGE_BACKEND=r2)

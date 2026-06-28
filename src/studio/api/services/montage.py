@@ -20,6 +20,7 @@ from sqlmodel import Session
 
 from ...db.models import Asset
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
+from ....features import storage
 from .paths import episode_dir
 
 logger = logging.getLogger(__name__)
@@ -112,12 +113,13 @@ class MontageService:
         os.makedirs(out_dir, exist_ok=True)
         output_path = os.path.join(out_dir, "final_video.mp4")
 
-        paths = [a.local_path for a in ordered if a.local_path]
+        paths = [storage.materialize(a.local_path) for a in ordered if a.local_path]
         duration = self.concatenator(paths, output_path)
+        final_ref = storage.persist_file(output_path, out_dir, "final_video.mp4")
 
         with Session(self.engine) as session:
-            EpisodeRepo(session).set_final(episode_id, output_path, duration)
-        return output_path
+            EpisodeRepo(session).set_final(episode_id, final_ref, duration)
+        return final_ref
 
     # -- Rich cinematic montage (timers, nameplates, subtitles) ---------------
 
@@ -168,11 +170,11 @@ class MontageService:
             )
             return self.assemble(episode_id)
 
-        # (round_index, beat) -> local_path, only files that exist AND not écartés.
+        # (round_index, beat) -> local file (materialized), present AND not écarté.
         by_key = {
-            (a.round_index, a.beat): a.local_path
+            (a.round_index, a.beat): storage.materialize(a.local_path)
             for a in assets
-            if a.local_path and os.path.exists(a.local_path) and not a.excluded
+            if a.local_path and storage.exists(a.local_path) and not a.excluded
         }
 
         def g(ri: Optional[int], beat: str) -> Optional[str]:
@@ -263,6 +265,7 @@ class MontageService:
 
             output_path = os.path.join(out_dir, "final_video.mp4")
             duration = self.concatenator(round_files, output_path)
+            final_ref = storage.persist_file(output_path, out_dir, "final_video.mp4")
         except Exception as exc:
             logger.warning(
                 "assemble_rich(ep=%s): échec du compositing riche (%s) → repli "
@@ -271,5 +274,5 @@ class MontageService:
             return self.assemble(episode_id)
 
         with Session(self.engine) as session:
-            EpisodeRepo(session).set_final(episode_id, output_path, duration)
-        return output_path
+            EpisodeRepo(session).set_final(episode_id, final_ref, duration)
+        return final_ref
