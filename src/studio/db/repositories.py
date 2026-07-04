@@ -22,6 +22,7 @@ from src.studio.db.models import (
     Episode,
     GenerationJob,
     Project,
+    User,
     VoiceProfile,
 )
 
@@ -517,6 +518,35 @@ class EditorDocRepo:
         self.session.delete(row)
         self.session.commit()
         return True
+
+
+class UserRepo:
+    """CRUD for :class:`User` (auth Phase B)."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self, email: str, password_hash: str, is_admin: bool = False
+    ) -> User:
+        user = User(
+            email=email, password_hash=password_hash, is_admin=is_admin
+        )
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
+
+    def get(self, user_id: int) -> Optional[User]:
+        return self.session.get(User, user_id)
+
+    def get_by_email(self, email: str) -> Optional[User]:
+        return self.session.exec(
+            select(User).where(User.email == email)
+        ).first()
+
+    def count(self) -> int:
+        return len(self.session.exec(select(User)).all())
 
 
 class SettingRepo:

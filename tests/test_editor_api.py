@@ -24,9 +24,10 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import Session, create_engine  # noqa: E402
 
 from src.studio.api import app as app_module  # noqa: E402
+from src.studio.api.services import auth as auth_service  # noqa: E402
 from src.studio.api.services.fakes import FakeAssetProvider  # noqa: E402
 from src.studio.db.engine import init_db  # noqa: E402
-from src.studio.db.repositories import AssetRepo  # noqa: E402
+from src.studio.db.repositories import AssetRepo, UserRepo  # noqa: E402
 
 
 @pytest.fixture
@@ -40,6 +41,14 @@ def client(tmp_path, monkeypatch):
         f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
     )
     init_db(engine)
+
+    # Auth (B.1) : l'API est derrière un login → admin de test + session ouverte.
+    with Session(engine) as s:
+        UserRepo(s).create(
+            "admin@test.local",
+            auth_service.hash_password("test-password"),
+            is_admin=True,
+        )
 
     fake_provider = FakeAssetProvider()
 
@@ -61,6 +70,11 @@ def client(tmp_path, monkeypatch):
     with TestClient(app_module.app) as c:
         c.fake_provider = fake_provider  # type: ignore[attr-defined]
         c.engine = engine  # type: ignore[attr-defined]
+        r = c.post(
+            "/api/auth/login",
+            json={"email": "admin@test.local", "password": "test-password"},
+        )
+        assert r.status_code == 200, r.text
         yield c
 
     app_module.app.dependency_overrides.clear()

@@ -1,7 +1,9 @@
-import { NavLink, Outlet } from "react-router-dom"
-import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound } from "lucide-react"
+import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound, LogOut } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
-import { usingMocks } from "@/lib/api"
+import { api, usingMocks } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 
 const nav = [
@@ -13,6 +15,19 @@ const nav = [
 ]
 
 export function Layout() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+
+  async function logout() {
+    try {
+      await api.logout()
+    } finally {
+      await qc.invalidateQueries({ queryKey: ["me"] })
+      navigate("/login", { replace: true })
+    }
+  }
+
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card/40 px-4 py-6 md:flex">
@@ -54,6 +69,20 @@ export function Layout() {
             <Badge variant="warning" className="w-full justify-center gap-1">
               <Sparkles className="h-3 w-3" /> Mode démo (mocks)
             </Badge>
+          )}
+          {user && (
+            <div className="flex items-center justify-between gap-2 rounded-md bg-secondary/40 px-2 py-1.5">
+              <span className="truncate text-xs text-muted-foreground" title={user.email}>
+                {user.email}
+              </span>
+              <button
+                onClick={logout}
+                title="Se déconnecter"
+                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           )}
           <p className="text-[10px] text-muted-foreground/70">
             Studio vidéo IA · TikTok / Shorts / Reels

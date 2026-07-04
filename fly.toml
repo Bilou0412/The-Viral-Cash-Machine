@@ -18,6 +18,9 @@ primary_region = "cdg"
   # URL EXTERNE atteignable par le process Remotion pour charger les assets.
   VCM_RENDER_BASE = "https://vcm-studio-prod.fly.dev"
   CORS_ORIGINS = "https://vcm-studio-prod.fly.dev"
+  # Auth (B.1) : cookie de session HTTPS-only. Secrets via `fly secrets set` :
+  # VCM_SESSION_SECRET, VCM_ADMIN_EMAIL, VCM_ADMIN_PASSWORD.
+  VCM_COOKIE_SECURE = "1"
 
 [http_service]
   internal_port = 8000

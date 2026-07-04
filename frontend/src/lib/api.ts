@@ -7,6 +7,7 @@
 import type {
   AdventureScript,
   Asset,
+  AuthUser,
   BeatsResponse,
   BrickSpec,
   CostEstimate,
@@ -43,6 +44,8 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    // `credentials: include` envoie le cookie de session (auth Phase B.1).
+    credentials: "include",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     ...init,
   })
@@ -74,6 +77,21 @@ export const eventsUrlFor = (id: string | number) => `${BASE}/events/${id}`
 // ── Real API surface ───────────────────────────────────────────────────
 
 const realApi = {
+  // ── Auth (Phase B.1) ─────────────────────────────────────────────────
+  // GET /me : 401 si non connecté (le front en déduit qu'il faut se logger).
+  getMe: () => request<AuthUser>("/auth/me"),
+  login: (email: string, password: string) =>
+    request<AuthUser>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  register: (email: string, password: string) =>
+    request<AuthUser>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+
   listThemes: () => request<Theme[]>("/themes"),
 
   listProjects: () => request<Project[]>("/projects"),

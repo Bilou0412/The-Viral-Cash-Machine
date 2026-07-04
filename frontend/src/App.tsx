@@ -14,15 +14,25 @@ import { EpisodeRedirect } from "@/pages/EpisodeRedirect"
 import { Editor } from "@/pages/Editor"
 import { EditorIndex } from "@/pages/EditorIndex"
 import { Settings } from "@/pages/Settings"
+import { Login } from "@/pages/Login"
+import { Register } from "@/pages/Register"
+import { RequireAuth } from "@/lib/auth"
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 10_000 } },
 })
 
 const router = createBrowserRouter([
+  // Pages d'auth — hors garde (elles doivent charger sans session).
+  { path: "/login", element: <Login /> },
+  { path: "/register", element: <Register /> },
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <RequireAuth>
+        <Layout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: "new", element: <NewEpisode /> },
@@ -38,7 +48,14 @@ const router = createBrowserRouter([
     ],
   },
   // The editor is a full-screen NLE — rendered outside the studio Layout chrome.
-  { path: "/editor/:docId", element: <Editor /> },
+  {
+    path: "/editor/:docId",
+    element: (
+      <RequireAuth>
+        <Editor />
+      </RequireAuth>
+    ),
+  },
 ])
 
 export default function App() {

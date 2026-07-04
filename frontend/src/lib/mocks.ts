@@ -277,7 +277,16 @@ function deriveRenderModel(doc: EditorDoc): RenderModel {
 // In-memory BYOK key status for mock/e2e mode (no backend).
 const mockKeys = { openai_set: false, replicate_set: false }
 
+// Mode mock/e2e : toujours authentifié en admin (le SPA ne redirige pas vers
+// /login, la génération reste démontrable). Garde les tests Playwright verts.
+const mockUser = { id: 1, email: "demo@vcm.local", is_admin: true }
+
 export const mockApi = {
+  async getMe() { await delay(); return { ...mockUser } },
+  async login(_email: string, _password: string) { await delay(); return { ...mockUser } },
+  async register(_email: string, _password: string) { await delay(); return { ...mockUser } },
+  async logout() { await delay(); return { ok: true } },
+
   async listThemes() { await delay(); return [...themes] },
 
   async listProjects() { await delay(); return [...projects] },
