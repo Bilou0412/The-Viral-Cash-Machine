@@ -36,6 +36,7 @@ export function ScriptEditor() {
   const [dirty, setDirty] = useState(false)
   const [regenOpen, setRegenOpen] = useState(false)
   const [regenPrompt, setRegenPrompt] = useState("")
+  const [reviewing, setReviewing] = useState(false)
 
   // Initialize the editable copy during render when fresh data arrives for this
   // episode (React-recommended "adjust state while rendering" pattern).
@@ -108,7 +109,6 @@ export function ScriptEditor() {
     navigate(`/episodes/${episodeId}/assets`)
   }
 
-  const [reviewing, setReviewing] = useState(false)
   async function goToReview() {
     if (dirty) await save()
     setReviewing(true)
