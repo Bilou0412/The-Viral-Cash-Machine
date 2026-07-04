@@ -232,6 +232,34 @@ function newEditorDoc(title: string): EditorDoc {
   }
 }
 
+// Document COMPOSITE (ClipBrick) — ce que produit le script IA, révisé en R2.
+function newAdventureDoc(title: string): EditorDoc {
+  const clip = (id: string, kind: "video" | "photo", imgPrompt: string, motionPrompt: string, narr: string) => ({
+    id,
+    type: "clip" as const,
+    kind,
+    image: { model_ref: "bytedance/seedream-4.5", params: { prompt: imgPrompt, aspect_ratio: "9:16" } },
+    motion: kind === "video"
+      ? { model_ref: "prunaai/p-video", params: { prompt: motionPrompt, duration: 4 } }
+      : null,
+    children: [
+      { id: `${id}__narr`, role: "narration" as const, model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } },
+    ],
+    placement: { track: 0, start: 0, duration: 4 },
+  })
+  return {
+    schema_version: 2,
+    title,
+    canvas: { width: 1080, height: 1920, fps: 30 },
+    global_context: { text: "Un court-métrage d'horreur vertical.", characters: {}, art_direction: "cinematic, cold tones", extra: {} },
+    tracks: [{ index: 0, role: "main" }],
+    bricks: [
+      clip("c1", "video", "an abandoned subway tunnel, dim flickering light", "slow forward dolly, static camera", "Tu cours dans le noir, le souffle court."),
+      clip("c2", "photo", "a rusted metal door covered in scratches", "", "Une porte. Derrière, un souffle."),
+    ],
+  }
+}
+
 let nextDocId = 1
 const editorDocuments = new Map<string, EditorDocument>()
 
@@ -239,6 +267,8 @@ function seedEditorDocs() {
   if (editorDocuments.size) return
   const id = `doc-${nextDocId++}`
   editorDocuments.set(id, { id, project_id: 1, title: "Métro hanté — montage", doc: newEditorDoc("Métro hanté — montage") })
+  const id2 = `doc-${nextDocId++}`
+  editorDocuments.set(id2, { id: id2, project_id: 1, title: "Métro hanté — briques (revue)", doc: newAdventureDoc("Métro hanté — briques (revue)") })
 }
 
 // Derive a RenderModel from a doc's bricks (mirrors backend derivation).
@@ -261,7 +291,7 @@ function deriveRenderModel(doc: EditorDoc): RenderModel {
       text = typeof b.payload.text === "string" ? b.payload.text : ""
     } else {
       media = "video"
-      src = b.source_path ?? PLACEHOLDER_IMG
+      src = ("source_path" in b && b.source_path ? b.source_path : PLACEHOLDER_IMG)
     }
     clips.push({ id: b.id, media, src, start, duration, track, z: 0, text })
   }

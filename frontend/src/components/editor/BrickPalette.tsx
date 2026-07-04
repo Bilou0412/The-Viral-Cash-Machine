@@ -19,6 +19,7 @@ const ICONS: Record<BrickType, React.ComponentType<{ className?: string }>> = {
   voice: Mic,
   media: Upload,
   text: Type,
+  clip: Film, // les clips ne sont pas dans la palette ; clé requise par le Record
 }
 
 interface BrickPaletteProps {

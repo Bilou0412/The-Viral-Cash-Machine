@@ -16,6 +16,7 @@ import { EditorIndex } from "@/pages/EditorIndex"
 import { Settings } from "@/pages/Settings"
 import { Login } from "@/pages/Login"
 import { Register } from "@/pages/Register"
+import { ClipReview } from "@/pages/ClipReview"
 import { RequireAuth } from "@/lib/auth"
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       { path: "library", element: <LibraryPage /> },
       { path: "settings", element: <Settings /> },
       { path: "editor", element: <EditorIndex /> },
+      { path: "editor/:docId/review", element: <ClipReview /> },
       { path: "episodes/:id", element: <EpisodeRedirect /> },
       { path: "episodes/:id/script", element: <ScriptEditor /> },
       { path: "episodes/:id/assets", element: <Assets /> },

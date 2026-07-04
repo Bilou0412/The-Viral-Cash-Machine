@@ -60,6 +60,7 @@ function brickLabel(b: Brick): string {
     return typeof t === "string" && t ? t : "Texte"
   }
   if (b.type === "media") return "Média"
+  if (b.type === "clip") return "Brique"
   const ref = b.model_ref || b.type
   return ref.split("/").pop() ?? b.type
 }
