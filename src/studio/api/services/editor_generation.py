@@ -34,6 +34,7 @@ from ....editor.document import (
     GenNode,
     GenerativeBrick,
 )
+from ....features import storage
 from ....features.assets.ports import AssetProvider
 from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....features.compositing.registry import validate_params
@@ -100,10 +101,30 @@ def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
     return ordered
 
 
+def _resolve_media_value(value: str, token: Optional[str]) -> Optional[str]:
+    """Résout une valeur d'input média en URL utilisable par Replicate.
+
+    URL http(s) → telle quelle ; **photo uploadée** (ref de stockage) ou chemin
+    local → poussée vers la Files API Replicate ; sinon ``None`` (valeur laissée
+    telle quelle par l'appelant). C'est le chaînon qui rend l'upload fluide
+    (download/upload automatiques).
+    """
+    if not value:
+        return None
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    if storage.exists(value):
+        return _upload_to_replicate(storage.materialize(value), token)
+    if os.path.exists(value):
+        return _upload_to_replicate(value, token)
+    return None
+
+
 def _resolve_brick_refs(
     params: Dict[str, Any], outputs: Dict[str, str], token: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Replace ``"{brick:X}"`` values by the (Replicate-uploaded) URL of X.
+    """Replace ``"{brick:X}"`` values by the (Replicate-uploaded) URL of X, and
+    resolve **uploaded photos** (storage refs / local paths) to Replicate URLs.
 
     ``outputs`` maps brick id -> a usable URL. If the prior output is a local
     path, it is uploaded to Replicate first (best-effort); a missing/unknown ref
@@ -124,6 +145,12 @@ def _resolve_brick_refs(
                 else:
                     resolved[key] = value  # unresolved -> let validation catch it
                 continue
+            # Phase 3 : photo uploadée (ref de stockage) ou fichier local → URL.
+            if storage.exists(value) or os.path.exists(value):
+                media = _resolve_media_value(value, token)
+                if media is not None:
+                    resolved[key] = media
+                    continue
         resolved[key] = value
     return resolved
 
@@ -300,11 +327,17 @@ class EditorGenerationService:
 
         if clip.kind == "video":
             motion = clip.motion or GenNode()
-            # Auto-lien : image de départ = photo de cette brique, SAUF si un input
-            # image explicite (upload/override) est saisi dans les params du motion.
-            explicit_image = field_value(motion.params, "video", "image")
+            # Auto-lien : image de départ = photo de cette brique, SAUF si une photo
+            # explicite (uploadée / URL) est saisie dans les params du motion — elle
+            # est alors résolue (upload Replicate) et remplace l'auto-lien.
+            explicit = field_value(motion.params, "video", "image")
+            explicit_url = (
+                _resolve_media_value(str(explicit), self.replicate_token)
+                if explicit
+                else None
+            )
             image_input = (
-                explicit_image
+                explicit_url
                 or img_url
                 or _url_for_local(done.get(img_beat), self.replicate_token)
             )

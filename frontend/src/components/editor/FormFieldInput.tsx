@@ -2,7 +2,11 @@
 // string/number/integer/boolean/enum/file/array → matching control. Values are
 // kept as `unknown` and coerced per type on change.
 
-import { Link2, X } from "lucide-react"
+import { useRef, useState } from "react"
+import { Link2, Upload, X } from "lucide-react"
+import { toast } from "sonner"
+import { api } from "@/lib/api"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
@@ -101,15 +105,7 @@ export function FormFieldInput({
       )
       break
     case "file":
-      control = (
-        <Input
-          id={id}
-          type="text"
-          placeholder="URL ou chemin de fichier"
-          value={asString(value)}
-          onChange={(e) => onChange(e.target.value || null)}
-        />
-      )
+      control = <FileUpload value={value} onChange={onChange} />
       break
     case "array":
       control = (
@@ -222,6 +218,75 @@ function ConnectableField({
       )}
       {field.description && (
         <p className="text-[10px] leading-snug text-muted-foreground/70">{field.description}</p>
+      )}
+    </div>
+  )
+}
+
+/** Upload d'une photo pour un input image (Phase 3). La valeur devient la ref de
+ * stockage ; à la génération elle est poussée vers Replicate. Vider = revenir à
+ * l'auto-lien (pour l'image de départ d'une vidéo). */
+function FileUpload({
+  value,
+  onChange,
+}: {
+  value: unknown
+  onChange: (value: unknown) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const current = asString(value)
+
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = "" // permet de re-sélectionner le même fichier
+    if (!file) return
+    setBusy(true)
+    try {
+      const { ref } = await api.uploadFile(file)
+      onChange(ref)
+      toast.success("Photo uploadée")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Échec de l'upload")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={pick}
+      />
+      {current ? (
+        <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-2 py-1.5">
+          <span className="min-w-0 flex-1 truncate text-xs" title={current}>
+            📷 {current.split("/").pop()}
+          </span>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            title="Retirer (revenir à l'auto-lien)"
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          className="gap-1.5"
+        >
+          <Upload className="h-3.5 w-3.5" /> {busy ? "Upload…" : "Uploader une photo"}
+        </Button>
       )}
     </div>
   )

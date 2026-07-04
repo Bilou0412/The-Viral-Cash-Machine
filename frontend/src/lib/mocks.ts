@@ -511,6 +511,11 @@ export const mockApi = {
     return { id, status: "scheduled" }
   },
 
+  async uploadFile(file: File) {
+    await delay()
+    return { ref: `mock-upload/${file.name}` }
+  },
+
   async getKeysStatus() {
     await delay()
     return { ...mockKeys }

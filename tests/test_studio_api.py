@@ -362,6 +362,39 @@ def _register(client, email, password="password123"):
     return r.json()["id"]
 
 
+def test_upload_photo(client):
+    # Upload d'une photo (Phase 3) → renvoie une ref stockée, auth requise.
+    png = b"\x89PNG\r\n\x1a\n" + b"x" * 256
+    r = client.post(
+        "/api/uploads", files={"file": ("photo.png", png, "image/png")}
+    )
+    assert r.status_code == 200, r.text
+    ref = r.json()["ref"]
+    assert ref
+    from src.features import storage
+
+    assert storage.exists(ref)
+    # Fichier vide → 422.
+    assert client.post(
+        "/api/uploads", files={"file": ("empty.png", b"", "image/png")}
+    ).status_code == 422
+    # Sans session → 401.
+    client.post("/api/auth/logout")
+    assert client.post(
+        "/api/uploads", files={"file": ("x.png", png, "image/png")}
+    ).status_code == 401
+
+
+def test_resolve_media_value_unit():
+    # Résolution des valeurs média (Phase 3), sans réseau.
+    from src.studio.api.services.editor_generation import _resolve_media_value
+
+    assert _resolve_media_value("https://x/y.png", None) == "https://x/y.png"
+    assert _resolve_media_value("", None) is None
+    # Une valeur non-fichier (ex. un prompt) n'est pas résolue.
+    assert _resolve_media_value("juste un prompt", None) is None
+
+
 def test_data_isolation_between_users(client):
     # Alice crée un projet + épisode ; Bob ne doit RIEN en voir (404, pas 403).
     _register(client, "alice@test.local")

@@ -198,6 +198,29 @@ const realApi = {
       method: "POST",
     }),
 
+  // Upload d'une photo (Phase 3) → ref de stockage à mettre en input image.
+  // Multipart : on n'utilise pas `request` (qui force Content-Type JSON).
+  uploadFile: async (file: File): Promise<{ ref: string }> => {
+    const form = new FormData()
+    form.append("file", file)
+    const res = await fetch(`${BASE}/uploads`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    })
+    if (!res.ok) {
+      let detail = res.statusText
+      try {
+        const body = await res.json()
+        detail = body.detail ?? body.message ?? detail
+      } catch {
+        /* non-JSON */
+      }
+      throw new ApiError(res.status, typeof detail === "string" ? detail : res.statusText)
+    }
+    return res.json() as Promise<{ ref: string }>
+  },
+
   // BYOK API keys (entered in Settings). GET = status only; PUT saves non-empty.
   getKeysStatus: () => request<KeysStatus>("/settings/keys"),
   saveKeys: (body: { openai?: string; replicate?: string }) =>
