@@ -73,9 +73,12 @@ test("editor journey: place bricks, inspect, connect — no errors", async ({ pa
   const inspector = page.getByTestId("inspector")
   await expect(inspector).toBeVisible()
   await expect(inspector.getByText("Modèle", { exact: true })).toBeVisible()
-  // At least one dynamic form field from the mock model form (image → "prompt").
+  // At least one dynamic form field from the mock model form, shown with its
+  // BUSINESS label (image → "prompt" is labelled « Description de l'image »).
   await expect(inspector.getByText("Paramètres", { exact: true })).toBeVisible()
-  await expect(inspector.getByText("prompt", { exact: true })).toBeVisible()
+  await expect(
+    inspector.getByText("Description de l'image", { exact: true })
+  ).toBeVisible()
   await shot(page, info, "03-inspector-image")
 
   // 5. Add a Vidéo brick, select it, and connect its media input (the "image"
@@ -87,8 +90,11 @@ test("editor journey: place bricks, inspect, connect — no errors", async ({ pa
   await expect(videoBlock).toBeVisible()
   await videoBlock.click()
 
-  // The video model form exposes an "image" file field, which is connectable.
-  await expect(inspector.getByText("image", { exact: true })).toBeVisible()
+  // The video model form exposes an "image" file field (labelled « Image de
+  // départ »), which is connectable.
+  await expect(
+    inspector.getByText("Image de départ", { exact: true })
+  ).toBeVisible()
   const connectSelect = inspector.getByLabel("Connecter à une brique")
   await expect(connectSelect).toBeVisible()
 
