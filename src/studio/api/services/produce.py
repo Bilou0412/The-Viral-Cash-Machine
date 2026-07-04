@@ -12,6 +12,8 @@ testables hors-ligne ; cette orchestration fait de la vraie génération réseau
 
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
@@ -22,8 +24,17 @@ from .generation import AssetGenerationService
 from .montage import MontageService
 
 
-def produce_episode(engine: Engine, episode_id: int, side: str = "left") -> str:
-    """Produit la vidéo COMPLÈTE d'un épisode (script déjà en base). Renvoie le mp4."""
+def produce_episode(
+    engine: Engine,
+    episode_id: int,
+    side: str = "left",
+    replicate_token: Optional[str] = None,
+    openai_key: Optional[str] = None,
+) -> str:
+    """Produit la vidéo COMPLÈTE d'un épisode (script déjà en base). Renvoie le mp4.
+
+    ``replicate_token`` / ``openai_key`` = clés de l'utilisateur courant (B.2).
+    """
     with Session(engine) as session:
         row = ScriptRepo(session).latest_for_episode(episode_id)
         if row is None:
@@ -32,7 +43,9 @@ def produce_episode(engine: Engine, episode_id: int, side: str = "left") -> str:
 
     bus.publish(episode_id, {"type": "produce_started"})
     # 1. Aventure (assets image-first) + intro (générée dans generate_episode).
-    AssetGenerationService(engine).generate_episode(episode_id, script, side)
+    AssetGenerationService(
+        engine, replicate_token=replicate_token, openai_key=openai_key
+    ).generate_episode(episode_id, script, side)
     # 2. Montage complet.
     out = MontageService(engine).assemble_rich(episode_id)
     bus.publish(episode_id, {"type": "produce_done", "final_path": out})

@@ -73,7 +73,6 @@ if TYPE_CHECKING:
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     eng = get_engine()
     init_db(eng)
-    secrets.apply_to_env(eng)  # load BYOK keys (entered in the UI) into the env
     auth.bootstrap_admin(eng)  # crée l'admin depuis VCM_ADMIN_EMAIL/PASSWORD si posés
     yield
 
@@ -144,11 +143,19 @@ def get_downloader() -> Any:
     return None
 
 
-def get_catalog_client() -> Any:
-    """Provide the Replicate model-catalog client (overridden with a fake in tests)."""
+def get_catalog_client(
+    request: Request, engine: Engine = Depends(get_db_engine)
+) -> Any:
+    """Client catalogue Replicate scopé sur la clé de l'utilisateur courant (B.2).
+
+    Overridé par un fake en test. Le middleware garantit une session sur /api/*,
+    donc ``user_id`` est présent ; on lit sa clé Replicate (None si absente).
+    """
     from .services.model_catalog import ReplicateCatalogClient
 
-    return ReplicateCatalogClient()
+    uid = request.session.get("user_id")
+    token = secrets.get_user_keys(engine, int(uid)).replicate if uid else None
+    return ReplicateCatalogClient(api_token=token)
 
 
 def _session(engine: Engine = Depends(get_db_engine)) -> Iterator[Session]:
@@ -184,6 +191,56 @@ def require_admin(user: User = Depends(require_user)) -> User:
 def _public_user(user: User) -> dict[str, Any]:
     """Vue publique d'un utilisateur (jamais le hash du mot de passe)."""
     return {"id": user.id, "email": user.email, "is_admin": user.is_admin}
+
+
+# --- Ownership (Phase B.2) — isolation des données par utilisateur -----------
+# Cross-tenant → 404 (ne pas divulguer l'existence). L'admin bypasse tout.
+
+
+def _uid(user: User) -> int:
+    """id d'un utilisateur chargé (toujours défini) — typé int pour les repos."""
+    assert user.id is not None
+    return user.id
+
+
+def _require_owned_project(
+    session: Session, user: User, project_id: int
+) -> Project:
+    project = ProjectRepo(session).get(project_id)
+    if project is None or (not user.is_admin and project.owner_id != user.id):
+        raise HTTPException(404, f"project {project_id} not found")
+    return project
+
+
+def _require_owned_episode(
+    session: Session, user: User, episode_id: int
+) -> Episode:
+    episode = EpisodeRepo(session).get(episode_id)
+    if episode is None:
+        raise HTTPException(404, f"episode {episode_id} not found")
+    _require_owned_project(session, user, episode.project_id)  # 404 si pas owner
+    return episode
+
+
+def _require_owned_doc(session: Session, user: User, doc_id: int) -> Any:
+    row = EditorDocRepo(session).get(doc_id)
+    if row is None:
+        raise HTTPException(404, f"editor document {doc_id} not found")
+    _require_owned_project(session, user, row.project_id)
+    return row
+
+
+def _require_owned_asset(session: Session, user: User, asset_id: int) -> Asset:
+    asset = AssetRepo(session).get(asset_id)
+    if asset is None:
+        raise HTTPException(404, f"asset {asset_id} not found")
+    # Les assets de l'éditeur ont episode_id=0 → passer par le document, sinon
+    # par l'épisode.
+    if asset.editor_document_id is not None:
+        _require_owned_doc(session, user, asset.editor_document_id)
+    else:
+        _require_owned_episode(session, user, asset.episode_id)
+    return asset
 
 
 # ---------------------------------------------------------------------------
@@ -258,8 +315,8 @@ def register(
 ) -> dict[str, Any]:
     """Crée un compte (non-admin) et ouvre la session.
 
-    B.1 : un inscrit lambda peut se connecter mais **pas** générer (routes de
-    génération réservées à l'admin) — l'inscription s'ouvre vraiment en B.2.
+    B.2 : chaque utilisateur ne voit que ses données et génère avec **ses**
+    propres clés (chiffrées) — l'inscription est ouverte.
     """
     email = body.email.strip().lower()
     if not email or "@" not in email:
@@ -308,15 +365,22 @@ def me(user: User = Depends(require_user)) -> dict[str, Any]:
 
 
 @app.get("/api/projects")
-def list_projects(session: Session = Depends(_session)) -> list[Project]:
-    return list(ProjectRepo(session).list())
+def list_projects(session: Session = Depends(_session),
+    user: User = Depends(require_user)) -> list[Project]:
+    repo = ProjectRepo(session)
+    if user.is_admin:
+        return list(repo.list())
+    return list(repo.list_for_owner(_uid(user)))
 
 
 @app.post("/api/projects")
 def create_project(
-    body: ProjectIn, session: Session = Depends(_session)
+    body: ProjectIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Project:
-    return ProjectRepo(session).create(body.name, body.settings_json)
+    return ProjectRepo(session).create(
+        body.name, body.settings_json, owner_id=_uid(user)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -326,37 +390,35 @@ def create_project(
 
 @app.get("/api/episodes")
 def list_episodes(
-    project_id: Optional[int] = None, session: Session = Depends(_session)
+    project_id: Optional[int] = None, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> list[Episode]:
     repo = EpisodeRepo(session)
     if project_id is not None:
+        _require_owned_project(session, user, project_id)  # 404 si pas owner
         return list(repo.by_project(project_id))
-    return list(repo.list())
+    if user.is_admin:
+        return list(repo.list())
+    return list(repo.by_owner(_uid(user)))
 
 
 @app.post("/api/episodes")
 def create_episode(
-    body: EpisodeIn, session: Session = Depends(_session)
+    body: EpisodeIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Episode:
-    if ProjectRepo(session).get(body.project_id) is None:
-        raise HTTPException(404, f"project {body.project_id} not found")
+    _require_owned_project(session, user, body.project_id)
     return EpisodeRepo(session).create(
         body.project_id, body.title, draft_mode=body.draft_mode, theme=body.theme
     )
 
 
-def _require_episode(session: Session, episode_id: int) -> Episode:
-    episode = EpisodeRepo(session).get(episode_id)
-    if episode is None:
-        raise HTTPException(404, f"episode {episode_id} not found")
-    return episode
-
-
 @app.get("/api/episodes/{episode_id}")
 def get_episode(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Episode:
-    return _require_episode(session, episode_id)
+    return _require_owned_episode(session, user, episode_id)
 
 
 # ---------------------------------------------------------------------------
@@ -428,12 +490,16 @@ def generate_episode_script(
     episode_id: int,
     body: ScriptGenIn,
     session: Session = Depends(_session),
-    _admin: User = Depends(require_admin),
+    user: User = Depends(require_user),
+    engine: Engine = Depends(get_db_engine),
 ) -> dict[str, Any]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
+    # B.2 : script écrit avec la clé OpenAI de l'utilisateur (sinon décomposeur Fake).
+    keys = secrets.get_user_keys(engine, _uid(user))
     script = generate_script(
         body.prompt, body.char_left_name, body.char_right_name,
         body.char_left_desc, body.char_right_desc, n_rounds=body.n_rounds,
+        openai_key=keys.openai,
     )
     ScriptRepo(session).create(episode_id, script.model_dump_json())
     data: dict[str, Any] = json.loads(script.model_dump_json())
@@ -442,9 +508,10 @@ def generate_episode_script(
 
 @app.get("/api/episodes/{episode_id}/script")
 def get_episode_script(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     row = ScriptRepo(session).latest_for_episode(episode_id)
     if row is None:
         raise HTTPException(404, "no script yet for this episode")
@@ -454,9 +521,10 @@ def get_episode_script(
 
 @app.put("/api/episodes/{episode_id}/script")
 def edit_episode_script(
-    episode_id: int, body: ScriptEditIn, session: Session = Depends(_session)
+    episode_id: int, body: ScriptEditIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     # Validate the edit against the schema before persisting.
     from ...features.scripting.adventure import AdventureScript
 
@@ -487,9 +555,10 @@ def _load_script(session: Session, episode_id: int) -> "AdventureScript":
 
 @app.get("/api/episodes/{episode_id}/beats")
 def get_episode_beats(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)
     plan = plan_episode_assets(script)
     return {
@@ -510,9 +579,10 @@ def get_episode_beats(
 
 @app.get("/api/episodes/{episode_id}/cost")
 def get_episode_cost(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    episode = _require_episode(session, episode_id)
+    episode = _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)
     est = estimate_cost(script, draft=episode.draft_mode)
     repo = CostRepo(session)
@@ -546,20 +616,25 @@ class KeysIn(BaseModel):
 
 
 @app.get("/api/settings/keys")
-def get_keys(engine: Engine = Depends(get_db_engine)) -> dict[str, bool]:
-    """Statut des clés (configurées ou non). Ne renvoie jamais la valeur."""
-    return secrets.keys_status(engine)
+def get_keys(
+    engine: Engine = Depends(get_db_engine),
+    user: User = Depends(require_user),
+) -> dict[str, bool]:
+    """Statut des clés de l'utilisateur courant. Ne renvoie jamais la valeur."""
+    return secrets.keys_status(engine, _uid(user))
 
 
 @app.put("/api/settings/keys")
 def put_keys(
     body: KeysIn,
     engine: Engine = Depends(get_db_engine),
-    _admin: User = Depends(require_admin),
+    user: User = Depends(require_user),
 ) -> dict[str, bool]:
-    """Enregistre les clés non vides (DB + os.environ) et renvoie le statut."""
-    secrets.set_keys(engine, openai=body.openai, replicate=body.replicate)
-    return secrets.keys_status(engine)
+    """Enregistre (chiffrées) les clés non vides de l'utilisateur et renvoie le statut."""
+    secrets.set_keys(
+        engine, _uid(user), openai=body.openai, replicate=body.replicate
+    )
+    return secrets.keys_status(engine, _uid(user))
 
 
 # ---------------------------------------------------------------------------
@@ -572,14 +647,23 @@ def generate_assets(
     episode_id: int,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
-    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)
-    service = AssetGenerationService(engine, provider=provider, downloader=downloader)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    if provider is None and not keys.replicate:
+        raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
+    service = AssetGenerationService(
+        engine,
+        provider=provider,
+        downloader=downloader,
+        replicate_token=keys.replicate,
+        openai_key=keys.openai,
+    )
     background.add_task(service.generate_episode, episode_id, script)
     return {"episode_id": episode_id, "status": "scheduled"}
 
@@ -588,28 +672,39 @@ def generate_assets(
 def regenerate_one_asset(
     asset_id: int,
     background: BackgroundTasks,
+    session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
-    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
-    background.add_task(regenerate_asset, engine, asset_id, provider, downloader)
+    _require_owned_asset(session, user, asset_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    if provider is None and not keys.replicate:
+        raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
+    background.add_task(
+        regenerate_asset, engine, asset_id, provider, downloader,
+        keys.replicate, keys.openai,
+    )
     return {"asset_id": asset_id, "status": "scheduled"}
 
 
 @app.get("/api/episodes/{episode_id}/assets")
 def list_episode_assets(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> list[Asset]:
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     return list(AssetRepo(session).assets_by_episode(episode_id))
 
 
 @app.patch("/api/assets/{asset_id}")
 def update_asset(
-    asset_id: int, body: AssetUpdateIn, session: Session = Depends(_session)
+    asset_id: int, body: AssetUpdateIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Asset:
     """Revue M1 : éditer le prompt d'un asset et/ou l'écarter du montage."""
+    _require_owned_asset(session, user, asset_id)
     asset = AssetRepo(session).update(
         asset_id, prompt=body.prompt, excluded=body.excluded
     )
@@ -628,6 +723,7 @@ def montage_episode(
     episode_id: int,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
 ) -> dict[str, Any]:
     """Lance le montage HORS du cycle requête (MoviePy = plusieurs minutes).
@@ -637,7 +733,7 @@ def montage_episode(
     via SSE /api/events/{id} et récupère le résultat sur /api/episodes/{id}/video.
     (Un montage synchrone dépasserait le timeout proxy ~60s en prod.)
     """
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     svc = MontageService(engine)
     if not svc.has_renderable_inputs(episode_id):
         raise HTTPException(409, f"episode {episode_id} has no ready video assets to assemble")
@@ -650,21 +746,28 @@ def produce_full_episode(
     episode_id: int,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
-    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     """Un bouton = toute la vidéo : assets aventure + intro + montage (fond)."""
-    _require_episode(session, episode_id)
+    _require_owned_episode(session, user, episode_id)
     _load_script(session, episode_id)  # 404 si pas de script
+    keys = secrets.get_user_keys(engine, _uid(user))
+    if not keys.replicate:
+        raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
     from .services.produce import produce_episode
 
-    background.add_task(produce_episode, engine, episode_id)
+    background.add_task(
+        produce_episode, engine, episode_id, "left", keys.replicate, keys.openai
+    )
     return {"episode_id": episode_id, "status": "scheduled"}
 
 
 @app.get("/api/library")
-def library(session: Session = Depends(_session)) -> list[dict[str, Any]]:
-    episodes = EpisodeRepo(session).list()
+def library(session: Session = Depends(_session),
+    user: User = Depends(require_user)) -> list[dict[str, Any]]:
+    repo = EpisodeRepo(session)
+    episodes = repo.list() if user.is_admin else repo.by_owner(_uid(user))
     return [
         {
             "episode_id": e.id,
@@ -684,19 +787,19 @@ def library(session: Session = Depends(_session)) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def _require_editor_doc(session: Session, doc_id: int) -> Any:
-    row = EditorDocRepo(session).get(doc_id)
-    if row is None:
-        raise HTTPException(404, f"editor document {doc_id} not found")
-    return row
-
-
 @app.get("/api/editor/documents")
 def list_editor_documents(
-    project_id: Optional[int] = None, session: Session = Depends(_session)
+    project_id: Optional[int] = None, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> list[dict[str, Any]]:
     repo = EditorDocRepo(session)
-    rows = repo.by_project(project_id) if project_id is not None else repo.list()
+    if project_id is not None:
+        _require_owned_project(session, user, project_id)  # 404 si pas owner
+        rows: Any = repo.by_project(project_id)
+    elif user.is_admin:
+        rows = repo.list()
+    else:
+        rows = repo.by_owner(_uid(user))
     return [
         {"id": r.id, "project_id": r.project_id, "title": r.title} for r in rows
     ]
@@ -704,10 +807,10 @@ def list_editor_documents(
 
 @app.post("/api/editor/documents")
 def create_editor_document(
-    body: EditorDocIn, session: Session = Depends(_session)
+    body: EditorDocIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    if ProjectRepo(session).get(body.project_id) is None:
-        raise HTTPException(404, f"project {body.project_id} not found")
+    _require_owned_project(session, user, body.project_id)
     from ...editor.document import EditorDocument
 
     doc = EditorDocument(title=body.title)
@@ -724,7 +827,8 @@ def create_editor_document(
 
 @app.post("/api/episodes/{episode_id}/editor-document")
 def create_editor_document_from_script(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
     """Matérialise le script de l'épisode en document de briques ÉDITABLE (R1).
 
@@ -732,7 +836,7 @@ def create_editor_document_from_script(
     (`AdventureScript`), on le transforme en arbre `ClipBrick` via
     `adventure_to_document`, et on persiste le document pour la revue/édition.
     """
-    episode = _require_episode(session, episode_id)
+    episode = _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)
     from ...features.scripting.adventure_to_bricks import adventure_to_document
 
@@ -755,9 +859,10 @@ def create_editor_document_from_script(
 
 @app.get("/api/editor/documents/{doc_id}")
 def get_editor_document(
-    doc_id: int, session: Session = Depends(_session)
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    row = _require_editor_doc(session, doc_id)
+    row = _require_owned_doc(session, user, doc_id)
     from ...editor import upgrade_document
 
     doc = upgrade_document(json.loads(row.doc_json))
@@ -771,9 +876,10 @@ def get_editor_document(
 
 @app.put("/api/editor/documents/{doc_id}")
 def save_editor_document(
-    doc_id: int, body: EditorDocSaveIn, session: Session = Depends(_session)
+    doc_id: int, body: EditorDocSaveIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    _require_editor_doc(session, doc_id)
+    _require_owned_doc(session, user, doc_id)
     from ...editor.document import EditorDocument
 
     try:
@@ -797,14 +903,18 @@ def generate_editor_document(
     doc_id: int,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
-    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
-    _require_editor_doc(session, doc_id)
+    _require_owned_doc(session, user, doc_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    if provider is None and not keys.replicate:
+        raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
     service = EditorGenerationService(
-        engine, provider=provider, downloader=downloader
+        engine, provider=provider, downloader=downloader,
+        replicate_token=keys.replicate,
     )
     background.add_task(service.generate_document, doc_id)
     return {"id": doc_id, "status": "scheduled"}
@@ -816,23 +926,28 @@ def regenerate_editor_brick(
     brick_id: str,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
-    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
-    _require_editor_doc(session, doc_id)
+    _require_owned_doc(session, user, doc_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    if provider is None and not keys.replicate:
+        raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
     background.add_task(
-        regenerate_brick, engine, doc_id, brick_id, provider, downloader
+        regenerate_brick, engine, doc_id, brick_id, provider, downloader,
+        keys.replicate,
     )
     return {"id": doc_id, "brick_id": brick_id, "status": "scheduled"}
 
 
 @app.get("/api/editor/documents/{doc_id}/render-model")
 def editor_render_model(
-    doc_id: int, session: Session = Depends(_session)
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> dict[str, Any]:
-    row = _require_editor_doc(session, doc_id)
+    row = _require_owned_doc(session, user, doc_id)
     from ...editor import upgrade_document
     from ...editor.resolve import resolve
 
@@ -851,10 +966,11 @@ def render_editor_document(
     doc_id: int,
     background: BackgroundTasks,
     session: Session = Depends(_session),
+    user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
 ) -> dict[str, Any]:
     """Export MP4 via Remotion (subprocess Node) — planifié en tâche de fond."""
-    _require_editor_doc(session, doc_id)
+    _require_owned_doc(session, user, doc_id)
     from .services.remotion_render import render_document
 
     background.add_task(render_document, engine, doc_id)
@@ -863,10 +979,11 @@ def render_editor_document(
 
 @app.get("/api/editor/documents/{doc_id}/video")
 def editor_document_video(
-    doc_id: int, session: Session = Depends(_session)
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> FileResponse:
     """Sert le MP4 final d'un document éditeur (rendu Remotion)."""
-    row = _require_editor_doc(session, doc_id)
+    row = _require_owned_doc(session, user, doc_id)
     project = ProjectRepo(session).get(row.project_id)
     project_name = project.name if project else f"project_{row.project_id}"
     from .services.paths import editor_dir
@@ -883,7 +1000,21 @@ def editor_document_video(
 
 
 @app.get("/api/events/{episode_id}")
-async def episode_events(episode_id: int) -> StreamingResponse:
+async def episode_events(
+    episode_id: int,
+    scope: str = "episode",
+    engine: Engine = Depends(get_db_engine),
+    user: User = Depends(require_user),
+) -> StreamingResponse:
+    # B.2 : vérifie l'ownership de la ressource suivie avant de s'abonner au bus
+    # (le bus mélange épisodes et documents dans le même espace d'ids → 404 si
+    # la ressource n'appartient pas à l'utilisateur). Session courte (le flux SSE
+    # reste ouvert longtemps, on ne garde pas de session DB dessus).
+    with Session(engine) as session:
+        if scope == "doc":
+            _require_owned_doc(session, user, episode_id)
+        else:
+            _require_owned_episode(session, user, episode_id)
     queue = bus.subscribe(episode_id)
 
     async def stream() -> AsyncIterator[str]:
@@ -902,19 +1033,21 @@ async def episode_events(episode_id: int) -> StreamingResponse:
 
 @app.get("/api/assets/{asset_id}/file")
 def asset_file(
-    asset_id: int, session: Session = Depends(_session)
+    asset_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Response:
-    asset = AssetRepo(session).get(asset_id)
-    if asset is None or not asset.local_path or not storage.exists(asset.local_path):
+    asset = _require_owned_asset(session, user, asset_id)
+    if not asset.local_path or not storage.exists(asset.local_path):
         raise HTTPException(404, "asset file not available")
     return storage.serve(asset.local_path)
 
 
 @app.get("/api/episodes/{episode_id}/video")
 def episode_video(
-    episode_id: int, session: Session = Depends(_session)
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
 ) -> Response:
-    episode = _require_episode(session, episode_id)
+    episode = _require_owned_episode(session, user, episode_id)
     if not episode.final_path or not storage.exists(episode.final_path):
         raise HTTPException(404, "final video not available")
     return storage.serve(episode.final_path)

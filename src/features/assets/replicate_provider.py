@@ -1,7 +1,6 @@
 """Replicate-based asset generation."""
 
 from typing import Any, Dict, List, Optional
-import replicate
 from .ports import AssetProvider, RunResult
 
 
@@ -39,9 +38,21 @@ def _normalize_outputs(result: Any) -> List[str]:
 
 
 class ReplicateAssetProvider(AssetProvider):
-    """Generate assets using Replicate AI models."""
+    """Generate assets using Replicate AI models.
 
-    last_run: Optional[RunResult] = None
+    ``api_token`` (B.2) : le token Replicate de l'utilisateur courant. Passé au
+    client SDK à chaque appel (plus de lecture implicite de ``REPLICATE_API_TOKEN``
+    dans l'environnement, qui serait partagée entre utilisateurs).
+    """
+
+    def __init__(self, api_token: Optional[str] = None) -> None:
+        self.api_token = api_token
+        self.last_run: Optional[RunResult] = None
+
+    def _client(self) -> Any:
+        from replicate.client import Client
+
+        return Client(api_token=self.api_token) if self.api_token else Client()
 
     def run_model_metered(
         self, model_ref: str, params: Dict[str, Any]
@@ -49,14 +60,12 @@ class ReplicateAssetProvider(AssetProvider):
         """Run a model via the predictions API to capture real cost/metrics.
 
         Defensive: if the predictions path fails for any SDK-shape reason, fall
-        back to the plain ``replicate.run`` (outputs only, no metrics) so
-        generation never breaks — the cost layer then falls back to the estimate.
+        back to ``client.run`` (outputs only, no metrics) so generation never
+        breaks — the cost layer then falls back to the estimate.
         """
+        client = self._client()
         result: RunResult
         try:
-            from replicate.client import Client
-
-            client: Any = Client()
             pred = client.models.predictions.create(model_ref, input=params)
             pred.wait()
             metrics: Dict[str, Any] = dict(pred.metrics or {})
@@ -71,7 +80,7 @@ class ReplicateAssetProvider(AssetProvider):
                 metrics=metrics,
             )
         except Exception:
-            result = RunResult(urls=_normalize_outputs(replicate.run(model_ref, input=params)))
+            result = RunResult(urls=_normalize_outputs(client.run(model_ref, input=params)))
         self.last_run = result
         return result
 

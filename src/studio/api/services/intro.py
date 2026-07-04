@@ -48,8 +48,16 @@ def _intro_video_prompt(script: AdventureScript, first: str, second: str) -> str
     )
 
 
-def generate_intro(engine: Engine, episode_id: int) -> str:
-    """Génère + compile l'intro de l'épisode ; renvoie le chemin du fichier final."""
+def generate_intro(
+    engine: Engine,
+    episode_id: int,
+    replicate_token: Optional[str] = None,
+    openai_key: Optional[str] = None,
+) -> str:
+    """Génère + compile l'intro de l'épisode ; renvoie le chemin du fichier final.
+
+    ``replicate_token`` / ``openai_key`` = clés de l'utilisateur courant (B.2).
+    """
     with Session(engine) as session:
         episode = EpisodeRepo(session).get(episode_id)
         if episode is None:
@@ -77,7 +85,18 @@ def generate_intro(engine: Engine, episode_id: int) -> str:
     # P1 : narrateur = PHRASE FIXE du template, seuls les prénoms varient.
     narration = f"Choisis ton compagnon pour cette nuit : {left} ou {right}."
 
-    pipeline = Pipeline()
+    # B.2 : provider + transcriber portent les clés de l'utilisateur (pas d'env).
+    transcriber = None
+    if openai_key:
+        from openai import OpenAI
+
+        from ....features.transcription.whisper import WhisperTranscriber
+
+        transcriber = WhisperTranscriber(OpenAI(api_key=openai_key))
+    pipeline = Pipeline(
+        asset_provider=ReplicateAssetProvider(api_token=replicate_token),
+        transcriber=transcriber,
+    )
     # 1) Assets (image 2 persos -> dialogue ; voix perso + narrateur par défaut).
     pipeline.generate_assets(
         project_name,
@@ -93,7 +112,9 @@ def generate_intro(engine: Engine, episode_id: int) -> str:
     base = os.environ.get("VCM_OUTPUT_DIR", "exports")
     inst_dir = os.path.join(base, project_name, instance_id)
     voice_id, model = _narrator_voice()
-    narr_url = ReplicateAssetProvider().synthesize_voice(narration, voice_id, model)
+    narr_url = ReplicateAssetProvider(api_token=replicate_token).synthesize_voice(
+        narration, voice_id, model
+    )
     download_file(narr_url, inst_dir, "narrator.mp3")
 
     # 3) Détection des têtes + compile via le compositeur historique (nameplates+timer).

@@ -56,8 +56,11 @@ fly secrets set OPENAI_API_KEY=... REPLICATE_API_TOKEN=... -a vcm-studio-dev
 #   VCM_ADMIN_EMAIL / VCM_ADMIN_PASSWORD : ton compte admin (créé au 1er démarrage
 #   s'il n'existe pas). Sans eux : personne ne peut générer. (VCM_COOKIE_SECURE=1
 #   est déjà dans [env] des fly.toml.)
-fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... -a vcm-studio-dev
-fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... -a vcm-studio-prod
+# 4ter) Multi-tenant (Phase B.2) — REQUIS : chiffrement des clés API par-utilisateur.
+#   VCM_SECRET_KEY : clé Fernet urlsafe-base64 32 octets → `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
+#   ⚠️ La perdre/changer rend illisibles TOUTES les clés déjà chiffrées (à conserver).
+fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... VCM_SECRET_KEY=... -a vcm-studio-dev
+fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... VCM_SECRET_KEY=... -a vcm-studio-prod
 
 # 5) Premier déploiement manuel + contrôle
 fly deploy --remote-only --config fly.toml      # prod

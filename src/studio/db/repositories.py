@@ -23,6 +23,7 @@ from src.studio.db.models import (
     GenerationJob,
     Project,
     User,
+    UserApiKey,
     VoiceProfile,
 )
 
@@ -33,8 +34,15 @@ class ProjectRepo:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def create(self, name: str, settings_json: Optional[str] = None) -> Project:
-        project = Project(name=name, settings_json=settings_json)
+    def create(
+        self,
+        name: str,
+        settings_json: Optional[str] = None,
+        owner_id: Optional[int] = None,
+    ) -> Project:
+        project = Project(
+            name=name, settings_json=settings_json, owner_id=owner_id
+        )
         self.session.add(project)
         self.session.commit()
         self.session.refresh(project)
@@ -50,6 +58,12 @@ class ProjectRepo:
 
     def list(self) -> Sequence[Project]:
         return self.session.exec(select(Project)).all()
+
+    def list_for_owner(self, owner_id: int) -> Sequence[Project]:
+        """Projets d'un utilisateur (B.2 isolation). L'admin utilise ``list``."""
+        return self.session.exec(
+            select(Project).where(Project.owner_id == owner_id)
+        ).all()
 
     def delete(self, project_id: int) -> bool:
         project = self.get(project_id)
@@ -97,6 +111,14 @@ class EpisodeRepo:
     def by_project(self, project_id: int) -> Sequence[Episode]:
         return self.session.exec(
             select(Episode).where(Episode.project_id == project_id)
+        ).all()
+
+    def by_owner(self, owner_id: int) -> Sequence[Episode]:
+        """Épisodes des projets d'un utilisateur (B.2 isolation, join Project)."""
+        return self.session.exec(
+            select(Episode)
+            .join(Project, Episode.project_id == Project.id)  # type: ignore[arg-type]
+            .where(Project.owner_id == owner_id)
         ).all()
 
     def update_status(self, episode_id: int, status: str) -> Optional[Episode]:
@@ -486,6 +508,14 @@ class EditorDocRepo:
             )
         ).all()
 
+    def by_owner(self, owner_id: int) -> Sequence[EditorDocumentRow]:
+        """Documents des projets d'un utilisateur (B.2 isolation, join Project)."""
+        return self.session.exec(
+            select(EditorDocumentRow)
+            .join(Project, EditorDocumentRow.project_id == Project.id)  # type: ignore[arg-type]
+            .where(Project.owner_id == owner_id)
+        ).all()
+
     def list(self) -> Sequence[EditorDocumentRow]:
         return self.session.exec(select(EditorDocumentRow)).all()
 
@@ -547,6 +577,42 @@ class UserRepo:
 
     def count(self) -> int:
         return len(self.session.exec(select(User)).all())
+
+
+class UserApiKeyRepo:
+    """Clés API chiffrées par utilisateur (B.2). Une ligne par (user, provider)."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def _get_row(self, user_id: int, provider: str) -> Optional[UserApiKey]:
+        return self.session.exec(
+            select(UserApiKey).where(
+                UserApiKey.user_id == user_id,
+                UserApiKey.provider == provider,
+            )
+        ).first()
+
+    def get(self, user_id: int, provider: str) -> Optional[UserApiKey]:
+        return self._get_row(user_id, provider)
+
+    def upsert(self, user_id: int, provider: str, ciphertext: str) -> None:
+        row = self._get_row(user_id, provider)
+        if row is None:
+            row = UserApiKey(
+                user_id=user_id, provider=provider, ciphertext=ciphertext
+            )
+        else:
+            row.ciphertext = ciphertext
+            row.updated_at = datetime.now(timezone.utc)
+        self.session.add(row)
+        self.session.commit()
+
+    def status(self, user_id: int) -> dict[str, bool]:
+        rows = self.session.exec(
+            select(UserApiKey).where(UserApiKey.user_id == user_id)
+        ).all()
+        return {r.provider: True for r in rows}
 
 
 class SettingRepo:

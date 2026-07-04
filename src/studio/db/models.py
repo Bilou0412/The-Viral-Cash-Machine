@@ -27,6 +27,11 @@ class Project(SQLModel, table=True):
     name: str = Field(index=True)
     created_at: datetime = Field(default_factory=_utcnow)
     settings_json: Optional[str] = Field(default=None)
+    # Multi-tenant (B.2) : propriétaire du projet. Nullable pour les lignes legacy
+    # (créées avant l'auth) → visibles uniquement des admins (ou backfillées).
+    owner_id: Optional[int] = Field(
+        default=None, foreign_key="user.id", index=True
+    )
 
 
 class Episode(SQLModel, table=True):
@@ -177,6 +182,23 @@ class User(SQLModel, table=True):
     password_hash: str
     is_admin: bool = Field(default=False)
     created_at: datetime = Field(default_factory=_utcnow)
+
+
+class UserApiKey(SQLModel, table=True):
+    """Clé API d'un utilisateur, **chiffrée au repos** (Fernet) — B.2.
+
+    ``ciphertext`` est le token Fernet (jamais la clé en clair). Une ligne par
+    (utilisateur, provider). Remplace le stockage global ``AppSetting`` pour les
+    clés : chaque utilisateur génère avec **ses** clés, à **ses** frais.
+    """
+
+    __tablename__ = "user_api_key"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    provider: str = Field(index=True)          # "openai" | "replicate"
+    ciphertext: str
+    updated_at: datetime = Field(default_factory=_utcnow)
 
 
 class AppSetting(SQLModel, table=True):

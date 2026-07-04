@@ -18,3 +18,4 @@ httpx
 boto3   # backend object storage R2/S3 (import paresseux ; actif si STORAGE_BACKEND=r2)
 argon2-cffi   # hachage des mots de passe (auth, Phase B)
 itsdangerous  # cookies de session signés (Starlette SessionMiddleware)
+cryptography  # chiffrement des clés API par-utilisateur (Fernet, Phase B.2)
