@@ -24,12 +24,12 @@ export const useBricks = () =>
   useQuery({ queryKey: qkEditor.bricks, queryFn: api.listBricks, staleTime: Infinity })
 
 // model_ref is "owner/name"; split for the endpoint.
-export const useModelForm = (modelRef: string | null) =>
+export const useModelForm = (modelRef: string | null, kind?: string) =>
   useQuery({
-    queryKey: qkEditor.modelForm(modelRef ?? ""),
+    queryKey: [...qkEditor.modelForm(modelRef ?? ""), kind ?? ""],
     queryFn: () => {
       const [owner, name] = (modelRef ?? "").split("/")
-      return api.getModelForm(owner, name)
+      return api.getModelForm(owner, name, kind)
     },
     enabled: !!modelRef && modelRef.includes("/"),
     staleTime: 5 * 60_000,

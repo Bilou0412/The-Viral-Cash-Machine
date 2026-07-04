@@ -219,6 +219,9 @@ export interface FormField {
   enum: string[] | null
   description: string
   order: number
+  // Libellé métier FR (fallback = nom brut embelli côté backend). `help` optionnel.
+  label?: string
+  help?: string
 }
 
 export interface ModelForm {

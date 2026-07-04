@@ -158,8 +158,10 @@ const realApi = {
   // ── Editor (E5) ──────────────────────────────────────────────────────
   listBricks: () => request<BrickSpec[]>("/bricks"),
 
-  getModelForm: (owner: string, name: string) =>
-    request<ModelForm>(`/models/${owner}/${name}/form`),
+  getModelForm: (owner: string, name: string, kind?: string) =>
+    request<ModelForm>(
+      `/models/${owner}/${name}/form${kind ? `?kind=${encodeURIComponent(kind)}` : ""}`
+    ),
 
   searchModels: (kind: GenerativeKind, q: string) =>
     request<ModelSearchResult[]>(

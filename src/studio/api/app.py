@@ -469,13 +469,19 @@ def model_search_route(
 
 @app.get("/api/models/{owner}/{name}/form")
 def model_form_route(
-    owner: str, name: str, client: Any = Depends(get_catalog_client)
+    owner: str,
+    name: str,
+    kind: Optional[str] = None,
+    client: Any = Depends(get_catalog_client),
 ) -> Any:
-    """Descripteur de formulaire (tous les arguments du modèle) pour l'inspecteur."""
+    """Descripteur de formulaire (tous les arguments du modèle) pour l'inspecteur.
+
+    ``kind`` (image/video/voice) attache un libellé métier FR à chaque input.
+    """
     from .services.model_catalog import form_descriptor
 
     try:
-        return form_descriptor(f"{owner}/{name}", client)
+        return form_descriptor(f"{owner}/{name}", client, kind=kind)
     except Exception as exc:
         raise HTTPException(502, f"impossible de lire le schéma du modèle: {exc}")
 

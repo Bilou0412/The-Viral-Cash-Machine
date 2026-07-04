@@ -34,7 +34,7 @@ export function FormFieldInput({
   const id = `field-${field.name}`
   const label = (
     <Label htmlFor={id} className="flex items-center gap-1 text-xs">
-      <span className="font-medium">{field.name}</span>
+      <span className="font-medium">{field.label || field.name}</span>
       {field.required && <span className="text-primary">*</span>}
     </Label>
   )
