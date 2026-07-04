@@ -272,7 +272,7 @@ export interface Placement {
   duration: number
 }
 
-export type BrickType = "image" | "video" | "voice" | "media" | "text"
+export type BrickType = "image" | "video" | "voice" | "media" | "text" | "clip"
 
 export interface GenerativeBrick {
   id: string
@@ -301,7 +301,36 @@ export interface TextBrick {
   placement: Placement
 }
 
-export type Brick = GenerativeBrick | MediaBrick | TextBrick
+// Brique COMPOSITE (générée par le script) : un asset = image (+ motion si vidéo)
+// + enfants voix. C'est l'unité RÉVISÉE (R2). `params` = tous les inputs du modèle.
+export interface GenNode {
+  model_ref: string
+  params: Record<string, unknown>
+}
+
+export interface AudioChild {
+  id: string
+  role: "narration" | "dialogue"
+  model_ref: string
+  params: Record<string, unknown>
+}
+
+export interface ClipBrick {
+  id: string
+  type: "clip"
+  kind: "video" | "photo"
+  image: GenNode
+  motion?: GenNode | null
+  children: AudioChild[]
+  context_overrides?: Partial<GlobalContext> | null
+  preset_id?: number | null
+  layers?: Layer[]
+  placement: Placement
+}
+
+export type Brick = GenerativeBrick | MediaBrick | TextBrick | ClipBrick
+
+export const isClipBrick = (b: Brick): b is ClipBrick => b.type === "clip"
 
 export interface EditorDoc {
   schema_version: number

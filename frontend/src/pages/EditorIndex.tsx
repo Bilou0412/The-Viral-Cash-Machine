@@ -104,19 +104,25 @@ export function EditorIndex() {
         ) : docs.data && docs.data.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {docs.data.map((d) => (
-              <Link key={d.id} to={`/editor/${d.id}`}>
-                <Card className="transition-colors hover:border-primary/60">
-                  <CardContent className="flex items-center gap-3 p-4">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary">
-                      <Clapperboard className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{d.title}</p>
-                      <p className="text-xs text-muted-foreground">#{d.id}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <Card key={d.id} className="transition-colors hover:border-primary/60">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary">
+                    <Clapperboard className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{d.title}</p>
+                    <p className="text-xs text-muted-foreground">#{d.id}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <Link to={`/editor/${d.id}/review`} className="text-xs font-medium text-primary hover:underline">
+                      Réviser
+                    </Link>
+                    <Link to={`/editor/${d.id}`} className="text-xs text-muted-foreground hover:underline">
+                      Montage
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (

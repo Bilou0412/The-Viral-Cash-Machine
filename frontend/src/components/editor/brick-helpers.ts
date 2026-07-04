@@ -26,6 +26,7 @@ export const BRICK_COLORS: Record<BrickType, { bg: string; border: string; text:
   voice: { bg: "bg-emerald-500/15", border: "border-emerald-500/40", text: "text-emerald-300", dot: "bg-emerald-400" },
   media: { bg: "bg-amber-500/15", border: "border-amber-500/40", text: "text-amber-300", dot: "bg-amber-400" },
   text: { bg: "bg-rose-500/15", border: "border-rose-500/40", text: "text-rose-300", dot: "bg-rose-400" },
+  clip: { bg: "bg-primary/15", border: "border-primary/40", text: "text-primary", dot: "bg-primary" },
 }
 
 export const BRICK_LABELS: Record<BrickType, string> = {
@@ -34,6 +35,7 @@ export const BRICK_LABELS: Record<BrickType, string> = {
   voice: "Voix",
   media: "Média",
   text: "Texte",
+  clip: "Brique",
 }
 
 // Non-generative bricks are hardcoded client-side (per the contract).
@@ -56,7 +58,7 @@ function defaultPlacement(bricks: Brick[], track: number, duration: number): Pla
 }
 
 const TRACK_FOR: Record<BrickType, number> = {
-  image: 0, video: 0, media: 0, text: 1, voice: 2,
+  image: 0, video: 0, media: 0, text: 1, voice: 2, clip: 0,
 }
 
 export function createBrick(item: PaletteItem, bricks: Brick[]): Brick {
@@ -71,12 +73,13 @@ export function createBrick(item: PaletteItem, bricks: Brick[]): Brick {
     const mb: MediaBrick = { id: newId("media"), type: "media", layers: [], placement }
     return mb
   }
-  // generative: image | video | voice
-  const placement = defaultPlacement(bricks, track, item.type === "voice" ? 4 : 4)
+  // generative: image | video | voice (la palette ne crée jamais de "clip")
+  const kind = item.type as GenerativeBrick["type"]
+  const placement = defaultPlacement(bricks, track, 4)
   const model_ref = item.spec?.preferred_models[0] ?? ""
   const gb: GenerativeBrick = {
-    id: newId(item.type),
-    type: item.type,
+    id: newId(kind),
+    type: kind,
     model_ref,
     params: {},
     layers: [],
@@ -148,6 +151,9 @@ export function brickRefLabel(b: Brick): string {
   }
   if (b.type === "media") {
     return `${BRICK_LABELS.media} ${shortId(b.id)}`
+  }
+  if (b.type === "clip") {
+    return `${BRICK_LABELS.clip} ${shortId(b.id)}`
   }
   const model = b.model_ref ? b.model_ref.split("/").pop() : BRICK_LABELS[b.type]
   return `${BRICK_LABELS[b.type]} · ${model} ${shortId(b.id)}`
