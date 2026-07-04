@@ -35,12 +35,8 @@ packages = ["src", "scripts"]
 
 [tool.mypy]
 python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-
-[[tool.mypy.overrides]]
-module = ["src.infra.*", "src.features.*", "src.studio.db.*"]
+# Strict GLOBAL (rigueur type-Rust) : plus de zones tolérantes, tout `src` est
+# typé strictement. Seule exception : le monolithe Streamlit legacy (src/app.py).
 strict = true
 
 [[tool.mypy.overrides]]
@@ -60,6 +56,30 @@ ignore_missing_imports = true
 # Le monolithe Streamlit legacy (src/app.py) est en cours de retrait et exclu du
 # lint, comme il l'est du typage strict mypy. Le lint verrouille le code ACTIF.
 extend-exclude = ["src/app.py"]
+
+[tool.ruff.lint]
+# Jeu de règles « clippy » : bugs (B), simplifications (SIM/RET/C4/PIE/PERF),
+# modernisation (UP → `x | None`, `dict[...]`), imports triés (I), pièges (RUF).
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RET", "C4", "PIE", "PERF", "RUF"]
+ignore = [
+    # Longueur de ligne : c'est le rôle d'un formateur (ruff format/black), pas un
+    # gate de lint — l'imposer à la main réduit parfois la lisibilité.
+    "E501",
+    # Caractères Unicode « ambigus » : la base est en français typographié
+    # (apostrophes courbes, etc.), pas des coquilles.
+    "RUF001", "RUF002", "RUF003",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Depends()/File()/… en argument par défaut est l'idiome FastAPI, pas un bug B008.
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.File", "fastapi.Query", "fastapi.Form",
+    "fastapi.Header", "fastapi.Body", "fastapi.Cookie", "fastapi.Path",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Les tests lèvent volontairement des Exception larges dans certains pytest.raises.
+"tests/**" = ["B017"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

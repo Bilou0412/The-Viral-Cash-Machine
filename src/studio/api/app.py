@@ -22,7 +22,7 @@ import json
 import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from fastapi import (
     BackgroundTasks,
@@ -60,11 +60,11 @@ from ..db.repositories import (
 )
 from . import settings
 from .events import bus
+from .services import auth, secrets
 from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
 )
-from .services import auth, secrets
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
@@ -112,9 +112,12 @@ def _cookie_secure() -> bool:
 @app.middleware("http")
 async def _require_session(request: Request, call_next: Any) -> Response:
     path = request.url.path
-    if path.startswith("/api/") and path not in _AUTH_EXEMPT:
-        if not request.session.get("user_id"):
-            return JSONResponse({"detail": "authentification requise"}, status_code=401)
+    if (
+        path.startswith("/api/")
+        and path not in _AUTH_EXEMPT
+        and not request.session.get("user_id")
+    ):
+        return JSONResponse({"detail": "authentification requise"}, status_code=401)
     response: Response = await call_next(request)
     return response
 
@@ -141,7 +144,7 @@ def get_db_engine() -> Engine:
     return get_engine()
 
 
-def get_asset_provider() -> Optional[AssetProvider]:
+def get_asset_provider() -> AssetProvider | None:
     """Provide the asset provider. None -> service builds the real Replicate one."""
     return None
 
@@ -258,7 +261,7 @@ def _require_owned_asset(session: Session, user: User, asset_id: int) -> Asset:
 
 class ProjectIn(BaseModel):
     name: str
-    settings_json: Optional[str] = None
+    settings_json: str | None = None
 
 
 class EpisodeIn(BaseModel):
@@ -284,8 +287,8 @@ class ScriptEditIn(BaseModel):
 class AssetUpdateIn(BaseModel):
     """Édition d'un asset depuis la revue (M1) : prompt et/ou écarté."""
 
-    prompt: Optional[str] = None
-    excluded: Optional[bool] = None
+    prompt: str | None = None
+    excluded: bool | None = None
 
 
 class EditorDocIn(BaseModel):
@@ -298,7 +301,7 @@ class EditorDocIn(BaseModel):
 class EditorDocSaveIn(BaseModel):
     """Sauvegarde d'un document : le doc d'autoring (+ titre optionnel)."""
 
-    title: Optional[str] = None
+    title: str | None = None
     doc: dict[str, Any]
 
 
@@ -398,7 +401,7 @@ def create_project(
 
 @app.get("/api/episodes")
 def list_episodes(
-    project_id: Optional[int] = None, session: Session = Depends(_session),
+    project_id: int | None = None, session: Session = Depends(_session),
     user: User = Depends(require_user)
 ) -> list[Episode]:
     repo = EpisodeRepo(session)
@@ -472,14 +475,14 @@ def model_search_route(
     try:
         return search_models(kind, q, client)
     except KeyError as exc:
-        raise HTTPException(400, str(exc))
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.get("/api/models/{owner}/{name}/form")
 def model_form_route(
     owner: str,
     name: str,
-    kind: Optional[str] = None,
+    kind: str | None = None,
     client: Any = Depends(get_catalog_client),
 ) -> Any:
     """Descripteur de formulaire (tous les arguments du modèle) pour l'inspecteur.
@@ -491,7 +494,7 @@ def model_form_route(
     try:
         return form_descriptor(f"{owner}/{name}", client, kind=kind)
     except Exception as exc:
-        raise HTTPException(502, f"impossible de lire le schéma du modèle: {exc}")
+        raise HTTPException(502, f"impossible de lire le schéma du modèle: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -545,7 +548,7 @@ def edit_episode_script(
     try:
         script = AdventureScript.model_validate_json(body.script_json)
     except Exception as exc:
-        raise HTTPException(422, f"invalid AdventureScript: {exc}")
+        raise HTTPException(422, f"invalid AdventureScript: {exc}") from exc
     row = ScriptRepo(session).create(
         episode_id, script.model_dump_json(), edited=True
     )
@@ -558,7 +561,7 @@ def edit_episode_script(
 # ---------------------------------------------------------------------------
 
 
-def _load_script(session: Session, episode_id: int) -> "AdventureScript":
+def _load_script(session: Session, episode_id: int) -> AdventureScript:
     from ...features.scripting.adventure import AdventureScript
 
     row = ScriptRepo(session).latest_for_episode(episode_id)
@@ -625,8 +628,8 @@ def get_episode_cost(
 # ---------------------------------------------------------------------------
 
 class KeysIn(BaseModel):
-    openai: Optional[str] = None
-    replicate: Optional[str] = None
+    openai: str | None = None
+    replicate: str | None = None
 
 
 @app.get("/api/settings/keys")
@@ -701,7 +704,7 @@ def generate_assets(
     session: Session = Depends(_session),
     user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
-    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    provider: AssetProvider | None = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     _require_owned_episode(session, user, episode_id)
@@ -727,7 +730,7 @@ def regenerate_one_asset(
     session: Session = Depends(_session),
     user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
-    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    provider: AssetProvider | None = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     _require_owned_asset(session, user, asset_id)
@@ -841,7 +844,7 @@ def library(session: Session = Depends(_session),
 
 @app.get("/api/editor/documents")
 def list_editor_documents(
-    project_id: Optional[int] = None, session: Session = Depends(_session),
+    project_id: int | None = None, session: Session = Depends(_session),
     user: User = Depends(require_user)
 ) -> list[dict[str, Any]]:
     repo = EditorDocRepo(session)
@@ -937,7 +940,7 @@ def save_editor_document(
     try:
         doc = EditorDocument.model_validate(body.doc)
     except Exception as exc:
-        raise HTTPException(422, f"invalid EditorDocument: {exc}")
+        raise HTTPException(422, f"invalid EditorDocument: {exc}") from exc
     row = EditorDocRepo(session).save(
         doc_id, doc.model_dump_json(), title=body.title
     )
@@ -957,7 +960,7 @@ def generate_editor_document(
     session: Session = Depends(_session),
     user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
-    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    provider: AssetProvider | None = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     _require_owned_doc(session, user, doc_id)
@@ -980,7 +983,7 @@ def regenerate_editor_brick(
     session: Session = Depends(_session),
     user: User = Depends(require_user),
     engine: Engine = Depends(get_db_engine),
-    provider: Optional[AssetProvider] = Depends(get_asset_provider),
+    provider: AssetProvider | None = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
     _require_owned_doc(session, user, doc_id)
@@ -1010,7 +1013,8 @@ def editor_render_model(
         if a.status == "ready" and not a.excluded
     }
     model = resolve(doc, asset_src)
-    return json.loads(model.model_dump_json())
+    data: dict[str, Any] = json.loads(model.model_dump_json())
+    return data
 
 
 @app.post("/api/editor/documents/{doc_id}/render")
@@ -1075,7 +1079,7 @@ async def episode_events(
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=15.0)
                     yield bus.format_sse(event)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keep-alive\n\n"  # SSE comment heartbeat
         finally:
             bus.unsubscribe(episode_id, queue)

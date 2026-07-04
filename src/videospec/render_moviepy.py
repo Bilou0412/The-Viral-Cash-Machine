@@ -19,7 +19,8 @@ n'est importé QUE par le chemin de rendu, jamais par `videospec/__init__.py`
 from __future__ import annotations
 
 import os
-from typing import Any, List, Mapping, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 from moviepy import (
@@ -34,6 +35,12 @@ from moviepy import (
 from moviepy.video.fx import Resize
 from PIL import Image, ImageFilter, ImageFont
 
+from ..features.compositing.overlays import (
+    GaugeOverlay,
+    NameplateOverlay,
+    SubtitleOverlay,
+    TimerOverlay,
+)
 from .models import (
     AbsolutePosition,
     CountdownSegment,
@@ -46,21 +53,15 @@ from .models import (
     VideoSpec,
 )
 from .ports import ResolvedAssets
-from ..features.compositing.overlays import (
-    GaugeOverlay,
-    NameplateOverlay,
-    SubtitleOverlay,
-    TimerOverlay,
-)
 
 # Positions de tête par défaut (normalisées) quand le resolve n'en fournit pas.
-_DEFAULT_HEADS: Mapping[str, Tuple[float, float]] = {
+_DEFAULT_HEADS: Mapping[str, tuple[float, float]] = {
     "left": (0.3, 0.4),
     "right": (0.7, 0.4),
 }
 
 
-def _text_dims(text: str, fontsize: int, font_path: str, stroke_width: int) -> Tuple[int, int]:
+def _text_dims(text: str, fontsize: int, font_path: str, stroke_width: int) -> tuple[int, int]:
     """Dimensions de l'image d'un nameplate (miroir de NameplateOverlay.to_clip)."""
     try:
         font: ImageFont.FreeTypeFont = ImageFont.truetype(
@@ -116,8 +117,8 @@ class MoviePyRenderEngine:
         np_spec: NameplateSpec,
         w: int,
         h: int,
-        heads: Mapping[str, Tuple[float, float]],
-    ) -> Tuple[int, int]:
+        heads: Mapping[str, tuple[float, float]],
+    ) -> tuple[int, int]:
         text = np_spec.text.upper() if np_spec.uppercase else np_spec.text
         tw, th = _text_dims(text, np_spec.fontsize, np_spec.font_path, np_spec.stroke_width)
         place = np_spec.placement
@@ -136,10 +137,10 @@ class MoviePyRenderEngine:
         nameplates: Sequence[NameplateSpec],
         w: int,
         h: int,
-        heads: Mapping[str, Tuple[float, float]],
+        heads: Mapping[str, tuple[float, float]],
         duration: float,
-    ) -> List[object]:
-        out: List[object] = []
+    ) -> list[object]:
+        out: list[object] = []
         for np_spec in nameplates:
             text = np_spec.text.upper() if np_spec.uppercase else np_spec.text
             pos = self._nameplate_pos(np_spec, w, h, heads)
@@ -166,8 +167,8 @@ class MoviePyRenderEngine:
         w: int,
         h: int,
         style: SubtitleStyle,
-    ) -> List[object]:
-        out: List[object] = []
+    ) -> list[object]:
+        out: list[object] = []
         for s in words:
             start = float(s["start"])
             if start >= duration:
@@ -193,13 +194,13 @@ class MoviePyRenderEngine:
         resolved: ResolvedAssets,
         w: int,
         h: int,
-        heads: Mapping[str, Tuple[float, float]],
+        heads: Mapping[str, tuple[float, float]],
     ) -> object:
         paths = resolved.paths
         if isinstance(seg, IntroSegment):
             dur = seg.duration
             bg = ImageClip(np.array(self._img(paths[seg.background], w, h))).with_duration(dur)
-            layers: List[object] = [bg]
+            layers: list[object] = [bg]
             layers += self._nameplate_clips(seg.nameplates, w, h, heads, dur)
             if seg.transition is not None:
                 eye = seg.transition.duration
@@ -272,12 +273,12 @@ class MoviePyRenderEngine:
             layers += self._nameplate_clips(seg.nameplates, w, h, heads, dur)
             comp = CompositeVideoClip(layers, size=(w, h))
 
-            audio_el: List[object] = []
+            audio_el: list[object] = []
             if seg.tick_sound is not None and seg.tick_sound in paths:
-                for i in range(len(seg.steps)):
-                    audio_el.append(
-                        AudioFileClip(paths[seg.tick_sound]).with_start(i * seg.step_duration)
-                    )
+                audio_el.extend(
+                    AudioFileClip(paths[seg.tick_sound]).with_start(i * seg.step_duration)
+                    for i in range(len(seg.steps))
+                )
             if seg.end_sound is not None and seg.end_sound in paths:
                 audio_el.append(AudioFileClip(paths[seg.end_sound]).with_start(dur))
             if audio_el:

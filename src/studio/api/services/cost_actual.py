@@ -13,7 +13,6 @@ estimate, tagged transparently.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Optional
 
 from ....features.assets.ports import RunResult
 from . import price_table
@@ -24,11 +23,11 @@ from .pricing import CostLine
 class ActualCost:
     line: CostLine            # model/units/unit_kind from the estimate; amount = real
     source: str              # "provider" | "compute" | "estimate"
-    predict_time_s: Optional[float] = None
+    predict_time_s: float | None = None
 
 
 def actual_cost(
-    model_ref: str, estimate_line: CostLine, run: Optional[RunResult]
+    model_ref: str, estimate_line: CostLine, run: RunResult | None
 ) -> ActualCost:
     """Resolve the real cost for one generated node."""
     predict_time = run.predict_time if run is not None else None

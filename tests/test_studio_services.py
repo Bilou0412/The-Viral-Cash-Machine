@@ -12,13 +12,13 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.studio.api.services.fakes import FakeAssetProvider  # noqa: E402
-from src.studio.api.services.generation_plan import (  # noqa: E402
+from src.studio.api.services.fakes import FakeAssetProvider
+from src.studio.api.services.generation_plan import (
     estimate_cost,
     plan_episode_assets,
 )
-from src.studio.api.services.paths import episode_dir, exports_base  # noqa: E402
-from src.studio.api.services.scripting import generate_script  # noqa: E402
+from src.studio.api.services.paths import episode_dir, exports_base
+from src.studio.api.services.scripting import generate_script
 
 
 @pytest.fixture

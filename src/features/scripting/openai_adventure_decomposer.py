@@ -8,7 +8,7 @@ final, avec une passe d'auto-réparation (1 retry) en cas d'échec.
 
 import json
 import os
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -102,7 +102,7 @@ class _Timeline(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    beats: Tuple[str, ...]
+    beats: tuple[str, ...]
 
 
 def _chronology_default() -> bool:
@@ -110,7 +110,7 @@ def _chronology_default() -> bool:
     return os.environ.get(_CHRONOLOGY_ENV, "").strip().lower() in {"1", "true", "yes"}
 
 
-def _reconcile_timeline_length(beats: Tuple[str, ...], n: int) -> Tuple[str, ...]:
+def _reconcile_timeline_length(beats: tuple[str, ...], n: int) -> tuple[str, ...]:
     """Force la timeline à exactement `n` beats.
 
     Tronque si trop longue ; complète avec un beat générique si trop courte.
@@ -128,7 +128,7 @@ def _reconcile_timeline_length(beats: Tuple[str, ...], n: int) -> Tuple[str, ...
     return beats
 
 
-def _running_summary(prior_rounds: List[Round]) -> str:
+def _running_summary(prior_rounds: list[Round]) -> str:
     """Construit le résumé courant de l'aventure à partir des rounds déjà générés.
 
     Helper PUR : transporte l'état narratif (lieu, événements, tension, dernière
@@ -137,7 +137,7 @@ def _running_summary(prior_rounds: List[Round]) -> str:
     if not prior_rounds:
         return "C'est le tout premier round : l'aventure commence à l'entrée."
 
-    lines: List[str] = [
+    lines: list[str] = [
         f"Résumé de l'aventure jusqu'ici ({len(prior_rounds)} round(s) déjà vécus) :"
     ]
     for idx, rnd in enumerate(prior_rounds, start=1):
@@ -155,14 +155,14 @@ def _running_summary(prior_rounds: List[Round]) -> str:
 
 
 def _assemble_script(
-    intro_parts: "dict[str, object]", rounds: List[Round]
+    intro_parts: "dict[str, object]", rounds: list[Round]
 ) -> AdventureScript:
     """Assemble un AdventureScript depuis les parties intro/épilogue + les rounds.
 
     Helper PUR (aucun réseau) : Pydantic est l'arbitre final de validité.
     `intro_parts` doit fournir toutes les clés non-`rounds` d'AdventureScript.
     """
-    data: "dict[str, object]" = {**intro_parts, "rounds": tuple(rounds)}
+    data: dict[str, object] = {**intro_parts, "rounds": tuple(rounds)}
     return AdventureScript.model_validate(data)
 
 
@@ -259,13 +259,13 @@ class OpenAIAdventureDecomposer:
         last_error: Exception | None = None
         for attempt in range(2):
             try:
-                resp = self.client.chat.completions.create(
+                resp = self.client.chat.completions.create(  # type: ignore[call-overload]
                     model=self.model,
                     response_format={"type": "json_object"},
                     messages=messages,
                 )
             except Exception as e:  # erreur réseau / API
-                raise ValueError(f"Adventure decomposition request failed: {e}")
+                raise ValueError(f"Adventure decomposition request failed: {e}") from e
 
             raw = resp.choices[0].message.content or ""
             try:
@@ -299,13 +299,13 @@ class OpenAIAdventureDecomposer:
     def _chat_json(self, messages: "list[dict[str, str]]") -> str:
         """Un appel chat JSON ; renvoie le contenu brut. Erreurs réseau → ValueError."""
         try:
-            resp = self.client.chat.completions.create(
+            resp = self.client.chat.completions.create(  # type: ignore[call-overload]
                 model=self.model,
                 response_format={"type": "json_object"},
                 messages=messages,
             )
         except Exception as e:  # erreur réseau / API
-            raise ValueError(f"Adventure decomposition request failed: {e}")
+            raise ValueError(f"Adventure decomposition request failed: {e}") from e
         return resp.choices[0].message.content or ""
 
     def _gen_timeline(
@@ -314,7 +314,7 @@ class OpenAIAdventureDecomposer:
         char_left_name: str,
         char_right_name: str,
         n_rounds: int,
-    ) -> Tuple[str, ...]:
+    ) -> tuple[str, ...]:
         """Phase 1 : génère l'arc hypothétique (N beats), réconcilié à N."""
         sys_msg = (
             "You are a horror story architect. Plan the SHAPE of a first-person "
@@ -405,7 +405,7 @@ class OpenAIAdventureDecomposer:
         char_left_desc: str,
         char_right_desc: str,
         n_rounds: int,
-        rounds: List[Round],
+        rounds: list[Round],
     ) -> "dict[str, object]":
         """Génère les champs intro/épilogue (tout sauf `rounds`) en un appel."""
         # Sous-schéma : AdventureScript sans la clé `rounds`.
@@ -453,7 +453,7 @@ class OpenAIAdventureDecomposer:
                 {"role": "user", "content": user_msg},
             ]
         )
-        parts: "dict[str, object]" = json.loads(raw)
+        parts: dict[str, object] = json.loads(raw)
         parts.pop("rounds", None)
         return parts
 
@@ -471,7 +471,7 @@ class OpenAIAdventureDecomposer:
             prompt, char_left_name, char_right_name, n_rounds
         )
 
-        rounds: List[Round] = []
+        rounds: list[Round] = []
         for i in range(n_rounds):
             rnd = self._gen_round(
                 prompt,
@@ -498,4 +498,4 @@ class OpenAIAdventureDecomposer:
         except ValidationError as e:
             raise ValueError(
                 f"Chronology adventure script failed final validation: {e}"
-            )
+            ) from e

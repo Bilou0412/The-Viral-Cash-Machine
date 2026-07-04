@@ -16,7 +16,7 @@ c'est `prompts.py` qui dérive ses constantes d'ici (évite l'import circulaire)
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional, TypeVar
+from typing import TypeVar
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ HORROR = Theme(
 
 DEFAULT_THEME_NAME = "horror"
 
-THEMES: Dict[str, Theme] = {HORROR.name: HORROR}
+THEMES: dict[str, Theme] = {HORROR.name: HORROR}
 
 
 def get_theme(name: str = DEFAULT_THEME_NAME) -> Theme:
@@ -67,7 +67,7 @@ def get_theme(name: str = DEFAULT_THEME_NAME) -> Theme:
     try:
         return THEMES[name]
     except KeyError:
-        raise KeyError(f"thème inconnu : {name!r} (connus : {sorted(THEMES)})")
+        raise KeyError(f"thème inconnu : {name!r} (connus : {sorted(THEMES)})") from None
 
 
 def register_theme(theme: Theme) -> None:
@@ -87,7 +87,7 @@ T = TypeVar("T")
 
 
 def resolve(
-    asset_override: Optional[T], block_override: Optional[T], theme_value: T
+    asset_override: T | None, block_override: T | None, theme_value: T
 ) -> T:
     """Cascade de DA : asset ▸ bloc ▸ thème (premier non-None gagne)."""
     if asset_override is not None:

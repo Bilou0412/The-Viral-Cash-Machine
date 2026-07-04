@@ -20,15 +20,15 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("sqlmodel")
 
-from cryptography.fernet import Fernet  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlmodel import Session, create_engine  # noqa: E402
+from cryptography.fernet import Fernet
+from fastapi.testclient import TestClient
+from sqlmodel import Session, create_engine
 
-from src.studio.api import app as app_module  # noqa: E402
-from src.studio.api.services import auth as auth_service  # noqa: E402
-from src.studio.api.services.fakes import FakeAssetProvider  # noqa: E402
-from src.studio.db.engine import init_db  # noqa: E402
-from src.studio.db.repositories import AssetRepo, UserRepo  # noqa: E402
+from src.studio.api import app as app_module
+from src.studio.api.services import auth as auth_service
+from src.studio.api.services.fakes import FakeAssetProvider
+from src.studio.db.engine import init_db
+from src.studio.db.repositories import AssetRepo, UserRepo
 
 
 @pytest.fixture
@@ -299,7 +299,7 @@ def test_clip_forwards_all_model_params(client):
     client.put(f"/api/editor/documents/{doc_id}", json={"doc": _clip_doc()})
     client.post(f"/api/editor/documents/{doc_id}/generate")
 
-    calls = {ref: params for ref, params in client.fake_provider.run_calls}
+    calls = dict(client.fake_provider.run_calls)
     # Image : l'input supplémentaire (guidance) est transmis, plus jeté.
     assert calls["bytedance/seedream-4.5"].get("guidance") == 7
     # Motion : TOUS les inputs transmis (avant, seuls prompt/image/duration l'étaient).

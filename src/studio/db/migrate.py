@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy.engine import Engine
 
@@ -42,7 +41,7 @@ ASSET_FILES: dict[str, tuple[str, str]] = {
 
 
 def migrate_voices(
-    voice_json: Path = NARRATOR_VOICE_JSON, engine: Optional[Engine] = None
+    voice_json: Path = NARRATOR_VOICE_JSON, engine: Engine | None = None
 ) -> int:
     """Import ``narrator_voice.json`` into :class:`VoiceProfile`.
 
@@ -80,7 +79,7 @@ def migrate_voices(
 
 
 def migrate_exports(
-    exports_dir: Path = EXPORTS_DIR, engine: Optional[Engine] = None
+    exports_dir: Path = EXPORTS_DIR, engine: Engine | None = None
 ) -> dict[str, int]:
     """Scan ``exports/`` and create Project/Episode/Asset rows (best-effort).
 
@@ -164,7 +163,7 @@ def _load_metadata(inst_dir: Path) -> dict[str, object]:
 
 def _prompt_for_beat(
     metadata: dict[str, object], beat: str
-) -> Optional[str]:
+) -> str | None:
     """Pull the relevant prompt/text out of legacy metadata for a beat."""
     key = {
         "base_image": "freeze_image_prompt",
@@ -179,7 +178,7 @@ def _prompt_for_beat(
     return value if isinstance(value, str) else None
 
 
-def run_migration(engine: Optional[Engine] = None) -> dict[str, int]:
+def run_migration(engine: Engine | None = None) -> dict[str, int]:
     """Run the full migration (init DB, voices, exports). Returns row counts."""
     init_db(engine)
     result = {"voices": migrate_voices(engine=engine)}

@@ -1,5 +1,7 @@
 """SRT subtitle utilities."""
 
+from typing import Any
+
 
 def format_timestamp(seconds: float) -> str:
     """Convert seconds to SRT timestamp format (HH:MM:SS,mmm)."""
@@ -10,7 +12,7 @@ def format_timestamp(seconds: float) -> str:
     return f"{h:02}:{m:02}:{s:02},{ms:03}"
 
 
-def save_srt(subs_data: list[dict], output_path: str) -> None:
+def save_srt(subs_data: list[dict[str, Any]], output_path: str) -> None:
     """Save subtitles to SRT file."""
     if not subs_data:
         return

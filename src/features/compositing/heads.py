@@ -2,11 +2,12 @@
 
 import io
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Protocol
-from concurrent.futures import ThreadPoolExecutor
-from PIL import Image, ImageDraw
+
 import replicate
+from PIL import Image, ImageDraw
 
 
 @dataclass(frozen=True)
@@ -49,8 +50,11 @@ class GroundingDINOHeadDetector(HeadDetector):
                 right_mask.save(right_path)
 
                 # Detect in parallel
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    with open(left_path, "rb") as fl, open(right_path, "rb") as fr:
+                with (
+                    ThreadPoolExecutor(max_workers=2) as executor,
+                    open(left_path, "rb") as fl,
+                    open(right_path, "rb") as fr,
+                ):
                         f_left = executor.submit(self._detect_side, fl.read(), "LEFT", w, h)
                         f_right = executor.submit(self._detect_side, fr.read(), "RIGHT", w, h)
                         res_l = f_left.result()
@@ -79,7 +83,7 @@ class GroundingDINOHeadDetector(HeadDetector):
                     "text_threshold": 0.12,
                 },
             )
-            detections = output.get("detections", [])
+            detections = output.get("detections", []) if isinstance(output, dict) else []
             if detections:
                 best = sorted(detections, key=lambda d: d["bbox"][1])[0]
                 bbox = best["bbox"]

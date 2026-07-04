@@ -1,9 +1,10 @@
+import os
 from dataclasses import dataclass
 from typing import Protocol
-import os
+
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
 from moviepy import ImageClip, VideoClip
+from PIL import Image, ImageDraw, ImageFont
 
 
 class Overlay(Protocol):
@@ -26,15 +27,17 @@ class SubtitleOverlay:
     def to_clip(self, canvas: tuple[int, int]) -> ImageClip:
         """Create styled subtitle clip."""
         try:
-            font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
+            font: ImageFont.FreeTypeFont = ImageFont.truetype(
+                os.path.abspath(self.font_path), int(self.fontsize)
+            )
         except Exception:
-            font = ImageFont.load_default()
+            font = ImageFont.load_default()  # type: ignore[assignment]
 
         left, top, right, bottom = font.getbbox(self.text)
         tw, th = right - left, bottom - top
         px, py = int(self.fontsize * 0.35), int(self.fontsize * 0.2)
         img_w, img_h = tw + 2 * px, th + 2 * py
-        img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
+        img = Image.new("RGBA", (int(img_w), int(img_h)), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         draw.rounded_rectangle(
             [0, 0, img_w, img_h],
@@ -69,9 +72,11 @@ class TimerOverlay:
         draw.ellipse([5, 5, img_size - 5, img_size - 5], fill=(0, 0, 0, 220), outline="white", width=6)
 
         try:
-            font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
+            font: ImageFont.FreeTypeFont = ImageFont.truetype(
+                os.path.abspath(self.font_path), int(self.fontsize)
+            )
         except Exception:
-            font = ImageFont.load_default()
+            font = ImageFont.load_default()  # type: ignore[assignment]
 
         left, top, right, bottom = font.getbbox(self.label)
         tw, th = right - left, bottom - top
@@ -125,15 +130,17 @@ class NameplateOverlay:
     def to_clip(self, canvas: tuple[int, int]) -> ImageClip:
         """Create nameplate clip."""
         try:
-            font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
+            font: ImageFont.FreeTypeFont = ImageFont.truetype(
+                os.path.abspath(self.font_path), int(self.fontsize)
+            )
         except Exception:
-            font = ImageFont.load_default()
+            font = ImageFont.load_default()  # type: ignore[assignment]
 
         left, top, right, bottom = font.getbbox(self.text)
         tw, th = right - left, bottom - top
         sw = int(self.stroke_width)
         img_w, img_h = tw + 2 * sw + 10, th + 2 * sw + 10
-        img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
+        img = Image.new("RGBA", (int(img_w), int(img_h)), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         tx, ty = sw + 5 - left, sw + 5 - top
 

@@ -8,14 +8,13 @@ Callers use ``storage.exists(ref)`` / ``materialize`` / ``serve`` /
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 from starlette.responses import Response
 
 from .local import LocalStorage
 from .ports import StoragePort
 
-_backend: Optional[StoragePort] = None
+_backend: StoragePort | None = None
 
 
 def _build() -> StoragePort:
@@ -40,7 +39,7 @@ def get_storage() -> StoragePort:
     return _backend
 
 
-def set_storage(backend: Optional[StoragePort]) -> None:
+def set_storage(backend: StoragePort | None) -> None:
     """Override the backend (tests). ``None`` resets to the env-configured one."""
     global _backend
     _backend = backend
@@ -48,7 +47,7 @@ def set_storage(backend: Optional[StoragePort]) -> None:
 
 # -- façade -----------------------------------------------------------------
 
-def persist_from_url(url: str, folder: str, filename: str) -> Optional[str]:
+def persist_from_url(url: str, folder: str, filename: str) -> str | None:
     return get_storage().persist_from_url(url, folder, filename)
 
 
@@ -64,5 +63,5 @@ def materialize(ref: str) -> str:
     return get_storage().materialize(ref)
 
 
-def serve(ref: str, filename: Optional[str] = None) -> Response:
+def serve(ref: str, filename: str | None = None) -> Response:
     return get_storage().serve(ref, filename)

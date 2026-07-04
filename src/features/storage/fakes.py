@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import Optional
 
 from starlette.responses import Response
 
@@ -16,7 +15,7 @@ class FakeStorage(StoragePort):
     def __init__(self) -> None:
         self.objects: dict[str, bytes] = {}
 
-    def persist_from_url(self, url: str, folder: str, filename: str) -> Optional[str]:
+    def persist_from_url(self, url: str, folder: str, filename: str) -> str | None:
         key = _key_for(folder, filename)
         self.objects[key] = f"fake:{url}".encode()
         return key
@@ -36,5 +35,5 @@ class FakeStorage(StoragePort):
             f.write(self.objects[ref])
         return path
 
-    def serve(self, ref: str, filename: Optional[str] = None) -> Response:
+    def serve(self, ref: str, filename: str | None = None) -> Response:
         return Response(self.objects.get(ref, b""), media_type="application/octet-stream")

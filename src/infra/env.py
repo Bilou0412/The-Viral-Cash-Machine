@@ -1,4 +1,5 @@
 import os
+
 from .logging import log_terminal
 
 
@@ -9,7 +10,7 @@ def save_key_to_env(key_name: str, value: str) -> None:
         env_path = ".env"
         lines = []
         if os.path.exists(env_path):
-            with open(env_path, "r") as f:
+            with open(env_path) as f:
                 lines = f.readlines()
         found = False
         new_lines = []

@@ -15,10 +15,9 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any
 
 import numpy as np
-from PIL import Image, ImageFilter
 from moviepy import (
     AudioFileClip,
     ColorClip,
@@ -29,6 +28,7 @@ from moviepy import (
     concatenate_videoclips,
 )
 from moviepy.video.fx import MultiplySpeed, Resize
+from PIL import Image, ImageFilter
 
 from ..transcription.ports import Transcriber
 from .overlays import GaugeOverlay, NameplateOverlay, SubtitleOverlay, TimerOverlay
@@ -38,7 +38,7 @@ TICK = os.path.join("assets", "tick.wav")
 BEEP = os.path.join("assets", "final.wav")
 
 
-def _scale_volume(audio, factor: float):
+def _scale_volume(audio: Any, factor: float) -> Any:
     """Baisse le volume d'un AudioClip (API MoviePy 2.x robuste)."""
     if hasattr(audio, "with_volume_scaled"):
         return audio.with_volume_scaled(factor)
@@ -89,7 +89,7 @@ def _nameplate(name: str, dur: float) -> ImageClip:
     return plate.with_position(("center", 60))
 
 
-def _subs_cues(transcriber: Transcriber, audio_path: str) -> List[dict]:
+def _subs_cues(transcriber: Transcriber, audio_path: str) -> list[dict[str, Any]]:
     """Cues mot-à-mot (Whisper) bruts pour un audio."""
     if not audio_path or not os.path.exists(audio_path):
         return []
@@ -98,10 +98,10 @@ def _subs_cues(transcriber: Transcriber, audio_path: str) -> List[dict]:
 
 def _subs_from_audio(
     transcriber: Transcriber, audio_path: str, dur_cap: float
-) -> List[ImageClip]:
+) -> list[ImageClip]:
     """Sous-titres mot-à-mot (Whisper) calés sur l'audio, à 78% de la hauteur."""
     cues = _subs_cues(transcriber, audio_path)
-    subs: List[ImageClip] = []
+    subs: list[ImageClip] = []
     for c in cues:
         if c["start"] >= dur_cap:
             continue
@@ -114,7 +114,7 @@ def _subs_from_audio(
     return subs
 
 
-def _fit(clip, dur: float):
+def _fit(clip: Any, dur: float) -> Any:
     """Recadre/redimensionne un clip vidéo en 720x1280 et fixe la durée."""
     clip = clip.resized(height=H) if clip.h != H else clip
     if clip.w != W:
@@ -164,7 +164,7 @@ def _last_frame_path(video_path: str, workdir: str) -> str:
         return ""
 
 
-def _narrate_over(visual, narr_path: str, transcriber: Transcriber, workdir: str):
+def _narrate_over(visual: Any, narr_path: str, transcriber: Transcriber, workdir: str) -> Any:
     """Cale une narration sur un visuel à LA MÊME DURÉE par la vitesse.
 
     cible = min(durée visuel, durée narration). On accélère SEULEMENT le plus
@@ -194,7 +194,7 @@ def _narrate_over(visual, narr_path: str, transcriber: Transcriber, workdir: str
     tracks.append(narr.with_duration(min(float(narr.duration), safe)))
     audio = CompositeAudioClip(tracks).with_duration(safe)
 
-    layers = [visual] + _subs_from_audio(transcriber, narr_file, seg)
+    layers = [visual, *_subs_from_audio(transcriber, narr_file, seg)]
     return CompositeVideoClip(layers, size=(W, H)).with_duration(seg).with_audio(audio)
 
 
@@ -203,7 +203,7 @@ def _narrated_video(
     narr_path: str,
     transcriber: Transcriber,
     workdir: str = ".",
-):
+) -> Any:
     """Plan vidéo narré : narration et vidéo calées à la même durée (vitesse)."""
     v = VideoFileClip(video_path)
     return _narrate_over(_fit(v, float(v.duration)), narr_path, transcriber, workdir)
@@ -215,7 +215,7 @@ def _outcome_video(
     narr_path: str,
     transcriber: Transcriber,
     workdir: str = ".",
-):
+) -> Any:
     """Issue : court ZOOM sur la DERNIÈRE FRAME de la vidéo précédente (le perso),
     puis la vidéo de l'issue — JAMAIS un arrêt tenu sur une photo de choix. La
     narration court sur l'ensemble, calée à la même durée par la vitesse."""
@@ -232,25 +232,25 @@ def _outcome_video(
     return _narrate_over(visual, narr_path, transcriber, workdir)
 
 
-def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir: str):
+def _facecam_video(video_path: str, name: str, transcriber: Transcriber, workdir: str) -> Any:
     """Face-cam : voix native conservée + nameplate + sous-titres de la voix native."""
     v = VideoFileClip(video_path)
     dur = float(v.duration)
     safe = max(0.1, dur - 1.0 / FPS)
     base = _fit(v, dur)
     # sous-titres : transcrire l'audio natif (extrait en wav)
-    subs: List[ImageClip] = []
+    subs: list[ImageClip] = []
     native = base.audio
     if native is not None:
         wav = os.path.join(workdir, "_facecam_audio.wav")
         native.write_audiofile(wav, logger=None)
         subs = _subs_from_audio(transcriber, wav, dur)
-    layers = [base] + subs  # pas de plaque de nom (réservée à l'intro)
+    layers = [base, *subs]  # pas de plaque de nom (réservée à l'intro)
     comp = CompositeVideoClip(layers, size=(W, H)).with_duration(dur)
     return comp.with_audio(native.with_duration(safe)) if native is not None else comp
 
 
-def _ken_burns(image_path: str, dur: float):
+def _ken_burns(image_path: str, dur: float) -> Any:
     """Image fixe avec zoom Ken Burns."""
     img = Image.open(image_path).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
     clip = ImageClip(np.array(img)).with_duration(dur)
@@ -260,7 +260,7 @@ def _ken_burns(image_path: str, dur: float):
 
 def _choice_screen(
     a_img: str, b_img: str, narr_path: str, name: str, transcriber: Transcriber
-):
+) -> Any:
     """Écran des choix : 2 photos qui se succèdent (Ken Burns) + narration + subs."""
     narr = AudioFileClip(narr_path) if os.path.exists(narr_path) else None
     ndur = float(narr.duration) if narr else 0.0
@@ -286,7 +286,7 @@ def _choice_screen(
     return comp
 
 
-def _timer_screen(bg_image: str):
+def _timer_screen(bg_image: str) -> Any:
     """Compte à rebours 3-2-1 sur fond flouté + jauge + ticks/beep."""
     T_STEP = 0.8
     dur = T_STEP * 3
@@ -306,10 +306,9 @@ def _timer_screen(bg_image: str):
     ]
     gauge = GaugeOverlay(width=W, duration=dur).to_clip((W, H)).with_position(("center", int(0.66 * H)))
 
-    audio_el = []
+    audio_el: list[object] = []
     if os.path.exists(TICK):
-        for step in [0, T_STEP, 2 * T_STEP]:
-            audio_el.append(AudioFileClip(TICK).with_start(step))
+        audio_el.extend(AudioFileClip(TICK).with_start(step) for step in [0, T_STEP, 2 * T_STEP])
     if os.path.exists(BEEP):
         audio_el.append(AudioFileClip(BEEP).with_start(dur - 0.05))
     comp = CompositeVideoClip([bg, gauge, *counts], size=(W, H)).with_duration(dur)
@@ -323,7 +322,7 @@ def compose_narrated_segment(
     narr_path: str,
     transcriber: Transcriber,
     output_path: str,
-    workdir: Optional[str] = None,
+    workdir: str | None = None,
 ) -> str:
     """Monte UN plan vidéo narré (ex. l'épilogue) en fichier autonome."""
     workdir = workdir or os.path.dirname(output_path) or "."
@@ -343,7 +342,7 @@ def compose_entry_segment(
     narr_path: str,
     transcriber: Transcriber,
     output_path: str,
-    workdir: Optional[str] = None,
+    workdir: str | None = None,
     fallback_image: str = "",
 ) -> str:
     """Entrée « Si tu as choisi {nom}, … » : court ZOOM sur la DERNIÈRE FRAME de la
@@ -376,7 +375,7 @@ def compose_round(
     follower_name: str,
     transcriber: Transcriber,
     output_path: str,
-    workdir: Optional[str] = None,
+    workdir: str | None = None,
 ) -> str:
     """Assemble un round complet en MoviePy et écrit le fichier."""
     workdir = workdir or os.path.dirname(output_path) or "."

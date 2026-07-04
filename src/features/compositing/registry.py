@@ -29,8 +29,9 @@ Les vraies primitives vivent ailleurs :
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Literal
+from typing import Literal
 
 BrickKind = Literal["image", "video", "voice", "montage"]
 
@@ -358,7 +359,7 @@ def validate_params(kind: str, params: dict[str, object]) -> list[str]:
 
 
 def model_satisfies(
-    contract: CapabilityContract, input_schema_properties: "Iterable[str]"
+    contract: CapabilityContract, input_schema_properties: Iterable[str]
 ) -> bool:
     """True ssi chaque champ REQUIS (nom ou alias) figure dans les propriétés.
 

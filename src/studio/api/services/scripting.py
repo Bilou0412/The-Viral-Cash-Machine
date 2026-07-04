@@ -6,7 +6,6 @@ This keeps the route handler ignorant of provider selection.
 """
 
 import os
-from typing import Optional
 
 from ....features.scripting.adventure import DEFAULT_ROUNDS, AdventureScript
 from ....features.scripting.fake_adventure_decomposer import FakeAdventureDecomposer
@@ -15,7 +14,7 @@ from ....features.scripting.ports import AdventureDecomposer
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
 
 
-def get_decomposer(openai_key: Optional[str] = None) -> AdventureDecomposer:
+def get_decomposer(openai_key: str | None = None) -> AdventureDecomposer:
     """Return an OpenAI decomposer if a key is given, else the Fake one.
 
     ``openai_key`` = clé de l'utilisateur courant (B.2). Sans clé → décomposeur
@@ -41,8 +40,8 @@ def generate_script(
     char_left_desc: str = "",
     char_right_desc: str = "",
     n_rounds: int = DEFAULT_ROUNDS,
-    decomposer: Optional[AdventureDecomposer] = None,
-    openai_key: Optional[str] = None,
+    decomposer: AdventureDecomposer | None = None,
+    openai_key: str | None = None,
 ) -> AdventureScript:
     """Generate a validated AdventureScript from the creator's inputs.
 

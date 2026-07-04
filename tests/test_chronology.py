@@ -18,20 +18,19 @@ import pytest
 
 pydantic = pytest.importorskip("pydantic")
 
+from src.features.scripting import openai_adventure_decomposer as DEC  # noqa: E402
 from src.features.scripting.adventure import (  # noqa: E402
     AdventureScript,
     Choice,
     Round,
     VoiceProfile,
 )
-from src.features.scripting import openai_adventure_decomposer as DEC  # noqa: E402
 from src.features.scripting.openai_adventure_decomposer import (  # noqa: E402
     OpenAIAdventureDecomposer,
     _assemble_script,
     _reconcile_timeline_length,
     _running_summary,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fabriques (mêmes valeurs traçables que tests/test_adventure.py)
@@ -101,7 +100,7 @@ class _Completions:
     def __init__(self, owner: "_FakeClient"):
         self._owner = owner
 
-    def create(self, *, model, response_format, messages):  # noqa: ANN001
+    def create(self, *, model, response_format, messages):
         self._owner.calls.append(messages)
         content = self._owner.responses[self._owner.index]
         self._owner.index += 1

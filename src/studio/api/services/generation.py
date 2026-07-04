@@ -15,7 +15,7 @@ network and no real files.
 from __future__ import annotations
 
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
@@ -36,7 +36,7 @@ NARRATOR_VOICE_ID = "Deep_Voice_Man"
 CHARACTER_VOICE_ID = "Deep_Voice_Man"
 
 
-def _narrator_voice() -> tuple[str, Optional[str]]:
+def _narrator_voice() -> tuple[str, str | None]:
     """(voice_id, model) of the cloned 'conteur' narrator from its profile.
 
     Reads assets/narrator_voice.json (the durable cloned voice_id + the model it
@@ -45,7 +45,8 @@ def _narrator_voice() -> tuple[str, Optional[str]]:
     import json
 
     try:
-        data = json.load(open("assets/narrator_voice.json", encoding="utf-8"))
+        with open("assets/narrator_voice.json", encoding="utf-8") as fh:
+            data = json.load(fh)
         vid = data.get("voice_id")
         if vid:
             model = data.get("tts_model")
@@ -58,10 +59,10 @@ def _narrator_voice() -> tuple[str, Optional[str]]:
     return NARRATOR_VOICE_ID, None
 
 # Signature: (url, folder, filename) -> local path or None.
-Downloader = Callable[[str, str, str], Optional[str]]
+Downloader = Callable[[str, str, str], str | None]
 
 
-def _default_downloader(url: str, folder: str, filename: str) -> Optional[str]:
+def _default_downloader(url: str, folder: str, filename: str) -> str | None:
     # Routes through the storage backend: local (default — identical to the old
     # download_file) or R2 (uploads, returns an object key). See features/storage.
     from ....features import storage
@@ -91,7 +92,9 @@ _CHAIN_SRC = {
 }
 
 
-def _chain_source(round_index, beat: str, last_frame_by_key: dict):
+def _chain_source(
+    round_index: int | None, beat: str, last_frame_by_key: dict[tuple[int | None, str], str]
+) -> str | None:
     """URL de la dernière frame du plan source (None si pas dispo)."""
     stub = beat[: -len(".frame")] if beat.endswith(".frame") else beat
     if stub == "action":  # le 1er plan d'un round suit la survie du round précédent
@@ -102,7 +105,7 @@ def _chain_source(round_index, beat: str, last_frame_by_key: dict):
     return last_frame_by_key.get((round_index, src)) if src else None
 
 
-def _upload_to_replicate(path: str, token: Optional[str]) -> Optional[str]:
+def _upload_to_replicate(path: str, token: str | None) -> str | None:
     """Upload un fichier local vers la Files API Replicate → URL (best-effort).
 
     ``token`` = clé Replicate de l'utilisateur courant (B.2). None → pas d'upload.
@@ -114,7 +117,8 @@ def _upload_to_replicate(path: str, token: Optional[str]) -> Optional[str]:
     if not token:
         return None
     boundary = uuid.uuid4().hex
-    data = open(path, "rb").read()
+    with open(path, "rb") as fh:
+        data = fh.read()
     body = (
         f"--{boundary}\r\nContent-Disposition: form-data; name=\"content\"; "
         f"filename=\"{os.path.basename(path)}\"\r\nContent-Type: image/png\r\n\r\n"
@@ -128,10 +132,10 @@ def _upload_to_replicate(path: str, token: Optional[str]) -> Optional[str]:
         },
     )
     with urllib.request.urlopen(req, timeout=90) as r:
-        return _json.load(r)["urls"]["get"]
+        return str(_json.load(r)["urls"]["get"])
 
 
-def _last_frame_url(video_path: str, token: Optional[str]) -> Optional[str]:
+def _last_frame_url(video_path: str, token: str | None) -> str | None:
     """Extrait la dernière frame d'une vidéo locale et l'upload (best-effort).
 
     Renvoie None sur toute erreur (ex. fichier factice en test) → pas de
@@ -163,10 +167,10 @@ class AssetGenerationService:
     def __init__(
         self,
         engine: Engine,
-        provider: Optional[AssetProvider] = None,
-        downloader: Optional[Downloader] = None,
-        replicate_token: Optional[str] = None,
-        openai_key: Optional[str] = None,
+        provider: AssetProvider | None = None,
+        downloader: Downloader | None = None,
+        replicate_token: str | None = None,
+        openai_key: str | None = None,
     ) -> None:
         self.engine = engine
         # B.2 : le provider réel porte le token Replicate de l'utilisateur ;
@@ -214,7 +218,7 @@ class AssetGenerationService:
         frame_url_by_beat: dict[str, str] = {}
         # R3 — dernière frame de chaque vidéo (par (round, stub)) : sert de base
         # à la frame du plan suivant pour la CONTINUITÉ visuelle (fil rouge).
-        last_frame_by_key: dict = {}
+        last_frame_by_key: dict[tuple[int | None, str], str] = {}
 
         # IDEMPOTENCE : ne JAMAIS regénérer (donc re-payer) un asset déjà prêt sur
         # disque. « Produire » après « Générer » ne relance plus toute la passe.
@@ -266,13 +270,13 @@ class AssetGenerationService:
 
     def _existing_done(
         self, episode_id: int
-    ) -> dict[tuple[Optional[int], str], str]:
+    ) -> dict[tuple[int | None, str], str]:
         """{(round_index, beat): local_path} des assets DÉJÀ prêts sur disque.
 
         Sert à l'idempotence : un asset déjà généré et téléchargé n'est ni recréé
         ni repayé. On garde le DERNIER chemin valide par (round, beat).
         """
-        out: dict[tuple[Optional[int], str], str] = {}
+        out: dict[tuple[int | None, str], str] = {}
         with Session(self.engine) as session:
             assets = AssetRepo(session).assets_by_episode(episode_id)
         from ....features import storage
@@ -285,7 +289,7 @@ class AssetGenerationService:
     def _preseed_frame_urls(
         self,
         todo: list[PlannedAsset],
-        done: dict[tuple[Optional[int], str], str],
+        done: dict[tuple[int | None, str], str],
         frame_url_by_beat: dict[str, str],
     ) -> None:
         """Amorce frame_url_by_beat depuis les fichiers déjà présents.
@@ -320,7 +324,7 @@ class AssetGenerationService:
         out_dir: str,
         draft: bool,
         frame_url_by_beat: dict[str, str],
-        last_frame_by_key: dict,
+        last_frame_by_key: dict[tuple[int | None, str], str],
         index: int,
     ) -> None:
         with Session(self.engine) as session:
@@ -405,7 +409,7 @@ class AssetGenerationService:
         planned: PlannedAsset,
         draft: bool,
         frame_url_by_beat: dict[str, str],
-        last_frame_by_key: dict,
+        last_frame_by_key: dict[tuple[int | None, str], str],
     ) -> tuple[str, str, ActualCost]:
         """Dispatch to the right provider; return (model, url, ACTUAL cost).
 
@@ -469,11 +473,11 @@ class AssetGenerationService:
 def regenerate_asset(
     engine: Engine,
     asset_id: int,
-    provider: Optional[AssetProvider] = None,
-    downloader: Optional[Downloader] = None,
-    replicate_token: Optional[str] = None,
-    openai_key: Optional[str] = None,
-) -> Optional[int]:
+    provider: AssetProvider | None = None,
+    downloader: Downloader | None = None,
+    replicate_token: str | None = None,
+    openai_key: str | None = None,
+) -> int | None:
     """Regenerate a single existing asset in place. Returns its episode id.
 
     Reuses the stored prompt. For a video asset it needs a source frame; if none

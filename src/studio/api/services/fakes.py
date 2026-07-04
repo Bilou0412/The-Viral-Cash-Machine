@@ -5,7 +5,7 @@ it returns deterministic fake URLs and records every call, so tests can assert
 the image-first ordering and counts. Used whenever tests exercise generation.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ....features.assets.ports import AssetProvider, RunResult
 
@@ -14,11 +14,11 @@ class FakeAssetProvider(AssetProvider):
     """Records calls and returns deterministic fake asset URLs (no network)."""
 
     def __init__(self) -> None:
-        self.voice_calls: List[Tuple[str, str]] = []
-        self.image_calls: List[Tuple[str, str, str]] = []
-        self.video_calls: List[dict[str, object]] = []
-        self.run_calls: List[Tuple[str, Dict[str, Any]]] = []
-        self.last_run: Optional[RunResult] = None
+        self.voice_calls: list[tuple[str, str]] = []
+        self.image_calls: list[tuple[str, str, str, list[str] | None]] = []
+        self.video_calls: list[dict[str, object]] = []
+        self.run_calls: list[tuple[str, dict[str, Any]]] = []
+        self.last_run: RunResult | None = None
         self._n = 0
 
     def _metered(self, url: str) -> str:
@@ -54,7 +54,7 @@ class FakeAssetProvider(AssetProvider):
         duration: float,
         aspect_ratio: str,
         resolution: str,
-        audio_url: Optional[str] = None,
+        audio_url: str | None = None,
         draft: bool = False,
     ) -> str:
         self.video_calls.append(
@@ -68,7 +68,7 @@ class FakeAssetProvider(AssetProvider):
         )
         return self._metered(self._next("mp4"))
 
-    def run_model_metered(self, model_ref: str, params: Dict[str, Any]) -> RunResult:
+    def run_model_metered(self, model_ref: str, params: dict[str, Any]) -> RunResult:
         self.run_calls.append((model_ref, params))
         self.last_run = RunResult(
             urls=[f"https://fake.local/{model_ref}/0.out"],
@@ -77,5 +77,5 @@ class FakeAssetProvider(AssetProvider):
         )
         return self.last_run
 
-    def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
+    def run_model(self, model_ref: str, params: dict[str, Any]) -> list[str]:
         return self.run_model_metered(model_ref, params).urls

@@ -11,14 +11,13 @@ Sortie : un fichier intro final, enregistré comme Asset(beat="intro") de l'épi
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
+from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....features.scripting.adventure import AdventureScript
 from ....features.scripting.prompts import DA, NO_TEXT, POV_HANDS, VERTICAL
-from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....infra.download import download_file
 from ....pipeline import Pipeline, VideoInstance
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
@@ -50,8 +49,8 @@ def _intro_video_prompt(script: AdventureScript, first: str, second: str) -> str
 def generate_intro(
     engine: Engine,
     episode_id: int,
-    replicate_token: Optional[str] = None,
-    openai_key: Optional[str] = None,
+    replicate_token: str | None = None,
+    openai_key: str | None = None,
 ) -> str:
     """Génère + compile l'intro de l'épisode ; renvoie le chemin du fichier final.
 

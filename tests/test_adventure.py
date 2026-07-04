@@ -20,10 +20,9 @@ from src.features.scripting import (  # noqa: E402
     VoiceProfile,
     export_schema,
 )
-from src.features.scripting.adventure import MAX_ROUNDS  # noqa: E402
 from src.features.scripting import adventure_to_prompts as A2P  # noqa: E402
 from src.features.scripting import prompts as P  # noqa: E402
-
+from src.features.scripting.adventure import MAX_ROUNDS  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Fabriques de fixtures — un script valide construit à la main
@@ -177,7 +176,8 @@ def test_json_round_trip():
 
 def test_export_schema(tmp_path):
     out = export_schema(str(tmp_path / "adventure.schema.json"))
-    schema = json.loads(open(out, encoding="utf-8").read())
+    with open(out, encoding="utf-8") as fh:
+        schema = json.loads(fh.read())
     assert schema["title"] == "AdventureScript"
     assert "$defs" in schema
 

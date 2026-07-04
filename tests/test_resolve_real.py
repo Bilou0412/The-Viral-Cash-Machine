@@ -14,7 +14,7 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.videospec.resolve_real import RealAssetResolver  # noqa: E402
+from src.videospec.resolve_real import RealAssetResolver
 
 
 class _FakeProvider:

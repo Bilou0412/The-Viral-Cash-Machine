@@ -12,8 +12,6 @@ testables hors-ligne ; cette orchestration fait de la vraie génération réseau
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
@@ -28,8 +26,8 @@ def produce_episode(
     engine: Engine,
     episode_id: int,
     side: str = "left",
-    replicate_token: Optional[str] = None,
-    openai_key: Optional[str] = None,
+    replicate_token: str | None = None,
+    openai_key: str | None = None,
 ) -> str:
     """Produit la vidéo COMPLÈTE d'un épisode (script déjà en base). Renvoie le mp4.
 

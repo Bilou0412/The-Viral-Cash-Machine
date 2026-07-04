@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-from typing import Optional
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
@@ -38,7 +37,7 @@ def _render_base() -> str:
     return os.environ.get("VCM_RENDER_BASE", "http://localhost:8000").rstrip("/")
 
 
-def render_document(engine: Engine, doc_id: int) -> Optional[str]:
+def render_document(engine: Engine, doc_id: int) -> str | None:
     """Rend le MP4 final d'un document éditeur ; renvoie le chemin (ou lève)."""
     with Session(engine) as session:
         row = EditorDocRepo(session).get(doc_id)

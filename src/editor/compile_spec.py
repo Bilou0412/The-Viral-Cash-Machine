@@ -22,7 +22,7 @@ Limites B1 (explicites, levées en cas d'usage) :
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..videospec.models import (
     Asset,
@@ -49,7 +49,7 @@ def _prompt(node: GenNode, kind: str) -> str:
     return value if isinstance(value, str) else ""
 
 
-def _single_audio_child(clip: ClipBrick) -> Optional[AudioChild]:
+def _single_audio_child(clip: ClipBrick) -> AudioChild | None:
     """L'unique enfant audio du clip, ou None. Lève si le clip en a plusieurs."""
     if len(clip.children) > 1:
         raise ValueError(
@@ -63,7 +63,7 @@ def _voice_asset(clip: ClipBrick, child: AudioChild) -> VoiceAsset:
     params = child.params
     text = field_value(params, "voice", "text")
     voice_id = field_value(params, "voice", "voice_id")
-    kwargs: Dict[str, Any] = {"id": f"{clip.id}__voice", "text": text or ""}
+    kwargs: dict[str, Any] = {"id": f"{clip.id}__voice", "text": text or ""}
     if isinstance(voice_id, str) and voice_id:
         kwargs["voice_id"] = voice_id
     return VoiceAsset(**kwargs)
@@ -71,7 +71,7 @@ def _voice_asset(clip: ClipBrick, child: AudioChild) -> VoiceAsset:
 
 def _image_asset(clip: ClipBrick) -> ImageAsset:
     params = clip.image.params
-    kwargs: Dict[str, Any] = {"id": f"{clip.id}__img", "prompt": _prompt(clip.image, "image")}
+    kwargs: dict[str, Any] = {"id": f"{clip.id}__img", "prompt": _prompt(clip.image, "image")}
     for key in ("size", "aspect_ratio"):
         val = params.get(key)
         if isinstance(val, str) and val:
@@ -79,13 +79,13 @@ def _image_asset(clip: ClipBrick) -> ImageAsset:
     return ImageAsset(**kwargs)
 
 
-def _video_asset(clip: ClipBrick, image_id: str, audio_id: Optional[str]) -> VideoAsset:
+def _video_asset(clip: ClipBrick, image_id: str, audio_id: str | None) -> VideoAsset:
     motion = clip.motion or GenNode()
     params = motion.params
     duration = field_value(params, "video", "duration")
     if isinstance(duration, bool) or not isinstance(duration, (int, float)) or duration <= 0:
         duration = clip.placement.duration if clip.placement.duration > 0 else _DEFAULT_VIDEO_DURATION
-    kwargs: Dict[str, Any] = {
+    kwargs: dict[str, Any] = {
         "id": f"{clip.id}__vid",
         "prompt": _prompt(motion, "video") or _prompt(clip.image, "image"),
         "image": image_id,
@@ -107,15 +107,15 @@ def _zoom(clip: ClipBrick) -> ZoomEffect:
     return ZoomEffect(scale_from=z.from_scale, scale_to=z.to_scale)
 
 
-def _compile_clip(clip: ClipBrick) -> tuple[List[Asset], Segment]:
+def _compile_clip(clip: ClipBrick) -> tuple[list[Asset], Segment]:
     """Un clip → (ses assets, son segment)."""
-    assets: List[Asset] = []
+    assets: list[Asset] = []
 
     image = _image_asset(clip)
     assets.append(image)
 
     child = _single_audio_child(clip)
-    voice_id: Optional[str] = None
+    voice_id: str | None = None
     if child is not None:
         voice = _voice_asset(clip, child)
         assets.append(voice)
@@ -143,7 +143,7 @@ def _compile_clip(clip: ClipBrick) -> tuple[List[Asset], Segment]:
         )
 
     duration = clip.placement.duration if clip.placement.duration > 0 else None
-    kwargs: Dict[str, Any] = {"background": image.id, "transition": None}
+    kwargs: dict[str, Any] = {"background": image.id, "transition": None}
     if duration is not None:
         kwargs["duration"] = duration
     return assets, IntroSegment(**kwargs)
@@ -162,8 +162,8 @@ def document_to_spec(doc: EditorDocument) -> VideoSpec:
         key=lambda c: (c.placement.start, c.placement.track),
     )
 
-    assets: List[Asset] = []
-    segments: List[Segment] = []
+    assets: list[Asset] = []
+    segments: list[Segment] = []
     for clip in clips:
         clip_assets, segment = _compile_clip(clip)
         assets.extend(clip_assets)

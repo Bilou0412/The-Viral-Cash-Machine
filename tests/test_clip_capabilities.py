@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor import ClipBrick  # noqa: E402
-from src.editor.capabilities import (  # noqa: E402
+from src.editor import ClipBrick
+from src.editor.capabilities import (
     clip_is_ready,
     clip_node_kinds,
     validate_clip,

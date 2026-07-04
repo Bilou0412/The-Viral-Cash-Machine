@@ -24,7 +24,7 @@ Les sous-titres ne sont PAS transcrits ici (resterait offline) — ``subtitles=(
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .document import (
     EditorDocument,
@@ -40,7 +40,7 @@ _VIDEO_EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v", ".avi")
 _AUDIO_EXTS = (".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac")
 
 
-def _media_kind_from_path(path: Optional[str]) -> str:
+def _media_kind_from_path(path: str | None) -> str:
     """Devine "video"/"image"/"audio" depuis l'extension (défaut: image)."""
     if not path:
         return "image"
@@ -59,8 +59,8 @@ def _layer_clip(
     start: float,
     duration: float,
     track: int,
-    asset_src: Dict[str, str],
-) -> Optional[RenderClip]:
+    asset_src: dict[str, str],
+) -> RenderClip | None:
     """Construit le clip d'un calque empilé (z plus élevé que la brique)."""
     z = max(layer.z, layer_index + 1)
     payload = dict(layer.payload)
@@ -115,7 +115,7 @@ def _layer_clip(
     return None
 
 
-def resolve(doc: EditorDocument, asset_src: Dict[str, str]) -> RenderModel:
+def resolve(doc: EditorDocument, asset_src: dict[str, str]) -> RenderModel:
     """Aplatit un ``EditorDocument`` en ``RenderModel`` (frozen, prêt Remotion).
 
     Args:
@@ -128,7 +128,7 @@ def resolve(doc: EditorDocument, asset_src: Dict[str, str]) -> RenderModel:
         Un ``RenderModel`` dont ``clips`` contient, dans l'ordre des briques, le
         clip principal de chaque brique suivi de ses clips de calques.
     """
-    clips: List[RenderClip] = []
+    clips: list[RenderClip] = []
     max_end = 0.0
 
     for brick in doc.bricks:
@@ -138,7 +138,7 @@ def resolve(doc: EditorDocument, asset_src: Dict[str, str]) -> RenderModel:
         track = placement.track
         max_end = max(max_end, start + duration)
 
-        main: Optional[RenderClip] = None
+        main: RenderClip | None = None
 
         if isinstance(brick, GenerativeBrick):
             src = asset_src.get(brick.id)
@@ -169,7 +169,7 @@ def resolve(doc: EditorDocument, asset_src: Dict[str, str]) -> RenderModel:
                 z=0,
             )
         elif isinstance(brick, TextBrick):
-            payload: Dict[str, Any] = dict(brick.payload)
+            payload: dict[str, Any] = dict(brick.payload)
             main = RenderClip(
                 id=brick.id,
                 media="text",

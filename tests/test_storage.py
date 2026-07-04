@@ -35,7 +35,8 @@ def test_fake_round_trip(tmp_path) -> None:
     assert ref == "p/episode_1/v.mp4"            # key, not a path
     assert st.exists(ref)
     mat = st.materialize(ref)
-    assert open(mat, "rb").read() == b"data"
+    with open(mat, "rb") as fh:
+        assert fh.read() == b"data"
 
 
 def test_factory_default_is_local() -> None:
@@ -56,11 +57,11 @@ class _FakeS3:
         self.uploaded: dict[str, str] = {}
     def upload_file(self, local: str, bucket: str, key: str) -> None:
         self.uploaded[key] = local
-    def head_object(self, Bucket: str, Key: str):  # noqa: N803
+    def head_object(self, Bucket: str, Key: str):
         if Key in self.uploaded:
             return {"ContentLength": 10}
         raise RuntimeError("404")
-    def download_file(self, Bucket: str, Key: str, dest: str) -> None:  # noqa: N803
+    def download_file(self, Bucket: str, Key: str, dest: str) -> None:
         with open(dest, "wb") as f:
             f.write(b"obj")
 
@@ -83,7 +84,8 @@ def test_r2_uses_keys_and_client(tmp_path, monkeypatch) -> None:
     assert r2.exists(ref)
     assert not r2.exists("missing/key.mp4")
     mat = r2.materialize(ref)                     # downloads via fake client
-    assert open(mat, "rb").read() == b"obj"
+    with open(mat, "rb") as fh:
+        assert fh.read() == b"obj"
     resp = r2.serve(ref)                          # public base -> redirect
     assert resp.status_code == 307
     assert resp.headers["location"] == "https://cdn.example.com/proj/episode_1/v.mp4"

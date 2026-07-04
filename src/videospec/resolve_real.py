@@ -21,7 +21,7 @@ Imports lourds en paresseux (dans __init__) : importer ce module reste léger.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from .models import (
     FileAsset,
@@ -47,9 +47,9 @@ class RealAssetResolver:
 
     def __init__(
         self,
-        provider: Optional["AssetProvider"] = None,
-        transcriber: Optional["Transcriber"] = None,
-        head_detector: Optional["HeadDetector"] = None,
+        provider: AssetProvider | None = None,
+        transcriber: Transcriber | None = None,
+        head_detector: HeadDetector | None = None,
         *,
         draft: bool = False,
         image_size: str = "2K",
@@ -80,8 +80,8 @@ class RealAssetResolver:
         from ..infra.download import download_file
 
         os.makedirs(project_dir, exist_ok=True)
-        paths: Dict[str, str] = {}
-        urls: Dict[str, str] = {}  # URL fraîche par id (chaînage image→vidéo)
+        paths: dict[str, str] = {}
+        urls: dict[str, str] = {}  # URL fraîche par id (chaînage image→vidéo)
 
         images = [a for a in spec.assets if isinstance(a, ImageAsset)]
         voices = [a for a in spec.assets if isinstance(a, VoiceAsset)]
@@ -89,7 +89,7 @@ class RealAssetResolver:
         files = [a for a in spec.assets if isinstance(a, FileAsset)]
 
         # 1) Image de référence personnage en premier (image_input i2i des autres).
-        ref_url: Optional[str] = None
+        ref_url: str | None = None
         ref = next((a for a in images if _is_char_reference(a.id)), None)
         if ref is not None:
             print(f"[real] image (réf perso) {ref.id}…")
@@ -145,7 +145,7 @@ class RealAssetResolver:
             paths[fa.id] = fa.path
 
         # 6) Transcripts (Whisper) des sources de sous-titres.
-        transcripts: Dict[str, Tuple[Dict[str, object], ...]] = {}
+        transcripts: dict[str, tuple[dict[str, object], ...]] = {}
         for src in self._subtitle_sources(spec):
             local = paths.get(src)
             if local and os.path.exists(local):
@@ -154,7 +154,7 @@ class RealAssetResolver:
                 transcripts[src] = tuple(cues)
 
         # 7) Détection des têtes sur la réf perso (pour les nameplates).
-        heads: Dict[str, Tuple[float, float]] = {"left": (0.3, 0.4), "right": (0.7, 0.4)}
+        heads: dict[str, tuple[float, float]] = {"left": (0.3, 0.4), "right": (0.7, 0.4)}
         if ref is not None and paths.get(ref.id) and os.path.exists(paths[ref.id]):
             try:
                 print("[real] détection des têtes…")
@@ -176,8 +176,8 @@ class RealAssetResolver:
             print(f"[real] ⚠ téléchargement échoué : {asset_id}")
 
     @staticmethod
-    def _subtitle_sources(spec: VideoSpec) -> List[str]:
-        out: List[str] = []
+    def _subtitle_sources(spec: VideoSpec) -> list[str]:
+        out: list[str] = []
         for seg in spec.segments:
             subs = getattr(seg, "subtitles", None)
             src = getattr(subs, "source", None)

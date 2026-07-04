@@ -1,23 +1,24 @@
 """Video composition orchestration."""
 
 import os
+
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from moviepy import (
-    VideoFileClip,
-    ImageClip,
     AudioFileClip,
     ColorClip,
-    concatenate_videoclips,
-    CompositeVideoClip,
     CompositeAudioClip,
+    CompositeVideoClip,
+    ImageClip,
+    VideoFileClip,
+    concatenate_videoclips,
 )
 from moviepy.video.fx import Resize
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from ..transcription.ports import Transcriber
 from .heads import HeadDetector
+from .overlays import GaugeOverlay, NameplateOverlay, SubtitleOverlay, TimerOverlay
 from .srt import save_srt
-from .overlays import SubtitleOverlay, TimerOverlay, GaugeOverlay, NameplateOverlay
 
 
 class RawVideoCompositor:
@@ -103,13 +104,15 @@ class RawVideoCompositor:
         def get_nameplate_dims(text: str, fsize: int, color: str, font_path: str, stroke_w: int) -> tuple[int, int]:
             """Extract width and height from nameplate overlay rendering."""
             try:
-                font = ImageFont.truetype(os.path.abspath(font_path), int(fsize))
+                font: ImageFont.FreeTypeFont = ImageFont.truetype(
+                    os.path.abspath(font_path), int(fsize)
+                )
             except Exception:
-                font = ImageFont.load_default()
+                font = ImageFont.load_default()  # type: ignore[assignment]
             left, top, right, bottom = font.getbbox(text)
             tw, th = right - left, bottom - top
             sw = int(stroke_w)
-            return tw + 2 * sw + 10, th + 2 * sw + 10
+            return int(tw + 2 * sw + 10), int(th + 2 * sw + 10)
 
         tw_l, th_l = get_nameplate_dims(name_l, NAME_FSIZE, "white", font_p, 3)
         tw_r, th_r = get_nameplate_dims(name_r, NAME_FSIZE, "white", font_p, 3)
@@ -151,11 +154,11 @@ class RawVideoCompositor:
             img_for_blur = img_orig_pil.copy()
             draw = ImageDraw.Draw(img_for_blur)
             try:
-                font_pix = ImageFont.truetype(
+                font_pix: ImageFont.FreeTypeFont = ImageFont.truetype(
                     os.path.abspath(font_p), NAME_FSIZE
                 )
             except Exception:
-                font_pix = ImageFont.load_default()
+                font_pix = ImageFont.load_default()  # type: ignore[assignment]
             draw.text(
                 (pos_l_x + tw_l // 2, pos_l_y + th_l // 2),
                 name_l,
@@ -285,10 +288,11 @@ class RawVideoCompositor:
             dark_gauge = gauge_overlay.to_clip((w, h)).with_position(
                 ("center", int(0.65 * h))
             )
-            choice_audio_el = []
+            choice_audio_el: list[object] = []
             if os.path.exists(paths["tick"]):
-                for step in [0, T_STEP, 2 * T_STEP]:
-                    choice_audio_el.append(AudioFileClip(paths["tick"]).with_start(step))
+                choice_audio_el.extend(
+                    AudioFileClip(paths["tick"]).with_start(step) for step in [0, T_STEP, 2 * T_STEP]
+                )
             if os.path.exists(paths["beep"]):
                 choice_audio_el.append(
                     AudioFileClip(paths["beep"]).with_start(CHOICE_DUR)

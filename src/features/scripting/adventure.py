@@ -15,7 +15,6 @@ Conventions de langue (règle projet) :
 import json
 import sys
 from pathlib import Path
-from typing import Tuple
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -60,7 +59,7 @@ class Round(_Spec):
     environment_narration_fr: str  # FR
     character_line_fr: str         # FR — réplique face-cam (slot face_cam_dilemma)
     character_delivery: str        # EN — whispering / murmuring / hissing (la manière)
-    choices: Tuple[Choice, Choice]
+    choices: tuple[Choice, Choice]
     choice_narration_fr: str       # FR — le narrateur énonce les deux choix
     fatal_kill_desc: str           # EN — slot prompts.fatal_outcome (kill_desc)
     fatal_pov_reaction: str        # EN — réaction POV (slot fatal_outcome)
@@ -96,7 +95,7 @@ class AdventureScript(_Spec):
     char_left_intro_line_fr: str    # FR — réplique d'intro angoissante (dit son nom)
     char_right_intro_line_fr: str   # FR
     transition_narration_fr: str   # FR — « Si tu as choisi Étienne... »
-    rounds: Tuple[Round, ...]      # N séquences-choix (défaut produit 3 ; borné 1..MAX_ROUNDS)
+    rounds: tuple[Round, ...]      # N séquences-choix (défaut produit 3 ; borné 1..MAX_ROUNDS)
     epilogue_other_desc: str       # EN — slot prompts.epilogue_other_path (glimpse)
     epilogue_narration_fr: str     # FR — « Si tu avais choisi l'autre... »
 

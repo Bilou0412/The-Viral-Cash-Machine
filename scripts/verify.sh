@@ -10,8 +10,9 @@
 #   scripts/verify.sh --no-front      # sauter le build front
 #   scripts/verify.sh --e2e           # + tests navigateur Playwright (front en mock)
 #
-# mypy est un CLIQUET : échoue si le nombre d'erreurs DÉPASSE MYPY_BASELINE.
-MYPY_BASELINE="${MYPY_BASELINE:-40}"
+# mypy est STRICT et à ZÉRO erreur (rigueur type-Rust). Le cliquet reste en place
+# comme garde-fou, mais la baseline est 0 : toute nouvelle erreur casse le build.
+MYPY_BASELINE="${MYPY_BASELINE:-0}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2

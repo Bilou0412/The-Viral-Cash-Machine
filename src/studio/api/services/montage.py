@@ -13,14 +13,14 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Callable, List, Optional, Sequence
+from collections.abc import Callable, Sequence
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
+from ....features import storage
 from ...db.models import Asset
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
-from ....features import storage
 from .paths import episode_dir
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ def _moviepy_concat(paths: Sequence[str], output_path: str) -> float:
     return duration
 
 
-def _ordered_video_assets(assets: Sequence[Asset]) -> List[Asset]:
+def _ordered_video_assets(assets: Sequence[Asset]) -> list[Asset]:
     """Episode video assets in timeline order: intro, rounds, then epilogue.
 
     M2 : l'intro (beat="intro", round_index=None) DOIT passer en premier — sans ce
@@ -78,7 +78,7 @@ class MontageService:
     """Assembles ready video beats of an episode into one final video."""
 
     def __init__(
-        self, engine: Engine, concatenator: Optional[Concatenator] = None
+        self, engine: Engine, concatenator: Concatenator | None = None
     ) -> None:
         self.engine = engine
         self.concatenator = concatenator or _moviepy_concat
@@ -135,14 +135,14 @@ class MontageService:
         compatibilité avec les tests offline.
         """
 
-        from ...db.repositories import ScriptRepo
-        from ....features.scripting.adventure import AdventureScript
-        from ....features.transcription.whisper import WhisperTranscriber
         from ....features.compositing.adventure_compositor import (
             RoundAssets,
             compose_narrated_segment,
             compose_round,
         )
+        from ....features.scripting.adventure import AdventureScript
+        from ....features.transcription.whisper import WhisperTranscriber
+        from ...db.repositories import ScriptRepo
 
         with Session(self.engine) as session:
             episode = EpisodeRepo(session).get(episode_id)
@@ -176,7 +176,7 @@ class MontageService:
             if a.local_path and storage.exists(a.local_path) and not a.excluded
         }
 
-        def g(ri: Optional[int], beat: str) -> Optional[str]:
+        def g(ri: int | None, beat: str) -> str | None:
             return by_key.get((ri, beat))
 
         follower = script.char_left_name
@@ -205,7 +205,7 @@ class MontageService:
         # Rich compositing (MoviePy). On any failure (e.g. unreadable media in
         # offline tests), degrade gracefully to the simple concat.
         try:
-            round_files: List[str] = []
+            round_files: list[str] = []
             for ri in range(n_rounds):
                 rf = os.path.join(work, f"round_{ri}.mp4")
                 compose_round(

@@ -10,24 +10,24 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List
+from typing import Any
 
-Event = Dict[str, Any]
+Event = dict[str, Any]
 
 
 class EventBus:
     """Fan-out of per-episode events to any number of async subscribers."""
 
     def __init__(self) -> None:
-        self._subscribers: Dict[int, List["asyncio.Queue[Event]"]] = {}
+        self._subscribers: dict[int, list[asyncio.Queue[Event]]] = {}
 
-    def subscribe(self, episode_id: int) -> "asyncio.Queue[Event]":
-        queue: "asyncio.Queue[Event]" = asyncio.Queue()
+    def subscribe(self, episode_id: int) -> asyncio.Queue[Event]:
+        queue: asyncio.Queue[Event] = asyncio.Queue()
         self._subscribers.setdefault(episode_id, []).append(queue)
         return queue
 
     def unsubscribe(
-        self, episode_id: int, queue: "asyncio.Queue[Event]"
+        self, episode_id: int, queue: asyncio.Queue[Event]
     ) -> None:
         subs = self._subscribers.get(episode_id)
         if not subs:
@@ -37,13 +37,13 @@ class EventBus:
         if not subs:
             self._subscribers.pop(episode_id, None)
 
-    def publish(self, episode_id: int, event: Dict[str, Any]) -> None:
+    def publish(self, episode_id: int, event: dict[str, Any]) -> None:
         """Push an event to all subscribers of an episode (non-blocking)."""
         for queue in list(self._subscribers.get(episode_id, [])):
             queue.put_nowait(event)
 
     @staticmethod
-    def format_sse(event: Dict[str, Any]) -> str:
+    def format_sse(event: dict[str, Any]) -> str:
         """Serialize one event as an SSE `data:` frame."""
         return f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 

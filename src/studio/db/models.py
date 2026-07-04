@@ -7,15 +7,14 @@ expire (see ``Asset.local_path`` / ``GenerationJob.prediction_id``).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlmodel import Field, SQLModel
 
 
 def _utcnow() -> datetime:
     """Timezone-aware UTC timestamp used as the default for ``created_at``."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Project(SQLModel, table=True):
@@ -23,13 +22,13 @@ class Project(SQLModel, table=True):
 
     __tablename__ = "project"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     created_at: datetime = Field(default_factory=_utcnow)
-    settings_json: Optional[str] = Field(default=None)
+    settings_json: str | None = Field(default=None)
     # Multi-tenant (B.2) : propriétaire du projet. Nullable pour les lignes legacy
     # (créées avant l'auth) → visibles uniquement des admins (ou backfillées).
-    owner_id: Optional[int] = Field(
+    owner_id: int | None = Field(
         default=None, foreign_key="user.id", index=True
     )
 
@@ -39,7 +38,7 @@ class Episode(SQLModel, table=True):
 
     __tablename__ = "episode"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id", index=True)
     title: str
     # Lifecycle: draft -> assets -> montage -> done
@@ -48,8 +47,8 @@ class Episode(SQLModel, table=True):
     # DA / thème de l'épisode (cf. features.scripting.themes). Défaut « horror ».
     theme: str = Field(default="horror")
     draft_mode: bool = Field(default=True)
-    duration_s: Optional[float] = Field(default=None)
-    final_path: Optional[str] = Field(default=None)
+    duration_s: float | None = Field(default=None)
+    final_path: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -58,7 +57,7 @@ class AdventureScriptRow(SQLModel, table=True):
 
     __tablename__ = "adventure_script"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     episode_id: int = Field(foreign_key="episode.id", index=True)
     script_json: str
     edited: bool = Field(default=False)
@@ -74,21 +73,21 @@ class Asset(SQLModel, table=True):
 
     __tablename__ = "asset"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     episode_id: int = Field(foreign_key="episode.id", index=True)
-    round_index: Optional[int] = Field(default=None)
+    round_index: int | None = Field(default=None)
     beat: str
     # One of: image / video / audio
     kind: str = Field(index=True)
-    prompt: Optional[str] = Field(default=None)
-    local_path: Optional[str] = Field(default=None)
+    prompt: str | None = Field(default=None)
+    local_path: str | None = Field(default=None)
     status: str = Field(default="pending")
     draft: bool = Field(default=True)
     # M1/M2 : asset écarté par l'auteur → exclu du montage (jamais supprimé).
     excluded: bool = Field(default=False)
-    sha: Optional[str] = Field(default=None)
+    sha: str | None = Field(default=None)
     # E5 : asset issu d'une brique de l'éditeur timeline (None = asset Aventure).
-    editor_document_id: Optional[int] = Field(default=None, index=True)
+    editor_document_id: int | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -100,13 +99,13 @@ class GenerationJob(SQLModel, table=True):
 
     __tablename__ = "generation_job"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     asset_id: int = Field(foreign_key="asset.id", index=True)
     model: str
-    prediction_id: Optional[str] = Field(default=None)
+    prediction_id: str | None = Field(default=None)
     status: str = Field(default="pending", index=True)
-    duration_s: Optional[float] = Field(default=None)
-    error: Optional[str] = Field(default=None)
+    duration_s: float | None = Field(default=None)
+    error: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -119,12 +118,12 @@ class VoiceProfile(SQLModel, table=True):
 
     __tablename__ = "voice_profile"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    registre: Optional[str] = Field(default=None)
-    description: Optional[str] = Field(default=None)
-    voice_id: Optional[str] = Field(default=None)
-    sample_path: Optional[str] = Field(default=None)
+    registre: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    voice_id: str | None = Field(default=None)
+    sample_path: str | None = Field(default=None)
 
 
 class EditorDocumentRow(SQLModel, table=True):
@@ -137,9 +136,9 @@ class EditorDocumentRow(SQLModel, table=True):
 
     __tablename__ = "editor_document"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id", index=True)
-    episode_id: Optional[int] = Field(default=None, foreign_key="episode.id")
+    episode_id: int | None = Field(default=None, foreign_key="episode.id")
     title: str
     schema_version: int = Field(default=1)
     doc_json: str
@@ -152,7 +151,7 @@ class CostEntry(SQLModel, table=True):
 
     __tablename__ = "cost_entry"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     job_id: int = Field(foreign_key="generation_job.id", index=True)
     model: str
     units: float = Field(default=0.0)
@@ -163,7 +162,7 @@ class CostEntry(SQLModel, table=True):
     # rate) | "estimate" (rate-card fallback). is_estimate flags non-real costs.
     source: str = Field(default="estimate")
     is_estimate: bool = Field(default=True)
-    predict_time_s: Optional[float] = Field(default=None)
+    predict_time_s: float | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -177,7 +176,7 @@ class User(SQLModel, table=True):
 
     __tablename__ = "user"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True)
     password_hash: str
     is_admin: bool = Field(default=False)
@@ -194,7 +193,7 @@ class UserApiKey(SQLModel, table=True):
 
     __tablename__ = "user_api_key"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
     provider: str = Field(index=True)          # "openai" | "replicate"
     ciphertext: str

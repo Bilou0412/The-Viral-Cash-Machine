@@ -1,7 +1,9 @@
 import os
+
 from openai import OpenAI
-from .ports import Cue, Transcription, Transcriber
+
 from ...infra.logging import log_terminal
+from .ports import Cue, Transcriber, Transcription
 
 
 class WhisperTranscriber(Transcriber):

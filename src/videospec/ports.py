@@ -4,8 +4,9 @@ Le RenderEngine est interchangeable (MoviePy aujourd'hui, Remotion/Revideo
 demain) : il ne voit que le VideoSpec et des assets déjà résolus sur disque.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Mapping, Protocol
+from typing import Any, Protocol
 
 from .models import VideoSpec
 
@@ -21,7 +22,7 @@ class ResolvedAssets:
 
     paths: Mapping[str, str]
     heads: Mapping[str, tuple[float, float]] = field(default_factory=dict)
-    transcripts: Mapping[str, tuple[dict, ...]] = field(default_factory=dict)
+    transcripts: Mapping[str, tuple[dict[str, Any], ...]] = field(default_factory=dict)
 
 
 class AssetResolver(Protocol):
