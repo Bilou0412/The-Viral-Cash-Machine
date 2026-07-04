@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Save, Boxes, RefreshCw, Skull } from "lucide-react"
+import { Save, Boxes, RefreshCw, Skull, SlidersHorizontal } from "lucide-react"
 import { toast } from "sonner"
+import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -107,6 +108,21 @@ export function ScriptEditor() {
     navigate(`/episodes/${episodeId}/assets`)
   }
 
+  const [reviewing, setReviewing] = useState(false)
+  async function goToReview() {
+    if (dirty) await save()
+    setReviewing(true)
+    try {
+      // Matérialise le script en document de briques puis ouvre la revue.
+      const doc = await api.reviewFromScript(episodeId)
+      navigate(`/editor/${doc.id}/review`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Impossible d'ouvrir la revue")
+    } finally {
+      setReviewing(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <ProjectBreadcrumb episodeId={episodeId} />
@@ -147,6 +163,9 @@ export function ScriptEditor() {
           </Dialog>
           <Button variant="outline" onClick={save} disabled={saveScript.isPending || !dirty}>
             {saveScript.isPending ? <Spinner /> : <Save className="h-4 w-4" />} Sauvegarder
+          </Button>
+          <Button variant="outline" onClick={goToReview} disabled={reviewing}>
+            {reviewing ? <Spinner /> : <SlidersHorizontal className="h-4 w-4" />} Réviser en briques
           </Button>
           <Button onClick={goToAssets}>
             <Boxes className="h-4 w-4" /> Générer les assets

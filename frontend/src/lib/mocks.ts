@@ -366,6 +366,16 @@ export const mockApi = {
     await delay()
     return { episode_id: episodeId, assets: buildBeatEntries() }
   },
+  async reviewFromScript(episodeId: number): Promise<EditorDocument> {
+    await delay()
+    const id = `doc-${nextDocId++}`
+    const docu: EditorDocument = {
+      id, project_id: 1, title: `Épisode ${episodeId} — briques`,
+      doc: newAdventureDoc(`Épisode ${episodeId} — briques`),
+    }
+    editorDocuments.set(id, docu)
+    return structuredClone(docu)
+  },
   async getAssets(episodeId: number) {
     await delay()
     if (!assetsByEpisode.has(episodeId)) assetsByEpisode.set(episodeId, seedAssets(episodeId))
