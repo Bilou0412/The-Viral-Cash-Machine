@@ -46,9 +46,18 @@ fly mpg create --name vcm-pg-prod --region cdg && fly mpg attach <clusterID-prod
 fly mpg create --name vcm-pg-dev  --region cdg && fly mpg attach <clusterID-dev>  -a vcm-studio-dev
 #   Alternative Neon/Supabase : fly secrets set DATABASE_URL='postgresql+psycopg://...' -a <app>
 
-# 4) Secrets API (par app)
+# 4) Secrets API (par app) — OPTIONNEL : les clés OpenAI/Replicate se saisissent
+#    désormais DANS l'app (page Réglages, BYOK). fly secrets reste possible.
 fly secrets set OPENAI_API_KEY=... REPLICATE_API_TOKEN=... -a vcm-studio-prod
 fly secrets set OPENAI_API_KEY=... REPLICATE_API_TOKEN=... -a vcm-studio-dev
+
+# 4bis) Auth (Phase B.1) — REQUIS : signature des cookies + compte admin bootstrap.
+#   VCM_SESSION_SECRET : chaîne aléatoire (ex. `openssl rand -hex 32`).
+#   VCM_ADMIN_EMAIL / VCM_ADMIN_PASSWORD : ton compte admin (créé au 1er démarrage
+#   s'il n'existe pas). Sans eux : personne ne peut générer. (VCM_COOKIE_SECURE=1
+#   est déjà dans [env] des fly.toml.)
+fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... -a vcm-studio-dev
+fly secrets set VCM_SESSION_SECRET=... VCM_ADMIN_EMAIL=... VCM_ADMIN_PASSWORD=... -a vcm-studio-prod
 
 # 5) Premier déploiement manuel + contrôle
 fly deploy --remote-only --config fly.toml      # prod

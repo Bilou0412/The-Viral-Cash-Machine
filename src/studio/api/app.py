@@ -24,17 +24,23 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Optional
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    JSONResponse,
+    Response,
+    StreamingResponse,
+)
 from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
+from starlette.middleware.sessions import SessionMiddleware
 
 from ...features import storage
 from ...features.assets.ports import AssetProvider
 from ..db.engine import get_engine, init_db
-from ..db.models import Asset, Episode, Project
+from ..db.models import Asset, Episode, Project, User
 from ..db.repositories import (
     AssetRepo,
     CostRepo,
@@ -42,6 +48,7 @@ from ..db.repositories import (
     EpisodeRepo,
     ProjectRepo,
     ScriptRepo,
+    UserRepo,
 )
 from . import settings
 from .events import bus
@@ -49,7 +56,7 @@ from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
 )
-from .services import secrets
+from .services import auth, secrets
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
@@ -67,10 +74,51 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     eng = get_engine()
     init_db(eng)
     secrets.apply_to_env(eng)  # load BYOK keys (entered in the UI) into the env
+    auth.bootstrap_admin(eng)  # crée l'admin depuis VCM_ADMIN_EMAIL/PASSWORD si posés
     yield
 
 
 app = FastAPI(title="VCM Studio API", version="1.0", lifespan=_lifespan)
+
+# --- Auth (Phase B.1) -------------------------------------------------------
+# Le login verrouille TOUTE l'API : seules ces routes sont accessibles sans
+# session. Les pages du SPA (chemins hors /api) restent publiques (elles doivent
+# pouvoir charger /login).
+_AUTH_EXEMPT = frozenset({"/api/auth/login", "/api/auth/register"})
+
+
+def _session_secret() -> str:
+    """Clé de signature des cookies de session (VCM_SESSION_SECRET en prod)."""
+    return os.environ.get("VCM_SESSION_SECRET") or "dev-insecure-change-me"
+
+
+def _cookie_secure() -> bool:
+    """Cookie ``Secure`` (HTTPS-only). Activé en prod via VCM_COOKIE_SECURE=1 ;
+    désactivé par défaut pour le local/CI en HTTP (sinon la session ne persiste pas).
+    """
+    return os.environ.get("VCM_COOKIE_SECURE", "0") == "1"
+
+
+# Ordre d'AJOUT = ordre d'exécution inversé (le dernier ajouté est le plus
+# externe). On veut : CORS → SessionMiddleware → garde d'auth → route, donc on
+# ajoute la garde en premier, la session ensuite, CORS en dernier.
+@app.middleware("http")
+async def _require_session(request: Request, call_next: Any) -> Response:
+    path = request.url.path
+    if path.startswith("/api/") and path not in _AUTH_EXEMPT:
+        if not request.session.get("user_id"):
+            return JSONResponse({"detail": "authentification requise"}, status_code=401)
+    response: Response = await call_next(request)
+    return response
+
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=_session_secret(),
+    session_cookie="vcm_session",
+    https_only=_cookie_secure(),
+    same_site="lax",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,6 +154,36 @@ def get_catalog_client() -> Any:
 def _session(engine: Engine = Depends(get_db_engine)) -> Iterator[Session]:
     with Session(engine) as session:
         yield session
+
+
+# --- Auth dependencies (Phase B.1) -----------------------------------------
+
+
+def require_user(
+    request: Request, engine: Engine = Depends(get_db_engine)
+) -> User:
+    """Charge l'utilisateur de la session (401 si absent/invalide)."""
+    uid = request.session.get("user_id")
+    if not uid:
+        raise HTTPException(401, "authentification requise")
+    with Session(engine) as session:
+        user = UserRepo(session).get(int(uid))
+    if user is None:
+        request.session.clear()
+        raise HTTPException(401, "session invalide")
+    return user
+
+
+def require_admin(user: User = Depends(require_user)) -> User:
+    """Réserve la route à l'admin (B.1 : seul l'admin peut dépenser les clés)."""
+    if not user.is_admin:
+        raise HTTPException(403, "réservé à l'administrateur")
+    return user
+
+
+def _public_user(user: User) -> dict[str, Any]:
+    """Vue publique d'un utilisateur (jamais le hash du mot de passe)."""
+    return {"id": user.id, "email": user.email, "is_admin": user.is_admin}
 
 
 # ---------------------------------------------------------------------------
@@ -157,6 +235,71 @@ class EditorDocSaveIn(BaseModel):
 
     title: Optional[str] = None
     doc: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# Auth (Phase B.1) — inscription / connexion / session
+# ---------------------------------------------------------------------------
+
+
+class RegisterIn(BaseModel):
+    email: str
+    password: str
+
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/api/auth/register")
+def register(
+    body: RegisterIn, request: Request, engine: Engine = Depends(get_db_engine)
+) -> dict[str, Any]:
+    """Crée un compte (non-admin) et ouvre la session.
+
+    B.1 : un inscrit lambda peut se connecter mais **pas** générer (routes de
+    génération réservées à l'admin) — l'inscription s'ouvre vraiment en B.2.
+    """
+    email = body.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(422, "email invalide")
+    if len(body.password) < 8:
+        raise HTTPException(422, "mot de passe trop court (8 caractères minimum)")
+    with Session(engine) as session:
+        repo = UserRepo(session)
+        if repo.get_by_email(email) is not None:
+            raise HTTPException(409, "cet email est déjà utilisé")
+        user = repo.create(email, auth.hash_password(body.password), is_admin=False)
+    request.session["user_id"] = user.id
+    return _public_user(user)
+
+
+@app.post("/api/auth/login")
+def login(
+    body: LoginIn, request: Request, engine: Engine = Depends(get_db_engine)
+) -> dict[str, Any]:
+    """Vérifie les identifiants et ouvre la session (cookie signé)."""
+    email = body.email.strip().lower()
+    with Session(engine) as session:
+        user = UserRepo(session).get_by_email(email)
+    if user is None or not auth.verify_password(user.password_hash, body.password):
+        raise HTTPException(401, "identifiants invalides")
+    request.session["user_id"] = user.id
+    return _public_user(user)
+
+
+@app.post("/api/auth/logout")
+def logout(request: Request) -> dict[str, bool]:
+    """Ferme la session (vide le cookie)."""
+    request.session.clear()
+    return {"ok": True}
+
+
+@app.get("/api/auth/me")
+def me(user: User = Depends(require_user)) -> dict[str, Any]:
+    """L'utilisateur courant (401 si non connecté → le front sait qu'il faut login)."""
+    return _public_user(user)
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +425,10 @@ def model_form_route(
 
 @app.post("/api/episodes/{episode_id}/script")
 def generate_episode_script(
-    episode_id: int, body: ScriptGenIn, session: Session = Depends(_session)
+    episode_id: int,
+    body: ScriptGenIn,
+    session: Session = Depends(_session),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     _require_episode(session, episode_id)
     script = generate_script(
@@ -407,7 +553,9 @@ def get_keys(engine: Engine = Depends(get_db_engine)) -> dict[str, bool]:
 
 @app.put("/api/settings/keys")
 def put_keys(
-    body: KeysIn, engine: Engine = Depends(get_db_engine)
+    body: KeysIn,
+    engine: Engine = Depends(get_db_engine),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, bool]:
     """Enregistre les clés non vides (DB + os.environ) et renvoie le statut."""
     secrets.set_keys(engine, openai=body.openai, replicate=body.replicate)
@@ -427,6 +575,7 @@ def generate_assets(
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     _require_episode(session, episode_id)
     script = _load_script(session, episode_id)
@@ -442,6 +591,7 @@ def regenerate_one_asset(
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     background.add_task(regenerate_asset, engine, asset_id, provider, downloader)
     return {"asset_id": asset_id, "status": "scheduled"}
@@ -501,6 +651,7 @@ def produce_full_episode(
     background: BackgroundTasks,
     session: Session = Depends(_session),
     engine: Engine = Depends(get_db_engine),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     """Un bouton = toute la vidéo : assets aventure + intro + montage (fond)."""
     _require_episode(session, episode_id)
@@ -649,6 +800,7 @@ def generate_editor_document(
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     _require_editor_doc(session, doc_id)
     service = EditorGenerationService(
@@ -667,6 +819,7 @@ def regenerate_editor_brick(
     engine: Engine = Depends(get_db_engine),
     provider: Optional[AssetProvider] = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
+    _admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     _require_editor_doc(session, doc_id)
     background.add_task(

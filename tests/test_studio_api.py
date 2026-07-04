@@ -24,9 +24,13 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import create_engine  # noqa: E402
 
 from src.studio.api import app as app_module  # noqa: E402
+from src.studio.api.services import auth as auth_service  # noqa: E402
 from src.studio.api.services.fakes import FakeAssetProvider  # noqa: E402
 from src.studio.api.services.montage import MontageService  # noqa: E402
+from sqlmodel import Session  # noqa: E402
+
 from src.studio.db.engine import init_db  # noqa: E402
+from src.studio.db.repositories import UserRepo  # noqa: E402
 
 
 @pytest.fixture
@@ -42,6 +46,15 @@ def client(tmp_path, monkeypatch):
         f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
     )
     init_db(engine)
+
+    # Auth (B.1) : toute l'API est derrière un login. On crée un admin dans la DB
+    # de test et on ouvre la session sur le client (le cookie persiste ensuite).
+    with Session(engine) as s:
+        UserRepo(s).create(
+            "admin@test.local",
+            auth_service.hash_password("test-password"),
+            is_admin=True,
+        )
 
     fake_provider = FakeAssetProvider()
 
@@ -63,6 +76,12 @@ def client(tmp_path, monkeypatch):
     with TestClient(app_module.app) as c:
         c.fake_provider = fake_provider  # type: ignore[attr-defined]
         c.engine = engine  # type: ignore[attr-defined]
+        # Ouvre la session admin : le cookie signé persiste sur les requêtes suivantes.
+        r = c.post(
+            "/api/auth/login",
+            json={"email": "admin@test.local", "password": "test-password"},
+        )
+        assert r.status_code == 200, r.text
         yield c
 
     app_module.app.dependency_overrides.clear()
@@ -327,3 +346,87 @@ def test_settings_keys(client):
     finally:
         os.environ.pop("OPENAI_API_KEY", None)
         os.environ.pop("REPLICATE_API_TOKEN", None)
+
+
+# --- Auth (Phase B.1) -------------------------------------------------------
+
+
+def test_auth_required_without_session(client):
+    # Une fois déconnecté, toute l'API /api (hors auth) est fermée.
+    assert client.post("/api/auth/logout").status_code == 200
+    assert client.get("/api/projects").status_code == 401
+    assert client.get("/api/auth/me").status_code == 401
+
+
+def test_register_login_me_logout_flow(client):
+    # Le fixture est connecté en admin ; on repart d'une session vierge.
+    client.post("/api/auth/logout")
+    # Inscription (compte non-admin) → ouvre la session.
+    r = client.post(
+        "/api/auth/register",
+        json={"email": "Bob@Test.local", "password": "password123"},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["email"] == "bob@test.local"  # normalisé en minuscules
+    assert body["is_admin"] is False
+    assert "password" not in r.text and "hash" not in r.text
+    # /me reflète l'utilisateur courant.
+    assert client.get("/api/auth/me").json()["email"] == "bob@test.local"
+    # Déconnexion → 401 ensuite.
+    client.post("/api/auth/logout")
+    assert client.get("/api/auth/me").status_code == 401
+    # Reconnexion.
+    assert client.post(
+        "/api/auth/login",
+        json={"email": "bob@test.local", "password": "password123"},
+    ).status_code == 200
+
+
+def test_register_validation_and_duplicates(client):
+    client.post("/api/auth/logout")
+    # Mot de passe trop court.
+    assert client.post(
+        "/api/auth/register",
+        json={"email": "x@test.local", "password": "short"},
+    ).status_code == 422
+    # Email invalide.
+    assert client.post(
+        "/api/auth/register",
+        json={"email": "nope", "password": "password123"},
+    ).status_code == 422
+    # Doublon (l'admin du fixture existe déjà).
+    assert client.post(
+        "/api/auth/register",
+        json={"email": "admin@test.local", "password": "password123"},
+    ).status_code == 409
+    # Mauvais mot de passe.
+    assert client.post(
+        "/api/auth/login",
+        json={"email": "admin@test.local", "password": "wrong"},
+    ).status_code == 401
+
+
+def test_non_admin_cannot_spend_keys(client):
+    client.post("/api/auth/logout")
+    client.post(
+        "/api/auth/register",
+        json={"email": "bob@test.local", "password": "password123"},
+    )
+    # Lecture autorisée pour tout utilisateur connecté.
+    assert client.get("/api/projects").status_code == 200
+    assert client.get("/api/settings/keys").status_code == 200
+    # Mais dépenser (clés / génération) est réservé à l'admin → 403.
+    assert client.put(
+        "/api/settings/keys", json={"openai": "sk-x"}
+    ).status_code == 403
+    pid = client.post("/api/projects", json={"name": "p"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    assert client.post(
+        f"/api/episodes/{eid}/script", json={"prompt": "x"}
+    ).status_code == 403
+    assert client.post(
+        f"/api/episodes/{eid}/assets/generate"
+    ).status_code == 403

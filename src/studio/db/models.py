@@ -162,6 +162,23 @@ class CostEntry(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
 
+class User(SQLModel, table=True):
+    """Compte utilisateur (auth Phase B).
+
+    ``password_hash`` est un hash argon2 (jamais le mot de passe en clair).
+    ``is_admin`` : en B.1 seul l'admin peut dépenser les clés globales ; en B.2
+    chaque utilisateur aura ses propres clés (chiffrées) et pourra générer.
+    """
+
+    __tablename__ = "user"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True, unique=True)
+    password_hash: str
+    is_admin: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=_utcnow)
+
+
 class AppSetting(SQLModel, table=True):
     """Generic key/value app config — notably the BYOK API keys entered in the UI.
 

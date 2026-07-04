@@ -369,3 +369,11 @@ export interface KeysStatus {
   openai_set: boolean
   replicate_set: boolean
 }
+
+// Auth (Phase B.1) — utilisateur courant. `is_admin` : seul l'admin peut générer
+// en B.1 (clés globales). Le mot de passe / hash n'est jamais renvoyé.
+export interface AuthUser {
+  id: number
+  email: string
+  is_admin: boolean
+}
