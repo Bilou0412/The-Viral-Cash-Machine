@@ -24,7 +24,15 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Optional
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     FileResponse,
@@ -641,6 +649,44 @@ def put_keys(
         engine, _uid(user), openai=body.openai, replicate=body.replicate
     )
     return secrets.keys_status(engine, _uid(user))
+
+
+# ---------------------------------------------------------------------------
+# Uploads (Phase 3) — photos de l'utilisateur pour les inputs image des modèles
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/uploads")
+async def upload_file(
+    file: UploadFile = File(...),
+    user: User = Depends(require_user),
+) -> dict[str, str]:
+    """Stocke une photo uploadée (par-utilisateur) → renvoie sa ``ref`` de stockage.
+
+    La ref sert de valeur d'input image dans une brique ; à la génération elle est
+    poussée vers Replicate (Files API), comme le chaînage d'images généré.
+    """
+    import tempfile
+    from uuid import uuid4
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(422, "fichier vide")
+    if len(data) > 25_000_000:
+        raise HTTPException(413, "fichier trop volumineux (max 25 Mo)")
+    suffix = os.path.splitext(file.filename or "upload")[1][:12] or ".bin"
+    tmp_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(data)
+            tmp_path = tmp.name
+        ref = storage.persist_file(
+            tmp_path, f"uploads/{_uid(user)}", f"{uuid4().hex}{suffix}"
+        )
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+    return {"ref": ref}
 
 
 # ---------------------------------------------------------------------------
