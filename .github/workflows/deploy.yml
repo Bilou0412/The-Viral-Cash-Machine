@@ -32,7 +32,7 @@ jobs:
       - name: Skip si FLY_API_TOKEN absent
         if: env.FLY_API_TOKEN == ''
         run: echo "FLY_API_TOKEN absent → déploiement sauté (pose le secret pour activer la CD, cf. docs/DEPLOY.md)."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: env.FLY_API_TOKEN != ''
       - uses: superfly/flyctl-actions/setup-flyctl@master
         if: env.FLY_API_TOKEN != ''
@@ -51,7 +51,7 @@ jobs:
       - name: Skip si FLY_API_TOKEN absent
         if: env.FLY_API_TOKEN == ''
         run: echo "FLY_API_TOKEN absent → déploiement sauté (pose le secret pour activer la CD, cf. docs/DEPLOY.md)."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: env.FLY_API_TOKEN != ''
       - uses: superfly/flyctl-actions/setup-flyctl@master
         if: env.FLY_API_TOKEN != ''

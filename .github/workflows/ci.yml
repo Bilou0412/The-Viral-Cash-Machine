@@ -17,8 +17,8 @@ jobs:
     name: backend (mypy cliquet + pytest)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -33,8 +33,8 @@ jobs:
     name: frontend (build + lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -43,18 +43,17 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
-      # Lint advisory (cohérent avec le Makefile : `ruff ... || true`, hors `make verify`).
-      # Le gate dur du front = le build (tsc -b + vite). Le lint informe sans bloquer.
+      # Lint = gate dur (politique zéro warning). Le build (tsc -b + vite) reste le
+      # gate de typage ; eslint verrouille en plus les règles React/hooks.
       - run: npm run lint
         working-directory: frontend
-        continue-on-error: true
 
   e2e:
     name: e2e (Playwright, front en mock)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Install frontend deps (served in mock mode)
@@ -71,7 +70,7 @@ jobs:
         working-directory: e2e
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: e2e/playwright-report

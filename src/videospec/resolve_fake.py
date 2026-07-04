@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import wave
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 from moviepy import ColorClip
 from PIL import Image

@@ -56,5 +56,20 @@ ignore_errors = true
 module = ["streamlit.*", "replicate.*", "openai.*", "moviepy.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true
 
+[tool.ruff]
+# Le monolithe Streamlit legacy (src/app.py) est en cours de retrait et exclu du
+# lint, comme il l'est du typage strict mypy. Le lint verrouille le code ACTIF.
+extend-exclude = ["src/app.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Zéro warning toléré : un DeprecationWarning non traité fait échouer la suite
+# (politique clean-code). Les seules exceptions sont des fuites tierces hors de
+# notre contrôle, ignorées de façon CIBLÉE ci-dessous — jamais un `default` global.
+filterwarnings = [
+    "error",
+    # MoviePy laisse ses lecteurs de sous-process ffmpeg se fermer au GC (heavy
+    # render) → ResourceWarning non déterministe, interne à la lib. Hors scope.
+    "ignore::ResourceWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]

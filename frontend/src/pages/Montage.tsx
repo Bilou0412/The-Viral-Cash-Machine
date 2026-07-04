@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Clapperboard, Download, Film, Play, Wand2 } from "lucide-react"
 import { toast } from "sonner"
@@ -18,21 +18,21 @@ export function Montage() {
   const episode = useEpisode(episodeId)
   const cost = useCost(episodeId)
   const montage = useMontage(episodeId)
-  const [producing, setProducing] = useState(false)
+  const [launched, setLaunched] = useState(false)
+
+  // Une production est « en cours » tant qu'on l'a lancée ET que l'épisode n'a
+  // pas encore de vidéo finale. Dérivé au rendu (pas de setState dans un effet) :
+  // à produce_done, l'épisode passe « done » avec un final_path → le spinner
+  // s'arrête et l'abonnement SSE se coupe de lui-même.
+  const isProduced = episode.data?.status === "done" && !!episode.data.final_path
+  const producing = launched && !isProduced
 
   // Subscribe to the job stream while a full production is running so the page
   // auto-refreshes on produce_done (the hook invalidates episode + library).
   useJobEvents(episodeId, producing)
 
-  // produce_done → episode becomes "done" with a final_path → stop the spinner.
-  useEffect(() => {
-    if (producing && episode.data?.status === "done" && episode.data.final_path) {
-      setProducing(false)
-    }
-  }, [producing, episode.data?.status, episode.data?.final_path])
-
   async function produceAll() {
-    setProducing(true)
+    setLaunched(true)
     try {
       await api.produce(episodeId)
       toast.success("Production lancée 🎬", {
@@ -41,10 +41,10 @@ export function Montage() {
       })
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec du lancement")
-      setProducing(false)
+      setLaunched(false)
     }
-    // Keep `producing` true: the SSE subscription stays alive until produce_done,
-    // at which point the episode becomes "done" and the effect below clears it.
+    // On garde `launched` : l'abonnement SSE reste actif jusqu'à produce_done,
+    // moment où l'épisode devient « done » et où `producing` se dérive à false.
   }
 
   if (episode.isLoading) return <LoadingState />

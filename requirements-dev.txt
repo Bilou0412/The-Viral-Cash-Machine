@@ -2,6 +2,7 @@
 # Installées dans l'image de DEV (Dockerfile.dev) — pas dans l'image de prod.
 pytest>=8.0
 pytest-timeout
+httpx2  # client du TestClient Starlette 1.x (httpx est déprécié à cet usage)
 mypy
 ruff
 types-requests  # stubs pour le typage strict de src/infra/download.py

@@ -406,6 +406,5 @@ def compose_round(
         temp_audiofile=os.path.join(workdir, "_temp_audio.m4a"), remove_temp=True,
         logger=None,
     )
-    dur = float(final.duration)
     final.close()
     return output_path

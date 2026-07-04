@@ -27,7 +27,7 @@ class SubtitleOverlay:
         """Create styled subtitle clip."""
         try:
             font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
-        except:
+        except Exception:
             font = ImageFont.load_default()
 
         left, top, right, bottom = font.getbbox(self.text)
@@ -70,7 +70,7 @@ class TimerOverlay:
 
         try:
             font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
-        except:
+        except Exception:
             font = ImageFont.load_default()
 
         left, top, right, bottom = font.getbbox(self.label)
@@ -126,16 +126,16 @@ class NameplateOverlay:
         """Create nameplate clip."""
         try:
             font = ImageFont.truetype(os.path.abspath(self.font_path), int(self.fontsize))
-        except:
+        except Exception:
             font = ImageFont.load_default()
 
-        l, t, r, b = font.getbbox(self.text)
-        tw, th = r - l, b - t
+        left, top, right, bottom = font.getbbox(self.text)
+        tw, th = right - left, bottom - top
         sw = int(self.stroke_width)
         img_w, img_h = tw + 2 * sw + 10, th + 2 * sw + 10
         img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        tx, ty = sw + 5 - l, sw + 5 - t
+        tx, ty = sw + 5 - left, sw + 5 - top
 
         if sw > 0:
             for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:

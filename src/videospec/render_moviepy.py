@@ -38,7 +38,6 @@ from .models import (
     AbsolutePosition,
     CountdownSegment,
     FootageSegment,
-    HeadAnchor,
     IntroSegment,
     NameplateSpec,
     NarrationSegment,
@@ -69,8 +68,8 @@ def _text_dims(text: str, fontsize: int, font_path: str, stroke_width: int) -> T
         )
     except Exception:
         font = ImageFont.load_default()  # type: ignore[assignment]
-    l, t, r, b = font.getbbox(text)
-    tw, th = r - l, b - t
+    left, top, right, bottom = font.getbbox(text)
+    tw, th = right - left, bottom - top
     sw = int(stroke_width)
     return int(tw + 2 * sw + 10), int(th + 2 * sw + 10)
 

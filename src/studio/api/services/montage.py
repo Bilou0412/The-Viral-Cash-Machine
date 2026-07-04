@@ -134,7 +134,6 @@ class MontageService:
         manquent (pas de script, assets/fichiers incomplets) — ça garde la
         compatibilité avec les tests offline.
         """
-        import json
 
         from ...db.repositories import ScriptRepo
         from ....features.scripting.adventure import AdventureScript

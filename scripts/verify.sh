@@ -46,6 +46,10 @@ else
   add "✅ mypy : ${n_err}/${MYPY_BASELINE}"
 fi
 
+# ── 1b. ruff (lint dur du code actif ; src/app.py legacy exclu via pyproject) ──
+echo "── ruff (lint) ────────────────────────────────────────────────"
+if "$PY" -m ruff check src tests; then add "✅ ruff"; else add "❌ ruff"; fail=1; fi
+
 # ── 2. pytest ────────────────────────────────────────────────────────────
 if [ "$HEAVY" -eq 1 ]; then
   echo "── pytest --runheavy ──────────────────────────────────────────"

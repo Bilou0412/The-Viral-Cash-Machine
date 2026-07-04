@@ -23,7 +23,6 @@ from ....infra.download import download_file
 from ....pipeline import Pipeline, VideoInstance
 from ...db.repositories import AssetRepo, EpisodeRepo, ProjectRepo
 from .generation import _narrator_voice
-from .paths import episode_dir
 
 
 def _intro_image_prompt(script: AdventureScript) -> str:

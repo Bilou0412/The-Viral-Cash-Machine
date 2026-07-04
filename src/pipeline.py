@@ -154,7 +154,7 @@ class Pipeline:
             clip = VideoFileClip(output_path)
             duration = clip.duration
             clip.close()
-        except:
+        except Exception:
             duration = 0.0
 
         return CompiledVideo(output_path=output_path, duration=duration)

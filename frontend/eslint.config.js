@@ -18,6 +18,14 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Convention : un argument préfixé `_` est intentionnellement inutilisé
+      // (ex. mocks qui doivent respecter la signature de l'API réelle).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
   },
   {
     // shadcn-style primitives export their cva variant maps alongside the

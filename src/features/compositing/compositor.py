@@ -2,7 +2,6 @@
 
 import os
 import numpy as np
-from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from moviepy import (
     VideoFileClip,
@@ -105,10 +104,10 @@ class RawVideoCompositor:
             """Extract width and height from nameplate overlay rendering."""
             try:
                 font = ImageFont.truetype(os.path.abspath(font_path), int(fsize))
-            except:
+            except Exception:
                 font = ImageFont.load_default()
-            l, t, r, b = font.getbbox(text)
-            tw, th = r - l, b - t
+            left, top, right, bottom = font.getbbox(text)
+            tw, th = right - left, bottom - top
             sw = int(stroke_w)
             return tw + 2 * sw + 10, th + 2 * sw + 10
 
@@ -155,7 +154,7 @@ class RawVideoCompositor:
                 font_pix = ImageFont.truetype(
                     os.path.abspath(font_p), NAME_FSIZE
                 )
-            except:
+            except Exception:
                 font_pix = ImageFont.load_default()
             draw.text(
                 (pos_l_x + tw_l // 2, pos_l_y + th_l // 2),
