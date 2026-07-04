@@ -1,6 +1,6 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useNavigate, Link } from "react-router-dom"
 import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound, LogOut } from "lucide-react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { api, usingMocks } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
@@ -18,6 +18,8 @@ export function Layout() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { data: keys } = useQuery({ queryKey: ["keys"], queryFn: () => api.getKeysStatus() })
+  const keyMissing = keys && (!keys.openai_set || !keys.replicate_set)
 
   async function logout() {
     try {
@@ -95,6 +97,15 @@ export function Layout() {
           <Clapperboard className="h-5 w-5 text-primary" />
           <span className="font-bold">VCM Studio</span>
         </header>
+        {keyMissing && (
+          <Link
+            to="/settings"
+            className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400 md:px-8"
+          >
+            <KeyRound className="h-4 w-4 shrink-0" />
+            Ajoute tes clés OpenAI et Replicate dans Réglages pour pouvoir générer.
+          </Link>
+        )}
         <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </main>

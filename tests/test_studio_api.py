@@ -20,6 +20,7 @@ pytest.importorskip("sqlmodel")
 # Intégration FastAPI/DB lourde → skippée par défaut (cf. conftest, --runheavy).
 pytestmark = pytest.mark.slow
 
+from cryptography.fernet import Fernet  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import create_engine  # noqa: E402
 
@@ -40,6 +41,8 @@ def client(tmp_path, monkeypatch):
     # Offline isolation : pas de vraie clé → décomposeur Fake déterministe.
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("REPLICATE_API_TOKEN", raising=False)
+    # B.2 : clé de chiffrement des clés API par-utilisateur (Fernet).
+    monkeypatch.setenv("VCM_SECRET_KEY", Fernet.generate_key().decode())
 
     db_path = tmp_path / "studio_test.db"
     engine = create_engine(
@@ -324,28 +327,104 @@ def test_errors(client):
     assert client.post(f"/api/episodes/{eid}/montage").status_code == 409
 
 
-def test_settings_keys(client):
-    # set_keys writes into os.environ (intended in prod); clean up afterwards so
-    # the saved key can't leak into other tests (which expect no OpenAI key).
+def test_settings_keys_per_user_encrypted(client):
+    # B.2 : clés par-utilisateur, chiffrées au repos, jamais renvoyées en clair.
+    assert client.get("/api/settings/keys").json() == {
+        "openai_set": False,
+        "replicate_set": False,
+    }
+    r = client.put("/api/settings/keys", json={"openai": "sk-test-123"})
+    assert r.status_code == 200
+    assert r.json() == {"openai_set": True, "replicate_set": False}
+    # Statut persisté + masqué : la valeur n'apparaît jamais dans la réponse.
+    assert client.get("/api/settings/keys").json()["openai_set"] is True
+    assert "sk-test-123" not in client.get("/api/settings/keys").text
+    # Un champ vide ne vide PAS une clé existante.
+    client.put("/api/settings/keys", json={"openai": ""})
+    assert client.get("/api/settings/keys").json()["openai_set"] is True
+    # Chiffrement au repos : le ciphertext en DB ≠ le secret, mais déchiffrable.
+    with Session(client.engine) as s:
+        from src.studio.db.repositories import UserApiKeyRepo, UserRepo
+
+        admin = UserRepo(s).get_by_email("admin@test.local")
+        row = UserApiKeyRepo(s).get(admin.id, "openai")
+    assert row is not None
+    assert row.ciphertext != "sk-test-123"
+    fernet = Fernet(os.environ["VCM_SECRET_KEY"].encode())
+    assert fernet.decrypt(row.ciphertext.encode()).decode() == "sk-test-123"
+
+
+def _register(client, email, password="password123"):
+    """Repart d'une session vierge et ouvre une session pour ``email``."""
+    client.post("/api/auth/logout")
+    r = client.post("/api/auth/register", json={"email": email, "password": password})
+    assert r.status_code == 200, r.text
+    return r.json()["id"]
+
+
+def test_data_isolation_between_users(client):
+    # Alice crée un projet + épisode ; Bob ne doit RIEN en voir (404, pas 403).
+    _register(client, "alice@test.local")
+    pid = client.post("/api/projects", json={"name": "alice-proj"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    client.post(f"/api/episodes/{eid}/script", json={"prompt": "x"})
+
+    _register(client, "bob@test.local")
+    # Bob ne voit pas le projet/épisode d'Alice dans ses listes.
+    assert client.get("/api/projects").json() == []
+    assert client.get("/api/episodes").json() == []
+    assert client.get("/api/library").json() == []
+    # Accès direct par id → 404 (ne pas divulguer l'existence).
+    assert client.get(f"/api/episodes/{eid}").status_code == 404
+    assert client.get(f"/api/episodes/{eid}/script").status_code == 404
+    assert client.get(f"/api/episodes/{eid}/assets").status_code == 404
+    assert client.get(f"/api/episodes/{eid}/video").status_code == 404
+    assert client.post(f"/api/episodes/{eid}/montage").status_code == 404
+    assert client.post(
+        f"/api/episodes/{eid}/assets/generate"
+    ).status_code == 404
+    assert client.post(
+        "/api/episodes", json={"project_id": pid, "title": "x"}
+    ).status_code == 404
+    # Ses propres clés sont indépendantes de celles d'Alice.
+    assert client.get("/api/settings/keys").json() == {
+        "openai_set": False,
+        "replicate_set": False,
+    }
+
+
+def test_admin_sees_all(client):
+    # Le fixture est admin. Alice crée un projet ; l'admin le voit (bypass).
+    _register(client, "alice@test.local")
+    pid = client.post("/api/projects", json={"name": "alice-proj"}).json()["id"]
+    client.post("/api/auth/logout")
+    client.post(
+        "/api/auth/login",
+        json={"email": "admin@test.local", "password": "test-password"},
+    )
+    assert any(p["id"] == pid for p in client.get("/api/projects").json())
+    assert client.get(f"/api/episodes?project_id={pid}").status_code == 200
+
+
+def test_generate_without_key_returns_409(client):
+    # Sans provider injecté ni clé Replicate → 409 « ajoute tes clés ».
+    _register(client, "carol@test.local")
+    pid = client.post("/api/projects", json={"name": "c"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    client.post(f"/api/episodes/{eid}/script", json={"prompt": "x"})
+    # Retire l'override du provider fake → chemin prod (provider None).
+    app_module.app.dependency_overrides.pop(app_module.get_asset_provider, None)
     try:
-        # No keys initially (fixture deletes env keys).
-        assert client.get("/api/settings/keys").json() == {
-            "openai_set": False,
-            "replicate_set": False,
-        }
-        # Save one key — the value is never echoed back.
-        r = client.put("/api/settings/keys", json={"openai": "sk-test-123"})
-        assert r.status_code == 200
-        assert r.json() == {"openai_set": True, "replicate_set": False}
-        # Persisted + masked: status says set, the secret never appears in the body.
-        assert client.get("/api/settings/keys").json()["openai_set"] is True
-        assert "sk-test-123" not in client.get("/api/settings/keys").text
-        # An empty field must NOT wipe an existing key.
-        client.put("/api/settings/keys", json={"openai": ""})
-        assert client.get("/api/settings/keys").json()["openai_set"] is True
+        r = client.post(f"/api/episodes/{eid}/assets/generate")
+        assert r.status_code == 409
     finally:
-        os.environ.pop("OPENAI_API_KEY", None)
-        os.environ.pop("REPLICATE_API_TOKEN", None)
+        app_module.app.dependency_overrides[app_module.get_asset_provider] = (
+            lambda: client.fake_provider
+        )
 
 
 # --- Auth (Phase B.1) -------------------------------------------------------
@@ -405,28 +484,3 @@ def test_register_validation_and_duplicates(client):
         "/api/auth/login",
         json={"email": "admin@test.local", "password": "wrong"},
     ).status_code == 401
-
-
-def test_non_admin_cannot_spend_keys(client):
-    client.post("/api/auth/logout")
-    client.post(
-        "/api/auth/register",
-        json={"email": "bob@test.local", "password": "password123"},
-    )
-    # Lecture autorisée pour tout utilisateur connecté.
-    assert client.get("/api/projects").status_code == 200
-    assert client.get("/api/settings/keys").status_code == 200
-    # Mais dépenser (clés / génération) est réservé à l'admin → 403.
-    assert client.put(
-        "/api/settings/keys", json={"openai": "sk-x"}
-    ).status_code == 403
-    pid = client.post("/api/projects", json={"name": "p"}).json()["id"]
-    eid = client.post(
-        "/api/episodes", json={"project_id": pid, "title": "e"}
-    ).json()["id"]
-    assert client.post(
-        f"/api/episodes/{eid}/script", json={"prompt": "x"}
-    ).status_code == 403
-    assert client.post(
-        f"/api/episodes/{eid}/assets/generate"
-    ).status_code == 403

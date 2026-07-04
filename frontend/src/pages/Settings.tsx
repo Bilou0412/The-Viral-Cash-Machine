@@ -61,8 +61,9 @@ export function Settings() {
           <KeyRound className="h-5 w-5" /> Réglages — clés API
         </h1>
         <p className="text-sm text-muted-foreground">
-          Tes clés sont stockées sur ton instance (côté serveur) et ne sont jamais
-          réaffichées. Tu n'as pas besoin de les mettre via la ligne de commande.
+          Tes clés personnelles sont <strong>chiffrées côté serveur</strong> et ne
+          sont jamais réaffichées. Chaque compte a les siennes ; tu génères à tes
+          propres frais.
         </p>
       </div>
 

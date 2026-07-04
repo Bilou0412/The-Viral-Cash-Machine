@@ -20,6 +20,7 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("sqlmodel")
 
+from cryptography.fernet import Fernet  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import Session, create_engine  # noqa: E402
 
@@ -35,6 +36,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("REPLICATE_API_TOKEN", raising=False)
+    monkeypatch.setenv("VCM_SECRET_KEY", Fernet.generate_key().decode())
 
     db_path = tmp_path / "studio_test.db"
     engine = create_engine(
@@ -222,3 +224,33 @@ def test_editor_404s(client):
         ).status_code
         == 404
     )
+
+
+def test_editor_document_isolation(client):
+    # Alice crée un projet + document éditeur ; Bob ne doit RIEN en voir (404).
+    client.post("/api/auth/logout")
+    client.post(
+        "/api/auth/register",
+        json={"email": "alice@test.local", "password": "password123"},
+    )
+    pid = client.post("/api/projects", json={"name": "a"}).json()["id"]
+    doc_id = client.post(
+        "/api/editor/documents", json={"project_id": pid, "title": "d"}
+    ).json()["id"]
+
+    client.post("/api/auth/logout")
+    client.post(
+        "/api/auth/register",
+        json={"email": "bob@test.local", "password": "password123"},
+    )
+    assert client.get("/api/editor/documents").json() == []
+    assert client.get(f"/api/editor/documents/{doc_id}").status_code == 404
+    assert client.put(
+        f"/api/editor/documents/{doc_id}", json={"doc": {"bricks": []}}
+    ).status_code == 404
+    assert client.post(
+        f"/api/editor/documents/{doc_id}/generate"
+    ).status_code == 404
+    assert client.get(
+        f"/api/editor/documents/{doc_id}/render-model"
+    ).status_code == 404

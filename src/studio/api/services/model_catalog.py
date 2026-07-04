@@ -66,13 +66,20 @@ class ReplicateCatalogClient:
 
     On NE fait PAS d'appel urllib brut : l'API Replicate est derrière Cloudflare qui
     renvoie 403 sur le User-Agent par défaut `Python-urllib`. Le SDK (déjà utilisé par
-    la génération) gère auth, UA, pagination et recherche. Token via REPLICATE_API_TOKEN.
+    la génération) gère auth, UA, pagination et recherche. Token = clé de l'utilisateur
+    courant (B.2), passée au client SDK (plus de lecture d'env partagée).
     """
 
-    def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
-        import replicate
+    def __init__(self, api_token: Optional[str] = None) -> None:
+        self.api_token = api_token
 
-        model = replicate.models.get(model_ref)
+    def _client(self) -> Any:
+        from replicate.client import Client
+
+        return Client(api_token=self.api_token) if self.api_token else Client()
+
+    def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
+        model = self._client().models.get(model_ref)
         version = getattr(model, "latest_version", None)
         if version is None:  # certains modèles : prendre la 1re version listée
             versions = list(model.versions.list())
@@ -87,10 +94,8 @@ class ReplicateCatalogClient:
         return version_id, schema
 
     def search(self, query: str) -> List[Dict[str, Any]]:
-        import replicate
-
         try:
-            page = replicate.models.search(query)
+            page = self._client().models.search(query)
         except Exception:
             return []  # SDK sans search / erreur réseau → pas de résultat
         out: List[Dict[str, Any]] = []

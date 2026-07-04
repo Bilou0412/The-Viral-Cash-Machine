@@ -71,8 +71,9 @@ export const assetFileUrl = (assetId: number) =>
 export const episodeVideoUrl = (episodeId: number) =>
   USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/episodes/${episodeId}/video`
 export const eventsUrl = (episodeId: number) => `${BASE}/events/${episodeId}`
-// SSE for any job id (editor documents use string ids).
-export const eventsUrlFor = (id: string | number) => `${BASE}/events/${id}`
+// SSE for an editor document (B.2 : scope=doc → l'ownership est vérifié côté doc,
+// pas épisode ; le bus mélange les deux espaces d'ids).
+export const eventsUrlFor = (id: string | number) => `${BASE}/events/${id}?scope=doc`
 
 // ── Real API surface ───────────────────────────────────────────────────
 

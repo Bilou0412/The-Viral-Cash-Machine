@@ -101,7 +101,7 @@ def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
 
 
 def _resolve_brick_refs(
-    params: Dict[str, Any], outputs: Dict[str, str]
+    params: Dict[str, Any], outputs: Dict[str, str], token: Optional[str] = None
 ) -> Dict[str, Any]:
     """Replace ``"{brick:X}"`` values by the (Replicate-uploaded) URL of X.
 
@@ -117,7 +117,7 @@ def _resolve_brick_refs(
                 ref = m.group(1)
                 src = outputs.get(ref)
                 if src and os.path.exists(src):
-                    uploaded = _upload_to_replicate(src)
+                    uploaded = _upload_to_replicate(src, token)
                     resolved[key] = uploaded or src
                 elif src:
                     resolved[key] = src
@@ -136,10 +136,12 @@ class EditorGenerationService:
         engine: Engine,
         provider: Optional[AssetProvider] = None,
         downloader: Optional[Downloader] = None,
+        replicate_token: Optional[str] = None,
     ) -> None:
         self.engine = engine
-        self.provider = provider or ReplicateAssetProvider()
+        self.provider = provider or ReplicateAssetProvider(api_token=replicate_token)
         self.downloader = downloader or _default_downloader
+        self.replicate_token = replicate_token
 
     # -- helpers ----------------------------------------------------------
 
@@ -163,7 +165,7 @@ class EditorGenerationService:
         self, doc: EditorDocument, brick: GenerativeBrick, outputs: Dict[str, str]
     ) -> tuple[Dict[str, Any], str]:
         """Compile the prompt + resolve brick refs. Returns (params, prompt)."""
-        params = _resolve_brick_refs(dict(brick.params), outputs)
+        params = _resolve_brick_refs(dict(brick.params), outputs, self.replicate_token)
         key = _PROMPT_KEY[brick.type]
         base_prompt = str(params.get(key, "") or "")
         prompt = compile_prompt(
@@ -265,7 +267,7 @@ class EditorGenerationService:
         index += 1
 
         if clip.kind == "video":
-            image_input = img_url or _url_for_local(done.get(img_beat))
+            image_input = img_url or _url_for_local(done.get(img_beat), self.replicate_token)
             motion = clip.motion or GenNode()
             mot_prompt = str(
                 field_value(motion.params, "video", "prompt") or img_prompt
@@ -482,10 +484,10 @@ def _clip_node_count(clip: ClipBrick) -> int:
     return 1 + (1 if clip.kind == "video" else 0) + len(clip.children)
 
 
-def _url_for_local(path: Optional[str]) -> Optional[str]:
+def _url_for_local(path: Optional[str], token: Optional[str] = None) -> Optional[str]:
     """URL utilisable pour un fichier local (upload Replicate, repli sur le chemin)."""
     if path and os.path.exists(path):
-        return _upload_to_replicate(path) or path
+        return _upload_to_replicate(path, token) or path
     return None
 
 
@@ -521,8 +523,12 @@ def regenerate_brick(
     brick_id: str,
     provider: Optional[AssetProvider] = None,
     downloader: Optional[Downloader] = None,
+    replicate_token: Optional[str] = None,
 ) -> None:
     """Module-level wrapper to schedule a single-brick regeneration."""
     EditorGenerationService(
-        engine, provider=provider, downloader=downloader
+        engine,
+        provider=provider,
+        downloader=downloader,
+        replicate_token=replicate_token,
     ).regenerate_brick(doc_id, brick_id)

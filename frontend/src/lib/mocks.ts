@@ -274,8 +274,9 @@ function deriveRenderModel(doc: EditorDoc): RenderModel {
   return { version: "1.0", canvas: doc.canvas, clips, total_duration: total }
 }
 
-// In-memory BYOK key status for mock/e2e mode (no backend).
-const mockKeys = { openai_set: false, replicate_set: false }
+// In-memory BYOK key status for mock/e2e mode (no backend). Configurées par
+// défaut → la démo/e2e ne montre pas la bannière « ajoute tes clés ».
+const mockKeys = { openai_set: true, replicate_set: true }
 
 // Mode mock/e2e : toujours authentifié en admin (le SPA ne redirige pas vers
 // /login, la génération reste démontrable). Garde les tests Playwright verts.

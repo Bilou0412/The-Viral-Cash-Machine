@@ -102,13 +102,15 @@ def _chain_source(round_index, beat: str, last_frame_by_key: dict):
     return last_frame_by_key.get((round_index, src)) if src else None
 
 
-def _upload_to_replicate(path: str) -> Optional[str]:
-    """Upload un fichier local vers la Files API Replicate → URL (best-effort)."""
+def _upload_to_replicate(path: str, token: Optional[str]) -> Optional[str]:
+    """Upload un fichier local vers la Files API Replicate → URL (best-effort).
+
+    ``token`` = clé Replicate de l'utilisateur courant (B.2). None → pas d'upload.
+    """
     import json as _json
     import urllib.request
     import uuid
 
-    token = os.environ.get("REPLICATE_API_TOKEN")
     if not token:
         return None
     boundary = uuid.uuid4().hex
@@ -129,7 +131,7 @@ def _upload_to_replicate(path: str) -> Optional[str]:
         return _json.load(r)["urls"]["get"]
 
 
-def _last_frame_url(video_path: str) -> Optional[str]:
+def _last_frame_url(video_path: str, token: Optional[str]) -> Optional[str]:
     """Extrait la dernière frame d'une vidéo locale et l'upload (best-effort).
 
     Renvoie None sur toute erreur (ex. fichier factice en test) → pas de
@@ -150,7 +152,7 @@ def _last_frame_url(video_path: str) -> Optional[str]:
             check=True,
             capture_output=True,
         )
-        return _upload_to_replicate(png)
+        return _upload_to_replicate(png, token)
     except Exception:
         return None
 
@@ -163,10 +165,16 @@ class AssetGenerationService:
         engine: Engine,
         provider: Optional[AssetProvider] = None,
         downloader: Optional[Downloader] = None,
+        replicate_token: Optional[str] = None,
+        openai_key: Optional[str] = None,
     ) -> None:
         self.engine = engine
-        self.provider = provider or ReplicateAssetProvider()
+        # B.2 : le provider réel porte le token Replicate de l'utilisateur ;
+        # en test, `provider` (fake) est injecté et le token est ignoré.
+        self.provider = provider or ReplicateAssetProvider(api_token=replicate_token)
         self.downloader = downloader or _default_downloader
+        self.replicate_token = replicate_token
+        self.openai_key = openai_key
 
     def export_dir(self, project_name: str, episode_id: int) -> str:
         return episode_dir(project_name, episode_id)
@@ -231,13 +239,18 @@ class AssetGenerationService:
         # token Replicate) et jamais bloquante (le reste de l'épisode est déjà là).
         if (
             with_intro
-            and os.environ.get("REPLICATE_API_TOKEN")
+            and self.replicate_token
             and not self._has_intro(episode_id)
         ):
             try:
                 from .intro import generate_intro
 
-                generate_intro(self.engine, episode_id)
+                generate_intro(
+                    self.engine,
+                    episode_id,
+                    replicate_token=self.replicate_token,
+                    openai_key=self.openai_key,
+                )
             except Exception:  # l'intro ne doit jamais faire échouer la génération
                 pass
 
@@ -287,7 +300,7 @@ class AssetGenerationService:
         )
         ref_key = (None, "char_reference")
         if need_ref and ref_key in done and "char_reference" not in frame_url_by_beat:
-            url = _upload_to_replicate(done[ref_key])
+            url = _upload_to_replicate(done[ref_key], self.replicate_token)
             if url:
                 frame_url_by_beat["char_reference"] = url
         for p in todo:
@@ -296,7 +309,7 @@ class AssetGenerationService:
             frame_beat = p.beat.replace(".motion", ".frame")
             key = (p.round_index, frame_beat)
             if frame_beat not in frame_url_by_beat and key in done:
-                url = _upload_to_replicate(done[key])
+                url = _upload_to_replicate(done[key], self.replicate_token)
                 if url:
                     frame_url_by_beat[frame_beat] = url
 
@@ -358,7 +371,7 @@ class AssetGenerationService:
             asset_repo.set_local_path(asset_id, local or "")
             # R3 — mémorise la dernière frame d'une vidéo pour chaîner la suivante.
             if planned.kind == "video" and local:
-                lf = _last_frame_url(local)
+                lf = _last_frame_url(local, self.replicate_token)
                 if lf:
                     stub = (
                         planned.beat[: -len(".motion")]
@@ -458,13 +471,21 @@ def regenerate_asset(
     asset_id: int,
     provider: Optional[AssetProvider] = None,
     downloader: Optional[Downloader] = None,
+    replicate_token: Optional[str] = None,
+    openai_key: Optional[str] = None,
 ) -> Optional[int]:
     """Regenerate a single existing asset in place. Returns its episode id.
 
     Reuses the stored prompt. For a video asset it needs a source frame; if none
     is available it regenerates from an empty source (the provider handles it).
     """
-    svc = AssetGenerationService(engine, provider=provider, downloader=downloader)
+    svc = AssetGenerationService(
+        engine,
+        provider=provider,
+        downloader=downloader,
+        replicate_token=replicate_token,
+        openai_key=openai_key,
+    )
     with Session(engine) as session:
         asset = AssetRepo(session).get(asset_id)
         if asset is None:

@@ -15,10 +15,13 @@ from ....features.scripting.ports import AdventureDecomposer
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
 
 
-def get_decomposer() -> AdventureDecomposer:
-    """Return an OpenAI decomposer if a key is present, else the Fake one."""
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
+def get_decomposer(openai_key: Optional[str] = None) -> AdventureDecomposer:
+    """Return an OpenAI decomposer if a key is given, else the Fake one.
+
+    ``openai_key`` = clé de l'utilisateur courant (B.2). Sans clé → décomposeur
+    Fake déterministe (offline/tests).
+    """
+    if not openai_key:
         return FakeAdventureDecomposer()
     # Import lazily: the `openai` SDK is absent in offline/test environments.
     from openai import OpenAI
@@ -28,7 +31,7 @@ def get_decomposer() -> AdventureDecomposer:
     )
 
     model = os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
-    return OpenAIAdventureDecomposer(OpenAI(api_key=api_key), model)
+    return OpenAIAdventureDecomposer(OpenAI(api_key=openai_key), model)
 
 
 def generate_script(
@@ -39,6 +42,7 @@ def generate_script(
     char_right_desc: str = "",
     n_rounds: int = DEFAULT_ROUNDS,
     decomposer: Optional[AdventureDecomposer] = None,
+    openai_key: Optional[str] = None,
 ) -> AdventureScript:
     """Generate a validated AdventureScript from the creator's inputs.
 
@@ -46,7 +50,7 @@ def generate_script(
     optionally, a description) + the number of choice-sequences (`n_rounds`).
     Empty descriptions are invented by the model.
     """
-    dec = decomposer or get_decomposer()
+    dec = decomposer or get_decomposer(openai_key)
     return dec.decompose_adventure(
         prompt,
         char_left_name,
