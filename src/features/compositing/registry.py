@@ -184,6 +184,10 @@ class CapabilityField:
     name: str
     required: bool
     aliases: tuple[str, ...] = ()
+    # Libellé métier FR affiché en revue (le nom brut Replicate n'est pas parlant).
+    # Vaut aussi pour les alias (résolus via `_fields`). Vide → nom brut embelli.
+    label: str = ""
+    help: str = ""
 
 
 @dataclass(frozen=True)
@@ -206,16 +210,18 @@ CONTRACTS: dict[str, CapabilityContract] = {
     "image": CapabilityContract(
         kind="image",
         fields=(
-            CapabilityField("prompt", required=True),
+            CapabilityField("prompt", required=True, label="Description de l'image"),
             CapabilityField(
                 "image_input",
                 required=False,
                 aliases=("image", "reference", "init_image"),
+                label="Référence perso (photo)",
             ),
             CapabilityField(
                 "aspect_ratio",
                 required=False,
                 aliases=("size", "ratio"),
+                label="Format",
             ),
         ),
         # low-cost / quality-price / premium — vérifiés via Replicate MCP
@@ -233,11 +239,12 @@ CONTRACTS: dict[str, CapabilityContract] = {
     "video": CapabilityContract(
         kind="video",
         fields=(
-            CapabilityField("prompt", required=True),
+            CapabilityField("prompt", required=True, label="Mouvement / action"),
             CapabilityField(
                 "duration",
                 required=True,
                 aliases=("length", "num_frames"),
+                label="Durée (s)",
             ),
             CapabilityField(
                 "image",
@@ -248,16 +255,20 @@ CONTRACTS: dict[str, CapabilityContract] = {
                     "start_image",
                     "init_image",
                 ),
+                label="Image de départ",
+                help="Auto-liée à la photo de cette brique ; uploade une photo pour la remplacer.",
             ),
             CapabilityField(
                 "audio",
                 required=False,
                 aliases=("audio_input", "with_audio", "sound"),
+                label="Audio (voix)",
             ),
             CapabilityField(
                 "motion",
                 required=False,
                 aliases=("motion_prompt", "camera_motion"),
+                label="Mouvement de caméra",
             ),
         ),
         # low-cost / quality-price / premium — vérifiés via Replicate MCP
@@ -282,11 +293,13 @@ CONTRACTS: dict[str, CapabilityContract] = {
                 "text",
                 required=True,
                 aliases=("prompt", "input_text"),
+                label="Texte à dire",
             ),
             CapabilityField(
                 "voice_id",
                 required=True,
                 aliases=("voice", "speaker", "voice_name"),
+                label="Voix",
             ),
         ),
         # low-cost / quality-price / premium — vérifiés via Replicate MCP
@@ -306,6 +319,22 @@ CONTRACTS: dict[str, CapabilityContract] = {
 def _field_keys(f: CapabilityField) -> tuple[str, ...]:
     """Noms qui satisfont un champ : son nom canonique + ses alias."""
     return (f.name, *f.aliases)
+
+
+def label_for(kind: str, raw_name: str) -> tuple[str, str]:
+    """Libellé métier + aide FR pour un input brut d'un modèle, selon le contrat.
+
+    Matche le nom brut Replicate contre le champ canonique OU ses alias. Renvoie
+    ``("", "")`` si le champ n'est pas couvert par le contrat (→ le catalogue met
+    un nom brut embelli en repli).
+    """
+    contract = CONTRACTS.get(kind)
+    if contract is None:
+        return "", ""
+    for field in contract.fields:
+        if raw_name == field.name or raw_name in field.aliases:
+            return field.label, field.help
+    return "", ""
 
 
 def validate_params(kind: str, params: dict[str, object]) -> list[str]:

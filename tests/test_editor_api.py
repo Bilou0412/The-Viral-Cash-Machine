@@ -254,3 +254,57 @@ def test_editor_document_isolation(client):
     assert client.get(
         f"/api/editor/documents/{doc_id}/render-model"
     ).status_code == 404
+
+
+def _clip_doc():
+    """Document composite (ClipBrick vidéo) avec des inputs de modèle SUPPLÉMENTAIRES
+    sur l'image et le motion — pour vérifier qu'ils sont bien transmis (no-drop)."""
+    return {
+        "schema_version": 2,
+        "title": "clip",
+        "canvas": {"width": 1080, "height": 1920, "fps": 30},
+        "global_context": {"text": "", "characters": {}, "art_direction": "", "extra": {}},
+        "tracks": [],
+        "bricks": [
+            {
+                "id": "c1",
+                "type": "clip",
+                "kind": "video",
+                "image": {
+                    "model_ref": "bytedance/seedream-4.5",
+                    "params": {"prompt": "a castle", "guidance": 7},
+                },
+                "motion": {
+                    "model_ref": "prunaai/p-video",
+                    "params": {
+                        "prompt": "slow push in",
+                        "camera_motion": "static",
+                        "num_inference_steps": 30,
+                    },
+                },
+                "children": [],
+                "placement": {"track": 0, "start": 0.0, "duration": 4.0},
+            }
+        ],
+    }
+
+
+def test_clip_forwards_all_model_params(client):
+    """Le nouveau template : chaque nœud transmet TOUS ses inputs de modèle, et
+    l'image de départ de la vidéo est auto-liée à la photo générée de la brique."""
+    project_id = client.post("/api/projects", json={"name": "demo"}).json()["id"]
+    doc_id = client.post(
+        "/api/editor/documents", json={"project_id": project_id, "title": "c"}
+    ).json()["id"]
+    client.put(f"/api/editor/documents/{doc_id}", json={"doc": _clip_doc()})
+    client.post(f"/api/editor/documents/{doc_id}/generate")
+
+    calls = {ref: params for ref, params in client.fake_provider.run_calls}
+    # Image : l'input supplémentaire (guidance) est transmis, plus jeté.
+    assert calls["bytedance/seedream-4.5"].get("guidance") == 7
+    # Motion : TOUS les inputs transmis (avant, seuls prompt/image/duration l'étaient).
+    vid = calls["prunaai/p-video"]
+    assert vid.get("camera_motion") == "static"
+    assert vid.get("num_inference_steps") == 30
+    # Auto-lien : l'image de départ pointe vers la sortie de la brique image.
+    assert vid.get("image")

@@ -241,6 +241,36 @@ class EditorGenerationService:
                     out[a.beat] = p
         return out
 
+    def _node_params(
+        self,
+        doc: EditorDocument,
+        clip: ClipBrick,
+        node: Any,  # GenNode | AudioChild
+        contract_kind: str,
+        outputs: Dict[str, str],
+        overrides: Dict[str, Any],
+        prompt_fallback: str = "",
+    ) -> "tuple[Dict[str, Any], str]":
+        """Params COMPLETS d'un nœud composite : ses ``params`` bruts (tous les inputs
+        du modèle saisis en revue) + refs résolues + prompt compilé + clés dérivées
+        (``overrides`` : image auto-liée, durée…) qui l'emportent. Miroir du chemin
+        legacy `_final_params`, pour ne plus jeter aucun input.
+        """
+        params = _resolve_brick_refs(dict(node.params), outputs, self.replicate_token)
+        for key, value in overrides.items():
+            if value not in (None, ""):
+                params[key] = value
+        prompt_key = _PROMPT_KEY[contract_kind]
+        base = str(field_value(params, contract_kind, prompt_key) or "") or prompt_fallback
+        prompt = compile_prompt(
+            base,
+            doc.global_context,
+            clip.context_overrides,
+            include_story=(contract_kind != "voice"),
+        )
+        params[prompt_key] = prompt
+        return params, prompt
+
     def _generate_clip(
         self,
         doc: EditorDocument,
@@ -253,24 +283,30 @@ class EditorGenerationService:
         """Exécute un `ClipBrick` : image (first-frame) → motion → enfants narration.
 
         Idempotent via `done` (beat déjà prêt = sauté). Renvoie l'index après les
-        nœuds exécutés. L'URL de l'image alimente l'entrée i2v du motion.
+        nœuds exécutés. L'URL de l'image alimente l'entrée i2v du motion (auto-lien),
+        sauf si un input image explicite (upload) est fourni.
         """
         cid = clip.id
         img_beat = f"{cid}.image"
-        img_prompt = str(field_value(clip.image.params, "image", "prompt") or "")
+        img_params, img_prompt = self._node_params(
+            doc, clip, clip.image, "image", done, {}
+        )
         img_url = self._run_or_skip(
             doc_id, out_dir, done, index, beat=img_beat,
             contract_kind="image", asset_kind="image",
-            model_ref=clip.image.model_ref, params={"prompt": img_prompt},
-            prompt=img_prompt,
+            model_ref=clip.image.model_ref, params=img_params, prompt=img_prompt,
         )
         index += 1
 
         if clip.kind == "video":
-            image_input = img_url or _url_for_local(done.get(img_beat), self.replicate_token)
             motion = clip.motion or GenNode()
-            mot_prompt = str(
-                field_value(motion.params, "video", "prompt") or img_prompt
+            # Auto-lien : image de départ = photo de cette brique, SAUF si un input
+            # image explicite (upload/override) est saisi dans les params du motion.
+            explicit_image = field_value(motion.params, "video", "image")
+            image_input = (
+                explicit_image
+                or img_url
+                or _url_for_local(done.get(img_beat), self.replicate_token)
             )
             duration = _as_float(
                 field_value(motion.params, "video", "duration"),
@@ -283,29 +319,27 @@ class EditorGenerationService:
                     "image source manquante (la first-frame a échoué)", index,
                 )
             else:
+                mot_params, mot_prompt = self._node_params(
+                    doc, clip, motion, "video", done,
+                    {"image": image_input, "duration": duration},
+                    prompt_fallback=img_prompt,
+                )
                 self._run_or_skip(
                     doc_id, out_dir, done, index, beat=mot_beat,
                     contract_kind="video", asset_kind="video",
-                    model_ref=motion.model_ref,
-                    params={
-                        "prompt": mot_prompt,
-                        "image": image_input,
-                        "duration": duration,
-                    },
-                    prompt=mot_prompt,
+                    model_ref=motion.model_ref, params=mot_params, prompt=mot_prompt,
                 )
             index += 1
 
         for child in clip.children:
-            text = str(field_value(child.params, "voice", "text") or "")
-            voice_id = str(
-                field_value(child.params, "voice", "voice_id") or "Deep_Voice_Man"
+            voice_id = field_value(child.params, "voice", "voice_id") or "Deep_Voice_Man"
+            ch_params, ch_prompt = self._node_params(
+                doc, clip, child, "voice", done, {"voice_id": voice_id}
             )
             self._run_or_skip(
                 doc_id, out_dir, done, index, beat=child.id,
                 contract_kind="voice", asset_kind="audio",
-                model_ref=child.model_ref,
-                params={"text": text, "voice_id": voice_id}, prompt=text,
+                model_ref=child.model_ref, params=ch_params, prompt=ch_prompt,
             )
             index += 1
         return index

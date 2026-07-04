@@ -63,6 +63,22 @@ def test_form_descriptor_maps_schema():
     assert by["mood"].required is False
 
 
+def test_form_descriptor_business_labels():
+    # Avec `kind`, chaque input reçoit un libellé métier FR (via le contrat) ;
+    # les champs hors contrat reçoivent le nom brut embelli.
+    clear_cache()
+    client = FakeClient({"o/m": ("ver1", _VIDEO_SCHEMA)}, [])
+    by = {f.name: f for f in form_descriptor("o/m", client, kind="video").fields}
+    assert by["prompt"].label == "Mouvement / action"
+    assert by["image"].label == "Image de départ"
+    assert by["duration"].label == "Durée (s)"
+    assert by["mood"].label == "Mood"  # hors contrat → nom brut embelli
+    # Sans `kind`, repli embelli pour tous.
+    clear_cache()
+    no_kind = {f.name: f for f in form_descriptor("o/m", client).fields}
+    assert no_kind["prompt"].label == "Prompt"
+
+
 def test_search_filters_by_contract():
     clear_cache()
     bad_schema = {  # pas d'`image` → ne satisfait pas le contrat vidéo

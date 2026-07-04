@@ -120,7 +120,7 @@ function GenerativeInspector({
   regenerating: boolean
 }) {
   const spec = specs?.find((s) => s.kind === brick.type)
-  const { data: form, isLoading } = useModelForm(brick.model_ref || null)
+  const { data: form, isLoading } = useModelForm(brick.model_ref || null, brick.type)
 
   // Valid connection sources = other bricks that produce an output.
   const connectableBricks = allBricks.filter(

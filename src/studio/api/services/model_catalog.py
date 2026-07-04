@@ -16,7 +16,11 @@ from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 from pydantic import BaseModel
 
-from ....features.compositing.registry import get_contract, model_satisfies
+from ....features.compositing.registry import (
+    get_contract,
+    label_for,
+    model_satisfies,
+)
 
 # ---------------------------------------------------------------------------
 # Descripteurs (réponse API)
@@ -31,6 +35,9 @@ class FormField(BaseModel):
     enum: Optional[List[str]] = None
     description: str = ""
     order: int = 999
+    # Libellé métier FR (depuis le contrat du kind) ; repli = nom brut embelli.
+    label: str = ""
+    help: str = ""
 
 
 class FormDescriptor(BaseModel):
@@ -157,23 +164,38 @@ def _input_properties(schema: Dict[str, Any]) -> List[str]:
     return list(schema.get("properties", {}).keys())
 
 
-def form_descriptor(model_ref: str, client: CatalogClient) -> FormDescriptor:
-    """Descripteur de formulaire pour l'inspecteur (champs triés par x-order)."""
+def _prettify(raw_name: str) -> str:
+    """Repli quand le champ n'est pas dans le contrat : snake_case → « Titre »."""
+    return raw_name.replace("_", " ").strip().capitalize()
+
+
+def form_descriptor(
+    model_ref: str, client: CatalogClient, kind: Optional[str] = None
+) -> FormDescriptor:
+    """Descripteur de formulaire pour l'inspecteur (champs triés par x-order).
+
+    ``kind`` (image/video/voice) permet d'attacher un **libellé métier FR** à
+    chaque input via le contrat du kind ; repli = nom brut embelli.
+    """
     version_id, schema = _cached_schema(client, model_ref)
     props: Dict[str, Any] = schema.get("properties", {})
     required = set(schema.get("required", []))
-    fields = [
-        FormField(
-            name=name,
-            type=_field_type(prop),
-            required=name in required,
-            default=prop.get("default"),
-            enum=prop.get("enum"),
-            description=str(prop.get("description", "")),
-            order=int(prop.get("x-order", 999)),
+    fields = []
+    for name, prop in props.items():
+        label, help_txt = (label_for(kind, name) if kind else ("", ""))
+        fields.append(
+            FormField(
+                name=name,
+                type=_field_type(prop),
+                required=name in required,
+                default=prop.get("default"),
+                enum=prop.get("enum"),
+                description=str(prop.get("description", "")),
+                order=int(prop.get("x-order", 999)),
+                label=label or _prettify(name),
+                help=help_txt,
+            )
         )
-        for name, prop in props.items()
-    ]
     fields.sort(key=lambda f: (f.order, f.name))
     return FormDescriptor(model_ref=model_ref, version_id=version_id, fields=fields)
 

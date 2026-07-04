@@ -162,35 +162,29 @@ const BRICK_SPECS: BrickSpec[] = [
 
 // Per-model dynamic form. Keyed by model_ref; falls back to a generic schema.
 function mockFormFields(modelRef: string): FormField[] {
-  const common: FormField[] = [
-    {
-      name: "prompt", type: "string", required: true, default: "",
-      enum: null, description: "Text prompt (EN).", order: 0,
-    },
-  ]
   if (modelRef.includes("video") || modelRef.includes("kling") || modelRef.includes("hailuo")) {
     return [
-      ...common,
-      { name: "image", type: "file", required: true, default: null, enum: null, description: "First-frame image.", order: 1 },
-      { name: "duration", type: "integer", required: false, default: 5, enum: null, description: "Clip length (s).", order: 2 },
-      { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1"], description: "Aspect ratio.", order: 3 },
-      { name: "loop", type: "boolean", required: false, default: false, enum: null, description: "Loop the motion.", order: 4 },
+      { name: "prompt", type: "string", required: true, default: "", enum: null, description: "Text prompt (EN).", order: 0, label: "Mouvement / action" },
+      { name: "image", type: "file", required: true, default: null, enum: null, description: "First-frame image.", order: 1, label: "Image de départ", help: "Auto-liée à la photo de cette brique ; uploade une photo pour la remplacer." },
+      { name: "duration", type: "integer", required: false, default: 5, enum: null, description: "Clip length (s).", order: 2, label: "Durée (s)" },
+      { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1"], description: "Aspect ratio.", order: 3, label: "Format" },
+      { name: "loop", type: "boolean", required: false, default: false, enum: null, description: "Loop the motion.", order: 4, label: "Boucle" },
     ]
   }
   if (modelRef.includes("speech") || modelRef.includes("chatterbox") || modelRef.includes("kokoro")) {
     return [
-      { name: "text", type: "string", required: true, default: "", enum: null, description: "Text to speak (FR).", order: 0 },
-      { name: "voice_id", type: "string", required: false, default: "male-conteur", enum: null, description: "Voice reference id.", order: 1 },
-      { name: "speed", type: "number", required: false, default: 1.0, enum: null, description: "Speech rate.", order: 2 },
-      { name: "emotion", type: "enum", required: false, default: "neutral", enum: ["neutral", "fearful", "tense", "calm"], description: "Delivery.", order: 3 },
+      { name: "text", type: "string", required: true, default: "", enum: null, description: "Text to speak (FR).", order: 0, label: "Texte à dire" },
+      { name: "voice_id", type: "string", required: false, default: "male-conteur", enum: null, description: "Voice reference id.", order: 1, label: "Voix" },
+      { name: "speed", type: "number", required: false, default: 1.0, enum: null, description: "Speech rate.", order: 2, label: "Vitesse" },
+      { name: "emotion", type: "enum", required: false, default: "neutral", enum: ["neutral", "fearful", "tense", "calm"], description: "Delivery.", order: 3, label: "Émotion" },
     ]
   }
   // image
   return [
-    ...common,
-    { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1", "4:3"], description: "Aspect ratio.", order: 1 },
-    { name: "guidance", type: "number", required: false, default: 3.5, enum: null, description: "Prompt adherence.", order: 2 },
-    { name: "seed", type: "integer", required: false, default: 0, enum: null, description: "Random seed (0 = random).", order: 3 },
+    { name: "prompt", type: "string", required: true, default: "", enum: null, description: "Text prompt (EN).", order: 0, label: "Description de l'image" },
+    { name: "aspect_ratio", type: "enum", required: false, default: "9:16", enum: ["9:16", "16:9", "1:1", "4:3"], description: "Aspect ratio.", order: 1, label: "Format" },
+    { name: "guidance", type: "number", required: false, default: 3.5, enum: null, description: "Prompt adherence.", order: 2, label: "Guidance" },
+    { name: "seed", type: "integer", required: false, default: 0, enum: null, description: "Random seed (0 = random).", order: 3, label: "Seed" },
   ]
 }
 
