@@ -122,6 +122,13 @@ const realApi = {
       body: JSON.stringify({ script_json: JSON.stringify(script) }),
     }),
 
+  // Matérialise le script de l'épisode en document de briques ÉDITABLE (R1→R2)
+  // et renvoie le document → on ouvre la page Réviser dessus.
+  reviewFromScript: (episodeId: number) =>
+    request<EditorDocument>(`/episodes/${episodeId}/editor-document`, {
+      method: "POST",
+    }),
+
   getBeats: (episodeId: number) => request<BeatsResponse>(`/episodes/${episodeId}/beats`),
   getAssets: (episodeId: number) => request<Asset[]>(`/episodes/${episodeId}/assets`),
   generateAssets: (episodeId: number) =>
