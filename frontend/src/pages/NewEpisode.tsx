@@ -41,8 +41,8 @@ export function NewEpisode() {
   // (e.g. from a project detail page) if it matches a real project.
   if (projectId == null && projects.data && projects.data.length > 0) {
     const requested = Number(searchParams.get("project"))
-    const preselect = projects.data.find((p) => p.id === requested)
-    setProjectId(preselect ? preselect.id : projects.data[0].id)
+    const preselect = projects.data.find((p) => p.id === requested) ?? projects.data[0]
+    if (preselect) setProjectId(preselect.id)
   }
 
   async function submit() {
@@ -72,7 +72,7 @@ export function NewEpisode() {
         n_rounds: clampRounds(nRounds),
       })
       toast.success("Script généré")
-      navigate(`/episodes/${ep.id}/script`)
+      void navigate(`/episodes/${ep.id}/script`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec de la génération")
     } finally {

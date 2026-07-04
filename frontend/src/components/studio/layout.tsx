@@ -26,7 +26,7 @@ export function Layout() {
       await api.logout()
     } finally {
       await qc.invalidateQueries({ queryKey: ["me"] })
-      navigate("/login", { replace: true })
+      void navigate("/login", { replace: true })
     }
   }
 

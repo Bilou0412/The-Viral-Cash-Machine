@@ -32,7 +32,7 @@ export function EditorIndex() {
     }
     try {
       const doc = await create.mutateAsync({ project_id: projectId, title })
-      navigate(`/editor/${doc.id}`)
+      void navigate(`/editor/${doc.id}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Création impossible")
     }

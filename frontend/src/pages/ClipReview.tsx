@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { AudioChild, Brick, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
+import type { AudioChild, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
 import { isClipBrick } from "@/lib/types"
 
 const SAVE_DEBOUNCE_MS = 600
@@ -119,7 +119,7 @@ export function ClipReview() {
         ...draft,
         bricks: draft.bricks.map((b) =>
           b.id === clipId && isClipBrick(b) ? updater(b) : b
-        ) as Brick[],
+        ),
       })
     },
     [draft, update]

@@ -80,7 +80,7 @@ function PlacementEditor({
 }) {
   const p = brick.placement
   const set = (patch: Partial<typeof p>) =>
-    onChange({ ...brick, placement: { ...p, ...patch } } as Brick)
+    onChange({ ...brick, placement: { ...p, ...patch } })
   return (
     <div className="grid grid-cols-3 gap-2">
       <div className="flex flex-col gap-1">

@@ -42,7 +42,7 @@ export function useEditorEvents(
     es.onmessage = (e) => {
       let data: JobEvent
       try {
-        data = JSON.parse(e.data) as JobEvent
+        data = JSON.parse(e.data as string) as JobEvent
       } catch {
         return // heartbeat
       }
@@ -61,14 +61,14 @@ export function useEditorEvents(
           case "asset_failed":
             done += 1
             lastBeat = data.beat ?? prev.lastBeat
-            qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
+            void qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
             break
           case "generation_done":
           case "produce_done":
             isActive = false
             if (data.local_path) finalPath = data.local_path
-            qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
-            qc.invalidateQueries({ queryKey: qkEditor.renderModel(docId) })
+            void qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
+            void qc.invalidateQueries({ queryKey: qkEditor.renderModel(docId) })
             onDoneRef.current?.()
             break
         }

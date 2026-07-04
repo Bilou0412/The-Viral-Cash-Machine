@@ -28,7 +28,7 @@ export const useModelForm = (modelRef: string | null, kind?: string) =>
   useQuery({
     queryKey: [...qkEditor.modelForm(modelRef ?? ""), kind ?? ""],
     queryFn: () => {
-      const [owner, name] = (modelRef ?? "").split("/")
+      const [owner = "", name = ""] = (modelRef ?? "").split("/")
       return api.getModelForm(owner, name, kind)
     },
     enabled: !!modelRef && modelRef.includes("/"),
@@ -69,7 +69,7 @@ export function useCreateEditorDocument() {
   return useMutation({
     mutationFn: (body: CreateEditorDocumentBody) => api.createEditorDocument(body),
     onSuccess: (doc) => {
-      qc.invalidateQueries({ queryKey: ["editor", "documents"] })
+      void qc.invalidateQueries({ queryKey: ["editor", "documents"] })
       qc.setQueryData(qkEditor.document(doc.id), doc)
     },
   })
@@ -82,7 +82,7 @@ export function useSaveEditorDocument(id: string) {
     onSuccess: (saved) => {
       qc.setQueryData(qkEditor.document(id), saved)
       // The render model is derived from the doc — refresh the preview.
-      qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
+      void qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
     },
   })
 }

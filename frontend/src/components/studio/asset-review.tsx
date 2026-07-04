@@ -96,6 +96,7 @@ export function AssetReview({
 
   const safeIndex = Math.min(index, total - 1)
   const beat = beats[safeIndex]
+  if (!beat) return null // total > 0 garantit l'index, mais on le prouve au compilateur
   const asset = primaryAsset(beat)
   const { src, kind } = previewSrcFor(beat)
   const excluded = !!asset?.excluded
@@ -104,10 +105,11 @@ export function AssetReview({
 
   const promptText = beat.framePrompt ?? beat.motionPrompt ?? beat.text ?? asset?.prompt ?? ""
 
+  const beatKey = beat.key
   function markReviewed() {
     setReviewed((prev) => {
       const next = new Set(prev)
-      next.add(beat.key)
+      next.add(beatKey)
       return next
     })
   }

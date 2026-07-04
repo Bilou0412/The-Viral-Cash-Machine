@@ -67,7 +67,7 @@ export function useCreateEpisode() {
   return useMutation({
     mutationFn: (body: CreateEpisodeBody) => api.createEpisode(body),
     onSuccess: (ep) => {
-      qc.invalidateQueries({ queryKey: ["episodes"] })
+      void qc.invalidateQueries({ queryKey: ["episodes"] })
       qc.setQueryData(qk.episode(ep.id), ep)
     },
   })
@@ -79,7 +79,7 @@ export function useGenerateScript(episodeId: number) {
     mutationFn: (body: GenerateScriptBody) => api.generateScript(episodeId, body),
     onSuccess: (script) => {
       qc.setQueryData(qk.script(episodeId), script)
-      qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
+      void qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
     },
   })
 }
@@ -97,8 +97,8 @@ export function useGenerateAssets(episodeId: number) {
   return useMutation({
     mutationFn: () => api.generateAssets(episodeId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
-      qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
+      void qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
+      void qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
     },
   })
 }
@@ -125,8 +125,8 @@ export function useMontage(episodeId: number) {
   return useMutation({
     mutationFn: () => api.montage(episodeId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
-      qc.invalidateQueries({ queryKey: qk.library })
+      void qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
+      void qc.invalidateQueries({ queryKey: qk.library })
     },
   })
 }

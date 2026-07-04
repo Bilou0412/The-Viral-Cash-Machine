@@ -27,7 +27,12 @@ interface FormFieldInputProps {
   connectableBricks?: Brick[]
 }
 
-const asString = (v: unknown) => (v == null ? "" : String(v))
+function asString(v: unknown): string {
+  if (v == null) return ""
+  if (typeof v === "string") return v
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v)
+  return JSON.stringify(v) ?? "" // objets/refs de brique : rendu lisible, jamais "[object Object]"
+}
 
 export function FormFieldInput({
   field,
@@ -94,7 +99,7 @@ export function FormFieldInput({
           id={id}
           type="number"
           step={field.type === "integer" ? 1 : "any"}
-          value={value === null || value === undefined ? "" : String(value)}
+          value={asString(value)}
           onChange={(e) => {
             const raw = e.target.value
             if (raw === "") return onChange(null)

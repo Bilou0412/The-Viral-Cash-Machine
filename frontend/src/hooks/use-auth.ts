@@ -4,7 +4,6 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import type { AuthUser } from "@/lib/types"
 
 export function useAuth() {
   const q = useQuery({
@@ -14,7 +13,7 @@ export function useAuth() {
     staleTime: Infinity,
   })
   return {
-    user: (q.data ?? null) as AuthUser | null,
+    user: (q.data ?? null),
     isLoading: q.isLoading,
   }
 }

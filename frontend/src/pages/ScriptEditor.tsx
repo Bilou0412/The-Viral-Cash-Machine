@@ -58,7 +58,9 @@ export function ScriptEditor() {
     setDraft((d) => {
       if (!d) return d
       const rounds = [...d.rounds] as [Round, Round, Round]
-      rounds[idx] = { ...rounds[idx], ...patch }
+      const current = rounds[idx]
+      if (!current) return d
+      rounds[idx] = { ...current, ...patch }
       return { ...d, rounds }
     })
     setDirty(true)
@@ -67,9 +69,13 @@ export function ScriptEditor() {
     setDraft((d) => {
       if (!d) return d
       const rounds = [...d.rounds] as [Round, Round, Round]
-      const choices = [...rounds[rIdx].choices] as [Choice, Choice]
-      choices[cIdx] = { ...choices[cIdx], ...patch }
-      rounds[rIdx] = { ...rounds[rIdx], choices }
+      const round = rounds[rIdx]
+      if (!round) return d
+      const choices = [...round.choices] as [Choice, Choice]
+      const current = choices[cIdx]
+      if (!current) return d
+      choices[cIdx] = { ...current, ...patch }
+      rounds[rIdx] = { ...round, choices }
       return { ...d, rounds }
     })
     setDirty(true)
@@ -106,7 +112,7 @@ export function ScriptEditor() {
 
   async function goToAssets() {
     if (dirty) await save()
-    navigate(`/episodes/${episodeId}/assets`)
+    void navigate(`/episodes/${episodeId}/assets`)
   }
 
   async function goToReview() {
@@ -115,7 +121,7 @@ export function ScriptEditor() {
     try {
       // Matérialise le script en document de briques puis ouvre la revue.
       const doc = await api.reviewFromScript(episodeId)
-      navigate(`/editor/${doc.id}/review`)
+      void navigate(`/editor/${doc.id}/review`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Impossible d'ouvrir la revue")
     } finally {

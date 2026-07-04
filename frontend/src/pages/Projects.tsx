@@ -32,7 +32,7 @@ export function Projects() {
       toast.success("Projet créé")
       setName("")
       setOpen(false)
-      navigate(`/projects/${p.id}`)
+      void navigate(`/projects/${p.id}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec de la création")
     }

@@ -28,7 +28,7 @@ export function Login() {
     try {
       await api.login(email, password)
       await qc.invalidateQueries({ queryKey: ["me"] })
-      navigate("/", { replace: true })
+      void navigate("/", { replace: true })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Échec de la connexion")
     } finally {
