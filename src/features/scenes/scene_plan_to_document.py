@@ -78,6 +78,10 @@ def scene_plan_to_document(
             )
         )
         shot_ids = [env_id]
+        # Chaque plan vidéo anime la photo d'ENVIRONNEMENT de la scène (contexte
+        # figé) : sa 1re frame i2v est cette photo (ref inter-brique, résolue à la
+        # génération). C'est ce qui garde le contexte concentré, non dilué.
+        env_ref = f"{{brick:{env_id}.image}}"
 
         # 2) Plans courts qui animent la photo (contexte en mouvement).
         for shot in sp.shots:
@@ -89,7 +93,11 @@ def scene_plan_to_document(
                     image=GenNode(model_ref=image_model, params={"prompt": shot.visual_desc}),
                     motion=GenNode(
                         model_ref=video_model,
-                        params={"prompt": shot.motion_desc, "duration": shot.duration_s},
+                        params={
+                            "prompt": shot.motion_desc,
+                            "duration": shot.duration_s,
+                            "image": env_ref,
+                        },
                     ),
                     children=children,
                     placement=place(shot.duration_s),

@@ -1,21 +1,32 @@
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom"
-import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound, LogOut, LayoutTemplate } from "lucide-react"
+import { Library, Clapperboard, Sparkles, Wand2, FolderKanban, Film, KeyRound, LogOut, LayoutTemplate } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { api, usingMocks } from "@/lib/api"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 
-const nav = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/creer", label: "Créer", icon: Sparkles, end: false },
-  { to: "/projects", label: "Projets", icon: FolderKanban, end: false },
-  { to: "/templates", label: "Templates", icon: LayoutTemplate, end: false },
-  { to: "/prompt-templates", label: "Styles", icon: Sparkles, end: false },
-  { to: "/editor", label: "Éditeur", icon: Film, end: true },
+// Nav resserrée : l'essentiel du parcours créateur en haut, l'outillage avancé
+// (templates/styles/NLE) replié dessous. Le logo ramène au Dashboard.
+const primaryNav = [
+  { to: "/creer", label: "Créer", icon: Wand2, end: false },
+  { to: "/projects", label: "Mes vidéos", icon: FolderKanban, end: false },
   { to: "/library", label: "Bibliothèque", icon: Library, end: false },
   { to: "/settings", label: "Réglages", icon: KeyRound, end: false },
 ]
+const advancedNav = [
+  { to: "/templates", label: "Templates", icon: LayoutTemplate, end: false },
+  { to: "/prompt-templates", label: "Styles", icon: Sparkles, end: false },
+  { to: "/editor", label: "Éditeur", icon: Film, end: true },
+]
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+    isActive
+      ? "bg-secondary text-foreground"
+      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+  )
 
 export function Layout() {
   const { user } = useAuth()
@@ -36,7 +47,7 @@ export function Layout() {
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card/40 px-4 py-6 md:flex">
-        <div className="mb-8 flex items-center gap-2 px-2">
+        <Link to="/" className="mb-8 flex items-center gap-2 px-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <Clapperboard className="h-5 w-5" />
           </div>
@@ -46,23 +57,21 @@ export function Layout() {
               Aventure · 9:16
             </p>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex flex-col gap-1">
-          {nav.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                )
-              }
-            >
+          {primaryNav.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClass}>
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </NavLink>
+          ))}
+
+          <p className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+            Avancé
+          </p>
+          {advancedNav.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClass}>
               <item.icon className="h-4 w-4" />
               {item.label}
             </NavLink>

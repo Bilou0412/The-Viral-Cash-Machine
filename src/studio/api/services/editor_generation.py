@@ -224,7 +224,7 @@ class EditorGenerationService:
         outputs: dict[str, str] = {}
         index = 0
         for clip in clips:
-            index = self._generate_clip(doc, doc_id, clip, out_dir, done, index)
+            index = self._generate_clip(doc, doc_id, clip, out_dir, done, outputs, index)
         for brick in flats:
             self._generate_one(doc, doc_id, brick, out_dir, outputs, index)
             index += 1
@@ -238,8 +238,15 @@ class EditorGenerationService:
         if brick is None:
             raise ValueError(f"brick {brick_id!r} not found in document {doc_id}")
         if isinstance(brick, ClipBrick):
-            # force : aucune table `done` → tous les nœuds du clip régénérés.
-            self._generate_clip(doc, doc_id, brick, out_dir, {}, 0)
+            # force : aucune table `done` → tous les nœuds du clip régénérés. On
+            # fournit les sorties des AUTRES briques (photo d'env de la scène) pour
+            # que la ref `{brick:<env>.image}` du plan se résolve.
+            clip_outputs: dict[str, str] = {}
+            with Session(self.engine) as session:
+                for asset in AssetRepo(session).assets_by_document(doc_id):
+                    if asset.local_path:
+                        clip_outputs[asset.beat] = asset.local_path
+            self._generate_clip(doc, doc_id, brick, out_dir, {}, clip_outputs, 0)
             return
         if not isinstance(brick, GenerativeBrick):
             raise ValueError(f"brick {brick_id!r} is not generative")
@@ -298,6 +305,19 @@ class EditorGenerationService:
         params[prompt_key] = prompt
         return params, prompt
 
+    def _resolve_image_input(self, value: str, refs: dict[str, str]) -> str | None:
+        """Résout une image de départ : ``{brick:X}`` (sortie d'une autre brique,
+        ex. la photo d'environnement d'une scène) OU une photo uploadée/URL."""
+        m = _BRICK_REF.match(value)
+        if m:
+            src = refs.get(m.group(1))
+            if not src:
+                return None
+            if os.path.exists(src):
+                return _upload_to_replicate(src, self.replicate_token)
+            return src
+        return _resolve_media_value(value, self.replicate_token)
+
     def _generate_clip(
         self,
         doc: EditorDocument,
@@ -305,36 +325,40 @@ class EditorGenerationService:
         clip: ClipBrick,
         out_dir: str,
         done: dict[str, str],
+        outputs: dict[str, str],
         index: int,
     ) -> int:
         """Exécute un `ClipBrick` : image (first-frame) → motion → enfants narration.
 
-        Idempotent via `done` (beat déjà prêt = sauté). Renvoie l'index après les
-        nœuds exécutés. L'URL de l'image alimente l'entrée i2v du motion (auto-lien),
-        sauf si un input image explicite (upload) est fourni.
+        Idempotent via `done` (beat déjà prêt = sauté). `outputs` accumule les URLs
+        produites (partagé entre briques) → un plan peut animer la **photo
+        d'environnement de sa scène** (`{brick:<env>.image}`). Renvoie l'index après
+        les nœuds exécutés.
         """
         cid = clip.id
+        refs = {**done, **outputs}  # résolution des refs inter-briques (scène)
         img_beat = f"{cid}.image"
         img_params, img_prompt = self._node_params(
-            doc, clip, clip.image, "image", done, {}
+            doc, clip, clip.image, "image", refs, {}
         )
         img_url = self._run_or_skip(
             doc_id, out_dir, done, index, beat=img_beat,
             contract_kind="image", asset_kind="image",
             model_ref=clip.image.model_ref, params=img_params, prompt=img_prompt,
         )
+        stored_img = img_url or done.get(img_beat)
+        if stored_img:
+            outputs[img_beat] = stored_img
+            refs[img_beat] = stored_img
         index += 1
 
         if clip.kind == "video":
             motion = clip.motion or GenNode()
-            # Auto-lien : image de départ = photo de cette brique, SAUF si une photo
-            # explicite (uploadée / URL) est saisie dans les params du motion — elle
-            # est alors résolue (upload Replicate) et remplace l'auto-lien.
+            # Image de départ : ref inter-brique (photo d'environnement de la scène)
+            # ou photo explicite (upload/URL) ; sinon auto-lien sur la photo du plan.
             explicit = field_value(motion.params, "video", "image")
             explicit_url = (
-                _resolve_media_value(str(explicit), self.replicate_token)
-                if explicit
-                else None
+                self._resolve_image_input(str(explicit), refs) if explicit else None
             )
             image_input = (
                 explicit_url
@@ -353,21 +377,24 @@ class EditorGenerationService:
                 )
             else:
                 mot_params, mot_prompt = self._node_params(
-                    doc, clip, motion, "video", done,
+                    doc, clip, motion, "video", refs,
                     {"image": image_input, "duration": duration},
                     prompt_fallback=img_prompt,
                 )
-                self._run_or_skip(
+                mot_url = self._run_or_skip(
                     doc_id, out_dir, done, index, beat=mot_beat,
                     contract_kind="video", asset_kind="video",
                     model_ref=motion.model_ref, params=mot_params, prompt=mot_prompt,
                 )
+                stored_mot = mot_url or done.get(mot_beat)
+                if stored_mot:
+                    outputs[mot_beat] = stored_mot
             index += 1
 
         for child in clip.children:
             voice_id = field_value(child.params, "voice", "voice_id") or "Deep_Voice_Man"
             ch_params, ch_prompt = self._node_params(
-                doc, clip, child, "voice", done, {"voice_id": voice_id}
+                doc, clip, child, "voice", refs, {"voice_id": voice_id}
             )
             self._run_or_skip(
                 doc_id, out_dir, done, index, beat=child.id,

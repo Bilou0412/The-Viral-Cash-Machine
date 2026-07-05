@@ -39,3 +39,75 @@ def test_built_document_compiles_to_valid_videospec():
     plan = FakeSceneDecomposer().decompose_video("x", n_scenes=2)
     spec = document_to_spec(scene_plan_to_document(plan))
     assert len(spec.segments) == 6  # 2 photos d'env + 4 plans vidéo
+
+
+def test_video_shots_seed_from_scene_env_photo():
+    """Chaque plan vidéo anime la photo d'ENVIRONNEMENT de sa scène (ref i2v)."""
+    plan = FakeSceneDecomposer().decompose_video("x", n_scenes=1)
+    doc = scene_plan_to_document(plan)
+    scene = doc.scenes[0]
+    env_ref = f"{{brick:{scene.environment_photo_ref}.image}}"
+    videos = [b for b in doc.bricks if getattr(b, "kind", None) == "video"]
+    assert videos, "au moins un plan vidéo"
+    for v in videos:
+        assert v.motion is not None
+        assert v.motion.params.get("image") == env_ref
+
+
+# -- Décrypteur OpenAI (Phase 3) — testé avec un CLIENT STUB (aucun réseau) -----
+
+class _Msg:
+    def __init__(self, content: str) -> None:
+        self.content = content
+
+
+class _Choice:
+    def __init__(self, content: str) -> None:
+        self.message = _Msg(content)
+
+
+class _Resp:
+    def __init__(self, content: str) -> None:
+        self.choices = [_Choice(content)]
+
+
+class _Completions:
+    def __init__(self, scripted: list[str]) -> None:
+        self._scripted = scripted
+        self._i = 0
+
+    def create(self, **_kw: object) -> _Resp:
+        content = self._scripted[min(self._i, len(self._scripted) - 1)]
+        self._i += 1
+        return _Resp(content)
+
+
+class _Chat:
+    def __init__(self, scripted: list[str]) -> None:
+        self.completions = _Completions(scripted)
+
+
+class _StubClient:
+    def __init__(self, scripted: list[str]) -> None:
+        self.chat = _Chat(scripted)
+
+
+def test_openai_scene_decomposer_two_phase_stub():
+    from src.features.scenes.openai_scene_decomposer import OpenAISceneDecomposer
+
+    macro = (
+        '{"scenes":[{"id":"s1","title":"Intro","environment_desc":'
+        '"a dark abandoned subway tunnel","intention":"on entre dans le noir"}]}'
+    )
+    micro = (
+        '{"shots":[{"id":"s1_a","kind":"video","visual_desc":"detail of the rails",'
+        '"motion_desc":"slow push in","narration_fr":"On avance.","duration_s":3}]}'
+    )
+    dec = OpenAISceneDecomposer(_StubClient([macro, micro]), "gpt-x")
+    plan = dec.decompose_video("un thriller vertical", style_identity="cold tones", n_scenes=1)
+    assert len(plan.scenes) == 1
+    sc = plan.scenes[0]
+    assert sc.environment_desc == "a dark abandoned subway tunnel"
+    assert len(sc.shots) == 1
+    assert sc.shots[0].kind == "video"
+    assert sc.shots[0].narration_fr == "On avance."
