@@ -199,8 +199,8 @@ def test_clip_duplicate_child_ids_rejected():
         )
 
 
-def test_v1_flat_bricks_still_valid_under_v2():
-    """Additif : un doc v1 (briques plates) se charge tel quel sous SCHEMA_VERSION 2."""
+def test_v1_flat_bricks_still_valid_under_current():
+    """Additif : un doc v1 (briques plates) se charge tel quel sous SCHEMA_VERSION."""
     raw = {
         "schema_version": 1,
         "title": "legacy",
@@ -210,7 +210,7 @@ def test_v1_flat_bricks_still_valid_under_v2():
         ],
     }
     d = upgrade_document(raw)
-    assert d.schema_version == SCHEMA_VERSION == 2
+    assert d.schema_version == SCHEMA_VERSION
     by_id = {b.id: b for b in d.bricks}
     assert isinstance(by_id["img1"], GenerativeBrick)
 

@@ -135,6 +135,16 @@ const realApi = {
       method: "POST",
     }),
 
+  // Créateur de scènes : idée → l'IA découpe en scènes + plans → document éditable.
+  createSceneDocument: (
+    episodeId: number,
+    body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
+  ) =>
+    request<EditorDocument>(`/episodes/${episodeId}/scene-document`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   getBeats: (episodeId: number) => request<BeatsResponse>(`/episodes/${episodeId}/beats`),
   getAssets: (episodeId: number) => request<Asset[]>(`/episodes/${episodeId}/assets`),
   generateAssets: (episodeId: number) =>

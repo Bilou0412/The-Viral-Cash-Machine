@@ -71,6 +71,7 @@ from .services.editor_generation import (
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
+from .services.scenes import generate_video_plan
 from .services.scripting import generate_script
 
 if TYPE_CHECKING:
@@ -324,6 +325,15 @@ class EditorDocSaveIn(BaseModel):
 
     title: str | None = None
     doc: dict[str, Any]
+
+
+class SceneGenIn(BaseModel):
+    """Créer une vidéo par scènes : l'idée (+ style optionnel + nb de scènes)."""
+
+    prompt: str
+    style_identity: str = ""
+    n_scenes: int = 3
+    title: str = "Nouvelle vidéo"
 
 
 class TemplateSlotIn(BaseModel):
@@ -971,6 +981,45 @@ def create_editor_document_from_script(
     from ...features.scripting.adventure_to_bricks import adventure_to_document
 
     doc = adventure_to_document(script, title=f"Épisode {episode_id}")
+    row = EditorDocRepo(session).create(
+        episode.project_id,
+        doc.title,
+        doc.model_dump_json(),
+        episode_id=episode_id,
+        schema_version=doc.schema_version,
+    )
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "episode_id": row.episode_id,
+        "title": row.title,
+        "doc": json.loads(row.doc_json),
+    }
+
+
+@app.post("/api/episodes/{episode_id}/scene-document")
+def create_scene_document(
+    episode_id: int, body: SceneGenIn,
+    session: Session = Depends(_session), user: User = Depends(require_user),
+    engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Créateur de scènes : idée → l'IA découpe en scènes + plans courts → document
+    de briques ÉDITABLE (index de scènes inclus), prêt pour la revue.
+
+    Sans clé OpenAI → décrypteur Fake déterministe (offline). Photo-first : chaque
+    scène porte une brique photo d'environnement (contexte figé) suivie de ses plans.
+    """
+    episode = _require_owned_episode(session, user, episode_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    plan = generate_video_plan(
+        body.prompt,
+        style_identity=body.style_identity,
+        n_scenes=body.n_scenes,
+        openai_key=keys.openai,
+    )
+    from ...features.scenes import scene_plan_to_document
+
+    doc = scene_plan_to_document(plan, title=body.title)
     row = EditorDocRepo(session).create(
         episode.project_id,
         doc.title,
