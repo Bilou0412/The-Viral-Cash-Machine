@@ -22,6 +22,7 @@ from src.studio.db.models import (
     Episode,
     GenerationJob,
     Project,
+    Template,
     User,
     UserApiKey,
     VoiceProfile,
@@ -70,6 +71,56 @@ class ProjectRepo:
         if project is None:
             return False
         self.session.delete(project)
+        self.session.commit()
+        return True
+
+
+class TemplateRepo:
+    """CRUD pour :class:`Template` (bibliothèque de structures réutilisables)."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self, name: str, structure_json: str, owner_id: int | None = None
+    ) -> Template:
+        row = Template(name=name, structure_json=structure_json, owner_id=owner_id)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def get(self, template_id: int) -> Template | None:
+        return self.session.get(Template, template_id)
+
+    def list(self) -> Sequence[Template]:
+        return self.session.exec(select(Template)).all()
+
+    def list_for_owner(self, owner_id: int) -> Sequence[Template]:
+        return self.session.exec(
+            select(Template).where(Template.owner_id == owner_id)
+        ).all()
+
+    def save(
+        self, template_id: int, structure_json: str, name: str | None = None
+    ) -> Template | None:
+        row = self.get(template_id)
+        if row is None:
+            return None
+        row.structure_json = structure_json
+        if name is not None:
+            row.name = name
+        row.updated_at = datetime.now(UTC)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def delete(self, template_id: int) -> bool:
+        row = self.get(template_id)
+        if row is None:
+            return False
+        self.session.delete(row)
         self.session.commit()
         return True
 

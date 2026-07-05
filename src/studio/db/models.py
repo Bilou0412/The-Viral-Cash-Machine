@@ -146,6 +146,24 @@ class EditorDocumentRow(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_utcnow)
 
 
+class Template(SQLModel, table=True):
+    """Un template réutilisable : la STRUCTURE d'une vidéo (le « contenant »).
+
+    ``structure_json`` décrit les slots ordonnés (type vidéo/photo, durée, format,
+    narration) SANS contenu — GPT le remplira ensuite (respect strict de la
+    structure). Possédé directement par un utilisateur (bibliothèque de templates).
+    """
+
+    __tablename__ = "template"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    structure_json: str
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+    owner_id: int | None = Field(default=None, foreign_key="user.id", index=True)
+
+
 class CostEntry(SQLModel, table=True):
     """Cost ledger row attached to a generation job."""
 

@@ -517,3 +517,55 @@ def test_register_validation_and_duplicates(client):
         "/api/auth/login",
         json={"email": "admin@test.local", "password": "wrong"},
     ).status_code == 401
+
+
+def test_template_crud(client):
+    """CRUD complet d'un template (T1) : le contenant, sans contenu."""
+    r = client.post(
+        "/api/templates",
+        json={
+            "name": "POV horreur",
+            "slots": [
+                {"id": "s1", "kind": "video", "duration": 4, "aspect_ratio": "9:16", "resolution": "720p", "narration": True},
+                {"id": "s2", "kind": "photo", "duration": 3, "aspect_ratio": "9:16", "resolution": "720p", "narration": False},
+            ],
+        },
+    )
+    assert r.status_code == 200, r.text
+    tpl = r.json()
+    tid = tpl["id"]
+    assert tpl["name"] == "POV horreur"
+    assert len(tpl["slots"]) == 2
+
+    # La liste renvoie des résumés (nb de slots + durée totale).
+    summaries = client.get("/api/templates").json()
+    mine = next(t for t in summaries if t["id"] == tid)
+    assert mine["slot_count"] == 2
+    assert mine["total_duration"] == 7
+
+    got = client.get(f"/api/templates/{tid}").json()
+    assert got["slots"][0]["kind"] == "video"
+
+    # Sauvegarde : renomme + remplace les slots.
+    r = client.put(
+        f"/api/templates/{tid}",
+        json={
+            "name": "POV horreur v2",
+            "slots": [
+                {"id": "s1", "kind": "video", "duration": 5, "aspect_ratio": "9:16", "resolution": "1080p", "narration": True},
+            ],
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["name"] == "POV horreur v2"
+    assert len(r.json()["slots"]) == 1
+
+    assert client.delete(f"/api/templates/{tid}").status_code == 200
+    assert client.get(f"/api/templates/{tid}").status_code == 404
+
+
+def test_template_unknown_404(client):
+    assert client.get("/api/templates/999999").status_code == 404
+    assert client.put(
+        "/api/templates/999999", json={"slots": []}
+    ).status_code == 404

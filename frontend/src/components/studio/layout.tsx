@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom"
-import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound, LogOut } from "lucide-react"
+import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, KeyRound, LogOut, LayoutTemplate } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { api, usingMocks } from "@/lib/api"
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projets", icon: FolderKanban, end: false },
+  { to: "/templates", label: "Templates", icon: LayoutTemplate, end: false },
   { to: "/editor", label: "Éditeur", icon: Film, end: true },
   { to: "/library", label: "Bibliothèque", icon: Library, end: false },
   { to: "/settings", label: "Réglages", icon: KeyRound, end: false },
