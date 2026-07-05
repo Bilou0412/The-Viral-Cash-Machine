@@ -164,6 +164,24 @@ class Template(SQLModel, table=True):
     owner_id: int | None = Field(default=None, foreign_key="user.id", index=True)
 
 
+class PromptTemplate(SQLModel, table=True):
+    """Un template de prompt système : l'IDENTITÉ d'une vidéo (le style + la
+    trame scénaristique). ``identity`` est le prompt système global ;
+    ``roles_json`` est la liste ORDONNÉE des prompts à trous, un par brique/rôle
+    (accroche → tension → …). Les ``{trous}`` alimentent le questionnaire (T2).
+    """
+
+    __tablename__ = "prompt_template"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    identity: str = Field(default="")
+    roles_json: str = Field(default="[]")
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+    owner_id: int | None = Field(default=None, foreign_key="user.id", index=True)
+
+
 class CostEntry(SQLModel, table=True):
     """Cost ledger row attached to a generation job."""
 

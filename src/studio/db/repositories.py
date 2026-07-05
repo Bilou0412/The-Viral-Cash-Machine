@@ -22,6 +22,7 @@ from src.studio.db.models import (
     Episode,
     GenerationJob,
     Project,
+    PromptTemplate,
     Template,
     User,
     UserApiKey,
@@ -108,6 +109,63 @@ class TemplateRepo:
         if row is None:
             return None
         row.structure_json = structure_json
+        if name is not None:
+            row.name = name
+        row.updated_at = datetime.now(UTC)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def delete(self, template_id: int) -> bool:
+        row = self.get(template_id)
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.commit()
+        return True
+
+
+class PromptTemplateRepo:
+    """CRUD pour :class:`PromptTemplate` (bibliothèque de prompts système)."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create(
+        self, name: str, identity: str, roles_json: str, owner_id: int | None = None
+    ) -> PromptTemplate:
+        row = PromptTemplate(
+            name=name, identity=identity, roles_json=roles_json, owner_id=owner_id
+        )
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
+    def get(self, template_id: int) -> PromptTemplate | None:
+        return self.session.get(PromptTemplate, template_id)
+
+    def list(self) -> Sequence[PromptTemplate]:
+        return self.session.exec(select(PromptTemplate)).all()
+
+    def list_for_owner(self, owner_id: int) -> Sequence[PromptTemplate]:
+        return self.session.exec(
+            select(PromptTemplate).where(PromptTemplate.owner_id == owner_id)
+        ).all()
+
+    def save(
+        self,
+        template_id: int,
+        identity: str,
+        roles_json: str,
+        name: str | None = None,
+    ) -> PromptTemplate | None:
+        row = self.get(template_id)
+        if row is None:
+            return None
+        row.identity = identity
+        row.roles_json = roles_json
         if name is not None:
             row.name = name
         row.updated_at = datetime.now(UTC)

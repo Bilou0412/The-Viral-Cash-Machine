@@ -10,6 +10,7 @@ const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projets", icon: FolderKanban, end: false },
   { to: "/templates", label: "Templates", icon: LayoutTemplate, end: false },
+  { to: "/prompt-templates", label: "Styles", icon: Sparkles, end: false },
   { to: "/editor", label: "Éditeur", icon: Film, end: true },
   { to: "/library", label: "Bibliothèque", icon: Library, end: false },
   { to: "/settings", label: "Réglages", icon: KeyRound, end: false },

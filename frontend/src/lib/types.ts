@@ -389,6 +389,37 @@ export interface CreateTemplateBody {
   slots: TemplateSlot[]
 }
 
+// ── Templates de prompt système (T2.1) — l'identité + la trame à trous ──
+// Un prompt système par brique/rôle, à trous ({token}) ; les trous alimentent
+// le questionnaire. `holes` est dérivé côté serveur (ordre d'apparition).
+export interface RolePrompt {
+  id: string
+  label: string
+  // Champs du cahier des charges (clé du schéma → texte à trous). Cf. shot-schema.
+  fields: Record<string, string>
+}
+
+export interface PromptTemplate {
+  id: string
+  name: string
+  identity: string
+  roles: RolePrompt[]
+  holes: string[]
+}
+
+export interface PromptTemplateSummary {
+  id: string
+  name: string
+  role_count: number
+  hole_count: number
+}
+
+export interface CreatePromptTemplateBody {
+  name: string
+  identity: string
+  roles: RolePrompt[]
+}
+
 // ── RenderModel (GET /api/editor/documents/{id}/render-model) ──────────
 
 export type RenderMedia = "video" | "image" | "audio" | "text" | "overlay"
