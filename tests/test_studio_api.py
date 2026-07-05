@@ -609,3 +609,22 @@ def test_prompt_template_crud(client):
 
     assert client.delete(f"/api/prompt-templates/{tid}").status_code == 200
     assert client.get(f"/api/prompt-templates/{tid}").status_code == 404
+
+
+def test_scene_document_offline(client):
+    """Créateur de scènes de bout en bout, sans clé (décrypteur Fake)."""
+    pid = client.post("/api/projects", json={"name": "scenes"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    r = client.post(
+        f"/api/episodes/{ep['id']}/scene-document",
+        json={"prompt": "un thriller vertical", "n_scenes": 2, "title": "Ma vidéo"},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["episode_id"] == ep["id"]
+    doc = body["doc"]
+    assert doc["title"] == "Ma vidéo"
+    assert len(doc["scenes"]) == 2
+    assert len(doc["bricks"]) == 6  # 2 × (photo d'env + 2 plans)
+    # la 1re brique de chaque scène est sa photo d'environnement
+    assert doc["scenes"][0]["environment_photo_ref"] == doc["scenes"][0]["shot_ids"][0]

@@ -32,6 +32,7 @@ import type {
   PromptTemplate,
   PromptTemplateSummary,
   CreatePromptTemplateBody,
+  Scene,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -315,6 +316,58 @@ function seedPromptTemplates() {
   promptTemplates.set(id, { id, name: "POV horreur — identité", identity, roles, holes: holesOf(identity, roles) })
 }
 
+// Miroir du Fake backend : idée → scènes (photo d'env + 2 plans courts chacune).
+function newSceneDoc(title: string, nScenes: number): EditorDoc {
+  const bricks: EditorDoc["bricks"] = []
+  const scenes: Scene[] = []
+  let cursor = 0
+  const push = (b: EditorDoc["bricks"][number], dur: number) => {
+    bricks.push(b)
+    cursor += dur
+  }
+  for (let i = 1; i <= Math.max(1, nScenes); i++) {
+    const envId = `s${i}_env`
+    push(
+      {
+        id: envId, type: "clip", kind: "photo",
+        image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `wide establishing shot of location ${i}, cold tones` } },
+        children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
+      },
+      3
+    )
+    const shotIds = [envId]
+    const shots: [string, number, string, string][] = [
+      ["sh1", 3, "slow push in, static camera", "La tension monte."],
+      ["sh2", 4, "handheld, static framing", "Un choix s'impose."],
+    ]
+    for (const [k, dur, motion, narr] of shots) {
+      const sid = `s${i}_${k}`
+      push(
+        {
+          id: sid, type: "clip", kind: "video",
+          image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `shot inside location ${i}` } },
+          motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur } },
+          children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
+          layers: [], placement: { track: 0, start: cursor, duration: dur },
+        },
+        dur
+      )
+      shotIds.push(sid)
+    }
+    scenes.push({
+      id: `s${i}`, title: `Scène ${i}`,
+      context: { text: `Le contexte concentré de la scène ${i}.`, characters: {}, art_direction: "cold tones", extra: {} },
+      environment_photo_ref: envId, shot_ids: shotIds,
+    })
+  }
+  return {
+    schema_version: 3, title,
+    canvas: { width: 1080, height: 1920, fps: 30 },
+    global_context: { text: title, characters: {}, art_direction: "cold tones", extra: {} },
+    tracks: [{ index: 0, role: "main" }], bricks, scenes,
+  }
+}
+
 let nextDocId = 1
 const editorDocuments = new Map<string, EditorDocument>()
 
@@ -421,6 +474,18 @@ export const mockApi = {
     await delay()
     return { episode_id: episodeId, assets: buildBeatEntries() }
   },
+  async createSceneDocument(
+    _episodeId: number,
+    body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
+  ): Promise<EditorDocument> {
+    await delay(400)
+    const id = `doc-${nextDocId++}`
+    const doc = newSceneDoc(body.title || "Nouvelle vidéo", body.n_scenes ?? 3)
+    const docu: EditorDocument = { id, project_id: 1, title: doc.title, doc }
+    editorDocuments.set(id, docu)
+    return structuredClone(docu)
+  },
+
   async reviewFromScript(episodeId: number): Promise<EditorDocument> {
     await delay()
     const id = `doc-${nextDocId++}`

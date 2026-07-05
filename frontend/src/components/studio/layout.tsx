@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/creer", label: "Créer", icon: Sparkles, end: false },
   { to: "/projects", label: "Projets", icon: FolderKanban, end: false },
   { to: "/templates", label: "Templates", icon: LayoutTemplate, end: false },
   { to: "/prompt-templates", label: "Styles", icon: Sparkles, end: false },

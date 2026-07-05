@@ -26,6 +26,7 @@ import { isClipBrick } from "@/lib/types"
 const SAVE_DEBOUNCE_MS = 600
 const PX_PER_SEC = 64
 const RULER_H = 20
+const SCENE_H = 22
 const LANE_H = 76
 const GUTTER = 68
 const MIN_BLOCK_PX = 40
@@ -219,6 +220,20 @@ export function ClipReview() {
     return m
   }, [renderModel])
 
+  // Bandes de scène (v3) : span temporel de chaque scène, dérivé de ses briques.
+  const sceneBands = useMemo(() => {
+    const byId = new Map(clips.map((c) => [c.id, c]))
+    const bands: { id: string; title: string; start: number; end: number }[] = []
+    for (const s of draft?.scenes ?? []) {
+      const members = s.shot_ids.map((id) => byId.get(id)).filter((b): b is ClipBrick => !!b)
+      if (members.length === 0) continue
+      const start = Math.min(...members.map((m) => m.placement.start))
+      const end = Math.max(...members.map((m) => m.placement.start + m.placement.duration))
+      bands.push({ id: s.id, title: s.title || s.id, start, end })
+    }
+    return bands
+  }, [draft, clips])
+
   const onRegenerate = (clipId: string) =>
     regenerate.mutate(clipId, {
       onSuccess: () => toast.success("Régénération lancée"),
@@ -287,6 +302,14 @@ export function ClipReview() {
               {/* Gouttière : libellés de piste */}
               <div className="shrink-0" style={{ width: GUTTER }}>
                 <div style={{ height: RULER_H }} />
+                {sceneBands.length > 0 && (
+                  <div
+                    className="flex items-center text-[10px] font-medium uppercase text-muted-foreground/70"
+                    style={{ height: SCENE_H }}
+                  >
+                    Scènes
+                  </div>
+                )}
                 <div
                   className="flex items-center gap-1 border-t border-border/40 pt-1 text-[10px] font-medium uppercase text-muted-foreground"
                   style={{ height: LANE_H }}
@@ -316,6 +339,22 @@ export function ClipReview() {
                       </div>
                     ))}
                   </div>
+
+                  {/* bandes de SCÈNE */}
+                  {sceneBands.length > 0 && (
+                    <div className="relative" style={{ height: SCENE_H }}>
+                      {sceneBands.map((b) => (
+                        <div
+                          key={b.id}
+                          title={b.title}
+                          className="absolute top-0 flex h-[calc(100%-3px)] items-center overflow-hidden rounded-sm border border-primary/40 bg-primary/10 px-1.5 text-[10px] font-medium text-primary"
+                          style={{ left: b.start * PX_PER_SEC, width: Math.max(24, (b.end - b.start) * PX_PER_SEC - 3) }}
+                        >
+                          <span className="truncate">{b.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* piste VIDÉO */}
                   <div className="relative border-t border-border/40" style={{ height: LANE_H }}>

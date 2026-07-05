@@ -26,6 +26,7 @@ const Register = lazy(() => import("@/pages/Register").then((m) => ({ default: m
 const ClipReview = lazy(() => import("@/pages/ClipReview").then((m) => ({ default: m.ClipReview })))
 const TemplatesIndex = lazy(() => import("@/pages/TemplatesIndex").then((m) => ({ default: m.TemplatesIndex })))
 const TemplateBuilder = lazy(() => import("@/pages/TemplateBuilder").then((m) => ({ default: m.TemplateBuilder })))
+const Creer = lazy(() => import("@/pages/Creer").then((m) => ({ default: m.Creer })))
 const PromptTemplatesIndex = lazy(() => import("@/pages/PromptTemplatesIndex").then((m) => ({ default: m.PromptTemplatesIndex })))
 const PromptTemplateBuilder = lazy(() => import("@/pages/PromptTemplateBuilder").then((m) => ({ default: m.PromptTemplateBuilder })))
 
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Dashboard /> },
+      { path: "creer", element: <Creer /> },
       { path: "new", element: <NewEpisode /> },
       { path: "projects", element: <Projects /> },
       { path: "projects/:id", element: <ProjectDetail /> },
