@@ -25,6 +25,9 @@ import type {
   RenderClip,
   RenderModel,
   Round,
+  Template,
+  TemplateSummary,
+  CreateTemplateBody,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -260,6 +263,23 @@ function newAdventureDoc(title: string): EditorDoc {
       clip("c3", DUR * 2, "video", "a flooded boiler room, black water rising", "slow tilt up, static camera", "L'eau monte. Il faut choisir, vite."),
     ],
   }
+}
+
+let nextTemplateId = 1
+const templates = new Map<string, Template>()
+
+function seedTemplates() {
+  if (templates.size) return
+  const id = `tpl-${nextTemplateId++}`
+  templates.set(id, {
+    id,
+    name: "POV horreur — 3 plans",
+    slots: [
+      { id: "s1", kind: "video", duration: 4, aspect_ratio: "9:16", resolution: "720p", narration: true },
+      { id: "s2", kind: "photo", duration: 3, aspect_ratio: "9:16", resolution: "720p", narration: true },
+      { id: "s3", kind: "video", duration: 5, aspect_ratio: "9:16", resolution: "720p", narration: true },
+    ],
+  })
 }
 
 let nextDocId = 1
@@ -499,6 +519,48 @@ export const mockApi = {
     existing.doc = structuredClone(doc)
     existing.title = doc.title
     return structuredClone(existing)
+  },
+
+  async listTemplates(): Promise<TemplateSummary[]> {
+    await delay()
+    seedTemplates()
+    return [...templates.values()].map((t) => ({
+      id: t.id,
+      name: t.name,
+      slot_count: t.slots.length,
+      total_duration: t.slots.reduce((a, s) => a + s.duration, 0),
+    }))
+  },
+
+  async createTemplate(body: CreateTemplateBody): Promise<Template> {
+    await delay()
+    const id = `tpl-${nextTemplateId++}`
+    const t: Template = { id, name: body.name, slots: structuredClone(body.slots) }
+    templates.set(id, t)
+    return structuredClone(t)
+  },
+
+  async getTemplate(id: string): Promise<Template> {
+    await delay()
+    seedTemplates()
+    const t = templates.get(id)
+    if (!t) throw new Error("template not found")
+    return structuredClone(t)
+  },
+
+  async saveTemplate(id: string, body: CreateTemplateBody): Promise<Template> {
+    await delay(150)
+    const t = templates.get(id)
+    if (!t) throw new Error("template not found")
+    t.name = body.name
+    t.slots = structuredClone(body.slots)
+    return structuredClone(t)
+  },
+
+  async deleteTemplate(id: string): Promise<{ ok: boolean }> {
+    await delay()
+    templates.delete(id)
+    return { ok: true }
   },
 
   async generateEditorDocument(id: string) {

@@ -25,6 +25,9 @@ import type {
   ModelSearchResult,
   Project,
   RenderModel,
+  Template,
+  TemplateSummary,
+  CreateTemplateBody,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -227,6 +230,16 @@ const realApi = {
     }
     return res.json() as Promise<{ ref: string }>
   },
+
+  // ── Templates (T1) — bibliothèque de structures réutilisables ────────
+  listTemplates: () => request<TemplateSummary[]>("/templates"),
+  createTemplate: (body: CreateTemplateBody) =>
+    request<Template>("/templates", { method: "POST", body: JSON.stringify(body) }),
+  getTemplate: (id: string) => request<Template>(`/templates/${id}`),
+  saveTemplate: (id: string, body: CreateTemplateBody) =>
+    request<Template>(`/templates/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteTemplate: (id: string) =>
+    request<{ ok: boolean }>(`/templates/${id}`, { method: "DELETE" }),
 
   // BYOK API keys (entered in Settings). GET = status only; PUT saves non-empty.
   getKeysStatus: () => request<KeysStatus>("/settings/keys"),

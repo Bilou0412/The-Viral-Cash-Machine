@@ -22,7 +22,7 @@ import json
 import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import (
     BackgroundTasks,
@@ -48,7 +48,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from ...features import storage
 from ...features.assets.ports import AssetProvider
 from ..db.engine import get_engine, init_db
-from ..db.models import Asset, Episode, Project, User
+from ..db.models import Asset, Episode, Project, Template, User
 from ..db.repositories import (
     AssetRepo,
     CostRepo,
@@ -56,6 +56,7 @@ from ..db.repositories import (
     EpisodeRepo,
     ProjectRepo,
     ScriptRepo,
+    TemplateRepo,
     UserRepo,
 )
 from . import settings
@@ -241,6 +242,15 @@ def _require_owned_doc(session: Session, user: User, doc_id: int) -> Any:
     return row
 
 
+def _require_owned_template(
+    session: Session, user: User, template_id: int
+) -> Template:
+    row = TemplateRepo(session).get(template_id)
+    if row is None or (not user.is_admin and row.owner_id != user.id):
+        raise HTTPException(404, f"template {template_id} not found")
+    return row
+
+
 def _require_owned_asset(session: Session, user: User, asset_id: int) -> Asset:
     asset = AssetRepo(session).get(asset_id)
     if asset is None:
@@ -303,6 +313,31 @@ class EditorDocSaveIn(BaseModel):
 
     title: str | None = None
     doc: dict[str, Any]
+
+
+class TemplateSlotIn(BaseModel):
+    """Un slot du template : le CONTENANT (structure), jamais le contenu."""
+
+    id: str
+    kind: Literal["video", "photo"]
+    duration: float = 4.0
+    aspect_ratio: str = "9:16"
+    resolution: str = "720p"
+    narration: bool = True
+
+
+class TemplateIn(BaseModel):
+    """Création d'un template (bibliothèque de structures réutilisables)."""
+
+    name: str = "Nouveau template"
+    slots: list[TemplateSlotIn] = []
+
+
+class TemplateSaveIn(BaseModel):
+    """Sauvegarde d'un template : ses slots (+ nom optionnel)."""
+
+    name: str | None = None
+    slots: list[TemplateSlotIn]
 
 
 # ---------------------------------------------------------------------------
@@ -951,6 +986,80 @@ def save_editor_document(
         "title": row.title,
         "doc": json.loads(row.doc_json),
     }
+
+
+# ---------------------------------------------------------------------------
+# Templates (T1) — bibliothèque de structures réutilisables (le « contenant »)
+# ---------------------------------------------------------------------------
+
+
+def _template_dict(row: Template) -> dict[str, Any]:
+    """Sérialise une ligne Template → { id, name, slots }."""
+    data = json.loads(row.structure_json)
+    slots = data.get("slots", []) if isinstance(data, dict) else []
+    return {"id": row.id, "name": row.name, "slots": slots}
+
+
+def _template_summary(row: Template) -> dict[str, Any]:
+    data = json.loads(row.structure_json)
+    slots = data.get("slots", []) if isinstance(data, dict) else []
+    total = sum(float(s.get("duration", 0)) for s in slots)
+    return {
+        "id": row.id,
+        "name": row.name,
+        "slot_count": len(slots),
+        "total_duration": total,
+    }
+
+
+@app.get("/api/templates")
+def list_templates(
+    session: Session = Depends(_session), user: User = Depends(require_user)
+) -> list[dict[str, Any]]:
+    repo = TemplateRepo(session)
+    rows = repo.list() if user.is_admin else repo.list_for_owner(_uid(user))
+    return [_template_summary(r) for r in rows]
+
+
+@app.post("/api/templates")
+def create_template(
+    body: TemplateIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    structure = json.dumps({"slots": [s.model_dump() for s in body.slots]})
+    row = TemplateRepo(session).create(body.name, structure, owner_id=_uid(user))
+    return _template_dict(row)
+
+
+@app.get("/api/templates/{template_id}")
+def get_template(
+    template_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    row = _require_owned_template(session, user, template_id)
+    return _template_dict(row)
+
+
+@app.put("/api/templates/{template_id}")
+def save_template(
+    template_id: int, body: TemplateSaveIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    _require_owned_template(session, user, template_id)
+    structure = json.dumps({"slots": [s.model_dump() for s in body.slots]})
+    row = TemplateRepo(session).save(template_id, structure, name=body.name)
+    assert row is not None  # existence checked above
+    return _template_dict(row)
+
+
+@app.delete("/api/templates/{template_id}")
+def delete_template(
+    template_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, bool]:
+    _require_owned_template(session, user, template_id)
+    TemplateRepo(session).delete(template_id)
+    return {"ok": True}
 
 
 @app.post("/api/editor/documents/{doc_id}/generate")

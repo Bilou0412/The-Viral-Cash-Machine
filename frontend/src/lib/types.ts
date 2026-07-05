@@ -359,6 +359,36 @@ export interface CreateEditorDocumentBody {
   title: string
 }
 
+// ── Templates (T1) — bibliothèque de structures réutilisables ──────────
+// Un template décrit le CONTENANT (structure de la timeline), jamais le contenu :
+// une liste ordonnée de slots (vidéo/photo, durée, format, narration).
+export interface TemplateSlot {
+  id: string
+  kind: "video" | "photo"
+  duration: number
+  aspect_ratio: string
+  resolution: string
+  narration: boolean
+}
+
+export interface Template {
+  id: string
+  name: string
+  slots: TemplateSlot[]
+}
+
+export interface TemplateSummary {
+  id: string
+  name: string
+  slot_count: number
+  total_duration: number
+}
+
+export interface CreateTemplateBody {
+  name: string
+  slots: TemplateSlot[]
+}
+
 // ── RenderModel (GET /api/editor/documents/{id}/render-model) ──────────
 
 export type RenderMedia = "video" | "image" | "audio" | "text" | "overlay"
