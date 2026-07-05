@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..videospec.models import Canvas
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class _Doc(BaseModel):
@@ -170,6 +170,22 @@ class Track(_Doc):
     role: Literal["video", "audio", "overlay"] = "video"
 
 
+class Scene(_Doc):
+    """Regroupement narratif de briques (v3) — un INDEX, pas une imbrication.
+
+    Une scène = un contexte concentré : la photo d'environnement (contexte figé)
+    + les plans (shots) qui l'animent. Elle **référence** des briques du document
+    par id (les briques restent une liste plate → le rendu/`document_to_spec`
+    reste inchangé). Lenient : une brique peut n'appartenir à aucune scène.
+    """
+
+    id: Annotated[str, Field(min_length=1)]
+    title: str = ""
+    context: NarrativeContext = Field(default_factory=NarrativeContext)
+    environment_photo_ref: str = ""              # id de la brique PHOTO figée
+    shot_ids: list[str] = Field(default_factory=list)  # refs ordonnées vers bricks
+
+
 class EditorDocument(_Doc):
     """Document d'autoring complet : canvas + contexte global + pistes + briques."""
 
@@ -179,6 +195,7 @@ class EditorDocument(_Doc):
     global_context: NarrativeContext = Field(default_factory=NarrativeContext)
     tracks: list[Track] = Field(default_factory=list)
     bricks: list[Brick] = Field(default_factory=list)
+    scenes: list[Scene] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check(self) -> EditorDocument:
@@ -194,4 +211,16 @@ class EditorDocument(_Doc):
                         raise ValueError(
                             f"calque narration référence une brique inconnue '{ref}'"
                         )
+        scene_ids = [s.id for s in self.scenes]
+        if len(scene_ids) != len(set(scene_ids)):
+            raise ValueError("ids de scènes dupliqués dans le document")
+        for scene in self.scenes:
+            refs = [*scene.shot_ids]
+            if scene.environment_photo_ref:
+                refs.append(scene.environment_photo_ref)
+            for ref in refs:
+                if ref not in known:
+                    raise ValueError(
+                        f"scène '{scene.id}' référence une brique inconnue '{ref}'"
+                    )
         return self

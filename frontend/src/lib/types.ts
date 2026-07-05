@@ -332,6 +332,16 @@ export type Brick = GenerativeBrick | MediaBrick | TextBrick | ClipBrick
 
 export const isClipBrick = (b: Brick): b is ClipBrick => b.type === "clip"
 
+// Regroupement narratif de briques (v3) — un index vers `bricks`, pas une
+// imbrication. Une scène = un contexte concentré (photo d'environnement + plans).
+export interface Scene {
+  id: string
+  title: string
+  context: GlobalContext
+  environment_photo_ref: string
+  shot_ids: string[]
+}
+
 export interface EditorDoc {
   schema_version: number
   title: string
@@ -339,6 +349,7 @@ export interface EditorDoc {
   global_context: GlobalContext
   tracks: TrackDef[]
   bricks: Brick[]
+  scenes?: Scene[]
 }
 
 export interface EditorDocument {

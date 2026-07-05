@@ -19,6 +19,9 @@ def upgrade_document(raw: dict[str, Any]) -> EditorDocument:
     # l'union, donc rien à transformer ici — un doc v1 se charge tel quel sous v2.
     # Le repli briques-plates → ClipBrick interviendra avec B1 (quand `resolve.py`
     # et `editor_generation.py` consommeront les clips).
+    #
+    # v2 → v3 : introduction de `scenes` (index de regroupement narratif). Additif :
+    # un doc v2 sans `scenes` se valide avec `scenes=[]` par défaut — rien à faire.
     _ = version
 
     data["schema_version"] = SCHEMA_VERSION
