@@ -1,9 +1,10 @@
-// R2 — Revue des briques générées par l'IA, en TIMELINE chronologique.
+// R2 — Revue des briques en TIMELINE DE MONTAGE (multipiste).
 //
-// Le script est devenu une timeline : chaque `ClipBrick` (un plan de la vidéo)
-// est un bloc placé dans l'ordre du montage (largeur ∝ durée). On clique un bloc
-// pour éditer SES arguments (tous les inputs Replicate, labellisés métier) dans
-// l'inspecteur en dessous, puis on régénère ce plan. Sauvegarde automatique.
+// Comme un logiciel de montage : piste VIDÉO (chaque plan vidéo/photo = une
+// brique) et piste SON (la narration/dialogue de chaque plan = une brique alignée
+// dessous), sur la même règle de temps. On clique une brique → ses arguments
+// (inputs Replicate labellisés métier) s'éditent dans l'inspecteur. Régénération
+// ciblée, sauvegarde automatique.
 
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
@@ -23,18 +24,19 @@ import type { AudioChild, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
 import { isClipBrick } from "@/lib/types"
 
 const SAVE_DEBOUNCE_MS = 600
-const PX_PER_SEC = 60
-const MIN_BLOCK_PX = 96
+const PX_PER_SEC = 64
+const RULER_H = 20
+const LANE_H = 76
+const GUTTER = 68
+const MIN_BLOCK_PX = 40
 
-/** Libellé court d'un plan : le prompt image (ou motion), tronqué. */
-function clipLabel(clip: ClipBrick, index: number): string {
-  const p =
-    (typeof clip.image.params.prompt === "string" && clip.image.params.prompt) ||
-    (clip.motion && typeof clip.motion.params.prompt === "string" && clip.motion.params.prompt) ||
-    ""
-  const short = p.replace(/\s+/g, " ").trim().slice(0, 60)
-  return short || `Plan ${index + 1}`
-}
+type Selection = { clipId: string; childId: string | null }
+
+const promptOf = (n: GenNode | null | undefined): string =>
+  n && typeof n.params.prompt === "string" ? n.params.prompt : ""
+const textOf = (c: AudioChild): string =>
+  typeof c.params.text === "string" ? c.params.text : ""
+const short = (s: string, n = 48) => s.replace(/\s+/g, " ").trim().slice(0, n)
 
 /** Formulaire complet d'un nœud génératif (image / motion / voix). */
 function NodeForm({
@@ -96,36 +98,43 @@ function Section({
   )
 }
 
-/** Un bloc de la timeline (un plan), positionné par son placement. */
-function TimelineBlock({
-  clip,
-  index,
+/** Un bloc de piste (vidéo ou son), positionné par le temps. */
+function TrackBlock({
   left,
   width,
-  thumb,
-  generated,
   selected,
   onSelect,
+  tone,
+  thumb,
+  icon: Icon,
+  badge,
+  label,
 }: {
-  clip: ClipBrick
-  index: number
   left: number
   width: number
-  thumb: string | null
-  generated: boolean
   selected: boolean
   onSelect: () => void
+  tone: "video" | "audio"
+  thumb?: string | null
+  icon: typeof ImageIcon
+  badge?: string
+  label: string
 }) {
-  const Icon = clip.kind === "video" ? Film : ImageIcon
   return (
     <button
       type="button"
       onClick={onSelect}
-      title={clipLabel(clip, index)}
+      title={label}
       className={cn(
-        "absolute top-6 flex h-24 flex-col justify-between overflow-hidden rounded-lg border p-2 text-left transition",
-        "bg-secondary/40 hover:border-primary/60",
-        selected ? "border-primary ring-2 ring-primary" : "border-border"
+        "absolute top-1.5 flex h-[calc(100%-0.75rem)] flex-col justify-between overflow-hidden rounded-md border px-2 py-1.5 text-left transition",
+        tone === "video"
+          ? "bg-primary/10 hover:border-primary/60"
+          : "bg-emerald-500/10 hover:border-emerald-500/60",
+        selected
+          ? "border-primary ring-2 ring-primary"
+          : tone === "video"
+            ? "border-primary/30"
+            : "border-emerald-500/30"
       )}
       style={{ left, width }}
     >
@@ -133,30 +142,23 @@ function TimelineBlock({
         <img
           src={thumb}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30"
         />
       )}
       <div className="relative flex items-center gap-1.5">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-background/80 text-[10px] font-bold">
-          {index + 1}
-        </span>
-        <Icon className="h-3.5 w-3.5 shrink-0 text-primary" />
-        <span
+        {badge && (
+          <span className="flex h-4 min-w-4 items-center justify-center rounded bg-background/80 px-1 text-[10px] font-bold">
+            {badge}
+          </span>
+        )}
+        <Icon
           className={cn(
-            "ml-auto h-2 w-2 shrink-0 rounded-full",
-            generated ? "bg-emerald-500" : "border border-current opacity-40"
+            "h-3.5 w-3.5 shrink-0",
+            tone === "video" ? "text-primary" : "text-emerald-500"
           )}
-          title={generated ? "généré" : "à générer"}
         />
       </div>
-      <span className="relative line-clamp-2 text-[11px] font-medium leading-snug">
-        {clipLabel(clip, index)}
-      </span>
-      {clip.children.length > 0 && (
-        <span className="relative flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Mic className="h-3 w-3" /> {clip.children.length}
-        </span>
-      )}
+      <span className="relative line-clamp-2 text-[11px] font-medium leading-tight">{label}</span>
     </button>
   )
 }
@@ -170,7 +172,7 @@ export function ClipReview() {
 
   const [draft, setDraft] = useState<EditorDoc | null>(null)
   const [hydratedKey, setHydratedKey] = useState<string | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [sel, setSel] = useState<Selection | null>(null)
   const serverKey = document ? JSON.stringify(document.doc) : null
   if (serverKey && hydratedKey !== serverKey && document) {
     setHydratedKey(serverKey)
@@ -198,7 +200,6 @@ export function ClipReview() {
     [draft, update]
   )
 
-  // Plans triés chronologiquement (ordre du montage).
   const clips = useMemo(
     () =>
       (draft?.bricks ?? [])
@@ -208,7 +209,6 @@ export function ClipReview() {
     [draft]
   )
 
-  // brique id -> URL d'aperçu (asset généré prêt), best-effort via le render model.
   const thumbById = useMemo(() => {
     const m = new Map<string, string>()
     for (const c of renderModel?.clips ?? []) {
@@ -232,23 +232,29 @@ export function ClipReview() {
     return <div className="p-8 text-sm text-muted-foreground">Chargement…</div>
   }
 
-  const selected = clips.find((c) => c.id === selectedId) ?? clips[0] ?? null
-  const selectedIndex = selected ? clips.findIndex((c) => c.id === selected.id) : -1
+  const selection: Selection | null =
+    (sel && clips.find((c) => c.id === sel.clipId) ? sel : null) ??
+    (clips[0] ? { clipId: clips[0].id, childId: null } : null)
+  const selClip = selection ? clips.find((c) => c.id === selection.clipId) ?? null : null
+  const selIndex = selClip ? clips.findIndex((c) => c.id === selClip.id) : -1
+  const selChild =
+    selClip && selection?.childId
+      ? selClip.children.find((ch) => ch.id === selection.childId) ?? null
+      : null
+
   const totalSec = Math.max(6, ...clips.map((c) => c.placement.start + c.placement.duration))
-  const stripWidth = totalSec * PX_PER_SEC + 24
+  const stripWidth = totalSec * PX_PER_SEC + 16
 
   const setImage = (params: Record<string, unknown>) =>
-    selected && updateClip(selected.id, (c) => ({ ...c, image: { ...c.image, params } }))
+    selClip && updateClip(selClip.id, (c) => ({ ...c, image: { ...c.image, params } }))
   const setMotion = (params: Record<string, unknown>) =>
-    selected &&
-    updateClip(selected.id, (c) => ({ ...c, motion: { ...(c.motion as GenNode), params } }))
-  const setChild = (childId: string, params: Record<string, unknown>) =>
-    selected &&
-    updateClip(selected.id, (c) => ({
+    selClip &&
+    updateClip(selClip.id, (c) => ({ ...c, motion: { ...(c.motion as GenNode), params } }))
+  const setChildParams = (childId: string, params: Record<string, unknown>) =>
+    selClip &&
+    updateClip(selClip.id, (c) => ({
       ...c,
-      children: c.children.map((ch: AudioChild) =>
-        ch.id === childId ? { ...ch, params } : ch
-      ),
+      children: c.children.map((ch) => (ch.id === childId ? { ...ch, params } : ch)),
     }))
 
   return (
@@ -258,8 +264,8 @@ export function ClipReview() {
           <Clapperboard className="h-5 w-5" /> Revue — {document?.title}
         </h1>
         <p className="text-sm text-muted-foreground">
-          La timeline de ta vidéo. Clique un plan pour régler ses inputs, puis régénère-le.
-          La sauvegarde est automatique.
+          La timeline de montage : piste vidéo et piste son. Clique une brique pour éditer ses
+          arguments, puis régénère-la. Sauvegarde automatique.
         </p>
       </div>
 
@@ -269,60 +275,111 @@ export function ClipReview() {
         </p>
       ) : (
         <>
-          {/* Timeline chronologique */}
+          {/* Timeline multipiste */}
           <div className="rounded-xl border border-border bg-card/40 p-3">
-            <div className="mb-1 flex items-center justify-between">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Timeline
               </span>
               <span className="text-[11px] text-muted-foreground">{totalSec.toFixed(1)}s</span>
             </div>
-            <div className="overflow-x-auto pb-2">
-              <div className="relative h-32" style={{ width: stripWidth }}>
-                {/* règle temporelle */}
-                {Array.from({ length: Math.ceil(totalSec) + 1 }).map((_, s) => (
-                  <div
-                    key={s}
-                    className="absolute top-0 h-4 border-l border-border/50 text-[9px] text-muted-foreground"
-                    style={{ left: s * PX_PER_SEC }}
-                  >
-                    <span className="pl-1">{s}s</span>
+            <div className="flex">
+              {/* Gouttière : libellés de piste */}
+              <div className="shrink-0" style={{ width: GUTTER }}>
+                <div style={{ height: RULER_H }} />
+                <div
+                  className="flex items-center gap-1 border-t border-border/40 pt-1 text-[10px] font-medium uppercase text-muted-foreground"
+                  style={{ height: LANE_H }}
+                >
+                  <Film className="h-3 w-3" /> Vidéo
+                </div>
+                <div
+                  className="flex items-center gap-1 border-t border-border/40 pt-1 text-[10px] font-medium uppercase text-muted-foreground"
+                  style={{ height: LANE_H }}
+                >
+                  <Mic className="h-3 w-3" /> Son
+                </div>
+              </div>
+
+              {/* Pistes scrollables */}
+              <div className="min-w-0 flex-1 overflow-x-auto pb-2">
+                <div className="relative" style={{ width: stripWidth }}>
+                  {/* règle temporelle */}
+                  <div className="relative" style={{ height: RULER_H }}>
+                    {Array.from({ length: Math.ceil(totalSec) + 1 }).map((_, s) => (
+                      <div
+                        key={s}
+                        className="absolute top-0 h-full border-l border-border/40 text-[9px] text-muted-foreground"
+                        style={{ left: s * PX_PER_SEC }}
+                      >
+                        <span className="pl-1">{s}s</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {clips.map((clip, i) => (
-                  <TimelineBlock
-                    key={clip.id}
-                    clip={clip}
-                    index={i}
-                    left={clip.placement.start * PX_PER_SEC}
-                    width={Math.max(MIN_BLOCK_PX, clip.placement.duration * PX_PER_SEC - 6)}
-                    thumb={thumbById.get(clip.id) ?? null}
-                    generated={thumbById.has(clip.id)}
-                    selected={selected?.id === clip.id}
-                    onSelect={() => setSelectedId(clip.id)}
-                  />
-                ))}
+
+                  {/* piste VIDÉO */}
+                  <div className="relative border-t border-border/40" style={{ height: LANE_H }}>
+                    {clips.map((clip, i) => (
+                      <TrackBlock
+                        key={clip.id}
+                        tone="video"
+                        left={clip.placement.start * PX_PER_SEC}
+                        width={Math.max(MIN_BLOCK_PX, clip.placement.duration * PX_PER_SEC - 4)}
+                        selected={selClip?.id === clip.id && !selChild}
+                        onSelect={() => setSel({ clipId: clip.id, childId: null })}
+                        thumb={thumbById.get(clip.id) ?? null}
+                        icon={clip.kind === "video" ? Film : ImageIcon}
+                        badge={String(i + 1)}
+                        label={short(promptOf(clip.image) || promptOf(clip.motion)) || `Plan ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* piste SON */}
+                  <div className="relative border-t border-border/40" style={{ height: LANE_H }}>
+                    {clips.flatMap((clip) => {
+                      const n = clip.children.length || 0
+                      return clip.children.map((child, k) => {
+                        const w = clip.placement.duration / Math.max(1, n)
+                        return (
+                          <TrackBlock
+                            key={child.id}
+                            tone="audio"
+                            left={(clip.placement.start + k * w) * PX_PER_SEC}
+                            width={Math.max(MIN_BLOCK_PX, w * PX_PER_SEC - 4)}
+                            selected={selChild?.id === child.id}
+                            onSelect={() => setSel({ clipId: clip.id, childId: child.id })}
+                            icon={Mic}
+                            label={short(textOf(child)) || child.role}
+                          />
+                        )
+                      })
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Inspecteur du plan sélectionné */}
-          {selected && (
+          {/* Inspecteur de la brique sélectionnée */}
+          {selClip && (
             <div className="rounded-xl border border-border bg-card/40 p-4">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h2 className="text-base font-semibold">
-                    Plan {selectedIndex + 1} · {selected.kind === "video" ? "Vidéo" : "Photo"}
+                    {selChild
+                      ? `Voix · ${selChild.role}`
+                      : `Plan ${selIndex + 1} · ${selClip.kind === "video" ? "Vidéo" : "Photo"}`}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    {selected.placement.start.toFixed(1)}s –{" "}
-                    {(selected.placement.start + selected.placement.duration).toFixed(1)}s
+                    Plan {selIndex + 1} · {selClip.placement.start.toFixed(1)}s –{" "}
+                    {(selClip.placement.start + selClip.placement.duration).toFixed(1)}s
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onRegenerate(selected.id)}
+                  onClick={() => onRegenerate(selClip.id)}
                   disabled={regenerate.isPending}
                   className="gap-1.5"
                 >
@@ -330,39 +387,38 @@ export function ClipReview() {
                 </Button>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Section icon={ImageIcon} title="Image">
+              {selChild ? (
+                <Section icon={Mic} title={`Voix · ${selChild.role}`}>
                   <NodeForm
-                    modelRef={selected.image.model_ref}
-                    kind="image"
-                    params={selected.image.params}
-                    onChange={setImage}
+                    modelRef={selChild.model_ref}
+                    kind="voice"
+                    params={selChild.params}
+                    onChange={(p) => setChildParams(selChild.id, p)}
                   />
                 </Section>
-
-                {selected.kind === "video" && selected.motion && (
-                  <Section icon={Film} title="Vidéo">
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Section icon={ImageIcon} title="Image">
                     <NodeForm
-                      modelRef={selected.motion.model_ref}
-                      kind="video"
-                      params={selected.motion.params}
-                      onChange={setMotion}
-                      note="L'image de départ est auto-liée à la photo de ce plan."
+                      modelRef={selClip.image.model_ref}
+                      kind="image"
+                      params={selClip.image.params}
+                      onChange={setImage}
                     />
                   </Section>
-                )}
-
-                {selected.children.map((child) => (
-                  <Section key={child.id} icon={Mic} title={`Voix · ${child.role}`}>
-                    <NodeForm
-                      modelRef={child.model_ref}
-                      kind="voice"
-                      params={child.params}
-                      onChange={(p) => setChild(child.id, p)}
-                    />
-                  </Section>
-                ))}
-              </div>
+                  {selClip.kind === "video" && selClip.motion && (
+                    <Section icon={Film} title="Vidéo">
+                      <NodeForm
+                        modelRef={selClip.motion.model_ref}
+                        kind="video"
+                        params={selClip.motion.params}
+                        onChange={setMotion}
+                        note="L'image de départ est auto-liée à la photo de ce plan."
+                      />
+                    </Section>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </>
