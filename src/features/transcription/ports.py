@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Protocol, Tuple
+from typing import Any, Protocol
 
 
 @dataclass(frozen=True)
@@ -13,9 +13,9 @@ class Cue:
 @dataclass(frozen=True)
 class Transcription:
     """Complete transcription as immutable tuple of cues."""
-    cues: Tuple[Cue, ...]
+    cues: tuple[Cue, ...]
 
-    def to_list(self) -> list[dict]:
+    def to_list(self) -> list[dict[str, Any]]:
         """Convert to list of dicts for backwards compat with metadata.json."""
         return [
             {"text": cue.text, "start": cue.start, "end": cue.end}

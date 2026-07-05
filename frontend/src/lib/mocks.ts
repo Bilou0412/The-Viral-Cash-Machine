@@ -17,7 +17,6 @@ import type {
   Episode,
   FormField,
   GenerateScriptBody,
-  GenerativeBrick,
   GenerativeKind,
   LibraryItem,
   ModelForm,
@@ -109,8 +108,8 @@ function buildBeatEntries(): BeatEntry[] {
     }
     out.push({ round_index: r, beat: "choice.0", kind: "image", image_prompt: `[choice A] r${r + 1}`, motion_prompt: null, text: null })
     out.push({ round_index: r, beat: "choice.1", kind: "image", image_prompt: `[choice B] r${r + 1}`, motion_prompt: null, text: null })
-    out.push({ round_index: r, beat: "character.voice", kind: "audio", image_prompt: null, motion_prompt: null, text: SCRIPT.rounds[r].character_line_fr })
-    out.push({ round_index: r, beat: "narration", kind: "audio", image_prompt: null, motion_prompt: null, text: SCRIPT.rounds[r].action_narration_fr })
+    out.push({ round_index: r, beat: "character.voice", kind: "audio", image_prompt: null, motion_prompt: null, text: SCRIPT.rounds[r]?.character_line_fr ?? null })
+    out.push({ round_index: r, beat: "narration", kind: "audio", image_prompt: null, motion_prompt: null, text: SCRIPT.rounds[r]?.action_narration_fr ?? null })
   }
   out.push({ round_index: null, beat: "epilogue.frame", kind: "image", image_prompt: "[frame] epilogue", motion_prompt: null, text: null })
   out.push({ round_index: null, beat: "epilogue.motion", kind: "video", image_prompt: "[frame] epilogue", motion_prompt: "[motion] epilogue", text: null })
@@ -222,12 +221,12 @@ function newEditorDoc(title: string): EditorDoc {
         id: "brk-img-1", type: "image", model_ref: "bytedance/seedream-4.5",
         params: { prompt: "an abandoned subway tunnel, dim flickering light", aspect_ratio: "9:16" },
         layers: [], placement: { track: 0, start: 0, duration: 4 },
-      } as GenerativeBrick,
+      },
       {
         id: "brk-voice-1", type: "voice", model_ref: "minimax/speech-2.8-turbo",
         params: { text: "Tu cours dans le noir, le souffle court.", voice_id: "male-conteur" },
         layers: [], placement: { track: 2, start: 0, duration: 4 },
-      } as GenerativeBrick,
+      },
     ],
   }
 }

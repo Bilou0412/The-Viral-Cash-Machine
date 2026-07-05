@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor import (  # noqa: E402
+from src.editor import (
     ClipBrick,
     EditorDocument,
     GenerativeBrick,
@@ -12,7 +12,7 @@ from src.editor import (  # noqa: E402
     TextBrick,
     upgrade_document,
 )
-from src.editor.document import SCHEMA_VERSION  # noqa: E402
+from src.editor.document import SCHEMA_VERSION
 
 
 def _doc() -> EditorDocument:

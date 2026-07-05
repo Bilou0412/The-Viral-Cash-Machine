@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
@@ -31,8 +31,8 @@ from ....editor.context import compile_prompt
 from ....editor.document import (
     ClipBrick,
     EditorDocument,
-    GenNode,
     GenerativeBrick,
+    GenNode,
 )
 from ....features import storage
 from ....features.assets.ports import AssetProvider
@@ -60,7 +60,7 @@ _ASSET_KIND = {"image": "image", "video": "video", "voice": "audio"}
 _EXT = {"image": "png", "video": "mp4", "voice": "mp3"}
 
 
-def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
+def _ordered_generative_bricks(doc: EditorDocument) -> list[GenerativeBrick]:
     """Topo-order generative bricks so referenced bricks come first.
 
     A brick whose params contain ``"{brick:X}"`` depends on brick X. Falls back
@@ -69,8 +69,8 @@ def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
     gens = [b for b in doc.bricks if isinstance(b, GenerativeBrick)]
     by_id = {b.id: b for b in gens}
 
-    def deps(brick: GenerativeBrick) -> List[str]:
-        out: List[str] = []
+    def deps(brick: GenerativeBrick) -> list[str]:
+        out: list[str] = []
         for value in brick.params.values():
             if isinstance(value, str):
                 m = _BRICK_REF.match(value)
@@ -78,13 +78,13 @@ def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
                     out.append(m.group(1))
         return out
 
-    ordered: List[GenerativeBrick] = []
+    ordered: list[GenerativeBrick] = []
     placed: set[str] = set()
     remaining = list(gens)
     # Iterate up to len(gens) passes; on a stall, flush the rest in order.
     for _ in range(len(remaining) + 1):
         progress = False
-        still: List[GenerativeBrick] = []
+        still: list[GenerativeBrick] = []
         for brick in remaining:
             if all(d in placed for d in deps(brick)):
                 ordered.append(brick)
@@ -101,7 +101,7 @@ def _ordered_generative_bricks(doc: EditorDocument) -> List[GenerativeBrick]:
     return ordered
 
 
-def _resolve_media_value(value: str, token: Optional[str]) -> Optional[str]:
+def _resolve_media_value(value: str, token: str | None) -> str | None:
     """Résout une valeur d'input média en URL utilisable par Replicate.
 
     URL http(s) → telle quelle ; **photo uploadée** (ref de stockage) ou chemin
@@ -111,7 +111,7 @@ def _resolve_media_value(value: str, token: Optional[str]) -> Optional[str]:
     """
     if not value:
         return None
-    if value.startswith("http://") or value.startswith("https://"):
+    if value.startswith(("http://", "https://")):
         return value
     if storage.exists(value):
         return _upload_to_replicate(storage.materialize(value), token)
@@ -121,8 +121,8 @@ def _resolve_media_value(value: str, token: Optional[str]) -> Optional[str]:
 
 
 def _resolve_brick_refs(
-    params: Dict[str, Any], outputs: Dict[str, str], token: Optional[str] = None
-) -> Dict[str, Any]:
+    params: dict[str, Any], outputs: dict[str, str], token: str | None = None
+) -> dict[str, Any]:
     """Replace ``"{brick:X}"`` values by the (Replicate-uploaded) URL of X, and
     resolve **uploaded photos** (storage refs / local paths) to Replicate URLs.
 
@@ -130,7 +130,7 @@ def _resolve_brick_refs(
     path, it is uploaded to Replicate first (best-effort); a missing/unknown ref
     is left as-is so `validate_params` can flag it.
     """
-    resolved: Dict[str, Any] = {}
+    resolved: dict[str, Any] = {}
     for key, value in params.items():
         if isinstance(value, str):
             m = _BRICK_REF.match(value)
@@ -161,9 +161,9 @@ class EditorGenerationService:
     def __init__(
         self,
         engine: Engine,
-        provider: Optional[AssetProvider] = None,
-        downloader: Optional[Downloader] = None,
-        replicate_token: Optional[str] = None,
+        provider: AssetProvider | None = None,
+        downloader: Downloader | None = None,
+        replicate_token: str | None = None,
     ) -> None:
         self.engine = engine
         self.provider = provider or ReplicateAssetProvider(api_token=replicate_token)
@@ -189,8 +189,8 @@ class EditorGenerationService:
         return doc, out_dir
 
     def _final_params(
-        self, doc: EditorDocument, brick: GenerativeBrick, outputs: Dict[str, str]
-    ) -> tuple[Dict[str, Any], str]:
+        self, doc: EditorDocument, brick: GenerativeBrick, outputs: dict[str, str]
+    ) -> tuple[dict[str, Any], str]:
         """Compile the prompt + resolve brick refs. Returns (params, prompt)."""
         params = _resolve_brick_refs(dict(brick.params), outputs, self.replicate_token)
         key = _PROMPT_KEY[brick.type]
@@ -221,7 +221,7 @@ class EditorGenerationService:
         bus.publish(doc_id, {"type": "generation_started", "total": total})
 
         done = self._existing_done(doc_id)
-        outputs: Dict[str, str] = {}
+        outputs: dict[str, str] = {}
         index = 0
         for clip in clips:
             index = self._generate_clip(doc, doc_id, clip, out_dir, done, index)
@@ -244,7 +244,7 @@ class EditorGenerationService:
         if not isinstance(brick, GenerativeBrick):
             raise ValueError(f"brick {brick_id!r} is not generative")
         # Reuse already-downloaded outputs of OTHER bricks for cross-brick refs.
-        outputs: Dict[str, str] = {}
+        outputs: dict[str, str] = {}
         with Session(self.engine) as session:
             for asset in AssetRepo(session).assets_by_document(doc_id):
                 if asset.local_path:
@@ -253,9 +253,9 @@ class EditorGenerationService:
 
     # -- core -------------------------------------------------------------
 
-    def _existing_done(self, doc_id: int) -> Dict[str, str]:
+    def _existing_done(self, doc_id: int) -> dict[str, str]:
         """beat -> chemin local des Assets déjà `ready` ET présents sur disque."""
-        out: Dict[str, str] = {}
+        out: dict[str, str] = {}
         with Session(self.engine) as session:
             for a in AssetRepo(session).assets_by_document(doc_id):
                 p = a.local_path
@@ -274,10 +274,10 @@ class EditorGenerationService:
         clip: ClipBrick,
         node: Any,  # GenNode | AudioChild
         contract_kind: str,
-        outputs: Dict[str, str],
-        overrides: Dict[str, Any],
+        outputs: dict[str, str],
+        overrides: dict[str, Any],
         prompt_fallback: str = "",
-    ) -> "tuple[Dict[str, Any], str]":
+    ) -> tuple[dict[str, Any], str]:
         """Params COMPLETS d'un nœud composite : ses ``params`` bruts (tous les inputs
         du modèle saisis en revue) + refs résolues + prompt compilé + clés dérivées
         (``overrides`` : image auto-liée, durée…) qui l'emportent. Miroir du chemin
@@ -304,7 +304,7 @@ class EditorGenerationService:
         doc_id: int,
         clip: ClipBrick,
         out_dir: str,
-        done: Dict[str, str],
+        done: dict[str, str],
         index: int,
     ) -> int:
         """Exécute un `ClipBrick` : image (first-frame) → motion → enfants narration.
@@ -381,16 +381,16 @@ class EditorGenerationService:
         self,
         doc_id: int,
         out_dir: str,
-        done: Dict[str, str],
+        done: dict[str, str],
         index: int,
         *,
         beat: str,
         contract_kind: str,
         asset_kind: str,
         model_ref: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         prompt: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Saute le nœud si déjà `ready` (idempotence), sinon le génère."""
         if beat in done:
             bus.publish(
@@ -428,7 +428,7 @@ class EditorGenerationService:
         doc_id: int,
         brick: GenerativeBrick,
         out_dir: str,
-        outputs: Dict[str, str],
+        outputs: dict[str, str],
         index: int,
     ) -> None:
         """Brique PLATE legacy : un appel, un Asset (chaînage via outputs)."""
@@ -450,10 +450,10 @@ class EditorGenerationService:
         contract_kind: str,
         asset_kind: str,
         model_ref: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         prompt: str,
         index: int,
-    ) -> "tuple[Optional[str], Optional[str]]":
+    ) -> tuple[str | None, str | None]:
         """Génère UN nœud → Asset/Job/Cost/SSE. Renvoie (url distante, chemin local).
 
         `contract_kind` ∈ image/video/voice (validation + coût + extension) ;
@@ -551,7 +551,7 @@ def _clip_node_count(clip: ClipBrick) -> int:
     return 1 + (1 if clip.kind == "video" else 0) + len(clip.children)
 
 
-def _url_for_local(path: Optional[str], token: Optional[str] = None) -> Optional[str]:
+def _url_for_local(path: str | None, token: str | None = None) -> str | None:
     """URL utilisable pour un fichier local (upload Replicate, repli sur le chemin)."""
     if path and os.path.exists(path):
         return _upload_to_replicate(path, token) or path
@@ -559,7 +559,7 @@ def _url_for_local(path: Optional[str], token: Optional[str] = None) -> Optional
 
 
 def _best_effort_cost(
-    model_ref: str, kind: str, params: Dict[str, Any]
+    model_ref: str, kind: str, params: dict[str, Any]
 ) -> pricing.CostLine:
     """Best-effort cost line for an editor brick — never blocks.
 
@@ -588,9 +588,9 @@ def regenerate_brick(
     engine: Engine,
     doc_id: int,
     brick_id: str,
-    provider: Optional[AssetProvider] = None,
-    downloader: Optional[Downloader] = None,
-    replicate_token: Optional[str] = None,
+    provider: AssetProvider | None = None,
+    downloader: Downloader | None = None,
+    replicate_token: str | None = None,
 ) -> None:
     """Module-level wrapper to schedule a single-brick regeneration."""
     EditorGenerationService(

@@ -7,11 +7,11 @@ session lifecycle (commit happens inside the mutating methods).
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlmodel import Session, select
-
-from datetime import datetime, timezone
 
 from src.studio.db.models import (
     AdventureScriptRow,
@@ -37,8 +37,8 @@ class ProjectRepo:
     def create(
         self,
         name: str,
-        settings_json: Optional[str] = None,
-        owner_id: Optional[int] = None,
+        settings_json: str | None = None,
+        owner_id: int | None = None,
     ) -> Project:
         project = Project(
             name=name, settings_json=settings_json, owner_id=owner_id
@@ -48,10 +48,10 @@ class ProjectRepo:
         self.session.refresh(project)
         return project
 
-    def get(self, project_id: int) -> Optional[Project]:
+    def get(self, project_id: int) -> Project | None:
         return self.session.get(Project, project_id)
 
-    def get_by_name(self, name: str) -> Optional[Project]:
+    def get_by_name(self, name: str) -> Project | None:
         return self.session.exec(
             select(Project).where(Project.name == name)
         ).first()
@@ -102,7 +102,7 @@ class EpisodeRepo:
         self.session.refresh(episode)
         return episode
 
-    def get(self, episode_id: int) -> Optional[Episode]:
+    def get(self, episode_id: int) -> Episode | None:
         return self.session.get(Episode, episode_id)
 
     def list(self) -> Sequence[Episode]:
@@ -121,7 +121,7 @@ class EpisodeRepo:
             .where(Project.owner_id == owner_id)
         ).all()
 
-    def update_status(self, episode_id: int, status: str) -> Optional[Episode]:
+    def update_status(self, episode_id: int, status: str) -> Episode | None:
         episode = self.get(episode_id)
         if episode is None:
             return None
@@ -132,8 +132,8 @@ class EpisodeRepo:
         return episode
 
     def set_final(
-        self, episode_id: int, final_path: str, duration_s: Optional[float] = None
-    ) -> Optional[Episode]:
+        self, episode_id: int, final_path: str, duration_s: float | None = None
+    ) -> Episode | None:
         episode = self.get(episode_id)
         if episode is None:
             return None
@@ -172,12 +172,12 @@ class ScriptRepo:
         self.session.refresh(row)
         return row
 
-    def get(self, script_id: int) -> Optional[AdventureScriptRow]:
+    def get(self, script_id: int) -> AdventureScriptRow | None:
         return self.session.get(AdventureScriptRow, script_id)
 
     def latest_for_episode(
         self, episode_id: int
-    ) -> Optional[AdventureScriptRow]:
+    ) -> AdventureScriptRow | None:
         return self.session.exec(
             select(AdventureScriptRow)
             .where(AdventureScriptRow.episode_id == episode_id)
@@ -196,13 +196,13 @@ class AssetRepo:
         episode_id: int,
         beat: str,
         kind: str,
-        round_index: Optional[int] = None,
-        prompt: Optional[str] = None,
-        local_path: Optional[str] = None,
+        round_index: int | None = None,
+        prompt: str | None = None,
+        local_path: str | None = None,
         status: str = "pending",
         draft: bool = True,
-        sha: Optional[str] = None,
-        editor_document_id: Optional[int] = None,
+        sha: str | None = None,
+        editor_document_id: int | None = None,
     ) -> Asset:
         asset = Asset(
             episode_id=episode_id,
@@ -221,11 +221,11 @@ class AssetRepo:
         self.session.refresh(asset)
         return asset
 
-    def get(self, asset_id: int) -> Optional[Asset]:
+    def get(self, asset_id: int) -> Asset | None:
         return self.session.get(Asset, asset_id)
 
     def assets_by_episode(
-        self, episode_id: int, kind: Optional[str] = None
+        self, episode_id: int, kind: str | None = None
     ) -> Sequence[Asset]:
         statement = select(Asset).where(Asset.episode_id == episode_id)
         if kind is not None:
@@ -244,7 +244,7 @@ class AssetRepo:
 
     def by_document_and_beat(
         self, editor_document_id: int, beat: str
-    ) -> Optional[Asset]:
+    ) -> Asset | None:
         """E5 : l'asset d'une brique donnée (beat == brick id) dans un document."""
         return self.session.exec(
             select(Asset)
@@ -256,9 +256,9 @@ class AssetRepo:
     def update(
         self,
         asset_id: int,
-        prompt: Optional[str] = None,
-        excluded: Optional[bool] = None,
-    ) -> Optional[Asset]:
+        prompt: str | None = None,
+        excluded: bool | None = None,
+    ) -> Asset | None:
         """Édite le prompt et/ou le flag `excluded` d'un asset (M1).
 
         Seuls les champs non-None sont modifiés (None = inchangé).
@@ -276,8 +276,8 @@ class AssetRepo:
         return asset
 
     def set_local_path(
-        self, asset_id: int, local_path: str, sha: Optional[str] = None
-    ) -> Optional[Asset]:
+        self, asset_id: int, local_path: str, sha: str | None = None
+    ) -> Asset | None:
         """Record the downloaded on-disk path (never a replicate.delivery URL)."""
         asset = self.get(asset_id)
         if asset is None:
@@ -310,7 +310,7 @@ class JobRepo:
         self,
         asset_id: int,
         model: str,
-        prediction_id: Optional[str] = None,
+        prediction_id: str | None = None,
         status: str = "pending",
     ) -> GenerationJob:
         job = GenerationJob(
@@ -324,26 +324,26 @@ class JobRepo:
         self.session.refresh(job)
         return job
 
-    def get(self, job_id: int) -> Optional[GenerationJob]:
+    def get(self, job_id: int) -> GenerationJob | None:
         return self.session.get(GenerationJob, job_id)
 
     def mark_done(
-        self, job_id: int, duration_s: Optional[float] = None
-    ) -> Optional[GenerationJob]:
+        self, job_id: int, duration_s: float | None = None
+    ) -> GenerationJob | None:
         return self._set_status(job_id, "done", duration_s=duration_s)
 
     def mark_failed(
         self, job_id: int, error: str
-    ) -> Optional[GenerationJob]:
+    ) -> GenerationJob | None:
         return self._set_status(job_id, "failed", error=error)
 
     def _set_status(
         self,
         job_id: int,
         status: str,
-        duration_s: Optional[float] = None,
-        error: Optional[str] = None,
-    ) -> Optional[GenerationJob]:
+        duration_s: float | None = None,
+        error: str | None = None,
+    ) -> GenerationJob | None:
         job = self.get(job_id)
         if job is None:
             return None
@@ -367,10 +367,10 @@ class VoiceRepo:
     def create(
         self,
         name: str,
-        registre: Optional[str] = None,
-        description: Optional[str] = None,
-        voice_id: Optional[str] = None,
-        sample_path: Optional[str] = None,
+        registre: str | None = None,
+        description: str | None = None,
+        voice_id: str | None = None,
+        sample_path: str | None = None,
     ) -> VoiceProfile:
         voice = VoiceProfile(
             name=name,
@@ -384,10 +384,10 @@ class VoiceRepo:
         self.session.refresh(voice)
         return voice
 
-    def get(self, voice_id: int) -> Optional[VoiceProfile]:
+    def get(self, voice_id: int) -> VoiceProfile | None:
         return self.session.get(VoiceProfile, voice_id)
 
-    def get_by_name(self, name: str) -> Optional[VoiceProfile]:
+    def get_by_name(self, name: str) -> VoiceProfile | None:
         return self.session.exec(
             select(VoiceProfile).where(VoiceProfile.name == name)
         ).first()
@@ -418,7 +418,7 @@ class CostRepo:
         units: float = 0.0,
         unit_kind: str = "units",
         source: str = "estimate",
-        predict_time_s: Optional[float] = None,
+        predict_time_s: float | None = None,
     ) -> CostEntry:
         entry = CostEntry(
             job_id=job_id,
@@ -435,7 +435,7 @@ class CostRepo:
         self.session.refresh(entry)
         return entry
 
-    def get(self, entry_id: int) -> Optional[CostEntry]:
+    def get(self, entry_id: int) -> CostEntry | None:
         return self.session.get(CostEntry, entry_id)
 
     def total(self) -> float:
@@ -483,7 +483,7 @@ class EditorDocRepo:
         project_id: int,
         title: str,
         doc_json: str,
-        episode_id: Optional[int] = None,
+        episode_id: int | None = None,
         schema_version: int = 1,
     ) -> EditorDocumentRow:
         row = EditorDocumentRow(
@@ -498,7 +498,7 @@ class EditorDocRepo:
         self.session.refresh(row)
         return row
 
-    def get(self, doc_id: int) -> Optional[EditorDocumentRow]:
+    def get(self, doc_id: int) -> EditorDocumentRow | None:
         return self.session.get(EditorDocumentRow, doc_id)
 
     def by_project(self, project_id: int) -> Sequence[EditorDocumentRow]:
@@ -523,9 +523,9 @@ class EditorDocRepo:
         self,
         doc_id: int,
         doc_json: str,
-        title: Optional[str] = None,
-        schema_version: Optional[int] = None,
-    ) -> Optional[EditorDocumentRow]:
+        title: str | None = None,
+        schema_version: int | None = None,
+    ) -> EditorDocumentRow | None:
         """Update the stored ``doc_json`` (and optionally title/version)."""
         row = self.get(doc_id)
         if row is None:
@@ -535,7 +535,7 @@ class EditorDocRepo:
             row.title = title
         if schema_version is not None:
             row.schema_version = schema_version
-        row.updated_at = datetime.now(timezone.utc)
+        row.updated_at = datetime.now(UTC)
         self.session.add(row)
         self.session.commit()
         self.session.refresh(row)
@@ -567,10 +567,10 @@ class UserRepo:
         self.session.refresh(user)
         return user
 
-    def get(self, user_id: int) -> Optional[User]:
+    def get(self, user_id: int) -> User | None:
         return self.session.get(User, user_id)
 
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         return self.session.exec(
             select(User).where(User.email == email)
         ).first()
@@ -585,7 +585,7 @@ class UserApiKeyRepo:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _get_row(self, user_id: int, provider: str) -> Optional[UserApiKey]:
+    def _get_row(self, user_id: int, provider: str) -> UserApiKey | None:
         return self.session.exec(
             select(UserApiKey).where(
                 UserApiKey.user_id == user_id,
@@ -593,7 +593,7 @@ class UserApiKeyRepo:
             )
         ).first()
 
-    def get(self, user_id: int, provider: str) -> Optional[UserApiKey]:
+    def get(self, user_id: int, provider: str) -> UserApiKey | None:
         return self._get_row(user_id, provider)
 
     def upsert(self, user_id: int, provider: str, ciphertext: str) -> None:
@@ -604,7 +604,7 @@ class UserApiKeyRepo:
             )
         else:
             row.ciphertext = ciphertext
-            row.updated_at = datetime.now(timezone.utc)
+            row.updated_at = datetime.now(UTC)
         self.session.add(row)
         self.session.commit()
 
@@ -621,7 +621,7 @@ class SettingRepo:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         row = self.session.get(AppSetting, key)
         return row.value if row else None
 
@@ -631,6 +631,6 @@ class SettingRepo:
             row = AppSetting(key=key, value=value)
         else:
             row.value = value
-            row.updated_at = datetime.now(timezone.utc)
+            row.updated_at = datetime.now(UTC)
         self.session.add(row)
         self.session.commit()

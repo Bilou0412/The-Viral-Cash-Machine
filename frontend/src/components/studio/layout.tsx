@@ -3,7 +3,7 @@ import { LayoutDashboard, Library, Clapperboard, Sparkles, FolderKanban, Film, K
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { api, usingMocks } from "@/lib/api"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 
 const nav = [
@@ -26,7 +26,7 @@ export function Layout() {
       await api.logout()
     } finally {
       await qc.invalidateQueries({ queryKey: ["me"] })
-      navigate("/login", { replace: true })
+      void navigate("/login", { replace: true })
     }
   }
 

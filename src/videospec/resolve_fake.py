@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import os
 import wave
-from typing import Dict, List, Tuple
 
 from moviepy import ColorClip
 from PIL import Image
@@ -32,13 +31,13 @@ from .ports import ResolvedAssets
 _FRAMERATE = 22050
 
 
-def _color_for(asset_id: str) -> Tuple[int, int, int]:
+def _color_for(asset_id: str) -> tuple[int, int, int]:
     """Couleur sombre déterministe dérivée de l'id (variété visuelle, ton horreur)."""
     n = abs(hash(asset_id))
     return (20 + n % 60, 10 + (n // 7) % 40, 15 + (n // 13) % 50)
 
 
-def _fake_words(text: str, duration: float) -> Tuple[Dict[str, object], ...]:
+def _fake_words(text: str, duration: float) -> tuple[dict[str, object], ...]:
     """Transcript factice : un mot par token, réparti uniformément sur la durée."""
     tokens = text.split()
     if not tokens:
@@ -73,8 +72,8 @@ class FakeAssetResolver:
     def resolve(self, spec: VideoSpec, project_dir: str) -> ResolvedAssets:
         os.makedirs(project_dir, exist_ok=True)
         w, h, fps = spec.canvas.width, spec.canvas.height, spec.canvas.fps
-        paths: Dict[str, str] = {}
-        transcripts: Dict[str, Tuple[Dict[str, object], ...]] = {}
+        paths: dict[str, str] = {}
+        transcripts: dict[str, tuple[dict[str, object], ...]] = {}
 
         for a in spec.assets:
             if isinstance(a, ImageAsset):
@@ -97,7 +96,7 @@ class FakeAssetResolver:
                 # Fichier statique déjà sur disque (SFX) : on pointe dessus tel quel.
                 paths[a.id] = a.path
 
-        heads: Dict[str, Tuple[float, float]] = {
+        heads: dict[str, tuple[float, float]] = {
             "left": (0.3, 0.4),
             "right": (0.7, 0.4),
         }

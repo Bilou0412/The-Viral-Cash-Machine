@@ -85,7 +85,7 @@ JSON Format:
                     {"role": "user", "content": script},
                 ],
             )
-            data = json.loads(resp.choices[0].message.content)
+            data = json.loads(resp.choices[0].message.content or "{}")
 
             # Extract and validate required fields
             monster_left_desc = data.get("monster_left_desc", "")
@@ -114,6 +114,6 @@ JSON Format:
             )
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse GPT response as JSON: {e}")
+            raise ValueError(f"Failed to parse GPT response as JSON: {e}") from e
         except Exception as e:
-            raise ValueError(f"Script decomposition failed: {e}")
+            raise ValueError(f"Script decomposition failed: {e}") from e

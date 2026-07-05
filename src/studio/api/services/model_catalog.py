@@ -12,7 +12,7 @@ Cache en mémoire par `model_ref` (schémas immuables par version).
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Protocol
 
 from pydantic import BaseModel
 
@@ -32,7 +32,7 @@ class FormField(BaseModel):
     type: str            # string | integer | number | boolean | enum | file | array
     required: bool
     default: Any = None
-    enum: Optional[List[str]] = None
+    enum: list[str] | None = None
     description: str = ""
     order: int = 999
     # Libellé métier FR (depuis le contrat du kind) ; repli = nom brut embelli.
@@ -43,13 +43,13 @@ class FormField(BaseModel):
 class FormDescriptor(BaseModel):
     model_ref: str
     version_id: str
-    fields: List[FormField]
+    fields: list[FormField]
 
 
 class ModelCard(BaseModel):
     owner: str
     name: str
-    cover: Optional[str] = None
+    cover: str | None = None
     description: str = ""
 
 
@@ -59,11 +59,11 @@ class ModelCard(BaseModel):
 
 
 class CatalogClient(Protocol):
-    def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
+    def model_version_schema(self, model_ref: str) -> tuple[str, dict[str, Any]]:
         """(version_id, input_schema OpenAPI) du modèle (`owner/name`)."""
         ...
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
+    def search(self, query: str) -> list[dict[str, Any]]:
         """Modèles bruts {owner, name, cover_image_url, description, ...}."""
         ...
 
@@ -77,7 +77,7 @@ class ReplicateCatalogClient:
     courant (B.2), passée au client SDK (plus de lecture d'env partagée).
     """
 
-    def __init__(self, api_token: Optional[str] = None) -> None:
+    def __init__(self, api_token: str | None = None) -> None:
         self.api_token = api_token
 
     def _client(self) -> Any:
@@ -85,14 +85,14 @@ class ReplicateCatalogClient:
 
         return Client(api_token=self.api_token) if self.api_token else Client()
 
-    def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
+    def model_version_schema(self, model_ref: str) -> tuple[str, dict[str, Any]]:
         model = self._client().models.get(model_ref)
         version = getattr(model, "latest_version", None)
         if version is None:  # certains modèles : prendre la 1re version listée
             versions = list(model.versions.list())
             version = versions[0] if versions else None
         version_id = str(getattr(version, "id", "")) if version else ""
-        schema: Dict[str, Any] = {}
+        schema: dict[str, Any] = {}
         if version is not None:
             openapi = getattr(version, "openapi_schema", None) or {}
             schema = (
@@ -100,21 +100,20 @@ class ReplicateCatalogClient:
             )
         return version_id, schema
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
+    def search(self, query: str) -> list[dict[str, Any]]:
         try:
             page = self._client().models.search(query)
         except Exception:
             return []  # SDK sans search / erreur réseau → pas de résultat
-        out: List[Dict[str, Any]] = []
-        for m in page:
-            out.append(
-                {
-                    "owner": getattr(m, "owner", ""),
-                    "name": getattr(m, "name", ""),
-                    "cover_image_url": getattr(m, "cover_image_url", None),
-                    "description": getattr(m, "description", "") or "",
-                }
-            )
+        out: list[dict[str, Any]] = [
+            {
+                "owner": getattr(m, "owner", ""),
+                "name": getattr(m, "name", ""),
+                "cover_image_url": getattr(m, "cover_image_url", None),
+                "description": getattr(m, "description", "") or "",
+            }
+            for m in page
+        ]
         return out
 
 
@@ -122,12 +121,12 @@ class ReplicateCatalogClient:
 # Cache mémoire (schémas immuables par version)
 # ---------------------------------------------------------------------------
 
-_schema_cache: Dict[str, Tuple[str, Dict[str, Any]]] = {}
+_schema_cache: dict[str, tuple[str, dict[str, Any]]] = {}
 
 
 def _cached_schema(
     client: CatalogClient, model_ref: str
-) -> Tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     hit = _schema_cache.get(model_ref)
     if hit is None:
         hit = client.model_version_schema(model_ref)
@@ -152,7 +151,7 @@ _TYPE_MAP = {
 }
 
 
-def _field_type(prop: Dict[str, Any]) -> str:
+def _field_type(prop: dict[str, Any]) -> str:
     if prop.get("enum"):
         return "enum"
     if prop.get("format") == "uri":
@@ -160,7 +159,7 @@ def _field_type(prop: Dict[str, Any]) -> str:
     return _TYPE_MAP.get(str(prop.get("type", "string")), "string")
 
 
-def _input_properties(schema: Dict[str, Any]) -> List[str]:
+def _input_properties(schema: dict[str, Any]) -> list[str]:
     return list(schema.get("properties", {}).keys())
 
 
@@ -170,7 +169,7 @@ def _prettify(raw_name: str) -> str:
 
 
 def form_descriptor(
-    model_ref: str, client: CatalogClient, kind: Optional[str] = None
+    model_ref: str, client: CatalogClient, kind: str | None = None
 ) -> FormDescriptor:
     """Descripteur de formulaire pour l'inspecteur (champs triés par x-order).
 
@@ -178,7 +177,7 @@ def form_descriptor(
     chaque input via le contrat du kind ; repli = nom brut embelli.
     """
     version_id, schema = _cached_schema(client, model_ref)
-    props: Dict[str, Any] = schema.get("properties", {})
+    props: dict[str, Any] = schema.get("properties", {})
     required = set(schema.get("required", []))
     fields = []
     for name, prop in props.items():
@@ -200,10 +199,10 @@ def form_descriptor(
     return FormDescriptor(model_ref=model_ref, version_id=version_id, fields=fields)
 
 
-def search_models(kind: str, query: str, client: CatalogClient) -> List[ModelCard]:
+def search_models(kind: str, query: str, client: CatalogClient) -> list[ModelCard]:
     """Modèles correspondant à `query` ET satisfaisant le contrat de la brique."""
     contract = get_contract(kind)  # KeyError si kind inconnu
-    cards: List[ModelCard] = []
+    cards: list[ModelCard] = []
     for raw in client.search(query):
         owner = str(raw.get("owner", ""))
         name = str(raw.get("name", ""))

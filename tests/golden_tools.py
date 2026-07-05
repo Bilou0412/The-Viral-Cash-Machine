@@ -17,7 +17,7 @@ import hashlib
 import json
 import os
 import subprocess
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 # --- segment model ---------------------------------------------------------
 # compile_video_raw (compiler.py:298) concatenates these in this fixed order
@@ -160,5 +160,5 @@ def stable_metadata(meta: dict) -> dict:
 
 
 def load_json(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

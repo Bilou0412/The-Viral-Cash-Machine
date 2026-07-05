@@ -10,15 +10,15 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.features.scripting.adventure_to_spec import adventure_to_spec  # noqa: E402
-from src.features.scripting.fake_adventure_decomposer import (  # noqa: E402
+from src.features.scripting.adventure_to_spec import adventure_to_spec
+from src.features.scripting.fake_adventure_decomposer import (
     FakeAdventureDecomposer,
 )
-from src.features.scripting.themes import Theme  # noqa: E402
-from src.videospec.models import (  # noqa: E402
+from src.features.scripting.themes import Theme
+from src.videospec.models import (
     ImageAsset,
-    VideoSpec,
     VideoAsset,
+    VideoSpec,
 )
 
 # Nombre de segments par bloc séquence-choix, dans l'ordre rendu par le

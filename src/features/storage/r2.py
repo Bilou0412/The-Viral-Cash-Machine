@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import posixpath
-from typing import Any, Optional
+from typing import Any
 
 from starlette.responses import RedirectResponse, Response, StreamingResponse
 
@@ -38,7 +38,7 @@ class R2Storage(StoragePort):
         bucket: str,
         access_key: str,
         secret_key: str,
-        public_base: Optional[str] = None,
+        public_base: str | None = None,
     ) -> None:
         self._bucket = bucket
         self._public_base = public_base.rstrip("/") if public_base else None
@@ -63,7 +63,7 @@ class R2Storage(StoragePort):
             )
         return self._client
 
-    def persist_from_url(self, url: str, folder: str, filename: str) -> Optional[str]:
+    def persist_from_url(self, url: str, folder: str, filename: str) -> str | None:
         # Download to the local cache first (reuses the existing helper), then
         # upload. The local copy doubles as the materialize() cache for this run.
         local = download_file(url, folder, filename)
@@ -95,7 +95,7 @@ class R2Storage(StoragePort):
         self.client.download_file(self._bucket, ref, dest)
         return dest
 
-    def serve(self, ref: str, filename: Optional[str] = None) -> Response:
+    def serve(self, ref: str, filename: str | None = None) -> Response:
         if self._public_base:
             # Stable, CDN-cached, same asset — no signature to expire.
             return RedirectResponse(f"{self._public_base}/{ref}", status_code=307)

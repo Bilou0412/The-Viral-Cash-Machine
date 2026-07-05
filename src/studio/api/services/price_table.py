@@ -10,16 +10,16 @@ from __future__ import annotations
 import json
 import os
 from functools import lru_cache
-from typing import Any, Dict
+from typing import Any
 
 _DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "prices.json")
 
 
 @lru_cache(maxsize=1)
-def _table() -> Dict[str, Any]:
+def _table() -> dict[str, Any]:
     path = os.environ.get("VCM_PRICES_PATH", _DEFAULT_PATH)
     with open(path, encoding="utf-8") as f:
-        data: Dict[str, Any] = json.load(f)
+        data: dict[str, Any] = json.load(f)
     return data
 
 
@@ -30,8 +30,8 @@ def reload_prices() -> None:
 
 # -- estimate rates (pre-flight) --------------------------------------------
 
-def _estimate() -> Dict[str, Any]:
-    est: Dict[str, Any] = _table().get("estimate", {})
+def _estimate() -> dict[str, Any]:
+    est: dict[str, Any] = _table().get("estimate", {})
     return est
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
@@ -20,7 +20,7 @@ from sqlmodel import Session, SQLModel, create_engine
 # Default on-disk database at the repository root.
 DEFAULT_DB_URL = "sqlite:///studio.db"
 
-_engine: Optional[Engine] = None
+_engine: Engine | None = None
 
 
 def _normalize_url(url: str) -> str:
@@ -62,7 +62,7 @@ def _make_engine(url: str) -> Engine:
     return create_engine(url, **kwargs)
 
 
-def get_engine(url: Optional[str] = None) -> Engine:
+def get_engine(url: str | None = None) -> Engine:
     """Return the shared engine, creating it on first use.
 
     Passing an explicit ``url`` always builds a fresh engine for that URL (handy
@@ -117,7 +117,7 @@ def _ensure_columns(eng: Engine) -> None:
                 )
 
 
-def init_db(engine: Optional[Engine] = None) -> Engine:
+def init_db(engine: Engine | None = None) -> Engine:
     """Create all tables on ``engine`` (or the shared engine). Idempotent."""
     eng = engine if engine is not None else get_engine()
     # Importing models registers them on SQLModel.metadata.
@@ -129,7 +129,7 @@ def init_db(engine: Optional[Engine] = None) -> Engine:
 
 
 @contextmanager
-def get_session(engine: Optional[Engine] = None) -> Iterator[Session]:
+def get_session(engine: Engine | None = None) -> Iterator[Session]:
     """Yield a session bound to ``engine`` (or the shared engine)."""
     eng = engine if engine is not None else get_engine()
     with Session(eng) as session:

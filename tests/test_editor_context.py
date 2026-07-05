@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor.context import compile_prompt, merge_context  # noqa: E402
-from src.editor.document import NarrativeContext  # noqa: E402
+from src.editor.context import compile_prompt, merge_context
+from src.editor.document import NarrativeContext
 
 
 def test_global_inherited_when_no_override():

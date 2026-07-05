@@ -28,7 +28,6 @@ réinjecté dans la construction des prompts via `script_prompts` / `epilogue_be
 (qui acceptent déjà un thème), de sorte que la DA apparaît dans les prompts émis.
 """
 
-from typing import Dict, List, Optional
 
 from ...studio.api.services.generation_plan import (
     PlannedAsset,
@@ -64,7 +63,7 @@ _TICK_ID = "sfx_tick"
 _BEEP_ID = "sfx_beep"
 
 
-def _asset_id(round_index: Optional[int], beat: str) -> str:
+def _asset_id(round_index: int | None, beat: str) -> str:
     """Id stable dérivé de (round_index, beat).
 
     Episode-level (round_index None) → `ep_<beat>` ; sinon `r<i>_<beat>`. Le beat
@@ -76,8 +75,8 @@ def _asset_id(round_index: Optional[int], beat: str) -> str:
 
 
 def _themed_prompts(
-    script: AdventureScript, side: Side, theme: Optional[Theme]
-) -> Dict[str, str]:
+    script: AdventureScript, side: Side, theme: Theme | None
+) -> dict[str, str]:
     """Table (round_index, beat) -> prompt, reconstruite SOUS le `theme`.
 
     `plan_episode_assets` n'accepte pas de thème (il émet la DA par défaut). Pour
@@ -87,7 +86,7 @@ def _themed_prompts(
     PlannedAssets. Clé sous forme de chaîne « <ri>:<beat> » (ri = "None" pour les
     assets épisode), pour appliquer le bon prompt à chaque asset image/vidéo.
     """
-    out: Dict[str, str] = {}
+    out: dict[str, str] = {}
     if theme is None:
         return out
 
@@ -111,9 +110,9 @@ def _themed_prompts(
 
 
 def _build_assets(
-    planned: List[PlannedAsset],
-    themed: Dict[str, str],
-) -> tuple[List[Asset], Dict[str, str]]:
+    planned: list[PlannedAsset],
+    themed: dict[str, str],
+) -> tuple[list[Asset], dict[str, str]]:
     """Convertit chaque PlannedAsset en un asset VideoSpec typé.
 
     `themed` (peut être vide) surcharge les prompts image/vidéo pour appliquer la
@@ -125,13 +124,13 @@ def _build_assets(
     `generation_plan._video_pair`.
     """
     # Map (round_index, base_beat) -> id de l'asset image « .frame ».
-    frame_ids: Dict[str, str] = {}
+    frame_ids: dict[str, str] = {}
     for p in planned:
         if p.kind == "image" and p.beat.endswith(".frame"):
             base = p.beat[: -len(".frame")]
             frame_ids[f"{p.round_index}:{base}"] = _asset_id(p.round_index, p.beat)
 
-    assets: List[Asset] = []
+    assets: list[Asset] = []
     for p in planned:
         aid = _asset_id(p.round_index, p.beat)
         key = f"{p.round_index}:{p.beat}"
@@ -185,7 +184,7 @@ def adventure_to_spec(
         NameplateSpec(text=script.char_right_name, placement=HeadAnchor(side="right")),
     )
 
-    segments: List[Segment] = []
+    segments: list[Segment] = []
 
     # 1) INTRO — image de référence perso (épisode) + nameplates, transition
     #    eye-open par défaut (cf. builder.legacy_spec / IntroSegment).

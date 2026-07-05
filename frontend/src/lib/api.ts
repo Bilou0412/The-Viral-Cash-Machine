@@ -52,7 +52,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     let detail = res.statusText
     try {
-      const body = await res.json()
+      const body = (await res.json()) as { detail?: string; message?: string }
       detail = body.detail ?? body.message ?? detail
     } catch {
       /* non-JSON error body */
@@ -218,7 +218,7 @@ const realApi = {
     if (!res.ok) {
       let detail = res.statusText
       try {
-        const body = await res.json()
+        const body = (await res.json()) as { detail?: string; message?: string }
         detail = body.detail ?? body.message ?? detail
       } catch {
         /* non-JSON */
@@ -239,5 +239,5 @@ const realApi = {
 
 export type StudioApi = typeof realApi
 
-export const api: StudioApi = USE_MOCKS ? (mockApi as StudioApi) : realApi
+export const api: StudioApi = USE_MOCKS ? (mockApi) : realApi
 export const usingMocks = USE_MOCKS

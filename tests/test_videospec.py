@@ -6,7 +6,7 @@ import pytest
 
 pydantic = pytest.importorskip("pydantic")
 
-from src.videospec import VideoSpec, FileAsset, FootageSegment  # noqa: E402
+from src.videospec import FileAsset, FootageSegment, VideoSpec  # noqa: E402
 from src.videospec.builder import legacy_spec  # noqa: E402
 from src.videospec.schema import export_schema  # noqa: E402
 
@@ -64,6 +64,7 @@ def test_extra_fields_forbidden():
 
 def test_schema_export(tmp_path):
     out = export_schema(str(tmp_path / "videospec.schema.json"))
-    schema = json.loads(open(out, encoding="utf-8").read())
+    with open(out, encoding="utf-8") as fh:
+        schema = json.loads(fh.read())
     assert schema["title"] == "VideoSpec"
     assert "$defs" in schema

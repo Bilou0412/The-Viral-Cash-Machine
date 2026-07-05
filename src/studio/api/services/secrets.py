@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 from cryptography.fernet import Fernet
 from fastapi import HTTPException
@@ -28,25 +27,25 @@ def _fernet() -> Fernet:
         raise HTTPException(500, "VCM_SECRET_KEY manquant (chiffrement des clés API)")
     try:
         return Fernet(key.encode())
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             500, "VCM_SECRET_KEY invalide (clé Fernet urlsafe-base64 de 32 octets attendue)"
-        )
+        ) from e
 
 
 @dataclass(frozen=True)
 class UserKeys:
     """Clés déchiffrées d'un utilisateur (jamais persistées en clair)."""
 
-    openai: Optional[str] = None
-    replicate: Optional[str] = None
+    openai: str | None = None
+    replicate: str | None = None
 
 
 def set_keys(
     engine: Engine,
     user_id: int,
-    openai: Optional[str] = None,
-    replicate: Optional[str] = None,
+    openai: str | None = None,
+    replicate: str | None = None,
 ) -> None:
     """Chiffre et persiste les clés non vides de l'utilisateur (blanc ne vide pas)."""
     fernet = _fernet()

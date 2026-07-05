@@ -10,13 +10,12 @@ Cascade (généralise `themes.resolve` : le plus spécifique gagne) :
 Module pur (aucune I/O) — `editor_generation` l'appelle avant `run_model`.
 """
 
-from typing import Optional
 
 from .document import NarrativeContext
 
 
 def merge_context(
-    global_ctx: NarrativeContext, override: Optional[NarrativeContext] = None
+    global_ctx: NarrativeContext, override: NarrativeContext | None = None
 ) -> NarrativeContext:
     """Fond le contexte global et la surcharge locale (le local gagne s'il est rempli).
 
@@ -36,7 +35,7 @@ def merge_context(
 def compile_prompt(
     base_prompt: str,
     global_ctx: NarrativeContext,
-    override: Optional[NarrativeContext] = None,
+    override: NarrativeContext | None = None,
     *,
     template_prefix: str = "",
     include_story: bool = True,

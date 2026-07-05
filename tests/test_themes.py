@@ -11,8 +11,8 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.features.scripting import prompts as P  # noqa: E402
-from src.features.scripting.themes import (  # noqa: E402
+from src.features.scripting import prompts as P
+from src.features.scripting.themes import (
     HORROR,
     Theme,
     get_theme,

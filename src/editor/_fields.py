@@ -15,12 +15,12 @@ Import-light : `registry` est sans dépendance lourde (cf. son module).
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ..features.compositing.registry import get_contract
 
 
-def _keys(kind: str, field_name: str) -> Tuple[str, ...]:
+def _keys(kind: str, field_name: str) -> tuple[str, ...]:
     """Nom canonique + alias d'un champ du contrat (ou juste le nom si inconnu)."""
     for fld in get_contract(kind).fields:
         if fld.name == field_name:
@@ -32,7 +32,7 @@ def _is_empty(value: Any) -> bool:
     return value is None or (isinstance(value, str) and value.strip() == "")
 
 
-def field_value(params: Dict[str, Any], kind: str, field_name: str) -> Optional[Any]:
+def field_value(params: dict[str, Any], kind: str, field_name: str) -> Any | None:
     """Première valeur non-vide parmi le nom canonique et ses alias, sinon None."""
     for key in _keys(kind, field_name):
         if key in params and not _is_empty(params[key]):
@@ -40,12 +40,12 @@ def field_value(params: Dict[str, Any], kind: str, field_name: str) -> Optional[
     return None
 
 
-def field_present(params: Dict[str, Any], kind: str, field_name: str) -> bool:
+def field_present(params: dict[str, Any], kind: str, field_name: str) -> bool:
     """True si le champ (nom ou alias) porte une valeur non-vide."""
     return field_value(params, kind, field_name) is not None
 
 
-def missing_required(params: Dict[str, Any], kind: str) -> List[str]:
+def missing_required(params: dict[str, Any], kind: str) -> list[str]:
     """Champs REQUIS du contrat absents (vide = complet), vide-conscient."""
     return [
         fld.name

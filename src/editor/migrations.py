@@ -4,12 +4,12 @@
 `SCHEMA_VERSION` courant avant validation. Additif : on n'enlève jamais de champ.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from .document import SCHEMA_VERSION, EditorDocument
 
 
-def upgrade_document(raw: Dict[str, Any]) -> EditorDocument:
+def upgrade_document(raw: dict[str, Any]) -> EditorDocument:
     """Met à niveau un document brut puis le valide en `EditorDocument`."""
     data = dict(raw)
     version = int(data.get("schema_version", 1))

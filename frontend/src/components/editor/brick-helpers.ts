@@ -102,7 +102,7 @@ const BRICK_REF_RE = /^\{brick:([^}]+)\}$/
 export function asBrickRef(value: unknown): string | null {
   if (typeof value !== "string") return null
   const m = BRICK_REF_RE.exec(value)
-  return m ? m[1] : null
+  return m?.[1] ?? null
 }
 
 /** Encode a connection to a brick id as its param-value string. */

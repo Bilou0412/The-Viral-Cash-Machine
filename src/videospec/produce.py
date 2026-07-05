@@ -13,7 +13,7 @@ garde ce module testable et le bascule réel/factice trivial.
 
 from __future__ import annotations
 
-from typing import Optional, Protocol
+from typing import Protocol
 
 from .models import Canvas, VideoSpec
 from .ports import AssetResolver, RenderEngine
@@ -53,8 +53,8 @@ def produce_from_prompt(
     *,
     theme: object = None,
     side: str = "left",
-    n_rounds: Optional[int] = None,
-    canvas: Optional[Canvas] = None,
+    n_rounds: int | None = None,
+    canvas: Canvas | None = None,
 ) -> str:
     """prompt → AdventureScript → VideoSpec → MP4.
 

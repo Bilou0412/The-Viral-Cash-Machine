@@ -1,27 +1,10 @@
-// Auth (Phase B.1) — hook `useAuth` + garde de route `RequireAuth`.
-//
-// La source de vérité est GET /api/auth/me (401 = non connecté). En mode mock
-// (VITE_USE_MOCKS), `getMe` renvoie un utilisateur canned → toujours authentifié,
-// ce qui garde les tests e2e Playwright verts sans backend.
+// Auth (Phase B.1) — garde de route `RequireAuth`. Le hook `useAuth` (source de
+// vérité GET /api/auth/me) vit dans `@/hooks/use-auth` (convention : hooks dans
+// src/hooks/ ; ce fichier n'exporte qu'un composant pour le Fast Refresh).
 
 import type { ReactNode } from "react"
 import { Navigate, useLocation } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { api } from "@/lib/api"
-import type { AuthUser } from "@/lib/types"
-
-export function useAuth() {
-  const q = useQuery({
-    queryKey: ["me"],
-    queryFn: () => api.getMe(),
-    retry: false, // un 401 ne doit pas être retenté
-    staleTime: Infinity,
-  })
-  return {
-    user: (q.data ?? null) as AuthUser | null,
-    isLoading: q.isLoading,
-  }
-}
+import { useAuth } from "@/hooks/use-auth"
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth()

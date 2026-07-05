@@ -37,7 +37,7 @@ export function useJobEvents(episodeId: number, active: boolean): JobProgress {
     es.onmessage = (e) => {
       let data: JobEvent
       try {
-        data = JSON.parse(e.data) as JobEvent
+        data = JSON.parse(e.data as string) as JobEvent
       } catch {
         return // heartbeat / non-JSON
       }
@@ -58,27 +58,27 @@ export function useJobEvents(episodeId: number, active: boolean): JobProgress {
           case "asset_ready":
             if (data.beat) byGroup[beatGroup(data.beat)] = { status: "ready" }
             done += 1
-            qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
             break
           case "asset_failed":
             if (data.beat) byGroup[beatGroup(data.beat)] = { status: "failed" }
             done += 1
-            qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
             break
           case "generation_done":
             isActive = false
-            qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
-            qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
-            qc.invalidateQueries({ queryKey: qk.library })
+            void qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.library })
             break
           case "produce_done":
             // Full pipeline (assets + intro + montage) finished: refresh the
             // episode (status/final_path → final-video shows up), the asset list
             // and the library, without a manual reload.
             isActive = false
-            qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
-            qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
-            qc.invalidateQueries({ queryKey: qk.library })
+            void qc.invalidateQueries({ queryKey: qk.assets(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.episode(episodeId) })
+            void qc.invalidateQueries({ queryKey: qk.library })
             break
         }
         return { byGroup, done, total, active: isActive }

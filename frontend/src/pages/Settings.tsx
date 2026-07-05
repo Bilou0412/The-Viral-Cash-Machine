@@ -39,10 +39,10 @@ export function Settings() {
     }
     setSaving(true)
     try {
-      await api.saveKeys({
-        openai: openai || undefined,
-        replicate: replicate || undefined,
-      })
+      const body: { openai?: string; replicate?: string } = {}
+      if (openai) body.openai = openai
+      if (replicate) body.replicate = replicate
+      await api.saveKeys(body)
       setOpenai("")
       setReplicate("")
       await qc.invalidateQueries({ queryKey: ["keys"] })

@@ -14,14 +14,14 @@ they call ``exists`` / ``materialize`` / ``serve`` on the ref.
 
 from __future__ import annotations
 
-from typing import Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from starlette.responses import Response
 
 
 @runtime_checkable
 class StoragePort(Protocol):
-    def persist_from_url(self, url: str, folder: str, filename: str) -> Optional[str]:
+    def persist_from_url(self, url: str, folder: str, filename: str) -> str | None:
         """Fetch ``url`` into ``folder``/``filename``; return its ref or None on failure."""
         ...
 
@@ -40,6 +40,6 @@ class StoragePort(Protocol):
         """
         ...
 
-    def serve(self, ref: str, filename: Optional[str] = None) -> Response:
+    def serve(self, ref: str, filename: str | None = None) -> Response:
         """Return an HTTP response serving the object at ``ref``."""
         ...

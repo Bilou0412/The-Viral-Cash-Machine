@@ -1,10 +1,11 @@
 import os
+
 import requests
-from typing import Optional
+
 from .logging import log_terminal
 
 
-def download_file(url: str, folder: str, filename: str) -> Optional[str]:
+def download_file(url: str, folder: str, filename: str) -> str | None:
     if not url:
         return None
     try:

@@ -1,10 +1,11 @@
 """Replicate-based asset generation."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from .ports import AssetProvider, RunResult
 
 
-def _normalize_outputs(result: Any) -> List[str]:
+def _normalize_outputs(result: Any) -> list[str]:
     """Normalize a replicate.run(...) result into a list of URL strings.
 
     Handles the shapes replicate returns across models:
@@ -16,7 +17,7 @@ def _normalize_outputs(result: Any) -> List[str]:
     """
     # A list/tuple of outputs: normalize each element (flatten one level).
     if isinstance(result, (list, tuple)):
-        out: List[str] = []
+        out: list[str] = []
         for item in result:
             out.extend(_normalize_outputs(item))
         return out
@@ -45,9 +46,9 @@ class ReplicateAssetProvider(AssetProvider):
     dans l'environnement, qui serait partagée entre utilisateurs).
     """
 
-    def __init__(self, api_token: Optional[str] = None) -> None:
+    def __init__(self, api_token: str | None = None) -> None:
         self.api_token = api_token
-        self.last_run: Optional[RunResult] = None
+        self.last_run: RunResult | None = None
 
     def _client(self) -> Any:
         from replicate.client import Client
@@ -55,7 +56,7 @@ class ReplicateAssetProvider(AssetProvider):
         return Client(api_token=self.api_token) if self.api_token else Client()
 
     def run_model_metered(
-        self, model_ref: str, params: Dict[str, Any]
+        self, model_ref: str, params: dict[str, Any]
     ) -> RunResult:
         """Run a model via the predictions API to capture real cost/metrics.
 
@@ -68,7 +69,7 @@ class ReplicateAssetProvider(AssetProvider):
         try:
             pred = client.models.predictions.create(model_ref, input=params)
             pred.wait()
-            metrics: Dict[str, Any] = dict(pred.metrics or {})
+            metrics: dict[str, Any] = dict(pred.metrics or {})
             predict_time = metrics.get("predict_time")
             cost = getattr(pred, "cost", None)
             result = RunResult(
@@ -84,19 +85,19 @@ class ReplicateAssetProvider(AssetProvider):
         self.last_run = result
         return result
 
-    def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
+    def run_model(self, model_ref: str, params: dict[str, Any]) -> list[str]:
         """Run an arbitrary Replicate model and normalize its output URL(s)."""
         return self.run_model_metered(model_ref, params).urls
 
     def synthesize_voice(
-        self, text: str, voice_id: str, model: Optional[str] = None
+        self, text: str, voice_id: str, model: str | None = None
     ) -> str:
         """Synthesize voice using a Minimax Speech model.
 
         `model` lets a cloned voice use the model it was cloned with
         (e.g. "minimax/speech-02-hd"). Default = "minimax/speech-2.8-turbo".
         """
-        input: Dict[str, Any] = {
+        input: dict[str, Any] = {
             "text": text,
             "voice_id": voice_id,
         }
@@ -107,14 +108,14 @@ class ReplicateAssetProvider(AssetProvider):
         prompt: str,
         size: str,
         aspect_ratio: str,
-        image_input: Optional[list[str]] = None,
+        image_input: list[str] | None = None,
     ) -> str:
         """Generate image using ByteDance SeedDream model.
 
         `image_input` : 1-14 images de référence (image-to-image) — garde le
         personnage et la DA cohérents (validé : seedream-4.5 `image_input`).
         """
-        input: Dict[str, Any] = {
+        input: dict[str, Any] = {
             "prompt": prompt,
             "size": size,
             "aspect_ratio": aspect_ratio,
@@ -130,11 +131,11 @@ class ReplicateAssetProvider(AssetProvider):
         duration: float,
         aspect_ratio: str,
         resolution: str,
-        audio_url: Optional[str] = None,
+        audio_url: str | None = None,
         draft: bool = False,
     ) -> str:
         """Generate animated video using Pruna P-Video model."""
-        input: Dict[str, Any] = {
+        input: dict[str, Any] = {
             "prompt": prompt,
             "image": image_url,
             "duration": duration,

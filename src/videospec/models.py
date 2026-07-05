@@ -15,7 +15,7 @@ Règles de design :
   est validée au niveau du VideoSpec.
 """
 
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -66,7 +66,7 @@ class VideoAsset(_Spec):
     id: str
     prompt: str
     image: str
-    audio: Optional[str] = None
+    audio: str | None = None
     duration: float = 7.0
     resolution: str = "720x1280"
     draft: bool = False
@@ -81,7 +81,7 @@ class FileAsset(_Spec):
 
 
 Asset = Annotated[
-    Union[VoiceAsset, ImageAsset, VideoAsset, FileAsset],
+    VoiceAsset | ImageAsset | VideoAsset | FileAsset,
     Field(discriminator="type"),
 ]
 
@@ -107,7 +107,7 @@ class HeadAnchor(_Spec):
 
 
 Placement = Annotated[
-    Union[AbsolutePosition, HeadAnchor],
+    AbsolutePosition | HeadAnchor,
     Field(discriminator="type"),
 ]
 
@@ -172,7 +172,7 @@ class IntroSegment(_Spec):
     type: Literal["intro"] = "intro"
     background: str  # id d'un ImageAsset/FileAsset
     duration: float = 1.2
-    transition: Optional[EyeOpenTransition] = EyeOpenTransition()
+    transition: EyeOpenTransition | None = EyeOpenTransition()
     nameplates: tuple[NameplateSpec, ...] = ()
 
 
@@ -181,8 +181,8 @@ class FootageSegment(_Spec):
 
     type: Literal["footage"] = "footage"
     video: str  # id d'un VideoAsset/FileAsset
-    duration: Optional[float] = None  # None = durée de la vidéo
-    subtitles: Optional[SubtitleTrack] = None
+    duration: float | None = None  # None = durée de la vidéo
+    subtitles: SubtitleTrack | None = None
     nameplates: tuple[NameplateSpec, ...] = ()
 
 
@@ -192,9 +192,9 @@ class NarrationSegment(_Spec):
     type: Literal["narration"] = "narration"
     background: str  # id d'un ImageAsset/FileAsset
     audio: str  # id d'un VoiceAsset/FileAsset — fixe la durée du segment
-    duration: Optional[float] = None  # None = durée de l'audio
-    zoom: Optional[ZoomEffect] = ZoomEffect()
-    subtitles: Optional[SubtitleTrack] = None
+    duration: float | None = None  # None = durée de l'audio
+    zoom: ZoomEffect | None = ZoomEffect()
+    subtitles: SubtitleTrack | None = None
     nameplates: tuple[NameplateSpec, ...] = ()
 
 
@@ -207,14 +207,14 @@ class CountdownSegment(_Spec):
     steps: tuple[str, ...] = ("3", "2", "1")
     step_duration: float = 0.7
     timer: TimerStyle = TimerStyle()
-    gauge: Optional[GaugeSpec] = GaugeSpec()
-    tick_sound: Optional[str] = None  # id d'un FileAsset
-    end_sound: Optional[str] = None  # id d'un FileAsset
+    gauge: GaugeSpec | None = GaugeSpec()
+    tick_sound: str | None = None  # id d'un FileAsset
+    end_sound: str | None = None  # id d'un FileAsset
     nameplates: tuple[NameplateSpec, ...] = ()
 
 
 Segment = Annotated[
-    Union[IntroSegment, FootageSegment, NarrationSegment, CountdownSegment],
+    IntroSegment | FootageSegment | NarrationSegment | CountdownSegment,
     Field(discriminator="type"),
 ]
 
@@ -237,7 +237,7 @@ class VideoSpec(_Spec):
         if len(ids) != len(self.assets):
             raise ValueError("ids d'assets dupliqués dans le manifest")
 
-        def need(ref: Optional[str], where: str) -> None:
+        def need(ref: str | None, where: str) -> None:
             if ref is not None and ref not in ids:
                 raise ValueError(f"{where} référence l'asset inconnu '{ref}'")
 

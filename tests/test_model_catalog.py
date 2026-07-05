@@ -3,13 +3,13 @@
 Client Replicate factice → hors-ligne, host-runnable (model_catalog n'importe pas sqlalchemy).
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pytest
 
 pytest.importorskip("pydantic")
 
-from src.studio.api.services.model_catalog import (  # noqa: E402
+from src.studio.api.services.model_catalog import (
     clear_cache,
     form_descriptor,
     search_models,
@@ -19,16 +19,16 @@ from src.studio.api.services.model_catalog import (  # noqa: E402
 class FakeClient:
     def __init__(
         self,
-        schemas: Dict[str, Tuple[str, Dict[str, Any]]],
-        results: List[Dict[str, Any]],
+        schemas: dict[str, tuple[str, dict[str, Any]]],
+        results: list[dict[str, Any]],
     ) -> None:
         self.schemas = schemas
         self.results = results
 
-    def model_version_schema(self, model_ref: str) -> Tuple[str, Dict[str, Any]]:
+    def model_version_schema(self, model_ref: str) -> tuple[str, dict[str, Any]]:
         return self.schemas[model_ref]
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
+    def search(self, query: str) -> list[dict[str, Any]]:
         return list(self.results)
 
 

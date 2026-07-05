@@ -111,7 +111,7 @@ export function Editor() {
       update({
         ...draft,
         bricks: draft.bricks.map((b) =>
-          b.id === id ? ({ ...b, placement: { ...b.placement, start: startSec, track } } as Brick) : b
+          b.id === id ? ({ ...b, placement: { ...b.placement, start: startSec, track } }) : b
         ),
       })
     },
@@ -125,7 +125,7 @@ export function Editor() {
         ...draft,
         bricks: draft.bricks.map((b) =>
           b.id === id
-            ? ({ ...b, placement: { ...b.placement, duration } } as Brick)
+            ? ({ ...b, placement: { ...b.placement, duration } })
             : b
         ),
       })

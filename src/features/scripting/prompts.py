@@ -26,7 +26,6 @@ RÈGLES D'OR :
 8. La VITESSE du mouvement est explicite (calme par défaut) — corrige la dérive.
 """
 
-from typing import Optional
 
 from .themes import Theme, get_theme
 
@@ -38,7 +37,7 @@ from .themes import Theme, get_theme
 _DEFAULT_THEME = get_theme("horror")
 
 
-def _theme(theme: Optional[Theme]) -> Theme:
+def _theme(theme: Theme | None) -> Theme:
     """Le thème effectif (fallback : « horror »)."""
     return theme if theme is not None else _DEFAULT_THEME
 
@@ -76,7 +75,7 @@ def frame_action(
     character_name: str,
     character_desc: str,
     environment_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Première frame d'un plan d'action : on est juste derrière le perso."""
     t = _theme(theme)
@@ -98,7 +97,7 @@ def frame_environment(
     character_name: str,
     environment_desc: str,
     danger_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Première frame du plan d'environnement : le perso arrêté, le danger visible."""
     t = _theme(theme)
@@ -120,7 +119,7 @@ def frame_character(
     character_name: str,
     character_desc: str,
     environment_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Première frame du face-cam : le perso retourné, face à nous, proche."""
     t = _theme(theme)
@@ -141,7 +140,7 @@ def frame_fatal(
     character_name: str,
     character_desc: str,
     environment_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Première frame de la mort POV : la menace juste sur nous."""
     t = _theme(theme)
@@ -162,7 +161,7 @@ def frame_survival(
     character_name: str,
     character_desc: str,
     environment_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Première frame de la survie : le perso devant nous, le calme précaire."""
     t = _theme(theme)
@@ -183,7 +182,7 @@ def choice_image(
     character_name: str,
     option_desc: str,
     environment_desc: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Image d'UNE option de choix (pas de vidéo) — POV, le perso la désigne."""
     t = _theme(theme)
@@ -203,7 +202,7 @@ def choice_image(
 # ===========================================================================
 
 def motion_action(
-    character_name: str, action_motion: str, theme: Optional[Theme] = None
+    character_name: str, action_motion: str, theme: Theme | None = None
 ) -> str:
     """Animation du plan d'action : on suit, tranquille. Le look vient de l'image."""
     t = _theme(theme)
@@ -217,7 +216,7 @@ def motion_action(
 
 
 def motion_environment(
-    character_name: str, theme: Optional[Theme] = None
+    character_name: str, theme: Theme | None = None
 ) -> str:
     """Animation du plan d'environnement : presque immobile, micro-menace."""
     t = _theme(theme)
@@ -235,7 +234,7 @@ def motion_character(
     voice_desc: str,
     delivery: str,
     line_fr: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Animation du face-cam : il parle. Voix native, look déjà verrouillé."""
     t = _theme(theme)
@@ -252,7 +251,7 @@ def motion_fatal(
     character_name: str,
     kill_motion: str,
     pov_reaction: str,
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
 ) -> str:
     """Animation de la mort POV : brutal."""
     t = _theme(theme)
@@ -265,7 +264,7 @@ def motion_fatal(
 
 
 def motion_survival(
-    character_name: str, survival_motion: str, theme: Optional[Theme] = None
+    character_name: str, survival_motion: str, theme: Theme | None = None
 ) -> str:
     """Animation de la survie : on suit, méfiant."""
     t = _theme(theme)
@@ -278,7 +277,7 @@ def motion_survival(
 
 
 def narrator_audition(
-    voice_desc: str, line_fr: str, theme: Optional[Theme] = None
+    voice_desc: str, line_fr: str, theme: Theme | None = None
 ) -> str:
     """Clip jetable d'audition narrateur (texte→vidéo, visuel minimal)."""
     t = _theme(theme)

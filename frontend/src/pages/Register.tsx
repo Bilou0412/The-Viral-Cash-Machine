@@ -32,7 +32,7 @@ export function Register() {
     try {
       await api.register(email, password)
       await qc.invalidateQueries({ queryKey: ["me"] })
-      navigate("/", { replace: true })
+      void navigate("/", { replace: true })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Échec de l'inscription")
     } finally {

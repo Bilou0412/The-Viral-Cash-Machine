@@ -10,19 +10,19 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor import ClipBrick, document_to_spec  # noqa: E402
-from src.editor.capabilities import validate_clip  # noqa: E402
-from src.features.scripting.adventure_to_bricks import (  # noqa: E402
+from src.editor import ClipBrick, document_to_spec
+from src.editor.capabilities import validate_clip
+from src.features.scripting.adventure_to_bricks import (
     adventure_to_bricks,
     adventure_to_document,
 )
-from src.features.scripting.adventure_to_spec import adventure_to_spec  # noqa: E402
-from src.features.scripting.fake_adventure_decomposer import (  # noqa: E402
+from src.features.scripting.adventure_to_spec import adventure_to_spec
+from src.features.scripting.fake_adventure_decomposer import (
     FakeAdventureDecomposer,
 )
-from src.features.scripting.themes import Theme  # noqa: E402
-from src.studio.api.services.generation_plan import plan_episode_assets  # noqa: E402
-from src.videospec.models import ImageAsset, VideoAsset, VoiceAsset  # noqa: E402
+from src.features.scripting.themes import Theme
+from src.studio.api.services.generation_plan import plan_episode_assets
+from src.videospec.models import ImageAsset, VideoAsset, VoiceAsset
 
 
 def _script(n_rounds: int):

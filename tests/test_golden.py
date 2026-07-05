@@ -25,7 +25,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import golden_tools as gt  # noqa: E402
+import golden_tools as gt
 
 GOLDEN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "golden")
 GOLDEN_VIDEO = os.path.join(GOLDEN_DIR, "final_video.mp4")
@@ -101,7 +101,7 @@ def test_candidate_structure_and_duration(invariants):
         os.path.join(CANDIDATE_DIR, "narrator.mp3"),
     )
     assert [s["name"] for s in cand_plan] == [s["name"] for s in invariants["segment_plan"]]
-    for c, g in zip(cand_plan, invariants["segment_plan"]):
+    for c, g in zip(cand_plan, invariants["segment_plan"], strict=True):
         assert c["duration"] == pytest.approx(g["duration"], abs=DURATION_TOL_S), c["name"]
 
 

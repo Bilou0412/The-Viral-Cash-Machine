@@ -24,7 +24,7 @@ Module PUR : aucune I/O, aucun réseau.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, cast
+from typing import cast
 
 from ...editor.document import (
     AudioChild,
@@ -54,7 +54,7 @@ _VIDEO_DUR = 5.0
 _PHOTO_DUR = 4.0
 
 
-def _brick_id(round_index: Optional[int], beat: str) -> str:
+def _brick_id(round_index: int | None, beat: str) -> str:
     prefix = "ep" if round_index is None else f"r{round_index}"
     return f"{prefix}_{beat}"
 
@@ -62,9 +62,9 @@ def _brick_id(round_index: Optional[int], beat: str) -> str:
 def adventure_to_bricks(
     script: AdventureScript,
     side: Side = "left",
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
     narrator_voice_id: str = _DEFAULT_NARRATOR_VOICE,
-) -> List[ClipBrick]:
+) -> list[ClipBrick]:
     """Dérive la liste ordonnée de `ClipBrick` éditables d'un épisode.
 
     Ordre timeline : intro (référence perso) → par round (action, environment,
@@ -72,19 +72,19 @@ def adventure_to_bricks(
     `plan_episode_assets` (mêmes valeurs que `adventure_to_spec`).
     """
     planned = plan_episode_assets(script, side, theme)
-    idx: Dict[Tuple[Optional[int], str], PlannedAsset] = {
+    idx: dict[tuple[int | None, str], PlannedAsset] = {
         (p.round_index, p.beat): p for p in planned
     }
 
-    def img(ri: Optional[int], beat: str) -> str:
+    def img(ri: int | None, beat: str) -> str:
         p = idx.get((ri, beat))
         return (p.image_prompt or "") if p else ""
 
-    def mot(ri: Optional[int], beat: str) -> str:
+    def mot(ri: int | None, beat: str) -> str:
         p = idx.get((ri, beat))
         return (p.motion_prompt or "") if p else ""
 
-    def txt(ri: Optional[int], beat: str) -> str:
+    def txt(ri: int | None, beat: str) -> str:
         p = idx.get((ri, beat))
         return (p.text or "") if p else ""
 
@@ -96,7 +96,7 @@ def adventure_to_bricks(
         cursor += duration
         return pl
 
-    def narr_child(brick_id: str, ri: Optional[int], beat: str) -> AudioChild:
+    def narr_child(brick_id: str, ri: int | None, beat: str) -> AudioChild:
         return AudioChild(
             id=f"{brick_id}__narr",
             role="narration",
@@ -104,7 +104,7 @@ def adventure_to_bricks(
             params={"text": txt(ri, beat), "voice_id": narrator_voice_id},
         )
 
-    def video_brick(ri: Optional[int], beat: str, narr_beat: Optional[str]) -> ClipBrick:
+    def video_brick(ri: int | None, beat: str, narr_beat: str | None) -> ClipBrick:
         bid = _brick_id(ri, beat)
         children = [narr_child(bid, ri, narr_beat)] if narr_beat else []
         return ClipBrick(
@@ -117,7 +117,7 @@ def adventure_to_bricks(
         )
 
     def photo_brick(
-        ri: Optional[int], beat_id: str, image_prompt: str, narr_beat: Optional[str]
+        ri: int | None, beat_id: str, image_prompt: str, narr_beat: str | None
     ) -> ClipBrick:
         bid = _brick_id(ri, beat_id)
         children = [narr_child(bid, ri, narr_beat)] if narr_beat else []
@@ -129,7 +129,7 @@ def adventure_to_bricks(
             placement=place(_PHOTO_DUR),
         )
 
-    bricks: List[ClipBrick] = []
+    bricks: list[ClipBrick] = []
 
     # 1) INTRO : image de référence perso + narration de transition (narrateur).
     bricks.append(
@@ -154,7 +154,7 @@ def adventure_to_bricks(
 def adventure_to_document(
     script: AdventureScript,
     side: Side = "left",
-    theme: Optional[Theme] = None,
+    theme: Theme | None = None,
     narrator_voice_id: str = _DEFAULT_NARRATOR_VOICE,
     title: str = "Aventure",
 ) -> EditorDocument:
@@ -171,5 +171,5 @@ def adventure_to_document(
     return EditorDocument(
         title=title,
         global_context=context,
-        bricks=cast("List[Brick]", bricks),
+        bricks=cast("list[Brick]", bricks),
     )

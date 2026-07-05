@@ -15,6 +15,7 @@ from .models import (
     IntroSegment,
     NameplateSpec,
     NarrationSegment,
+    Segment,
     SubtitleTrack,
     VideoSpec,
 )
@@ -32,7 +33,7 @@ def legacy_spec(
         NameplateSpec(text=char_right_name, placement=HeadAnchor(side="right")),
     )
 
-    assets: list = [
+    assets: list[FileAsset] = [
         FileAsset(id="base_image", path="base_image.png"),
         FileAsset(id="main_video", path="video.mp4"),
         FileAsset(id="char_voice", path="character.mp3"),
@@ -40,7 +41,7 @@ def legacy_spec(
         FileAsset(id="beep", path="assets/final.wav"),
     ]
 
-    segments: list = [
+    segments: list[Segment] = [
         IntroSegment(background="base_image", nameplates=nameplates),
         FootageSegment(
             video="main_video",

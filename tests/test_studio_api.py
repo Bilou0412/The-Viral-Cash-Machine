@@ -22,14 +22,14 @@ pytestmark = pytest.mark.slow
 
 from cryptography.fernet import Fernet  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from sqlmodel import create_engine  # noqa: E402
+from sqlmodel import (  # noqa: E402
+    Session,
+    create_engine,
+)
 
 from src.studio.api import app as app_module  # noqa: E402
 from src.studio.api.services import auth as auth_service  # noqa: E402
 from src.studio.api.services.fakes import FakeAssetProvider  # noqa: E402
-from src.studio.api.services.montage import MontageService  # noqa: E402
-from sqlmodel import Session  # noqa: E402
-
 from src.studio.db.engine import init_db  # noqa: E402
 from src.studio.db.repositories import UserRepo  # noqa: E402
 

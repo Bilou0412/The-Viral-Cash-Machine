@@ -2,7 +2,7 @@
 // (→ navigates to /editor/:id), or open an existing one. The editor itself is the
 // full-screen /editor/:docId route.
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Clapperboard, Plus } from "lucide-react"
@@ -16,15 +16,11 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/studio/states
 export function EditorIndex() {
   const navigate = useNavigate()
   const projects = useProjects()
-  const [projectId, setProjectId] = useState<number>(0)
+  // Projet sélectionné : null = « pas encore choisi » → on retombe sur le premier
+  // projet chargé (dérivé au rendu, pas synchronisé via un effet).
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   const [title, setTitle] = useState("Nouveau montage")
-
-  // Default to the first project once loaded.
-  useEffect(() => {
-    if (projectId === 0 && projects.data && projects.data.length > 0) {
-      setProjectId(projects.data[0].id)
-    }
-  }, [projects.data, projectId])
+  const projectId = selectedProjectId ?? projects.data?.[0]?.id ?? 0
 
   const docs = useEditorDocuments(projectId)
   const create = useCreateEditorDocument()
@@ -36,7 +32,7 @@ export function EditorIndex() {
     }
     try {
       const doc = await create.mutateAsync({ project_id: projectId, title })
-      navigate(`/editor/${doc.id}`)
+      void navigate(`/editor/${doc.id}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Création impossible")
     }
@@ -74,7 +70,7 @@ export function EditorIndex() {
             <label className="text-xs text-muted-foreground">Projet</label>
             <select
               value={projectId}
-              onChange={(e) => setProjectId(Number(e.target.value))}
+              onChange={(e) => setSelectedProjectId(Number(e.target.value))}
               className="h-9 rounded-md border border-border bg-background px-3 text-sm"
             >
               {projects.data.map((p) => (

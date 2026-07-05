@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor.render_model import RenderClip, RenderModel, SubtitleWord  # noqa: E402
+from src.editor.render_model import RenderClip, RenderModel, SubtitleWord
 
 _RENDER_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "render"))
 

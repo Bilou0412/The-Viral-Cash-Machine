@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import os
 import shutil
-from typing import Optional
 
 from starlette.responses import FileResponse, Response
 
@@ -14,7 +13,7 @@ from .ports import StoragePort
 
 
 class LocalStorage(StoragePort):
-    def persist_from_url(self, url: str, folder: str, filename: str) -> Optional[str]:
+    def persist_from_url(self, url: str, folder: str, filename: str) -> str | None:
         os.makedirs(folder, exist_ok=True)
         return download_file(url, folder, filename)
 
@@ -31,5 +30,5 @@ class LocalStorage(StoragePort):
     def materialize(self, ref: str) -> str:
         return ref
 
-    def serve(self, ref: str, filename: Optional[str] = None) -> Response:
+    def serve(self, ref: str, filename: str | None = None) -> Response:
         return FileResponse(ref, filename=filename)

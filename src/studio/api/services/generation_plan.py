@@ -12,7 +12,7 @@ exactly the contract of `adventure_to_prompts`.
 """
 
 from dataclasses import dataclass
-from typing import List, Literal, Optional
+from typing import Literal
 
 from ....features.scripting.adventure import AdventureScript
 from ....features.scripting.adventure_to_prompts import (
@@ -37,17 +37,17 @@ class PlannedAsset:
     p-video prompt. For audio, `text` carries the spoken French.
     """
 
-    round_index: Optional[int]
+    round_index: int | None
     beat: str
     kind: AssetKind
-    image_prompt: Optional[str] = None
-    motion_prompt: Optional[str] = None
-    text: Optional[str] = None
+    image_prompt: str | None = None
+    motion_prompt: str | None = None
+    text: str | None = None
 
 
 def _video_pair(
-    round_index: Optional[int], beat: str, frame: str, motion: str
-) -> List[PlannedAsset]:
+    round_index: int | None, beat: str, frame: str, motion: str
+) -> list[PlannedAsset]:
     """A video beat = its first-frame image THEN the image→video motion."""
     return [
         PlannedAsset(round_index, f"{beat}.frame", "image", image_prompt=frame),
@@ -62,8 +62,8 @@ def _video_pair(
 
 
 def plan_episode_assets(
-    script: AdventureScript, side: Side = "left", theme: Optional[Theme] = None
-) -> List[PlannedAsset]:
+    script: AdventureScript, side: Side = "left", theme: Theme | None = None
+) -> list[PlannedAsset]:
     """Full ordered asset plan for one episode along the followed `side`.
 
     Order follows the timeline: per round (action, environment, character,
@@ -71,7 +71,7 @@ def plan_episode_assets(
     (narration + the followed character's spoken lines). `theme` (optional) drives
     the DA of the visual prompts ; None → thème par défaut « horror ».
     """
-    assets: List[PlannedAsset] = []
+    assets: list[PlannedAsset] = []
 
     # R2 — RÉFÉRENCE PERSONNAGE en tête : le perso suivi, plein cadre, fond uni.
     # Sert d'`image_input` (image-to-image) à TOUTES les images suivantes pour
@@ -117,7 +117,7 @@ def plan_episode_assets(
     return assets
 
 
-def _plan_audio(script: AdventureScript, side: Side) -> List[PlannedAsset]:
+def _plan_audio(script: AdventureScript, side: Side) -> list[PlannedAsset]:
     """Narration PAR BEAT (voix narrateur conteur), pour le montage par plan.
 
     Une piste audio par beat narré, calée sous son plan au montage :
@@ -125,7 +125,7 @@ def _plan_audio(script: AdventureScript, side: Side) -> List[PlannedAsset]:
     Le face-cam n'a PAS d'audio TTS séparé : sa voix est native (générée par
     p-video depuis le motion prompt qui contient le dialogue).
     """
-    assets: List[PlannedAsset] = [
+    assets: list[PlannedAsset] = [
         PlannedAsset(None, "transition.narration", "audio", text=script.transition_narration_fr),
     ]
     for i, rnd in enumerate(script.rounds):

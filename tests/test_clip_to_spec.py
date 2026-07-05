@@ -4,9 +4,9 @@ import pytest
 
 pytest.importorskip("pydantic")
 
-from src.editor import ClipBrick, EditorDocument, document_to_spec  # noqa: E402
-from src.editor.capabilities import clip_is_ready  # noqa: E402
-from src.videospec.models import (  # noqa: E402
+from src.editor import EditorDocument, document_to_spec
+from src.editor.capabilities import clip_is_ready
+from src.videospec.models import (
     FootageSegment,
     ImageAsset,
     IntroSegment,

@@ -2,14 +2,17 @@
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
+from .features.assets.ports import AssetBundle, AssetProvider
+from .features.assets.replicate_provider import ReplicateAssetProvider
+from .features.compositing.compositor import RawVideoCompositor
+from .features.compositing.heads import (
+    GroundingDINOHeadDetector,
+    HeadDetector,
+    HeadLayout,
+)
 from .features.transcription.ports import Transcriber
 from .features.transcription.whisper import WhisperTranscriber
-from .features.compositing.heads import HeadDetector, GroundingDINOHeadDetector, HeadLayout
-from .features.compositing.compositor import RawVideoCompositor
-from .features.assets.ports import AssetProvider, AssetBundle
-from .features.assets.replicate_provider import ReplicateAssetProvider
 from .infra.download import download_file
 
 
@@ -40,9 +43,9 @@ class Pipeline:
 
     def __init__(
         self,
-        asset_provider: Optional[AssetProvider] = None,
-        transcriber: Optional[Transcriber] = None,
-        head_detector: Optional[HeadDetector] = None,
+        asset_provider: AssetProvider | None = None,
+        transcriber: Transcriber | None = None,
+        head_detector: HeadDetector | None = None,
     ):
         self.asset_provider = asset_provider or ReplicateAssetProvider()
         self.transcriber = transcriber or WhisperTranscriber()
@@ -154,7 +157,7 @@ class Pipeline:
             clip = VideoFileClip(output_path)
             duration = clip.duration
             clip.close()
-        except:
+        except Exception:
             duration = 0.0
 
         return CompiledVideo(output_path=output_path, duration=duration)

@@ -11,7 +11,7 @@ le package `editor` doit s'importer sans openai/replicate (collecte pytest).
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Dict, List, Literal, Optional, Union
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,9 +30,9 @@ class NarrativeContext(_Doc):
     """Le « récit » qui devient le contexte des prompts d'assets."""
 
     text: str = ""                       # la trame / l'histoire
-    characters: Dict[str, str] = Field(default_factory=dict)  # nom -> description
+    characters: dict[str, str] = Field(default_factory=dict)  # nom -> description
     art_direction: str = ""              # DA (se mappe sur Theme.da)
-    extra: Dict[str, str] = Field(default_factory=dict)       # libre K/V
+    extra: dict[str, str] = Field(default_factory=dict)       # libre K/V
 
 
 class TimelinePlacement(_Doc):
@@ -48,7 +48,7 @@ class Layer(_Doc):
 
     type: Literal["text", "imported_media", "png_overlay", "narration"]
     z: int = 0
-    payload: Dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class GenNode(_Doc):
@@ -60,7 +60,7 @@ class GenNode(_Doc):
     """
 
     model_ref: str = ""
-    params: Dict[str, Any] = Field(default_factory=dict)
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 class ZoomSpec(_Doc):
@@ -78,7 +78,7 @@ class AudioChild(_Doc):
     id: Annotated[str, Field(min_length=1)]
     role: Literal["narration", "dialogue"]
     model_ref: str = ""
-    params: Dict[str, Any] = Field(default_factory=dict)
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerativeBrick(_Doc):
@@ -92,10 +92,10 @@ class GenerativeBrick(_Doc):
     id: Annotated[str, Field(min_length=1)]
     type: Literal["image", "video", "voice"]
     model_ref: str = ""                  # "owner/name" ou "owner/name:version"
-    params: Dict[str, Any] = Field(default_factory=dict)
-    context_overrides: Optional[NarrativeContext] = None
-    preset_id: Optional[int] = None
-    layers: List[Layer] = Field(default_factory=list)
+    params: dict[str, Any] = Field(default_factory=dict)
+    context_overrides: NarrativeContext | None = None
+    preset_id: int | None = None
+    layers: list[Layer] = Field(default_factory=list)
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
@@ -104,9 +104,9 @@ class MediaBrick(_Doc):
 
     id: Annotated[str, Field(min_length=1)]
     type: Literal["media"] = "media"
-    asset_ref: Optional[int] = None
-    source_path: Optional[str] = None
-    layers: List[Layer] = Field(default_factory=list)
+    asset_ref: int | None = None
+    source_path: str | None = None
+    layers: list[Layer] = Field(default_factory=list)
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
@@ -115,7 +115,7 @@ class TextBrick(_Doc):
 
     id: Annotated[str, Field(min_length=1)]
     type: Literal["text"] = "text"
-    payload: Dict[str, Any] = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
@@ -137,16 +137,16 @@ class ClipBrick(_Doc):
     type: Literal["clip"] = "clip"
     kind: Literal["video", "photo"]
     image: GenNode = Field(default_factory=GenNode)   # toujours présent
-    motion: Optional[GenNode] = None                  # kind=video uniquement
-    zoom: Optional[ZoomSpec] = None                   # kind=photo uniquement (Ken Burns)
-    children: List[AudioChild] = Field(default_factory=list)
-    context_overrides: Optional[NarrativeContext] = None
-    preset_id: Optional[int] = None
-    layers: List[Layer] = Field(default_factory=list)
+    motion: GenNode | None = None                  # kind=video uniquement
+    zoom: ZoomSpec | None = None                   # kind=photo uniquement (Ken Burns)
+    children: list[AudioChild] = Field(default_factory=list)
+    context_overrides: NarrativeContext | None = None
+    preset_id: int | None = None
+    layers: list[Layer] = Field(default_factory=list)
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
     @model_validator(mode="after")
-    def _check_kind(self) -> "ClipBrick":
+    def _check_kind(self) -> ClipBrick:
         if self.kind == "photo" and self.motion is not None:
             raise ValueError("une brique PHOTO ne peut pas porter de 'motion' (image→video)")
         if self.kind == "video" and self.zoom is not None:
@@ -158,7 +158,7 @@ class ClipBrick(_Doc):
 
 
 Brick = Annotated[
-    Union[ClipBrick, GenerativeBrick, MediaBrick, TextBrick],
+    ClipBrick | GenerativeBrick | MediaBrick | TextBrick,
     Field(discriminator="type"),
 ]
 
@@ -177,11 +177,11 @@ class EditorDocument(_Doc):
     title: str = "Sans titre"
     canvas: Canvas = Field(default_factory=Canvas)
     global_context: NarrativeContext = Field(default_factory=NarrativeContext)
-    tracks: List[Track] = Field(default_factory=list)
-    bricks: List[Brick] = Field(default_factory=list)
+    tracks: list[Track] = Field(default_factory=list)
+    bricks: list[Brick] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _check(self) -> "EditorDocument":
+    def _check(self) -> EditorDocument:
         ids = [b.id for b in self.bricks]
         if len(ids) != len(set(ids)):
             raise ValueError("ids de briques dupliqués dans le document")

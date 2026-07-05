@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy.engine import Engine
+from sqlmodel import create_engine
 
 from src.studio.db.engine import get_session, init_db
 from src.studio.db.migrate import migrate_exports, migrate_voices, run_migration
@@ -23,7 +24,6 @@ from src.studio.db.repositories import (
     ScriptRepo,
     VoiceRepo,
 )
-from sqlmodel import create_engine
 
 
 @pytest.fixture()

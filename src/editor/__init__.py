@@ -6,6 +6,7 @@ module, pour que la collecte pytest fonctionne hors conteneur. Les services
 réseau vivent dans `src/studio/api/services/`.
 """
 
+from .compile_spec import document_to_spec
 from .document import (
     SCHEMA_VERSION,
     AudioChild,
@@ -22,7 +23,6 @@ from .document import (
     Track,
     ZoomSpec,
 )
-from .compile_spec import document_to_spec
 from .migrations import upgrade_document
 
 __all__ = [
@@ -31,8 +31,8 @@ __all__ = [
     "Brick",
     "ClipBrick",
     "EditorDocument",
-    "GenerativeBrick",
     "GenNode",
+    "GenerativeBrick",
     "Layer",
     "MediaBrick",
     "NarrativeContext",

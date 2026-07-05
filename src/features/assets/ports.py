@@ -1,17 +1,17 @@
 """Asset generation ports."""
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Protocol, Optional
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 
 @dataclass(frozen=True)
 class AssetBundle:
     """Generated assets with URLs."""
 
-    narrator_audio_url: Optional[str] = None
-    character_audio_url: Optional[str] = None
-    freeze_image_url: Optional[str] = None
-    video_url: Optional[str] = None
+    narrator_audio_url: str | None = None
+    character_audio_url: str | None = None
+    freeze_image_url: str | None = None
+    video_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -23,10 +23,10 @@ class RunResult:
     compute the real cost as ``predict_time × hardware_rate``. See cost_actual.py.
     """
 
-    urls: List[str]
-    cost_usd: Optional[float] = None
-    predict_time: Optional[float] = None
-    metrics: Optional[Dict[str, Any]] = None
+    urls: list[str]
+    cost_usd: float | None = None
+    predict_time: float | None = None
+    metrics: dict[str, Any] | None = None
 
 
 class AssetProvider(Protocol):
@@ -34,16 +34,16 @@ class AssetProvider(Protocol):
 
     # The last metered run, stashed by run_model / the typed helpers so the
     # generation service can read the real cost without changing return types.
-    last_run: Optional[RunResult]
+    last_run: RunResult | None
 
     def run_model_metered(
-        self, model_ref: str, params: Dict[str, Any]
+        self, model_ref: str, params: dict[str, Any]
     ) -> RunResult:
         """Run a model and return URLs + real-cost signal (cost/metrics)."""
         ...
 
     def synthesize_voice(
-        self, text: str, voice_id: str, model: Optional[str] = None
+        self, text: str, voice_id: str, model: str | None = None
     ) -> str:
         """Synthesize voice from text. Returns URL.
 
@@ -57,7 +57,7 @@ class AssetProvider(Protocol):
         prompt: str,
         size: str,
         aspect_ratio: str,
-        image_input: Optional[list[str]] = None,
+        image_input: list[str] | None = None,
     ) -> str:
         """Generate image from prompt. Returns URL.
 
@@ -73,13 +73,13 @@ class AssetProvider(Protocol):
         duration: float,
         aspect_ratio: str,
         resolution: str,
-        audio_url: Optional[str] = None,
+        audio_url: str | None = None,
         draft: bool = False,
     ) -> str:
         """Generate animated video from image and prompt. Returns URL."""
         ...
 
-    def run_model(self, model_ref: str, params: Dict[str, Any]) -> List[str]:
+    def run_model(self, model_ref: str, params: dict[str, Any]) -> list[str]:
         """Run an arbitrary Replicate model with arbitrary params.
 
         Generic escape hatch for the video editor: any `owner/name` model ref

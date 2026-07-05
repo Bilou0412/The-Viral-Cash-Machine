@@ -26,8 +26,6 @@ limité à pydantic+videospec) : `from src.editor.capabilities import validate_c
 
 from __future__ import annotations
 
-from typing import Dict, List
-
 from ._fields import field_present, missing_required
 from .document import ClipBrick, GenNode
 
@@ -35,7 +33,7 @@ from .document import ClipBrick, GenNode
 _NODE_KIND = {"image": "image", "motion": "video", "audio": "voice"}
 
 
-def validate_clip(clip: ClipBrick) -> Dict[str, List[str]]:
+def validate_clip(clip: ClipBrick) -> dict[str, list[str]]:
     """Champs REQUIS manquants par nœud du clip. Dict vide = clip prêt à générer.
 
     Clés : ``"image"``, ``"motion"`` (clips vidéo), ``"child:<id>"`` (enfants
@@ -46,7 +44,7 @@ def validate_clip(clip: ClipBrick) -> Dict[str, List[str]]:
     sur ``c`` sans lever ni produire d'asset au prompt/texte vide. Le validateur
     et le compilateur partagent ``_fields`` (mêmes alias, même règle « vide »).
     """
-    issues: Dict[str, List[str]] = {}
+    issues: dict[str, list[str]] = {}
 
     img_missing = missing_required(clip.image.params, "image")
     if img_missing:
@@ -66,7 +64,7 @@ def validate_clip(clip: ClipBrick) -> Dict[str, List[str]]:
             issues["motion"] = motion_missing
 
     for child in clip.children:
-        missing: List[str] = []
+        missing: list[str] = []
         if not field_present(child.params, "voice", "text"):
             missing.append("text")
         if child.role == "narration" and not field_present(child.params, "voice", "voice_id"):
@@ -88,7 +86,7 @@ def clip_is_ready(clip: ClipBrick) -> bool:
     return not validate_clip(clip)
 
 
-def clip_node_kinds(clip: ClipBrick) -> Dict[str, str]:
+def clip_node_kinds(clip: ClipBrick) -> dict[str, str]:
     """Nœud → kind de contrat, pour que B3 sache quel formulaire/modèles montrer.
 
     ``form_descriptor`` (model_catalog) et ``get_contract(kind).preferred_models``
