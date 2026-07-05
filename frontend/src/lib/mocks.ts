@@ -28,6 +28,10 @@ import type {
   Template,
   TemplateSummary,
   CreateTemplateBody,
+  RolePrompt,
+  PromptTemplate,
+  PromptTemplateSummary,
+  CreatePromptTemplateBody,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -280,6 +284,35 @@ function seedTemplates() {
       { id: "s3", kind: "video", duration: 5, aspect_ratio: "9:16", resolution: "720p", narration: true },
     ],
   })
+}
+
+// Trous {token} uniques (ordre d'apparition) — miroir de la dérivation serveur.
+function holesOf(identity: string, roles: RolePrompt[]): string[] {
+  const seen: string[] = []
+  const scan = (t: string) => {
+    for (const m of t.matchAll(/\{([a-zA-Z0-9_]+)\}/g)) {
+      const tok = m[1]
+      if (tok && !seen.includes(tok)) seen.push(tok)
+    }
+  }
+  scan(identity)
+  for (const r of roles) scan(r.prompt)
+  return seen
+}
+
+let nextPromptId = 1
+const promptTemplates = new Map<string, PromptTemplate>()
+
+function seedPromptTemplates() {
+  if (promptTemplates.size) return
+  const id = `spt-${nextPromptId++}`
+  const identity = "Style : court-métrage d'horreur POV, {ton}, caméra à l'épaule, cold tones."
+  const roles: RolePrompt[] = [
+    { id: "r1", label: "Accroche", prompt: "On découvre {lieu}, une menace : {danger}." },
+    { id: "r2", label: "Tension", prompt: "{personnage} comprend qu'il faut fuir {danger}." },
+    { id: "r3", label: "Chute", prompt: "Issue face à {danger} : survie ou mort." },
+  ]
+  promptTemplates.set(id, { id, name: "POV horreur — identité", identity, roles, holes: holesOf(identity, roles) })
 }
 
 let nextDocId = 1
@@ -560,6 +593,56 @@ export const mockApi = {
   async deleteTemplate(id: string): Promise<{ ok: boolean }> {
     await delay()
     templates.delete(id)
+    return { ok: true }
+  },
+
+  async listPromptTemplates(): Promise<PromptTemplateSummary[]> {
+    await delay()
+    seedPromptTemplates()
+    return [...promptTemplates.values()].map((t) => ({
+      id: t.id,
+      name: t.name,
+      role_count: t.roles.length,
+      hole_count: holesOf(t.identity, t.roles).length,
+    }))
+  },
+
+  async createPromptTemplate(body: CreatePromptTemplateBody): Promise<PromptTemplate> {
+    await delay()
+    const id = `spt-${nextPromptId++}`
+    const t: PromptTemplate = {
+      id,
+      name: body.name,
+      identity: body.identity,
+      roles: structuredClone(body.roles),
+      holes: holesOf(body.identity, body.roles),
+    }
+    promptTemplates.set(id, t)
+    return structuredClone(t)
+  },
+
+  async getPromptTemplate(id: string): Promise<PromptTemplate> {
+    await delay()
+    seedPromptTemplates()
+    const t = promptTemplates.get(id)
+    if (!t) throw new Error("prompt template not found")
+    return structuredClone(t)
+  },
+
+  async savePromptTemplate(id: string, body: CreatePromptTemplateBody): Promise<PromptTemplate> {
+    await delay(150)
+    const t = promptTemplates.get(id)
+    if (!t) throw new Error("prompt template not found")
+    t.name = body.name
+    t.identity = body.identity
+    t.roles = structuredClone(body.roles)
+    t.holes = holesOf(body.identity, body.roles)
+    return structuredClone(t)
+  },
+
+  async deletePromptTemplate(id: string): Promise<{ ok: boolean }> {
+    await delay()
+    promptTemplates.delete(id)
     return { ok: true }
   },
 

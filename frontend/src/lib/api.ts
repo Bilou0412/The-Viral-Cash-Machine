@@ -28,6 +28,9 @@ import type {
   Template,
   TemplateSummary,
   CreateTemplateBody,
+  PromptTemplate,
+  PromptTemplateSummary,
+  CreatePromptTemplateBody,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -240,6 +243,16 @@ const realApi = {
     request<Template>(`/templates/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteTemplate: (id: string) =>
     request<{ ok: boolean }>(`/templates/${id}`, { method: "DELETE" }),
+
+  // ── Templates de prompt système (T2.1) ──────────────────────────────
+  listPromptTemplates: () => request<PromptTemplateSummary[]>("/prompt-templates"),
+  createPromptTemplate: (body: CreatePromptTemplateBody) =>
+    request<PromptTemplate>("/prompt-templates", { method: "POST", body: JSON.stringify(body) }),
+  getPromptTemplate: (id: string) => request<PromptTemplate>(`/prompt-templates/${id}`),
+  savePromptTemplate: (id: string, body: CreatePromptTemplateBody) =>
+    request<PromptTemplate>(`/prompt-templates/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deletePromptTemplate: (id: string) =>
+    request<{ ok: boolean }>(`/prompt-templates/${id}`, { method: "DELETE" }),
 
   // BYOK API keys (entered in Settings). GET = status only; PUT saves non-empty.
   getKeysStatus: () => request<KeysStatus>("/settings/keys"),

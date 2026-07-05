@@ -26,6 +26,8 @@ const Register = lazy(() => import("@/pages/Register").then((m) => ({ default: m
 const ClipReview = lazy(() => import("@/pages/ClipReview").then((m) => ({ default: m.ClipReview })))
 const TemplatesIndex = lazy(() => import("@/pages/TemplatesIndex").then((m) => ({ default: m.TemplatesIndex })))
 const TemplateBuilder = lazy(() => import("@/pages/TemplateBuilder").then((m) => ({ default: m.TemplateBuilder })))
+const PromptTemplatesIndex = lazy(() => import("@/pages/PromptTemplatesIndex").then((m) => ({ default: m.PromptTemplatesIndex })))
+const PromptTemplateBuilder = lazy(() => import("@/pages/PromptTemplateBuilder").then((m) => ({ default: m.PromptTemplateBuilder })))
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 10_000 } },
@@ -53,6 +55,8 @@ const router = createBrowserRouter([
       { path: "editor/:docId/review", element: <ClipReview /> },
       { path: "templates", element: <TemplatesIndex /> },
       { path: "templates/:id", element: <TemplateBuilder /> },
+      { path: "prompt-templates", element: <PromptTemplatesIndex /> },
+      { path: "prompt-templates/:id", element: <PromptTemplateBuilder /> },
       { path: "episodes/:id", element: <EpisodeRedirect /> },
       { path: "episodes/:id/script", element: <ScriptEditor /> },
       { path: "episodes/:id/assets", element: <Assets /> },

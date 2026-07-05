@@ -569,3 +569,43 @@ def test_template_unknown_404(client):
     assert client.put(
         "/api/templates/999999", json={"slots": []}
     ).status_code == 404
+
+
+def test_prompt_template_crud(client):
+    """CRUD d'un template de prompt système + détection des trous (T2.1)."""
+    r = client.post(
+        "/api/prompt-templates",
+        json={
+            "name": "POV horreur",
+            "identity": "Style: horreur POV, {ton}, caméra à l'épaule.",
+            "roles": [
+                {"id": "r1", "label": "Accroche", "prompt": "On découvre {lieu}."},
+                {"id": "r2", "label": "Tension", "prompt": "{personnage} sent {danger} approcher."},
+            ],
+        },
+    )
+    assert r.status_code == 200, r.text
+    tpl = r.json()
+    tid = tpl["id"]
+    # Trous uniques, dans l'ordre d'apparition (identité puis rôles).
+    assert tpl["holes"] == ["ton", "lieu", "personnage", "danger"]
+
+    summaries = client.get("/api/prompt-templates").json()
+    mine = next(t for t in summaries if t["id"] == tid)
+    assert mine["role_count"] == 2
+    assert mine["hole_count"] == 4
+
+    r = client.put(
+        f"/api/prompt-templates/{tid}",
+        json={
+            "name": "POV horreur v2",
+            "identity": "Style: {ton}.",
+            "roles": [{"id": "r1", "label": "Accroche", "prompt": "Voici {lieu}."}],
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["name"] == "POV horreur v2"
+    assert r.json()["holes"] == ["ton", "lieu"]
+
+    assert client.delete(f"/api/prompt-templates/{tid}").status_code == 200
+    assert client.get(f"/api/prompt-templates/{tid}").status_code == 404

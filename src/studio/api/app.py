@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal
@@ -48,13 +49,14 @@ from starlette.middleware.sessions import SessionMiddleware
 from ...features import storage
 from ...features.assets.ports import AssetProvider
 from ..db.engine import get_engine, init_db
-from ..db.models import Asset, Episode, Project, Template, User
+from ..db.models import Asset, Episode, Project, PromptTemplate, Template, User
 from ..db.repositories import (
     AssetRepo,
     CostRepo,
     EditorDocRepo,
     EpisodeRepo,
     ProjectRepo,
+    PromptTemplateRepo,
     ScriptRepo,
     TemplateRepo,
     UserRepo,
@@ -251,6 +253,15 @@ def _require_owned_template(
     return row
 
 
+def _require_owned_prompt_template(
+    session: Session, user: User, template_id: int
+) -> PromptTemplate:
+    row = PromptTemplateRepo(session).get(template_id)
+    if row is None or (not user.is_admin and row.owner_id != user.id):
+        raise HTTPException(404, f"prompt template {template_id} not found")
+    return row
+
+
 def _require_owned_asset(session: Session, user: User, asset_id: int) -> Asset:
     asset = AssetRepo(session).get(asset_id)
     if asset is None:
@@ -338,6 +349,30 @@ class TemplateSaveIn(BaseModel):
 
     name: str | None = None
     slots: list[TemplateSlotIn]
+
+
+class RolePromptIn(BaseModel):
+    """Un prompt système à trous, pour une brique/rôle (accroche, tension…)."""
+
+    id: str
+    label: str = ""
+    prompt: str = ""
+
+
+class PromptTemplateIn(BaseModel):
+    """Création d'un template de prompt système (identité + rôles à trous)."""
+
+    name: str = "Nouveau style"
+    identity: str = ""
+    roles: list[RolePromptIn] = []
+
+
+class PromptTemplateSaveIn(BaseModel):
+    """Sauvegarde d'un template de prompt système."""
+
+    name: str | None = None
+    identity: str = ""
+    roles: list[RolePromptIn] = []
 
 
 # ---------------------------------------------------------------------------
@@ -1059,6 +1094,101 @@ def delete_template(
 ) -> dict[str, bool]:
     _require_owned_template(session, user, template_id)
     TemplateRepo(session).delete(template_id)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Templates de prompt système (T2.1) — l'identité + la trame à trous
+# ---------------------------------------------------------------------------
+
+_HOLE_RE = re.compile(r"\{([a-zA-Z0-9_]+)\}")
+
+
+def _holes_of(identity: str, roles: list[dict[str, Any]]) -> list[str]:
+    """Trous ``{token}`` uniques (ordre d'apparition) dans l'identité + les rôles."""
+    seen: dict[str, None] = {}
+    for text in [identity, *(str(r.get("prompt", "")) for r in roles)]:
+        for m in _HOLE_RE.findall(text):
+            seen.setdefault(m, None)
+    return list(seen)
+
+
+def _prompt_template_dict(row: PromptTemplate) -> dict[str, Any]:
+    roles = json.loads(row.roles_json)
+    if not isinstance(roles, list):
+        roles = []
+    return {
+        "id": row.id,
+        "name": row.name,
+        "identity": row.identity,
+        "roles": roles,
+        "holes": _holes_of(row.identity, roles),
+    }
+
+
+def _prompt_template_summary(row: PromptTemplate) -> dict[str, Any]:
+    roles = json.loads(row.roles_json)
+    if not isinstance(roles, list):
+        roles = []
+    return {
+        "id": row.id,
+        "name": row.name,
+        "role_count": len(roles),
+        "hole_count": len(_holes_of(row.identity, roles)),
+    }
+
+
+@app.get("/api/prompt-templates")
+def list_prompt_templates(
+    session: Session = Depends(_session), user: User = Depends(require_user)
+) -> list[dict[str, Any]]:
+    repo = PromptTemplateRepo(session)
+    rows = repo.list() if user.is_admin else repo.list_for_owner(_uid(user))
+    return [_prompt_template_summary(r) for r in rows]
+
+
+@app.post("/api/prompt-templates")
+def create_prompt_template(
+    body: PromptTemplateIn, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    roles = json.dumps([r.model_dump() for r in body.roles])
+    row = PromptTemplateRepo(session).create(
+        body.name, body.identity, roles, owner_id=_uid(user)
+    )
+    return _prompt_template_dict(row)
+
+
+@app.get("/api/prompt-templates/{template_id}")
+def get_prompt_template(
+    template_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    row = _require_owned_prompt_template(session, user, template_id)
+    return _prompt_template_dict(row)
+
+
+@app.put("/api/prompt-templates/{template_id}")
+def save_prompt_template(
+    template_id: int, body: PromptTemplateSaveIn,
+    session: Session = Depends(_session), user: User = Depends(require_user)
+) -> dict[str, Any]:
+    _require_owned_prompt_template(session, user, template_id)
+    roles = json.dumps([r.model_dump() for r in body.roles])
+    row = PromptTemplateRepo(session).save(
+        template_id, body.identity, roles, name=body.name
+    )
+    assert row is not None  # existence checked above
+    return _prompt_template_dict(row)
+
+
+@app.delete("/api/prompt-templates/{template_id}")
+def delete_prompt_template(
+    template_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, bool]:
+    _require_owned_prompt_template(session, user, template_id)
+    PromptTemplateRepo(session).delete(template_id)
     return {"ok": True}
 
 
