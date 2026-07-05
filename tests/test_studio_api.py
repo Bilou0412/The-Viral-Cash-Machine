@@ -628,3 +628,19 @@ def test_scene_document_offline(client):
     assert len(doc["bricks"]) == 6  # 2 × (photo d'env + 2 plans)
     # la 1re brique de chaque scène est sa photo d'environnement
     assert doc["scenes"][0]["environment_photo_ref"] == doc["scenes"][0]["shot_ids"][0]
+
+
+def test_scene_env_photo_resolves_as_shot_first_frame(client):
+    """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
+    plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""
+    pid = client.post("/api/projects", json={"name": "s"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    ).json()
+    client.post(f"/api/editor/documents/{doc['id']}/generate")
+    motions = [p for ref, p in client.fake_provider.run_calls if ref == "prunaai/p-video"]
+    assert motions, "au moins un plan vidéo généré"
+    for p in motions:
+        img = str(p.get("image", ""))
+        assert img and not img.startswith("{brick"), "1re frame résolue, pas la ref brute"

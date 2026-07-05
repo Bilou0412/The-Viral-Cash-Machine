@@ -346,7 +346,7 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
         {
           id: sid, type: "clip", kind: "video",
           image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `shot inside location ${i}` } },
-          motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur } },
+          motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur, image: `{brick:${envId}.image}` } },
           children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
           layers: [], placement: { track: 0, start: cursor, duration: dur },
         },

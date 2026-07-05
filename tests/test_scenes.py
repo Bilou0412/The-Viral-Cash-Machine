@@ -39,3 +39,16 @@ def test_built_document_compiles_to_valid_videospec():
     plan = FakeSceneDecomposer().decompose_video("x", n_scenes=2)
     spec = document_to_spec(scene_plan_to_document(plan))
     assert len(spec.segments) == 6  # 2 photos d'env + 4 plans vidéo
+
+
+def test_video_shots_seed_from_scene_env_photo():
+    """Chaque plan vidéo anime la photo d'ENVIRONNEMENT de sa scène (ref i2v)."""
+    plan = FakeSceneDecomposer().decompose_video("x", n_scenes=1)
+    doc = scene_plan_to_document(plan)
+    scene = doc.scenes[0]
+    env_ref = f"{{brick:{scene.environment_photo_ref}.image}}"
+    videos = [b for b in doc.bricks if getattr(b, "kind", None) == "video"]
+    assert videos, "au moins un plan vidéo"
+    for v in videos:
+        assert v.motion is not None
+        assert v.motion.params.get("image") == env_ref
