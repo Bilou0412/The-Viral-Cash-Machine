@@ -233,18 +233,20 @@ function newEditorDoc(title: string): EditorDoc {
 
 // Document COMPOSITE (ClipBrick) — ce que produit le script IA, révisé en R2.
 function newAdventureDoc(title: string): EditorDoc {
-  const clip = (id: string, kind: "video" | "photo", imgPrompt: string, motionPrompt: string, narr: string) => ({
+  const DUR = 4
+  const clip = (id: string, start: number, kind: "video" | "photo", imgPrompt: string, motionPrompt: string, narr: string) => ({
     id,
     type: "clip" as const,
     kind,
     image: { model_ref: "bytedance/seedream-4.5", params: { prompt: imgPrompt, aspect_ratio: "9:16" } },
     motion: kind === "video"
-      ? { model_ref: "prunaai/p-video", params: { prompt: motionPrompt, duration: 4 } }
+      ? { model_ref: "prunaai/p-video", params: { prompt: motionPrompt, duration: DUR } }
       : null,
     children: [
       { id: `${id}__narr`, role: "narration" as const, model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } },
     ],
-    placement: { track: 0, start: 0, duration: 4 },
+    // Placement CHRONOLOGIQUE (plans séquentiels sur la piste principale).
+    placement: { track: 0, start, duration: DUR },
   })
   return {
     schema_version: 2,
@@ -253,8 +255,9 @@ function newAdventureDoc(title: string): EditorDoc {
     global_context: { text: "Un court-métrage d'horreur vertical.", characters: {}, art_direction: "cinematic, cold tones", extra: {} },
     tracks: [{ index: 0, role: "main" }],
     bricks: [
-      clip("c1", "video", "an abandoned subway tunnel, dim flickering light", "slow forward dolly, static camera", "Tu cours dans le noir, le souffle court."),
-      clip("c2", "photo", "a rusted metal door covered in scratches", "", "Une porte. Derrière, un souffle."),
+      clip("c1", 0, "video", "an abandoned subway tunnel, dim flickering light", "slow forward dolly, static camera", "Tu cours dans le noir, le souffle court."),
+      clip("c2", DUR, "photo", "a rusted metal door covered in scratches", "", "Une porte. Derrière, un souffle."),
+      clip("c3", DUR * 2, "video", "a flooded boiler room, black water rising", "slow tilt up, static camera", "L'eau monte. Il faut choisir, vite."),
     ],
   }
 }
