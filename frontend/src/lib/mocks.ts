@@ -296,7 +296,7 @@ function holesOf(identity: string, roles: RolePrompt[]): string[] {
     }
   }
   scan(identity)
-  for (const r of roles) scan(r.prompt)
+  for (const r of roles) for (const v of Object.values(r.fields)) scan(v)
   return seen
 }
 
@@ -308,9 +308,9 @@ function seedPromptTemplates() {
   const id = `spt-${nextPromptId++}`
   const identity = "Style : court-métrage d'horreur POV, {ton}, caméra à l'épaule, cold tones."
   const roles: RolePrompt[] = [
-    { id: "r1", label: "Accroche", prompt: "On découvre {lieu}, une menace : {danger}." },
-    { id: "r2", label: "Tension", prompt: "{personnage} comprend qu'il faut fuir {danger}." },
-    { id: "r3", label: "Chute", prompt: "Issue face à {danger} : survie ou mort." },
+    { id: "r1", label: "Accroche", fields: { decor: "On découvre {lieu}", sujet: "POV", camera: "à l'épaule", narration: "Une menace : {danger}." } },
+    { id: "r2", label: "Tension", fields: { action: "{personnage} comprend qu'il faut fuir {danger}", camera: "travelling avant" } },
+    { id: "r3", label: "Chute", fields: { action: "Issue face à {danger}", narration: "Survie ou mort." } },
   ]
   promptTemplates.set(id, { id, name: "POV horreur — identité", identity, roles, holes: holesOf(identity, roles) })
 }

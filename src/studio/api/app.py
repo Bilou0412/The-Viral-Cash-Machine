@@ -352,11 +352,16 @@ class TemplateSaveIn(BaseModel):
 
 
 class RolePromptIn(BaseModel):
-    """Un prompt système à trous, pour une brique/rôle (accroche, tension…)."""
+    """Un rôle/brique : le découpage à champs (le « cahier des charges »).
+
+    ``fields`` mappe une clé du schéma de plan (décor, sujet, cadrage, action,
+    caméra, narration, dialogue…) → texte à trous. Stockage volontairement
+    générique pour étendre le schéma sans migration.
+    """
 
     id: str
     label: str = ""
-    prompt: str = ""
+    fields: dict[str, str] = {}
 
 
 class PromptTemplateIn(BaseModel):
@@ -1105,9 +1110,14 @@ _HOLE_RE = re.compile(r"\{([a-zA-Z0-9_]+)\}")
 
 
 def _holes_of(identity: str, roles: list[dict[str, Any]]) -> list[str]:
-    """Trous ``{token}`` uniques (ordre d'apparition) dans l'identité + les rôles."""
+    """Trous ``{token}`` uniques (ordre d'apparition) : identité + champs des rôles."""
     seen: dict[str, None] = {}
-    for text in [identity, *(str(r.get("prompt", "")) for r in roles)]:
+    texts = [identity]
+    for role in roles:
+        fields = role.get("fields", {})
+        if isinstance(fields, dict):
+            texts.extend(str(v) for v in fields.values())
+    for text in texts:
         for m in _HOLE_RE.findall(text):
             seen.setdefault(m, None)
     return list(seen)

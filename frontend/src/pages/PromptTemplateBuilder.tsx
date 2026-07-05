@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { SHOT_SCHEMA } from "@/lib/shot-schema"
 import type { RolePrompt } from "@/lib/types"
 
 const SAVE_DEBOUNCE_MS = 500
@@ -32,11 +33,11 @@ function holesOf(identity: string, roles: RolePrompt[]): string[] {
     }
   }
   scan(identity)
-  for (const r of roles) scan(r.prompt)
+  for (const r of roles) for (const v of Object.values(r.fields)) scan(v)
   return seen
 }
 
-const newRole = (): RolePrompt => ({ id: crypto.randomUUID(), label: "", prompt: "" })
+const newRole = (): RolePrompt => ({ id: crypto.randomUUID(), label: "", fields: {} })
 
 export function PromptTemplateBuilder() {
   const { id = "" } = useParams()
@@ -73,6 +74,12 @@ export function PromptTemplateBuilder() {
   const addRole = () => commit(name, identity, [...roles, newRole()])
   const patchRole = (rid: string, patch: Partial<RolePrompt>) =>
     commit(name, identity, roles.map((r) => (r.id === rid ? { ...r, ...patch } : r)))
+  const patchField = (rid: string, key: string, value: string) =>
+    commit(
+      name,
+      identity,
+      roles.map((r) => (r.id === rid ? { ...r, fields: { ...r.fields, [key]: value } } : r))
+    )
   const removeRole = (rid: string) => commit(name, identity, roles.filter((r) => r.id !== rid))
   const moveRole = (rid: string, dir: -1 | 1) => {
     const i = roles.findIndex((r) => r.id === rid)
@@ -145,7 +152,7 @@ export function PromptTemplateBuilder() {
               <div className="space-y-3">
                 {roles.map((r, i) => (
                   <div key={r.id} className="rounded-lg border border-border/60 p-3">
-                    <div className="mb-2 flex items-center gap-2">
+                    <div className="mb-3 flex items-center gap-2">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-secondary text-[10px] font-bold">
                         {i + 1}
                       </span>
@@ -167,12 +174,43 @@ export function PromptTemplateBuilder() {
                         </Button>
                       </div>
                     </div>
-                    <Textarea
-                      rows={2}
-                      value={r.prompt}
-                      onChange={(e) => patchRole(r.id, { prompt: e.target.value })}
-                      placeholder="Prompt système à trous, ex. On découvre {lieu}, une menace : {danger}."
-                    />
+
+                    {/* Cahier des charges : champs de découpage (à trous) */}
+                    <div className="space-y-3">
+                      {SHOT_SCHEMA.map((section) => (
+                        <div key={section.title}>
+                          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                            {section.title}
+                            <span className="ml-1.5 font-normal normal-case text-muted-foreground/60">
+                              · {section.hint}
+                            </span>
+                          </p>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {section.fields.map((f) => (
+                              <div key={f.key} className="flex flex-col gap-1">
+                                <Label className="text-[11px] text-muted-foreground">{f.label}</Label>
+                                {f.multiline ? (
+                                  <Textarea
+                                    rows={2}
+                                    value={r.fields[f.key] ?? ""}
+                                    onChange={(e) => patchField(r.id, f.key, e.target.value)}
+                                    placeholder={f.placeholder}
+                                    className="text-sm"
+                                  />
+                                ) : (
+                                  <Input
+                                    value={r.fields[f.key] ?? ""}
+                                    onChange={(e) => patchField(r.id, f.key, e.target.value)}
+                                    placeholder={f.placeholder}
+                                    className="h-8 text-sm"
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>

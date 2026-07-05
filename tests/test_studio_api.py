@@ -579,8 +579,8 @@ def test_prompt_template_crud(client):
             "name": "POV horreur",
             "identity": "Style: horreur POV, {ton}, caméra à l'épaule.",
             "roles": [
-                {"id": "r1", "label": "Accroche", "prompt": "On découvre {lieu}."},
-                {"id": "r2", "label": "Tension", "prompt": "{personnage} sent {danger} approcher."},
+                {"id": "r1", "label": "Accroche", "fields": {"decor": "On découvre {lieu}."}},
+                {"id": "r2", "label": "Tension", "fields": {"action": "{personnage} sent {danger} approcher."}},
             ],
         },
     )
@@ -600,7 +600,7 @@ def test_prompt_template_crud(client):
         json={
             "name": "POV horreur v2",
             "identity": "Style: {ton}.",
-            "roles": [{"id": "r1", "label": "Accroche", "prompt": "Voici {lieu}."}],
+            "roles": [{"id": "r1", "label": "Accroche", "fields": {"decor": "Voici {lieu}."}}],
         },
     )
     assert r.status_code == 200

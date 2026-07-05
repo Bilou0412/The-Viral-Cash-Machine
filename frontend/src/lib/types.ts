@@ -395,7 +395,8 @@ export interface CreateTemplateBody {
 export interface RolePrompt {
   id: string
   label: string
-  prompt: string
+  // Champs du cahier des charges (clé du schéma → texte à trous). Cf. shot-schema.
+  fields: Record<string, string>
 }
 
 export interface PromptTemplate {
