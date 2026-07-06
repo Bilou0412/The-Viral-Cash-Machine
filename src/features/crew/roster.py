@@ -21,9 +21,9 @@ Phase = Literal[
     "distribution",
 ]
 
-# Ce qui exécute le métier : le décrypteur existant, la génération d'assets, le
-# rendu, ou un agent dédié (aujourd'hui : distribution).
-AgentKind = Literal["decomposer", "generation", "render", "distribution"]
+# Ce qui exécute le métier : le producteur (brief), le décrypteur existant, la
+# génération d'assets, le rendu, ou un agent dédié (aujourd'hui : distribution).
+AgentKind = Literal["brief", "decomposer", "generation", "render", "distribution"]
 
 
 @dataclass(frozen=True)
@@ -47,6 +47,14 @@ PHASES: tuple[Phase, ...] = (
 )
 
 CREW: tuple[CrewRole, ...] = (
+    CrewRole(
+        key="producteur",
+        phase="developpement",
+        title="Producteur",
+        subtitle="cadre le brief : objectif, audience, plateforme, durée, coût",
+        produces="le brief",
+        kind="brief",
+    ),
     CrewRole(
         key="scenariste",
         phase="developpement",
@@ -112,6 +120,11 @@ CREW: tuple[CrewRole, ...] = (
         kind="distribution",
     ),
 )
+
+
+def role_by_key(key: str) -> CrewRole | None:
+    """Le métier d'une clé (pour l'assembleur de contexte), ou None si inconnue."""
+    return next((r for r in CREW if r.key == key), None)
 
 
 def roster() -> list[dict[str, str]]:

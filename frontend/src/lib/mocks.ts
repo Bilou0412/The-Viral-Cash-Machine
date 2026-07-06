@@ -7,6 +7,8 @@ import type {
   Asset,
   BeatEntry,
   BeatsResponse,
+  Brief,
+  BriefResult,
   BrickSpec,
   CostEstimate,
   CreateEditorDocumentBody,
@@ -375,6 +377,7 @@ let nextDocId = 1
 const editorDocuments = new Map<string, EditorDocument>()
 const episodeToDoc = new Map<number, string>()  // épisode → dernier doc de scènes
 const distributionByDoc = new Map<string, DistributionKit>()  // doc → fiche de sortie
+const briefByEpisode = new Map<number, Brief>()  // épisode → brief du producteur
 
 function seedEditorDocs() {
   if (editorDocuments.size) return
@@ -452,7 +455,35 @@ export const mockApi = {
       duration_s: null, final_path: null, created_at: new Date().toISOString(),
     }
     episodes.push(e)
+    if (body.brief && e.id != null) briefByEpisode.set(e.id, structuredClone(body.brief))
     return e
+  },
+  async proposeBrief(body: { idea: string; partial?: Partial<Brief> }): Promise<BriefResult> {
+    await delay(400)
+    const pitch = body.idea.trim() || "une vidéo verticale"
+    const proposed: Brief = {
+      objectif: `Faire découvrir : ${pitch.slice(0, 120)}`,
+      audience: "créateurs et curieux sur mobile (18-34)",
+      plateforme: "tiktok",
+      duree_s: 30,
+      budget_usd: 0,
+      ton: "dynamique et captivant",
+      langue: "fr",
+      notes: "",
+    }
+    // Le mock n'appelle jamais OpenAI → brief de démo (l'humain édite ensuite).
+    return { ...proposed, ...(body.partial ?? {}), source: "fake" }
+  },
+  async getBrief(episodeId: number): Promise<Brief> {
+    await delay()
+    const b = briefByEpisode.get(episodeId)
+    if (!b) throw new Error("aucun brief pour cet épisode")
+    return structuredClone(b)
+  },
+  async saveBrief(episodeId: number, brief: Brief): Promise<Brief> {
+    await delay(150)
+    briefByEpisode.set(episodeId, structuredClone(brief))
+    return structuredClone(brief)
   },
   async generateScript(episodeId: number, body: GenerateScriptBody) {
     await delay(900)

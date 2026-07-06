@@ -9,6 +9,8 @@ import type {
   Asset,
   AuthUser,
   BeatsResponse,
+  Brief,
+  BriefResult,
   BrickSpec,
   CostEstimate,
   CreateEditorDocumentBody,
@@ -143,6 +145,19 @@ const realApi = {
   reviewFromScript: (episodeId: number) =>
     request<EditorDocument>(`/episodes/${episodeId}/editor-document`, {
       method: "POST",
+    }),
+
+  // Le producteur propose un brief complet à partir d'une idée (l'humain édite).
+  proposeBrief: (body: { idea: string; partial?: Partial<Brief> }) =>
+    request<BriefResult>("/brief/propose", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  getBrief: (episodeId: number) => request<Brief>(`/episodes/${episodeId}/brief`),
+  saveBrief: (episodeId: number, brief: Brief) =>
+    request<Brief>(`/episodes/${episodeId}/brief`, {
+      method: "PUT",
+      body: JSON.stringify(brief),
     }),
 
   // Créateur de scènes : idée → l'IA découpe en scènes + plans → document éditable.

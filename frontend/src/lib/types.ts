@@ -170,6 +170,7 @@ export interface CreateEpisodeBody {
   title: string
   draft_mode: boolean
   theme?: string // default "horror" server-side
+  brief?: Brief // brief du producteur (optionnel)
 }
 
 export interface GenerateScriptBody {
@@ -364,6 +365,25 @@ export interface EditorDocument {
 export type DecomposerSource = "openai" | "fake"
 
 export interface SceneDocumentResult extends EditorDocument {
+  source?: DecomposerSource
+}
+
+// Le brief du producteur (phase développement) — le cahier des charges qui
+// oriente toute la chaîne. Proposé par l'agent producteur, éditable.
+export type Platform = "tiktok" | "reels" | "shorts" | "youtube_short"
+
+export interface Brief {
+  objectif: string
+  audience: string
+  plateforme: Platform
+  duree_s: number
+  budget_usd: number
+  ton: string
+  langue: string
+  notes: string
+}
+
+export interface BriefResult extends Brief {
   source?: DecomposerSource
 }
 

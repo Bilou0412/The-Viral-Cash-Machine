@@ -8,7 +8,7 @@ l'attaché de presse / Growth (`DistributionAgent` → `DistributionKit`).
 
 from .model import DistributionKit
 from .ports import CrewAgentError, DistributionAgent
-from .roster import CREW, PHASES, CrewRole, roster
+from .roster import CREW, PHASES, CrewRole, role_by_key, roster
 
 __all__ = [
     "CREW",
@@ -17,5 +17,6 @@ __all__ = [
     "CrewRole",
     "DistributionAgent",
     "DistributionKit",
+    "role_by_key",
     "roster",
 ]

@@ -673,6 +673,68 @@ def test_distribution_agent_generate_edit_persist(client):
     assert client.get(f"/api/editor/documents/{did}/distribution").json()["title"] == "Mon titre"
 
 
+def test_brief_propose_persist_and_drive_scenes(client):
+    """Le producteur propose un brief (Fake), il persiste sur l'épisode, s'édite,
+    et le décrypteur le lit à la génération des scènes."""
+    # 1) Le producteur propose un brief à partir d'une idée (sans clé → Fake).
+    prop = client.post("/api/brief/propose", json={"idea": "un métro hanté"})
+    assert prop.status_code == 200, prop.text
+    brief = prop.json()
+    assert brief["source"] == "fake"
+    assert brief["objectif"] and brief["plateforme"] == "tiktok"
+
+    # 2) L'épisode créé AVEC le brief le persiste ; GET le relit.
+    pid = client.post("/api/projects", json={"name": "b"}).json()["id"]
+    edited = {**{k: v for k, v in brief.items() if k != "source"}, "langue": "en"}
+    ep = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "V", "brief": edited}
+    ).json()
+    got = client.get(f"/api/episodes/{ep['id']}/brief")
+    assert got.status_code == 200, got.text
+    assert got.json()["langue"] == "en"
+
+    # 3) PUT édite le brief → relu.
+    edited["ton"] = "sombre"
+    assert client.put(f"/api/episodes/{ep['id']}/brief", json=edited).status_code == 200
+    assert client.get(f"/api/episodes/{ep['id']}/brief").json()["ton"] == "sombre"
+
+    # 4) La génération de scènes réussit avec un brief présent (Fake décrypteur).
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    )
+    assert doc.status_code == 200, doc.text
+
+
+def test_brief_absent_returns_404(client):
+    """Un épisode sans brief renvoie 404 (le producteur n'a pas encore cadré)."""
+    pid = client.post("/api/projects", json={"name": "b"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    assert client.get(f"/api/episodes/{ep['id']}/brief").status_code == 404
+
+
+def test_agent_context_assembles_per_role(client):
+    """Le dossier de briefing d'un agent : brief + tranche du dossier + outils."""
+    pid = client.post("/api/projects", json={"name": "c"}).json()["id"]
+    brief = {"objectif": "faire peur", "plateforme": "reels", "langue": "fr",
+             "audience": "ados", "duree_s": 20, "budget_usd": 0, "ton": "sombre", "notes": ""}
+    ep = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "V", "brief": brief}
+    ).json()
+    client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    )
+    # Le chef opérateur reçoit le brief + le manifeste vidéo + la tranche scènes.
+    r = client.get(f"/api/episodes/{ep['id']}/agent-context/chef_operateur")
+    assert r.status_code == 200, r.text
+    ctx = r.json()
+    assert ctx["brief"]["objectif"] == "faire peur"
+    assert [t["kind"] for t in ctx["tools"]] == ["video"]
+    assert ctx["dossier"]["scenes"]
+    assert ctx["refs"]["phase"] == "preproduction"
+    # Rôle inconnu → 404.
+    assert client.get(f"/api/episodes/{ep['id']}/agent-context/nope").status_code == 404
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""
