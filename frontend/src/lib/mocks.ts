@@ -371,6 +371,7 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
 
 let nextDocId = 1
 const editorDocuments = new Map<string, EditorDocument>()
+const episodeToDoc = new Map<number, string>()  // épisode → dernier doc de scènes
 
 function seedEditorDocs() {
   if (editorDocuments.size) return
@@ -476,7 +477,7 @@ export const mockApi = {
     return { episode_id: episodeId, assets: buildBeatEntries() }
   },
   async createSceneDocument(
-    _episodeId: number,
+    episodeId: number,
     body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
   ): Promise<SceneDocumentResult> {
     await delay(400)
@@ -484,8 +485,17 @@ export const mockApi = {
     const doc = newSceneDoc(body.title || "Nouvelle vidéo", body.n_scenes ?? 3)
     const docu: EditorDocument = { id, project_id: 1, title: doc.title, doc }
     editorDocuments.set(id, docu)
+    episodeToDoc.set(episodeId, id)
     // Le mock n'appelle jamais OpenAI → scènes de démo.
     return { ...structuredClone(docu), source: "fake" }
+  },
+
+  async getEpisodeDocument(episodeId: number): Promise<EditorDocument> {
+    await delay()
+    const docId = episodeToDoc.get(episodeId)
+    const d = docId ? editorDocuments.get(docId) : undefined
+    if (!d) throw new Error("aucun document pour cet épisode")
+    return structuredClone(d)
   },
 
   async reviewFromScript(episodeId: number): Promise<EditorDocument> {
