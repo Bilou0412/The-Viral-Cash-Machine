@@ -617,6 +617,18 @@ class EditorDocRepo:
             )
         ).all()
 
+    def by_episode(self, episode_id: int) -> EditorDocumentRow | None:
+        """Le document éditable le plus RÉCENT d'un épisode (None si aucun).
+
+        Sert à router l'ouverture d'un épisode vers sa revue par scènes plutôt que
+        vers l'ancienne page script (le plus récent l'emporte s'il y en a plusieurs).
+        """
+        return self.session.exec(
+            select(EditorDocumentRow)
+            .where(EditorDocumentRow.episode_id == episode_id)
+            .order_by(EditorDocumentRow.id.desc())  # type: ignore[union-attr]
+        ).first()
+
     def by_owner(self, owner_id: int) -> Sequence[EditorDocumentRow]:
         """Documents des projets d'un utilisateur (B.2 isolation, join Project)."""
         return self.session.exec(

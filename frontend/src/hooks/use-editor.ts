@@ -17,11 +17,22 @@ export const qkEditor = {
     ["editor", "model-search", kind, q] as const,
   documents: (projectId: number) => ["editor", "documents", projectId] as const,
   document: (id: string) => ["editor", "document", id] as const,
+  episodeDocument: (episodeId: number) =>
+    ["editor", "episode-document", episodeId] as const,
   renderModel: (id: string) => ["editor", "render-model", id] as const,
 }
 
 export const useBricks = () =>
   useQuery({ queryKey: qkEditor.bricks, queryFn: api.listBricks, staleTime: Infinity })
+
+// Document de scènes d'un épisode (404 = aucun → pas de retry, on retombe legacy).
+export const useEpisodeDocument = (episodeId: number, enabled = true) =>
+  useQuery({
+    queryKey: qkEditor.episodeDocument(episodeId),
+    queryFn: () => api.getEpisodeDocument(episodeId),
+    enabled: enabled && Number.isFinite(episodeId),
+    retry: false,
+  })
 
 // model_ref is "owner/name"; split for the endpoint.
 export const useModelForm = (modelRef: string | null, kind?: string) =>

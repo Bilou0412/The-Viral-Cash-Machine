@@ -630,6 +630,23 @@ def test_scene_document_offline(client):
     assert doc["scenes"][0]["environment_photo_ref"] == doc["scenes"][0]["shot_ids"][0]
 
 
+def test_episode_editor_document_lookup(client):
+    """Un épisode avec document de scènes est retrouvable (→ ouverture sur la revue) ;
+    un épisode sans document renvoie 404 (→ chemin legacy)."""
+    pid = client.post("/api/projects", json={"name": "s"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    # Sans document → 404.
+    assert client.get(f"/api/episodes/{ep['id']}/editor-document").status_code == 404
+    # Après génération des scènes → l'endpoint renvoie le doc de cet épisode.
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    ).json()
+    found = client.get(f"/api/episodes/{ep['id']}/editor-document")
+    assert found.status_code == 200, found.text
+    assert found.json()["id"] == doc["id"]
+    assert found.json()["episode_id"] == ep["id"]
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""

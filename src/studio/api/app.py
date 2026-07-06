@@ -1041,6 +1041,28 @@ def create_scene_document(
     }
 
 
+@app.get("/api/episodes/{episode_id}/editor-document")
+def get_episode_editor_document(
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Document éditable (revue par scènes) le plus récent de l'épisode.
+
+    Permet d'ouvrir une vidéo directement sur sa revue plutôt que sur l'ancienne
+    page script. 404 si l'épisode n'a aucun document (chemin aventure legacy).
+    """
+    _require_owned_episode(session, user, episode_id)
+    row = EditorDocRepo(session).by_episode(episode_id)
+    if row is None:
+        raise HTTPException(404, "aucun document pour cet épisode")
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "episode_id": row.episode_id,
+        "title": row.title,
+    }
+
+
 @app.get("/api/editor/documents/{doc_id}")
 def get_editor_document(
     doc_id: int, session: Session = Depends(_session),

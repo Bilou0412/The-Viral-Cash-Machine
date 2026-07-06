@@ -114,6 +114,11 @@ const realApi = {
   createEpisode: (body: CreateEpisodeBody) =>
     request<Episode>("/episodes", { method: "POST", body: JSON.stringify(body) }),
 
+  // Document de scènes le plus récent d'un épisode (404 si aucun → chemin legacy).
+  // Sert à ouvrir une vidéo directement sur sa revue par scènes.
+  getEpisodeDocument: (episodeId: number) =>
+    request<EditorDocument>(`/episodes/${episodeId}/editor-document`),
+
   // POST generates (and stores) the AdventureScript from a prompt + character names.
   generateScript: (episodeId: number, body: GenerateScriptBody) =>
     request<AdventureScript>(`/episodes/${episodeId}/script`, {
