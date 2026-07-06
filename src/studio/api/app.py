@@ -70,6 +70,7 @@ from .services import auth, secrets
 from .services.art_direction import direct_art_direction
 from .services.context import assemble_context
 from .services.crew import agent_source, generate_distribution_kit
+from .services.dialogue import direct_dialogue
 from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
@@ -1540,6 +1541,32 @@ def direct_art_direction_route(
             brief = Brief.model_validate_json(episode.brief_json)
     try:
         doc = direct_art_direction(_doc_of_row(row), brief, openai_key=keys.openai)
+    except CrewAgentError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    saved = EditorDocRepo(session).save(doc_id, doc.model_dump_json())
+    assert saved is not None
+    return {
+        "id": saved.id, "project_id": saved.project_id, "title": saved.title,
+        "doc": json.loads(saved.doc_json), "source": agent_source(keys.openai),
+    }
+
+
+@app.post("/api/editor/documents/{doc_id}/direct/dialogue")
+def direct_dialogue_route(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Dirige le dialoguiste : réécrit le texte parlé (narration/dialogues) du
+    document, persiste, renvoie le doc à jour. Aucun asset n'est régénéré."""
+    row = _require_owned_doc(session, user, doc_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    brief = Brief()
+    if row.episode_id is not None:
+        episode = EpisodeRepo(session).get(row.episode_id)
+        if episode is not None and episode.brief_json:
+            brief = Brief.model_validate_json(episode.brief_json)
+    try:
+        doc = direct_dialogue(_doc_of_row(row), brief, openai_key=keys.openai)
     except CrewAgentError as exc:
         raise HTTPException(502, str(exc)) from exc
     saved = EditorDocRepo(session).save(doc_id, doc.model_dump_json())

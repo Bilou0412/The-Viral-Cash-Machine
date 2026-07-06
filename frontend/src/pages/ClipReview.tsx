@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Clapperboard, Film, Image as ImageIcon, Mic, Palette, RefreshCw, Video } from "lucide-react"
 import {
   useDirectArtDirection,
+  useDirectDialogue,
   useEditorDocument,
   useGenerateEditorDocument,
   useRegenerateBrick,
@@ -232,6 +233,7 @@ export function ClipReview() {
   const regenerate = useRegenerateBrick(docId)
   const shoot = useGenerateEditorDocument(docId)
   const directAD = useDirectArtDirection(docId)
+  const directDlg = useDirectDialogue(docId)
 
   // Diriger le directeur artistique : réécrit l'identité visuelle (aucun re-render).
   const onDirectArtDirection = () =>
@@ -244,6 +246,19 @@ export function ClipReview() {
         ),
       onError: (e) =>
         toast.error(e instanceof Error ? e.message : "Direction artistique impossible"),
+    })
+
+  // Diriger le dialoguiste : réécrit le texte parlé (aucun re-render).
+  const onDirectDialogue = () =>
+    directDlg.mutate(undefined, {
+      onSuccess: (doc) =>
+        toast.success(
+          doc.source === "fake"
+            ? "Dialogues de démo — ajoute ta clé OpenAI pour du sur-mesure."
+            : "Répliques réécrites 🎙️"
+        ),
+      onError: (e) =>
+        toast.error(e instanceof Error ? e.message : "Dialoguiste impossible"),
     })
 
   // Navigation dans la colonne vertébrale du studio (les 5 phases).
@@ -390,6 +405,14 @@ export function ClipReview() {
               onClick={onDirectArtDirection} disabled={directAD.isPending}
             >
               {directAD.isPending ? <Spinner /> : <Palette className="h-3.5 w-3.5" />}
+              Diriger
+            </Button>
+          ) : role.key === "dialoguiste" ? (
+            <Button
+              variant="outline" size="sm" className="gap-1.5"
+              onClick={onDirectDialogue} disabled={directDlg.isPending}
+            >
+              {directDlg.isPending ? <Spinner /> : <Mic className="h-3.5 w-3.5" />}
               Diriger
             </Button>
           ) : null

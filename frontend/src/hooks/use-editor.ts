@@ -133,6 +133,18 @@ export function useDirectArtDirection(id: string) {
   })
 }
 
+// Dialoguiste : réécrit le texte parlé et renvoie le doc à jour (même schéma).
+export function useDirectDialogue(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.directDialogue(id),
+    onSuccess: (saved) => {
+      qc.setQueryData(qkEditor.document(id), saved)
+      void qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
+    },
+  })
+}
+
 // Distribution : l'attaché de presse / Growth. 404 (pas encore de fiche) = normal.
 const qkDistribution = (id: string) => ["editor", "distribution", id] as const
 

@@ -764,6 +764,35 @@ def test_direct_art_direction_rewrites_and_persists(client):
     assert env_prompts(client.get(f"/api/editor/documents/{did}").json()) == after
 
 
+def test_direct_dialogue_rewrites_and_persists(client):
+    """Diriger le dialoguiste réécrit le texte parlé, persiste, et un GET le reflète."""
+    pid = client.post("/api/projects", json={"name": "dlg"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "un thriller", "n_scenes": 1}
+    ).json()
+    did = doc["id"]
+
+    def texts(d):
+        return {
+            child["id"]: child["params"].get("text")
+            for b in d["doc"]["bricks"]
+            if b.get("type") == "clip"
+            for child in b.get("children", [])
+        }
+
+    before = texts(client.get(f"/api/editor/documents/{did}").json())
+    r = client.post(f"/api/editor/documents/{did}/direct/dialogue")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "fake"
+    after = texts(body)
+    assert after and set(after) == set(before)  # mêmes enfants
+    assert all(v for v in after.values())  # tous non vides
+    # Persisté : un GET du document reflète les nouveaux textes.
+    assert texts(client.get(f"/api/editor/documents/{did}").json()) == after
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""

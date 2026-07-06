@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import ArtDirection, DistributionKit, SceneRef
+from .model import ArtDirection, Dialogue, DistributionKit, NarrationRef, SceneRef
 
 
 class CrewAgentError(ValueError):
@@ -44,4 +44,20 @@ class ArtDirectionAgent(Protocol):
         scenes: list[SceneRef],
     ) -> ArtDirection:
         """Brief (ton/plateforme) + scènes → `ArtDirection` (prompts image EN réécrits)."""
+        ...
+
+
+class DialogueAgent(Protocol):
+    """Le dialoguiste : réécrit le texte parlé (narration/dialogues) de chaque plan."""
+
+    def write_dialogue(
+        self,
+        *,
+        tone: str,
+        audience: str,
+        language: str,
+        characters: dict[str, str],
+        lines: list[NarrationRef],
+    ) -> Dialogue:
+        """Brief (ton/audience/langue) + répliques → `Dialogue` (textes réécrits, par id)."""
         ...

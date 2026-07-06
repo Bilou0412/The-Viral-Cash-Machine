@@ -13,6 +13,7 @@ import type {
   Brief,
   BriefResult,
   BrickSpec,
+  DialogueResult,
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
@@ -251,6 +252,12 @@ const realApi = {
   // du document (réécriture seule, aucun asset régénéré) → renvoie le doc à jour.
   directArtDirection: (id: string) =>
     request<ArtDirectionResult>(`/editor/documents/${id}/direct/art-direction`, {
+      method: "POST",
+    }),
+
+  // Dialoguiste : réécrit le texte parlé du document → renvoie le doc à jour.
+  directDialogue: (id: string) =>
+    request<DialogueResult>(`/editor/documents/${id}/direct/dialogue`, {
       method: "POST",
     }),
 

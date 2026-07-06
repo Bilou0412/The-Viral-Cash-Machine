@@ -196,6 +196,7 @@ def test_assemble_context_dossier_slices():
     da = assemble_context("directeur_artistique", brief=Brief(), doc=doc).dossier
     assert da["scenes"] and all("environment" in s for s in da["scenes"])
     son = assemble_context("inge_son", brief=Brief(), doc=doc).dossier
-    assert son["narration"]  # les répliques du Fake décrypteur
+    # Les répliques du Fake décrypteur, porteuses de l'id de leur enfant audio.
+    assert son["narration"] and all("id" in u and "text" in u for u in son["narration"])
     presse = assemble_context("attache_presse", brief=Brief(), doc=doc).dossier
     assert presse["title"] == "Ma vidéo" and "hook" in presse

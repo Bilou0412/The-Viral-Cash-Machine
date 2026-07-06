@@ -374,6 +374,11 @@ export interface ArtDirectionResult extends EditorDocument {
   source?: DecomposerSource
 }
 
+// Résultat du dialoguiste : le document réécrit (textes parlés) + le moteur.
+export interface DialogueResult extends EditorDocument {
+  source?: DecomposerSource
+}
+
 // Le brief du producteur (phase développement) — le cahier des charges qui
 // oriente toute la chaîne. Proposé par l'agent producteur, éditable.
 export type Platform = "tiktok" | "reels" | "shorts" | "youtube_short"

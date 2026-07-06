@@ -14,6 +14,7 @@ import type {
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
+  DialogueResult,
   DistributionKit,
   DistributionResult,
   EditorDoc,
@@ -681,6 +682,25 @@ export const mockApi = {
         const p = env.image.params.prompt
         const cur = (typeof p === "string" ? p : "").trim()
         env.image.params.prompt = `${cur} — art direction: ${style}`.trim()
+      }
+    }
+    return { ...structuredClone(existing), source: "fake" }
+  },
+
+  async directDialogue(id: string): Promise<DialogueResult> {
+    await delay(400)
+    const existing = editorDocuments.get(id)
+    if (!existing) throw new Error("editor document not found")
+    // Le mock n'appelle jamais OpenAI → dialogue de démo, mais MUTE réellement le
+    // doc : normalise chaque réplique (majuscule initiale + ponctuation finale).
+    for (const b of existing.doc.bricks) {
+      if (!isClipBrick(b)) continue
+      for (const child of b.children) {
+        const t = child.params.text
+        const cur = (typeof t === "string" ? t : "").trim()
+        if (!cur) continue
+        const polished = cur[0]!.toUpperCase() + cur.slice(1)
+        child.params.text = /[.!?…]$/.test(polished) ? polished : `${polished}.`
       }
     }
     return { ...structuredClone(existing), source: "fake" }
