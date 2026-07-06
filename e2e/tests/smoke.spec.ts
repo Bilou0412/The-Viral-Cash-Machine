@@ -10,8 +10,8 @@ test("sidebar navigation renders pages cleanly", async ({ page }, info) => {
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible()
   await shot(page, info, "dashboard")
 
-  // Créer (parcours principal)
-  await page.getByRole("link", { name: "Créer" }).click()
+  // Créer (parcours principal) — exact : le Dashboard a aussi un lien « Créer une vidéo ».
+  await page.getByRole("link", { name: "Créer", exact: true }).click()
   await expect(page).toHaveURL(/\/creer$/)
   await expect(page.getByRole("heading", { name: "Créer une vidéo" })).toBeVisible()
   await shot(page, info, "creer")

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import type {
   CreateEditorDocumentBody,
+  DistributionKit,
   EditorDoc,
   GenerativeKind,
 } from "@/lib/types"
@@ -116,4 +117,31 @@ export function useRegenerateBrick(id: string) {
 
 export function useRenderEditorDocument(id: string) {
   return useMutation({ mutationFn: () => api.renderEditorDocument(id) })
+}
+
+// Distribution : l'attaché de presse / Growth. 404 (pas encore de fiche) = normal.
+const qkDistribution = (id: string) => ["editor", "distribution", id] as const
+
+export const useDistribution = (id: string) =>
+  useQuery({
+    queryKey: qkDistribution(id),
+    queryFn: () => api.getDistribution(id),
+    enabled: !!id,
+    retry: false,
+  })
+
+export function useGenerateDistribution(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.generateDistribution(id),
+    onSuccess: (kit) => qc.setQueryData(qkDistribution(id), kit),
+  })
+}
+
+export function useSaveDistribution(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (kit: DistributionKit) => api.saveDistribution(id, kit),
+    onSuccess: (saved) => qc.setQueryData(qkDistribution(id), saved),
+  })
 }

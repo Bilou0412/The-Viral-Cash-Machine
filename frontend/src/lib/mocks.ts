@@ -11,6 +11,8 @@ import type {
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
+  DistributionKit,
+  DistributionResult,
   EditorDoc,
   EditorDocument,
   EditorDocumentSummary,
@@ -372,6 +374,7 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
 let nextDocId = 1
 const editorDocuments = new Map<string, EditorDocument>()
 const episodeToDoc = new Map<number, string>()  // épisode → dernier doc de scènes
+const distributionByDoc = new Map<string, DistributionKit>()  // doc → fiche de sortie
 
 function seedEditorDocs() {
   if (editorDocuments.size) return
@@ -743,6 +746,31 @@ export const mockApi = {
   async renderEditorDocument(id: string) {
     await delay(400)
     return { id, status: "scheduled" }
+  },
+
+  async getDistribution(id: string): Promise<DistributionResult> {
+    await delay()
+    const kit = distributionByDoc.get(id)
+    if (!kit) throw new Error("aucune fiche de sortie pour ce document")
+    return { id, ...structuredClone(kit) }
+  },
+  async generateDistribution(id: string): Promise<DistributionResult> {
+    await delay(500)
+    const doc = editorDocuments.get(id)
+    const name = doc?.title || "Nouvelle vidéo"
+    const kit: DistributionKit = {
+      title: `${name} 😱 (tu ne vas pas y croire)`,
+      description: `${name} — une vidéo verticale à regarder jusqu'au bout. Abonne-toi !`,
+      hashtags: ["#fyp", "#pourtoi", "#story", "#viral", "#shorts"],
+      hook: "Attends de voir la fin…",
+    }
+    distributionByDoc.set(id, kit)
+    return { id, source: "fake", ...structuredClone(kit) }
+  },
+  async saveDistribution(id: string, kit: DistributionKit): Promise<DistributionResult> {
+    await delay(150)
+    distributionByDoc.set(id, structuredClone(kit))
+    return { id, ...structuredClone(kit) }
   },
 
   async uploadFile(file: File) {

@@ -670,6 +670,20 @@ class EditorDocRepo:
         self.session.commit()
         return True
 
+    def set_distribution(
+        self, doc_id: int, distribution_json: str
+    ) -> EditorDocumentRow | None:
+        """Persiste la fiche de sortie (JSON `DistributionKit`) sur le document."""
+        row = self.get(doc_id)
+        if row is None:
+            return None
+        row.distribution_json = distribution_json
+        row.updated_at = datetime.now(UTC)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
 
 class UserRepo:
     """CRUD for :class:`User` (auth Phase B)."""

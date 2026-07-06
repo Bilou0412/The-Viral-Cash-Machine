@@ -54,7 +54,7 @@ export function Layout() {
           <div className="leading-tight">
             <p className="text-sm font-bold tracking-tight">VCM Studio</p>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Aventure · 9:16
+              Studio · 9:16
             </p>
           </div>
         </Link>
