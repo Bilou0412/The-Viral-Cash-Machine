@@ -142,6 +142,8 @@ class EditorDocumentRow(SQLModel, table=True):
     title: str
     schema_version: int = Field(default=1)
     doc_json: str
+    # Fiche de sortie (attaché de presse / Growth), JSON `DistributionKit` ou None.
+    distribution_json: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 

@@ -647,6 +647,32 @@ def test_episode_editor_document_lookup(client):
     assert found.json()["episode_id"] == ep["id"]
 
 
+def test_distribution_agent_generate_edit_persist(client):
+    """L'attaché de presse écrit la fiche de sortie, elle persiste et s'édite."""
+    pid = client.post("/api/projects", json={"name": "d"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "un thriller", "n_scenes": 1}
+    ).json()
+    did = doc["id"]
+    # Pas encore de fiche → 404.
+    assert client.get(f"/api/editor/documents/{did}/distribution").status_code == 404
+    # L'attaché de presse (Fake, pas de clé) écrit la fiche.
+    r = client.post(f"/api/editor/documents/{did}/distribution")
+    assert r.status_code == 200, r.text
+    kit = r.json()
+    assert kit["title"] and kit["hashtags"] and kit["hook"]
+    assert kit["source"] == "fake"
+    # Persistée → GET la relit.
+    got = client.get(f"/api/editor/documents/{did}/distribution")
+    assert got.status_code == 200
+    assert got.json()["title"] == kit["title"]
+    # Édition manuelle du producteur → relue.
+    edited = {"title": "Mon titre", "description": "desc", "hashtags": ["#a"], "hook": "hook"}
+    assert client.put(f"/api/editor/documents/{did}/distribution", json=edited).status_code == 200
+    assert client.get(f"/api/editor/documents/{did}/distribution").json()["title"] == "Mon titre"
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""

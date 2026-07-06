@@ -35,8 +35,8 @@ export function ProjectDetail() {
           </p>
         </div>
         <Button asChild>
-          <Link to={`/new?project=${projectId}`}>
-            <Plus className="h-4 w-4" /> Nouvel épisode
+          <Link to="/creer">
+            <Plus className="h-4 w-4" /> Créer une vidéo
           </Link>
         </Button>
       </div>
@@ -48,12 +48,12 @@ export function ProjectDetail() {
       ) : eps.length === 0 ? (
         <EmptyState
           icon={<Clapperboard className="h-8 w-8" />}
-          title="Aucun épisode"
-          description="Lance ton premier épisode dans ce projet."
+          title="Aucune vidéo"
+          description="Crée ta première vidéo dans ce projet."
           action={
             <Button asChild>
-              <Link to={`/new?project=${projectId}`}>
-                <Plus className="h-4 w-4" /> Nouvel épisode
+              <Link to="/creer">
+                <Plus className="h-4 w-4" /> Créer une vidéo
               </Link>
             </Button>
           }

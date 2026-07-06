@@ -46,7 +46,7 @@ export function Projects() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projets</h1>
           <p className="text-sm text-muted-foreground">
-            Tes projets Aventure. Ouvre un projet pour voir ses épisodes.
+            Tes projets. Ouvre un projet pour voir ses vidéos.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>

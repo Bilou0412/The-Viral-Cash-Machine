@@ -367,6 +367,19 @@ export interface SceneDocumentResult extends EditorDocument {
   source?: DecomposerSource
 }
 
+// Fiche de sortie écrite par l'attaché de presse / Growth (phase distribution).
+export interface DistributionKit {
+  title: string
+  description: string
+  hashtags: string[]
+  hook: string
+}
+
+export interface DistributionResult extends DistributionKit {
+  id?: string
+  source?: DecomposerSource
+}
+
 export interface EditorDocumentSummary {
   id: string
   project_id: number

@@ -48,6 +48,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from ...features import storage
 from ...features.assets.ports import AssetProvider
+from ...features.crew import CrewAgentError, DistributionKit
 from ...features.scenes import SceneDecompositionError
 from ..db.engine import get_engine, init_db
 from ..db.models import Asset, Episode, Project, PromptTemplate, Template, User
@@ -65,6 +66,7 @@ from ..db.repositories import (
 from . import settings
 from .events import bus
 from .services import auth, secrets
+from .services.crew import agent_source, generate_distribution_kit
 from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
@@ -76,6 +78,7 @@ from .services.scenes import decomposer_source, generate_video_plan
 from .services.scripting import generate_script
 
 if TYPE_CHECKING:
+    from ...editor.document import EditorDocument
     from ...features.scripting.adventure import AdventureScript
 
 # ---------------------------------------------------------------------------
@@ -1373,6 +1376,54 @@ def editor_document_video(
     if not os.path.exists(path):
         raise HTTPException(404, "final video not available")
     return FileResponse(path)
+
+
+# --- Distribution : l'attaché de presse / Growth (phase distribution) -------
+
+
+def _doc_of_row(row: Any) -> EditorDocument:
+    from ...editor import upgrade_document
+
+    return upgrade_document(json.loads(row.doc_json))
+
+
+@app.get("/api/editor/documents/{doc_id}/distribution")
+def get_distribution(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Fiche de sortie stockée (404 si l'attaché de presse n'a pas encore écrit)."""
+    row = _require_owned_doc(session, user, doc_id)
+    if not row.distribution_json:
+        raise HTTPException(404, "aucune fiche de sortie pour ce document")
+    return {"id": row.id, **json.loads(row.distribution_json)}
+
+
+@app.post("/api/editor/documents/{doc_id}/distribution")
+def generate_distribution(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Lance l'attaché de presse : écrit titre/description/hashtags/hook, persiste."""
+    row = _require_owned_doc(session, user, doc_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    try:
+        kit = generate_distribution_kit(_doc_of_row(row), openai_key=keys.openai)
+    except CrewAgentError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    EditorDocRepo(session).set_distribution(doc_id, kit.model_dump_json())
+    return {"id": row.id, "source": agent_source(keys.openai), **kit.model_dump()}
+
+
+@app.put("/api/editor/documents/{doc_id}/distribution")
+def save_distribution(
+    doc_id: int, body: DistributionKit, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Sauver les éditions manuelles du producteur sur la fiche de sortie."""
+    _require_owned_doc(session, user, doc_id)
+    EditorDocRepo(session).set_distribution(doc_id, body.model_dump_json())
+    return {"id": doc_id, **body.model_dump()}
 
 
 # ---------------------------------------------------------------------------

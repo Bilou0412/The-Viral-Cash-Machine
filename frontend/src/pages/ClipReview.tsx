@@ -7,20 +7,25 @@
 // ciblée, sauvegarde automatique.
 
 import { useCallback, useMemo, useRef, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
-import { Clapperboard, Film, Image as ImageIcon, Mic, RefreshCw } from "lucide-react"
+import { Clapperboard, Film, Image as ImageIcon, Mic, RefreshCw, Video } from "lucide-react"
 import {
   useEditorDocument,
+  useGenerateEditorDocument,
   useRegenerateBrick,
   useRenderModel,
   useSaveEditorDocument,
   useModelForm,
 } from "@/hooks/use-editor"
 import { FormFieldInput } from "@/components/editor/FormFieldInput"
+import { PhaseRail } from "@/components/studio/phase-rail"
+import { CrewPanel } from "@/components/studio/crew-panel"
+import { DistributionPanel } from "@/components/studio/distribution-panel"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import type { PhaseKey } from "@/lib/crew"
 import type { AudioChild, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
 import { isClipBrick } from "@/lib/types"
 
@@ -218,10 +223,27 @@ function TrackBlock({
 
 export function ClipReview() {
   const { docId = "" } = useParams()
+  const navigate = useNavigate()
   const { data: document, isLoading, isError } = useEditorDocument(docId)
   const { data: renderModel } = useRenderModel(docId)
   const save = useSaveEditorDocument(docId)
   const regenerate = useRegenerateBrick(docId)
+  const shoot = useGenerateEditorDocument(docId)
+
+  // Navigation dans la colonne vertébrale du studio (les 5 phases).
+  const goToPhase = (phase: PhaseKey) => {
+    if (phase === "developpement") return void navigate("/creer")
+    if (phase === "postproduction") return void navigate(`/editor/${docId}`)
+    if (phase === "tournage") {
+      shoot.mutate(undefined, {
+        onSuccess: () => toast.success("Tournage lancé — les plans se génèrent 🎥"),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Tournage impossible"),
+      })
+      return
+    }
+    const el = window.document.getElementById(`phase-${phase}`)
+    el?.scrollIntoView({ behavior: "smooth" })
+  }
 
   const [draft, setDraft] = useState<EditorDoc | null>(null)
   const [hydratedKey, setHydratedKey] = useState<string | null>(null)
@@ -325,16 +347,25 @@ export function ClipReview() {
     }))
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 text-xl font-bold">
-          <Clapperboard className="h-5 w-5" /> Revue — {document?.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          La timeline de montage : piste vidéo et piste son. Clique une brique pour éditer ses
-          arguments, puis régénère-la. Sauvegarde automatique.
-        </p>
+    <div className="mx-auto max-w-5xl space-y-5" id="phase-preproduction">
+      <PhaseRail current="preproduction" onSelect={goToPhase} />
+
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-xl font-bold">
+            <Clapperboard className="h-5 w-5" /> Préproduction — {document?.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Découpage &amp; storyboard : clique une brique pour éditer ses prompts (visuel,
+            mouvement, narration), puis régénère-la. Sauvegarde automatique.
+          </p>
+        </div>
+        <Button onClick={() => goToPhase("tournage")} disabled={shoot.isPending} className="gap-1.5">
+          <Video className="h-4 w-4" /> Lancer le tournage
+        </Button>
       </div>
+
+      <CrewPanel phase="preproduction" />
 
       {clips.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
@@ -558,6 +589,13 @@ export function ClipReview() {
           )}
         </>
       )}
+
+      <div id="phase-distribution" className="space-y-2 pt-2">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Distribution
+        </p>
+        <DistributionPanel docId={docId} />
+      </div>
     </div>
   )
 }

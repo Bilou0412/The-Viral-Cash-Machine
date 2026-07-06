@@ -86,6 +86,7 @@ _ADDED_COLUMNS = [
     ("cost_entry", "is_estimate", "BOOLEAN", "1"),
     ("cost_entry", "predict_time_s", "FLOAT", "NULL"),
     ("project", "owner_id", "INTEGER", "NULL"),  # B.2 multi-tenant
+    ("editor_document", "distribution_json", "VARCHAR", "NULL"),  # fiche de sortie
 ]
 
 

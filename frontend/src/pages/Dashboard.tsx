@@ -48,7 +48,7 @@ export function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Vue d'ensemble des projets et épisodes Aventure.
+            Vue d'ensemble de tes projets et de tes vidéos.
           </p>
         </div>
         <div className="flex gap-2">
@@ -80,8 +80,8 @@ export function Dashboard() {
             </DialogContent>
           </Dialog>
           <Button asChild>
-            <Link to="/new">
-              <Plus className="h-4 w-4" /> Nouvel épisode
+            <Link to="/creer">
+              <Plus className="h-4 w-4" /> Créer une vidéo
             </Link>
           </Button>
         </div>
@@ -104,12 +104,12 @@ export function Dashboard() {
         ) : eps.length === 0 ? (
           <EmptyState
             icon={<Clapperboard className="h-8 w-8" />}
-            title="Aucun épisode"
-            description="Lance ton premier épisode Aventure."
+            title="Aucune vidéo"
+            description="Crée ta première vidéo."
             action={
               <Button asChild>
-                <Link to="/new">
-                  <Plus className="h-4 w-4" /> Nouvel épisode
+                <Link to="/creer">
+                  <Plus className="h-4 w-4" /> Créer une vidéo
                 </Link>
               </Button>
             }

@@ -13,6 +13,8 @@ import type {
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
+  DistributionKit,
+  DistributionResult,
   EditorDoc,
   EditorDocument,
   EditorDocumentSummary,
@@ -77,6 +79,8 @@ export const assetFileUrl = (assetId: number) =>
   USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/assets/${assetId}/file`
 export const episodeVideoUrl = (episodeId: number) =>
   USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/episodes/${episodeId}/video`
+export const editorVideoUrl = (docId: string) =>
+  USE_MOCKS ? MOCK_PLACEHOLDER_IMG : `${BASE}/editor/documents/${docId}/video`
 export const eventsUrl = (episodeId: number) => `${BASE}/events/${episodeId}`
 // SSE for an editor document (B.2 : scope=doc → l'ownership est vérifié côté doc,
 // pas épisode ; le bus mélange les deux espaces d'ids).
@@ -225,6 +229,17 @@ const realApi = {
   renderEditorDocument: (id: string) =>
     request<{ id: string; status: string }>(`/editor/documents/${id}/render`, {
       method: "POST",
+    }),
+
+  // Distribution : l'attaché de presse / Growth (titre, description, hashtags, hook).
+  getDistribution: (id: string) =>
+    request<DistributionResult>(`/editor/documents/${id}/distribution`),
+  generateDistribution: (id: string) =>
+    request<DistributionResult>(`/editor/documents/${id}/distribution`, { method: "POST" }),
+  saveDistribution: (id: string, kit: DistributionKit) =>
+    request<DistributionResult>(`/editor/documents/${id}/distribution`, {
+      method: "PUT",
+      body: JSON.stringify(kit),
     }),
 
   // Upload d'une photo (Phase 3) → ref de stockage à mettre en input image.
