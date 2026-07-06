@@ -7,6 +7,7 @@
 import type {
   AdventureScript,
   Asset,
+  ArtDirectionResult,
   AuthUser,
   BeatsResponse,
   Brief,
@@ -243,6 +244,13 @@ const realApi = {
     request<RenderModel>(`/editor/documents/${id}/render-model`),
   renderEditorDocument: (id: string) =>
     request<{ id: string; status: string }>(`/editor/documents/${id}/render`, {
+      method: "POST",
+    }),
+
+  // Directeur artistique : réécrit les prompts d'environnement + l'art direction
+  // du document (réécriture seule, aucun asset régénéré) → renvoie le doc à jour.
+  directArtDirection: (id: string) =>
+    request<ArtDirectionResult>(`/editor/documents/${id}/direct/art-direction`, {
       method: "POST",
     }),
 

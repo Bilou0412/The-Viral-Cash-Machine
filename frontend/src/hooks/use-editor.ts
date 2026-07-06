@@ -119,6 +119,20 @@ export function useRenderEditorDocument(id: string) {
   return useMutation({ mutationFn: () => api.renderEditorDocument(id) })
 }
 
+// Directeur artistique : réécrit l'identité visuelle et renvoie le doc à jour.
+// On sème le cache du doc (le draft de la revue se re-hydrate) + on rafraîchit
+// le render-model (miniatures). Aucun asset n'est régénéré.
+export function useDirectArtDirection(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.directArtDirection(id),
+    onSuccess: (saved) => {
+      qc.setQueryData(qkEditor.document(id), saved)
+      void qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
+    },
+  })
+}
+
 // Distribution : l'attaché de presse / Growth. 404 (pas encore de fiche) = normal.
 const qkDistribution = (id: string) => ["editor", "distribution", id] as const
 
