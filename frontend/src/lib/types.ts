@@ -359,6 +359,14 @@ export interface EditorDocument {
   doc: EditorDoc
 }
 
+// Quel décrypteur a produit les scènes : "openai" (réel) ou "fake" (démo /
+// placeholder, renvoyé tant qu'aucune clé OpenAI n'est configurée).
+export type DecomposerSource = "openai" | "fake"
+
+export interface SceneDocumentResult extends EditorDocument {
+  source?: DecomposerSource
+}
+
 export interface EditorDocumentSummary {
   id: string
   project_id: number

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from .model import ScenePlan, ShotPlan, VideoPlan
-from .ports import DEFAULT_SCENES
+from .ports import DEFAULT_SCENES, SceneDecompositionError
 
 if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
     from openai import OpenAI
@@ -142,11 +142,29 @@ class OpenAISceneDecomposer:
     ) -> VideoPlan:
         n = max(1, n_scenes)
         skeletons = self._plan_scenes(prompt, style_identity, n)
+        if not skeletons:
+            raise SceneDecompositionError(
+                "L'IA n'a pas pu découper cette idée en scènes. Reformule ton idée "
+                "ou réessaie."
+            )
         scenes: list[ScenePlan] = []
         summary_parts: list[str] = []
         for i, sk in enumerate(skeletons[:n]):
             sid = sk.id or f"s{i + 1}"
             shots = self._expand_scene(sk, style_identity, " ".join(summary_parts))
+            if not shots:
+                # Micro illisible : garder la scène générable avec un plan minimal
+                # qui anime sa photo d'environnement (plutôt qu'une scène morte).
+                shots = [
+                    ShotPlan(
+                        id=f"{sid}_sh1",
+                        kind="video",
+                        visual_desc=sk.environment_desc,
+                        motion_desc="slow push in, static camera",
+                        narration_fr="",
+                        duration_s=4.0,
+                    )
+                ]
             scenes.append(
                 ScenePlan(
                     id=sid,

@@ -25,6 +25,7 @@ import type {
   ModelSearchResult,
   Project,
   RenderModel,
+  SceneDocumentResult,
   Template,
   TemplateSummary,
   CreateTemplateBody,
@@ -140,7 +141,7 @@ const realApi = {
     episodeId: number,
     body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
   ) =>
-    request<EditorDocument>(`/episodes/${episodeId}/scene-document`, {
+    request<SceneDocumentResult>(`/episodes/${episodeId}/scene-document`, {
       method: "POST",
       body: JSON.stringify(body),
     }),

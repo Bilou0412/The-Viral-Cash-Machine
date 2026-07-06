@@ -14,6 +14,14 @@ from .model import VideoPlan
 DEFAULT_SCENES = 3
 
 
+class SceneDecompositionError(ValueError):
+    """L'IA n'a pas pu produire un découpage exploitable (réponse vide/illisible).
+
+    Levée quand aucune scène n'est extraite du plan macro : mieux vaut une erreur
+    claire remontée à l'utilisateur qu'une vidéo vide générée silencieusement.
+    """
+
+
 class SceneVideoDecomposer(Protocol):
     """Décrit une vidéo en scènes puis chaque scène en plans courts."""
 
