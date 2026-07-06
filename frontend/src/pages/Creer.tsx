@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Minus, Plus, Sparkles, Wand2 } from "lucide-react"
-import { useCreateEpisode, useProjects } from "@/hooks/use-studio"
+import { useCreateEpisode, useCreateProject, useProjects } from "@/hooks/use-studio"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,6 +21,7 @@ const MAX_SCENES = 8
 export function Creer() {
   const navigate = useNavigate()
   const projects = useProjects()
+  const createProject = useCreateProject()
   const createEpisode = useCreateEpisode()
   const [title, setTitle] = useState("")
   const [prompt, setPrompt] = useState("")
@@ -32,14 +33,12 @@ export function Creer() {
       toast.error("Décris ton idée de vidéo.")
       return
     }
-    const project = projects.data?.[0]
-    if (!project) {
-      toast.error("Crée d'abord un projet depuis le dashboard.")
-      return
-    }
     const vidTitle = title.trim() || "Nouvelle vidéo"
     setBusy(true)
     try {
+      // Pas de dead-end pour un premier usage : on crée un projet à la volée s'il
+      // n'en existe aucun (Créer est le point d'entrée, pas le Dashboard).
+      const project = projects.data?.[0] ?? (await createProject.mutateAsync("Mes vidéos"))
       const ep = await createEpisode.mutateAsync({
         project_id: project.id,
         title: vidTitle,
