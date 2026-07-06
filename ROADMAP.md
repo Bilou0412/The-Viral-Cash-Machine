@@ -1,64 +1,78 @@
 # ROADMAP.md — Source unique de vérité
 
-> Ce document **remplace et consolide** les 5 plans précédents. Ils deviennent des
-> archives (bannière en tête de chacun) :
+> Ce document **remplace et consolide** les plans précédents (archivés :
 > `ARCHITECTURE_PLAN.md`, `EDITOR_PLAN.md`, `MODIF_PLAN.md`, `EXTENSION_PLAN.md`,
-> `BRIQUES_PLAN.md`. **Pour reprendre le travail : lire CE fichier**, section
-> « État consolidé » puis « Étapes restantes » (première ligne ⬜ = prochaine étape).
+> `BRIQUES_PLAN.md`). **Pour reprendre le travail : lire CE fichier**, section
+> « État consolidé » (§4) puis « Étapes restantes » (§5) — première ligne ⬜ = prochaine étape.
 
 ---
 
 ## 1. Le résultat visé (north star)
 
-Produire des **vidéos verticales virales** (format aventure à choix) **vite et pas
-cher**, avec une présentation où l'on **voit et ajuste des briques vidéo/photo**
-(leurs **arguments d'API** + leur **agencement**), et où l'on **ne régénère que ce
-qu'on touche**.
+Un **créateur de vidéos verticales 9:16** pour TikTok/Shorts/Reels, où **l'IA écrit et
+découpe, puis on révise en briques** — vite et pas cher, en **ne régénérant que ce qu'on
+touche**.
 
-Décision produit (tranchée) : **« l'IA écrit → je révise en briques »**, PAS un
-éditeur de montage vierge. La brique est l'**unité de REVUE d'une génération** —
-on n'assemble pas une vidéo de zéro, on **ajuste ce que l'IA a produit**, et on
-régénère ciblé pour maîtriser le coût.
+Modèle mental (tranché) : une **VIDÉO** = une séquence ordonnée de **SCÈNES** (l'arc :
+accroche → développement → chute). Une **SCÈNE** = un **contexte concentré qui ne se dilue
+pas**, en deux temps : **contexte figé** (une **photo d'environnement** qui tient le décor)
+puis **contexte en mouvement** (des **plans courts** vidéo/photo qui l'animent, + audio).
+Principe : **briques courtes = meilleurs prompts** (une intro de 20 s = plusieurs plans
+courts, pas une brique longue diluée).
+
+Décision produit (tranchée) : **« l'IA écrit → je révise en briques »**, PAS un éditeur de
+montage vierge. La brique est l'**unité de REVUE d'une génération** — on ajuste ce que l'IA a
+produit, on régénère ciblé pour maîtriser le coût. Dialogues/narration en **français**,
+prompts visuels en **anglais**.
+
+> Note pivot (2026-07) : le produit est passé du format « aventure à choix / horreur » (CYOA)
+> à un **créateur de scènes neutre et générique**. Le rail bas (`ClipBrick` → `VideoSpec` →
+> MP4) est **inchangé et réutilisé** ; seul le décrypteur du haut a changé (aventure → scènes).
+> Le rail aventure (`openai_adventure_decomposer` → `adventure_to_bricks`) **survit** comme
+> chemin alternatif, mais le **happy path** est désormais « Créer » (idée → scènes).
 
 ---
 
 ## 2. Le rail retenu (pipeline unique)
 
 ```
-Idée / thème
+Idée / thème (page « Créer »)
    │
-   ▼  [IA]   openai_adventure_decomposer  →  AdventureScript        (✅ existe)
+   ▼  [S-IA]  get_scene_decomposer (Fake offline / OpenAI 2 phases)  →  VideoPlan   (✅ fait)
+   │            macro : idée → scènes ; micro : scène → plans courts + audio
    │
-   ▼  [R1]   adventure_to_bricks          →  arbre de ClipBrick      (⬜ MANQUANT — connecteur clé)
-   │            (briques composites VIDÉO/PHOTO + enfants, ÉDITABLES)
+   ▼  [S-B]   scene_plan_to_document       →  EditorDocument          (✅ fait)
+   │            (briques ClipBrick courtes + INDEX de scènes ; photo d'env en tête)
    │
-   ▼  [R2]   UI de REVUE (React)          →  on déplie, on édite les
-   │            args (form_descriptor) + l'agencement, on régénère ciblé
+   ▼  [R2]    UI de REVUE (React)          →  timeline multipiste (Vidéo/Son),
+   │            bandes de scène, clic → inspecteur d'args (form_descriptor),        (✅ fait)
+   │            régénération ciblée par brique
    │
-   ▼  [B1]   document_to_spec             →  VideoSpec               (✅ fait)
+   ▼  [B1]    document_to_spec             →  VideoSpec (IR immuable)  (✅ fait)
    │
-   ▼  [IR]   resolve_real + MoviePyRenderEngine → MP4 final          (✅ existe)
+   ▼  [IR]    resolve_real + MoviePyRenderEngine → MP4 final           (✅ existe)
 ```
 
-Principe directeur : **la brique = revue de la génération**. `adventure_to_bricks`
-(R1) est le **chaînon manquant** qui rend la génération de l'IA éditable. Une fois
-posé, tout le reste (compiler → spec → rendu) existe déjà.
+Chemin alternatif (legacy, conservé) : `openai_adventure_decomposer → adventure_to_bricks →
+document_to_spec` (même sortie `ClipBrick`, sans le modèle de scènes).
+
+Principe directeur : **la brique = revue de la génération**. Tout le rail bas
+(compiler → spec → rendu) est déjà là ; les décrypteurs du haut alimentent le même
+`EditorDocument`.
 
 ---
 
 ## 3. Ce qu'on ABANDONNE / absorbe (pour lever le flou)
 
-- **Éditeur timeline vierge (Remotion-like, composer de zéro)** — abandonné. Le
-  front React n'est pas un éditeur blanc : c'est une **surface de revue** de
-  l'arbre de briques généré (R2 reformule l'ancien `EDITOR_PLAN` E5–E7).
-- **Briques PLATES (`GenerativeBrick` image/video/voice) comme modèle d'autoring**
-  — legacy. Conservées uniquement pour le `resolve.py`/preview existant tant que
-  R2 ne les a pas remplacées par les `ClipBrick` composites ; à retirer ensuite.
-- **Wizard guidé `MODIF_PLAN` LOT 2** — déjà supersédé (cf. mémoire).
-- **`adventure_to_spec` direct (script → VideoSpec sans briques)** — gardé comme
-  chemin rapide « sans revue », mais le chemin **canonique éditable** devient
-  `script → briques (R1) → VideoSpec (B1)`. À terme, `adventure_to_spec` peut se
-  redériver comme `document_to_spec(adventure_to_bricks(script))`.
+- **Format CYOA / horreur** (2 choix/1 fatal, 2 persos scalaires, beats fatal/survie,
+  `_GOLDEN_RULES`) — abandonné comme cadre produit. Le décrypteur de scènes est **neutre**
+  (`src/features/scenes/`). Le décrypteur aventure reste dispo mais n'est plus le défaut.
+- **Éditeur timeline vierge (composer de zéro)** — abandonné. Le front est une **surface de
+  revue** de l'arbre de briques généré (timeline multipiste Vidéo/Son + bandes de scène).
+- **Briques PLATES (`GenerativeBrick` image/video/voice) comme modèle d'autoring** — legacy.
+  Conservées uniquement pour `resolve.py`/preview existant ; à retirer à terme.
+- **`adventure_to_spec` direct (script → VideoSpec sans briques)** — gardé comme chemin rapide
+  « sans revue » ; le chemin canonique éditable passe par les briques.
 
 ---
 
@@ -70,89 +84,79 @@ posé, tout le reste (compiler → spec → rendu) existe déjà.
 | IR déclarative `VideoSpec` + ports `RenderEngine`/`AssetResolver` | ✅ | `src/videospec/` |
 | Rendu `MoviePyRenderEngine` (interprète le spec) | ✅ | `src/videospec/render_moviepy.py` |
 | `RealAssetResolver` (Step-1 piloté par manifest) | ✅ | `src/videospec/resolve_real.py` |
-| Script aventure + décomposeur LLM (+ chronologie) | ✅ | `src/features/scripting/` |
+| Décomposeur LLM aventure (+ chronologie) — legacy | ✅ | `src/features/scripting/` |
 | Génération idempotente (ne pas repayer un asset prêt) | ✅ | commit `85bd441` |
 | Contrats de capacité + 3 modèles préférés/kind | ✅ | `src/features/compositing/registry.py` |
 | Catalogue Replicate + `form_descriptor` (schéma→formulaire) | ✅ | `src/studio/api/services/model_catalog.py` |
 | **Brique composite `ClipBrick`** (VIDÉO/PHOTO + enfants + zoom) | ✅ | `src/editor/document.py` (B0) |
 | **`document_to_spec`** : briques → `VideoSpec` | ✅ | `src/editor/compile_spec.py` (B1) |
-| **`validate_clip`** cohérent avec le compilateur (`_fields`) | ✅ | `src/editor/capabilities.py` (B2) |
+| **`validate_clip`** cohérent avec le compilateur | ✅ | `src/editor/capabilities.py` (B2) |
 | **Tests allégés** : défaut ~6 s, `--runheavy` pour tout | ✅ | `tests/conftest.py` (T) |
-| **`adventure_to_bricks`** : script → arbre `ClipBrick` éditable | ✅ | `src/features/scripting/adventure_to_bricks.py` (R1) |
-| **Durcissement `ClipBrick`** : bornes, `allow_inf_nan`, ids non vides | ✅ | `src/editor/document.py` |
-| **Entrée du rail câblée** : `POST /api/episodes/{id}/editor-document` | ✅ | `src/studio/api/app.py` |
+| **`adventure_to_bricks`** : script → arbre `ClipBrick` (legacy) | ✅ | `src/features/scripting/adventure_to_bricks.py` (R1) |
 | **Génération des `ClipBrick`** (image→motion→narration) + idempotence | ✅ | `src/studio/api/services/editor_generation.py` (R1b) |
+| **UI de revue en timeline multipiste** (Vidéo / Son, clic → args) | ✅ | `frontend/src/pages/ClipReview.tsx` (#14) |
+| **Templates T1** — constructeur du « contenant » (structure) + CRUD | ✅ | `src/studio/db` + `frontend/.../Template*` (#15) |
+| **Styles T2.1** — templates de prompt système à champs (cahier des charges) | ✅ | `PromptTemplate` + `frontend/.../PromptTemplate*` (#16) |
+| **Modèle de scènes** (`Scene` = INDEX de briques, schema v3, VideoSpec identique) | ✅ | `src/editor/document.py` (#17) |
+| **Décrypteur de scènes** (Fake offline + OpenAI 2 phases, neutre) | ✅ | `src/features/scenes/` (#17, #18) |
+| **`scene_plan_to_document`** + route `POST /episodes/{id}/scene-document` | ✅ | `src/features/scenes/scene_plan_to_document.py` (#17) |
+| **Photo d'environnement = 1re frame des plans** (i2v, `{brick:X.image}`) | ✅ | `editor_generation.py` (#18, R4) |
+| **Page « Créer »** (idée + nb de scènes → épisode → revue) + **bandes de scène** | ✅ | `frontend/src/pages/Creer.tsx` (#17) |
+| **Nav resserrée** (7 → 4 + groupe « Avancé ») | ✅ | `frontend/src/components/studio/layout.tsx` (#18) |
+| **Rigueur type-Rust** : mypy strict cliquet 0, ruff, TS strict, eslint typé | ✅ | `scripts/verify.sh`, `pyproject.toml` (#13) |
 
 ---
 
 ## 5. Étapes restantes (ordonnées — 1 étape / session)
 
-### R1 — `adventure_to_bricks` : script → arbre de `ClipBrick` éditable  ✅
-FAIT (`src/features/scripting/adventure_to_bricks.py` + `adventure_to_document`).
-Adaptateur **pur, hors-ligne**, ancré sur `plan_episode_assets` : groupe les
-`PlannedAsset` en briques (beat vidéo = VIDÉO image+motion ; image seule = PHOTO ;
-narration = enfant). **Invariant testé** : les assets génératifs (prompts image/
-motion, textes narration) de `document_to_spec(adventure_to_bricks(s))` sont
-IDENTIQUES à ceux d'`adventure_to_spec(s)` — couverture 1:1, rien perdu/ajouté.
-Toutes les briques sortent `clip_is_ready`. Overlays montage (countdown, plaques,
-eye-open) restent hors briques. mypy clean, +8 tests.
-**Entrée du rail câblée** (revue multi-agents 2026-06-21) : `POST
-/api/episodes/{id}/editor-document` matérialise et persiste le document de briques
-depuis le script. + durcissement `ClipBrick` (le bug inf/NaN → doc irrechargeable
-est corrigé). R1 n'est plus du code mort côté entrée.
+> Le rail tourne de bout en bout **en backend et en mock**. Les étapes historiques R1–R4
+> sont livrées (voir §4). Restent la **boucle réelle** (dogfood), le **flux Créer complet**,
+> les **garde-fous coût** et le **socle monétisation**.
 
-### R1b — Génération des `ClipBrick` (`EditorGenerationService`) + idempotence  ✅
-FAIT (`src/studio/api/services/editor_generation.py`). `generate_document`
-dispatche désormais `ClipBrick` (image first-frame → motion image→video → enfants
-narration TTS) et briques plates legacy. Chaque nœud = une ligne `Asset`
-(`beat = {id}.image|{id}.motion|{child.id}`), via un cœur partagé `_run_node`
-(Asset/Job/Cost/SSE). **Idempotence** `_existing_done` : un nœud `ready` + fichier
-présent n'est ni régénéré ni repayé. Image-first câblé (URL image → entrée i2v du
-motion). `regenerate_brick` gère les `ClipBrick` (force). Test offline bout-en-bout :
-56 nœuds générés, 2ᵉ run = 0 appel, régénération ciblée = 3 nœuds. mypy baseline
-inchangé (40), suite complète 204 passed. Le rail `ClipBrick` est le chemin éditable
-canonique ; le monde `PlannedAsset` reste le « chemin rapide sans revue ».
-**Le rail tourne maintenant de bout en bout en backend** : script → briques →
-génération idempotente → assets. Reste R2 (le front de revue).
+### S1 — Fermer la boucle réelle (dogfood)  ⬜  ← PROCHAINE ÉTAPE
+Générer une **vraie vidéo** depuis « Créer » avec de **vraies clés** (OpenAI + Replicate) :
+idée → scènes (OpenAI 2 phases) → photo d'environnement + plans (image-first) → MP4. Objectif :
+**trouver et corriger ce qui casse hors mock** (schéma OpenAI réel, mapping des modèles
+Replicate, i2v env→plan, coûts). C'est le prérequis pour dogfooder. Vérifier d'abord sur un
+épisode court (1 scène, 2 plans) pour limiter le coût.
 
-### R2 — UI de REVUE (React)  ⬜
-Présenter l'arbre de briques généré : timeline avec briques parentes **dépliables**
-(VIDÉO violet / PHOTO cyan), enfants visibles (narration/dialogue/zoom), **inspecteur
-d'args** branché sur `form_descriptor`, et **état par nœud** (à générer / prêt /
-écarté). PAS de composition à blanc — édition + régénération de l'existant. Réutilise
-`frontend/src/components/editor/` (Timeline/BrickPalette) en les **reciblant** sur
-`ClipBrick`.
+### S2 — Flux « Créer » complet  ⬜
+Étape **photo-first explicite par scène** (générer/uploader l'environnement AVANT les plans,
+via `api.uploadFile`), + **sélecteurs Style/Template optionnels** qui grainent le décrypteur
+(un Style graine `style_identity`, un Template contraint `n_scenes`/la structure). Rend le
+parcours de création complet et guidé.
 
-### R3 — Régénération ciblée / idempotence par nœud  ⬜
-Brancher la génération **par nœud de brique** sur `AssetProvider` + statut `Asset`/
-`GenerationJob`. Un nœud `prêt` n'est ni regénéré ni repayé (réutilise `85bd441`).
-Champ « écarter » par nœud. C'est le cœur du « pas cher ».
+### S3 — Garde-fous coût (finir R5)  ⬜
+`draft` par défaut en revue (existe), **estimation AVANT génération** (`estimate_cost` existe)
+affichée dans « Créer »/revue, **confirmation explicite** avant un run « final », **tableau de
+coût par épisode**. C'est le cœur du « pas cher » côté UX.
 
-### R4 — Image-first (vérifier/finir)  ⬜
-Garantir que toute brique VIDÉO part d'une **image générée d'abord** (first-frame)
-puis motion-only (p-video), sans re-description. Vérifier l'état (ex-`EXTENSION` P2 :
-splitters `frame_*`/`motion_*` dans `prompts.py`) et compléter si partiel.
+### S4 — Socle monétisation  ⬜
+Crédits + **Lemon Squeezy** (ou équivalent) + **tier gratuit watermarké**. Plan déjà esquissé
+(crédits décomptés par nœud généré via l'idempotence existante). À n'attaquer qu'une fois S1
+fiable (pas de sens de facturer une génération qui casse).
 
-### R5 — Garde-fous coût  ⬜
-`draft` par défaut en revue, **estimation avant génération** (`estimate_cost` existe),
-et confirmation explicite avant un run « final ». Tableau de coût par épisode.
+### S5 (option) — Rangement legacy  ⬜
+Retirer le chemin `resolve.py`/preview basé sur les **briques plates** une fois la revue
+`ClipBrick` pleinement consommée ; ranger les routes de création éparpillées derrière
+« Avancé » ; garder le NLE `Editor` pour les power users.
 
 ---
 
 ## 6. Décisions encore ouvertes (à trancher en temps voulu)
 
-- **Multi-format** : aventure d'abord ; la série « La Coloc » (`series/bible.md`)
-  réutilisera le même rail briques plus tard (pas maintenant).
-- **Durcissement du modèle `ClipBrick`** — ✅ FAIT : bornes numériques (durée ≥ 0,
-  zoom > 0, focus ∈ [0,1]), `allow_inf_nan=False`, `id` non vide (`Annotated[...]`).
-  Reste optionnel : `validate_assignment=True` (revalider à la mutation en place),
-  à peser quand l'éditeur mutera des briques.
-- **Retrait des briques plates** : quand R2 consomme les `ClipBrick`, retirer le
-  chemin `resolve.py`/preview basé sur les briques plates.
+- **Vidéo longue** : enchaîner N scènes concentrées (le modèle le permet déjà) — cadrer le
+  nombre de scènes / durée cible par défaut dans « Créer ».
+- **Multi-format / séries** (`series/bible.md`) : réutiliseront le même rail briques plus tard.
+- **`validate_assignment=True`** sur `ClipBrick` (revalider à la mutation en place) : à peser
+  quand l'éditeur mutera intensément des briques.
+- **Retrait des briques plates** : quand la revue `ClipBrick` a tout absorbé (cf. S5).
 
 ---
 
 ## 7. Protocole par étape
 
-modèle/code → tests cheap offline → `mypy src/editor` + `pytest tests/` (rapide ~6 s ;
-`pytest --runheavy` pour tout, dans `vcm-dev`) → commit → cocher la table de la section 5.
+modèle/code → tests cheap offline (fakes, sans réseau) → `python -m mypy src` (cliquet 0) +
+`python -m pytest -q` (rapide ~6 s ; `--runheavy` pour tout) + `cd frontend && npm run build`
+→ (option `bash scripts/verify.sh --heavy` pour la boucle complète) → commit → PR vers `dev`,
+CI verte, merge → cocher la table §4 / avancer la ligne ⬜ de §5.
