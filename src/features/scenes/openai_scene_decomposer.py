@@ -82,12 +82,20 @@ class OpenAISceneDecomposer:
     ) -> list[_SceneSk]:
         """MACRO : l'arc en `n_scenes` scènes (une par contexte concentré)."""
         system = (
-            "You are a short-form vertical (9:16) video director. Plan a video as an "
-            "ORDERED list of SCENES forming an arc (hook -> build -> payoff). A SCENE is "
-            "ONE concentrated context: a single location/moment that must not dilute.\n"
-            f'Return JSON {{"scenes": [...]}} with EXACTLY {n_scenes} scenes, each: '
-            '"id", "title", "environment_desc" (ENGLISH: the establishing photo of the '
-            'setting, detailed, NO on-screen text), "intention" (what happens in the scene). '
+            "You are a short-form vertical (9:16) video director for TikTok/Reels/Shorts. "
+            "Plan a video as an ORDERED list of SCENES forming a tight arc: HOOK (grab in "
+            "the first seconds), BUILD (raise tension/curiosity), PAYOFF (a beat that lands). "
+            "A SCENE is ONE concentrated context — a single location and moment that must "
+            "NOT dilute: everything in it shares the same place and mood.\n"
+            f'Return JSON {{"scenes": [...]}} with EXACTLY {n_scenes} scenes, each with:\n'
+            '- "id": short slug;\n'
+            '- "title": short FRENCH label;\n'
+            '- "environment_desc": ENGLISH. The establishing PHOTO of the setting — a still '
+            "image prompt. Concrete and vivid: location, time of day, lighting, mood, "
+            "textures. NO camera movement (it is a photo), NO on-screen text, NO watermark;\n"
+            '- "intention": what happens in this scene and why it matters to the arc '
+            "(distinct per scene).\n"
+            "Name any character with a FRENCH first name (never 'Character A'). "
             "Output JSON only."
         )
         if style_identity.strip():
@@ -104,13 +112,23 @@ class OpenAISceneDecomposer:
     ) -> list[ShotPlan]:
         """MICRO : la scène → plans COURTS qui animent sa photo d'environnement."""
         system = (
-            "You are a director breaking ONE scene into SHORT shots (3-5s each) that "
-            "animate the scene's environment photo. Stay INSIDE the scene's environment "
-            "(do not change location).\n"
-            f'Return JSON {{"shots": [...]}} with 2 to {_MAX_SHOTS} shots, each: "id", '
-            '"kind" ("video" or "photo"), "visual_desc" (ENGLISH, what we see), '
-            '"motion_desc" (ENGLISH, camera/action), "narration_fr" (FRENCH, one short '
-            'everyday spoken sentence), "duration_s" (3-5). No on-screen text. Output JSON only.'
+            "You are a director breaking ONE scene into SHORT shots (3 to 5 seconds each) "
+            "that ANIMATE the scene's environment photo. Every shot STAYS INSIDE that same "
+            "environment (same location, same mood) — never cut to a new place. Keep the "
+            "context concentrated.\n"
+            f'Return JSON {{"shots": [...]}} with 2 to {_MAX_SHOTS} shots, each with:\n'
+            '- "id": short slug;\n'
+            '- "kind": "video" (default) or "photo";\n'
+            '- "visual_desc": ENGLISH. What we see in THIS shot within the environment — '
+            "concrete subject, framing, detail; consistent with the environment; "
+            "NO on-screen text;\n"
+            '- "motion_desc": ENGLISH. STRICTLY STATIC CAMERA (locked-off tripod). Describe '
+            "the SUBJECT'S action, never a camera move (no pan/zoom/dolly/handheld) — the "
+            "model drifts otherwise;\n"
+            '- "narration_fr": FRENCH. One short, natural, spoken sentence (French first '
+            "names for people);\n"
+            '- "duration_s": 3 to 5.\n'
+            "The FIRST shot should hook. No on-screen text. Output JSON only."
         )
         if style_identity.strip():
             system += f"\nSTYLE / IDENTITY: {style_identity.strip()}"

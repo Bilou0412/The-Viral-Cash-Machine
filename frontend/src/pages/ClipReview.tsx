@@ -19,6 +19,7 @@ import {
 } from "@/hooks/use-editor"
 import { FormFieldInput } from "@/components/editor/FormFieldInput"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { AudioChild, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
 import { isClipBrick } from "@/lib/types"
@@ -77,6 +78,57 @@ function NodeForm({
           />
         ))}
     </div>
+  )
+}
+
+/** Champ MÉTIER : une prompt éditable (sans clé, sans schéma technique). */
+function PromptField({
+  label,
+  hint,
+  value,
+  onChange,
+  rows = 3,
+}: {
+  label: string
+  hint?: string
+  value: string
+  onChange: (v: string) => void
+  rows?: number
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <Textarea rows={rows} value={value} onChange={(e) => onChange(e.target.value)} />
+      {hint && <p className="text-[10px] text-muted-foreground/70">{hint}</p>}
+    </div>
+  )
+}
+
+/** Réglages TECHNIQUES (schéma Replicate) — repliés, affichés seulement si le
+ *  schéma a pu être chargé (donc si une clé Replicate est configurée). Sans clé,
+ *  ce panneau ne s'affiche pas : la revue reste 100 % métier (prompts). */
+function TechnicalDetails({
+  modelRef,
+  kind,
+  params,
+  onChange,
+}: {
+  modelRef: string
+  kind: "image" | "video" | "voice"
+  params: Record<string, unknown>
+  onChange: (next: Record<string, unknown>) => void
+}) {
+  const { data: form } = useModelForm(modelRef || null, kind)
+  if (!form?.fields?.length) return null
+  return (
+    <details className="rounded-lg border border-border/60 p-3">
+      <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">
+        Réglages techniques (avancé)
+      </summary>
+      <div className="mt-3">
+        <NodeForm modelRef={modelRef} kind={kind} params={params} onChange={onChange} />
+      </div>
+    </details>
   )
 }
 
@@ -427,8 +479,16 @@ export function ClipReview() {
               </div>
 
               {selChild ? (
-                <Section icon={Mic} title={`Voix · ${selChild.role}`}>
-                  <NodeForm
+                <Section icon={Mic} title={`Narration · ${selChild.role}`}>
+                  <PromptField
+                    label="Narration (FR)"
+                    hint="En français. Une phrase courte, parlée, naturelle."
+                    value={textOf(selChild)}
+                    onChange={(v) =>
+                      setChildParams(selChild.id, { ...selChild.params, text: v })
+                    }
+                  />
+                  <TechnicalDetails
                     modelRef={selChild.model_ref}
                     kind="voice"
                     params={selChild.params}
@@ -436,24 +496,60 @@ export function ClipReview() {
                   />
                 </Section>
               ) : (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <Section icon={ImageIcon} title="Image">
-                    <NodeForm
+                <div className="space-y-4">
+                  <Section
+                    icon={selClip.kind === "video" ? Film : ImageIcon}
+                    title={selClip.kind === "video" ? "Plan vidéo" : "Photo"}
+                  >
+                    <PromptField
+                      label={
+                        selClip.kind === "video"
+                          ? "Prompt visuel — 1re frame (EN)"
+                          : "Prompt visuel (EN)"
+                      }
+                      hint="En anglais. Décor, sujet, cadrage, lumière. Aucun texte à l'écran."
+                      value={promptOf(selClip.image)}
+                      onChange={(v) => setImage({ ...selClip.image.params, prompt: v })}
+                    />
+                    {selClip.kind === "video" && selClip.motion && (
+                      <PromptField
+                        label="Mouvement (EN)"
+                        hint="En anglais, caméra statique : décris l'action, pas un mouvement de caméra. La 1re frame est la photo d'environnement de la scène."
+                        value={promptOf(selClip.motion)}
+                        onChange={(v) =>
+                          setMotion({ ...(selClip.motion?.params ?? {}), prompt: v })
+                        }
+                        rows={2}
+                      />
+                    )}
+                    <TechnicalDetails
                       modelRef={selClip.image.model_ref}
                       kind="image"
                       params={selClip.image.params}
                       onChange={setImage}
                     />
-                  </Section>
-                  {selClip.kind === "video" && selClip.motion && (
-                    <Section icon={Film} title="Vidéo">
-                      <NodeForm
+                    {selClip.kind === "video" && selClip.motion && (
+                      <TechnicalDetails
                         modelRef={selClip.motion.model_ref}
                         kind="video"
                         params={selClip.motion.params}
                         onChange={setMotion}
-                        note="L'image de départ est auto-liée à la photo de ce plan."
                       />
+                    )}
+                  </Section>
+
+                  {selClip.children.length > 0 && (
+                    <Section icon={Mic} title="Narration">
+                      {selClip.children.map((ch) => (
+                        <PromptField
+                          key={ch.id}
+                          label={`Narration · ${ch.role} (FR)`}
+                          value={textOf(ch)}
+                          onChange={(v) =>
+                            setChildParams(ch.id, { ...ch.params, text: v })
+                          }
+                        />
+                      ))}
                     </Section>
                   )}
                 </div>
