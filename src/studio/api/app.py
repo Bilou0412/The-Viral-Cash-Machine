@@ -48,6 +48,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from ...features import storage
 from ...features.assets.ports import AssetProvider
+from ...features.scenes import SceneDecompositionError
 from ..db.engine import get_engine, init_db
 from ..db.models import Asset, Episode, Project, PromptTemplate, Template, User
 from ..db.repositories import (
@@ -71,7 +72,7 @@ from .services.editor_generation import (
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
-from .services.scenes import generate_video_plan
+from .services.scenes import decomposer_source, generate_video_plan
 from .services.scripting import generate_script
 
 if TYPE_CHECKING:
@@ -1011,12 +1012,15 @@ def create_scene_document(
     """
     episode = _require_owned_episode(session, user, episode_id)
     keys = secrets.get_user_keys(engine, _uid(user))
-    plan = generate_video_plan(
-        body.prompt,
-        style_identity=body.style_identity,
-        n_scenes=body.n_scenes,
-        openai_key=keys.openai,
-    )
+    try:
+        plan = generate_video_plan(
+            body.prompt,
+            style_identity=body.style_identity,
+            n_scenes=body.n_scenes,
+            openai_key=keys.openai,
+        )
+    except SceneDecompositionError as exc:
+        raise HTTPException(502, str(exc)) from exc
     from ...features.scenes import scene_plan_to_document
 
     doc = scene_plan_to_document(plan, title=body.title)
@@ -1033,6 +1037,7 @@ def create_scene_document(
         "episode_id": row.episode_id,
         "title": row.title,
         "doc": json.loads(row.doc_json),
+        "source": decomposer_source(keys.openai),
     }
 
 

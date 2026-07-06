@@ -50,7 +50,11 @@ export function Creer() {
         n_scenes: nScenes,
         title: vidTitle,
       })
-      toast.success("Scènes générées 🎬")
+      if (doc.source === "fake") {
+        toast.warning("Scènes de démo — ajoute ta clé OpenAI dans Réglages pour du vrai contenu.")
+      } else {
+        toast.success("Scènes générées 🎬")
+      }
       void navigate(`/editor/${doc.id}/review`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Génération impossible")

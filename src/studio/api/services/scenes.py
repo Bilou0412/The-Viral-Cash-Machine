@@ -8,12 +8,22 @@ déterministe (offline/tests). Le handler de route ignore la sélection.
 from __future__ import annotations
 
 import os
+from typing import Literal
 
 from ....features.scenes.fake_scene_decomposer import FakeSceneDecomposer
 from ....features.scenes.model import VideoPlan
 from ....features.scenes.ports import DEFAULT_SCENES, SceneVideoDecomposer
 
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
+
+DecomposerSource = Literal["openai", "fake"]
+
+
+def decomposer_source(openai_key: str | None) -> DecomposerSource:
+    """Quel décrypteur sera utilisé (sans instancier OpenAI) : réel si clé présente,
+    sinon le Fake déterministe. Sert à avertir l'utilisateur qu'il génère des scènes
+    de démo (placeholder) tant qu'aucune clé OpenAI n'est configurée."""
+    return "openai" if openai_key else "fake"
 
 
 def get_scene_decomposer(openai_key: str | None = None) -> SceneVideoDecomposer:

@@ -33,6 +33,7 @@ import type {
   PromptTemplateSummary,
   CreatePromptTemplateBody,
   Scene,
+  SceneDocumentResult,
   Theme,
   UpdateAssetBody,
 } from "./types"
@@ -477,13 +478,14 @@ export const mockApi = {
   async createSceneDocument(
     _episodeId: number,
     body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
-  ): Promise<EditorDocument> {
+  ): Promise<SceneDocumentResult> {
     await delay(400)
     const id = `doc-${nextDocId++}`
     const doc = newSceneDoc(body.title || "Nouvelle vidéo", body.n_scenes ?? 3)
     const docu: EditorDocument = { id, project_id: 1, title: doc.title, doc }
     editorDocuments.set(id, docu)
-    return structuredClone(docu)
+    // Le mock n'appelle jamais OpenAI → scènes de démo.
+    return { ...structuredClone(docu), source: "fake" }
   },
 
   async reviewFromScript(episodeId: number): Promise<EditorDocument> {

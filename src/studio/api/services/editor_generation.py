@@ -101,6 +101,54 @@ def _ordered_generative_bricks(doc: EditorDocument) -> list[GenerativeBrick]:
     return ordered
 
 
+def _clip_ref_ids(clip: ClipBrick) -> list[str]:
+    """Ids des clips dont ce clip dépend : toute valeur ``"{brick:X.image}"`` de ses
+    nœuds (image / motion / enfants) référence le clip ``X`` (part avant le ``.``)."""
+    nodes: list[Any] = [clip.image]
+    if clip.motion is not None:
+        nodes.append(clip.motion)
+    nodes.extend(clip.children)
+    out: list[str] = []
+    for node in nodes:
+        for value in node.params.values():
+            if isinstance(value, str):
+                m = _BRICK_REF.match(value)
+                if m:
+                    out.append(m.group(1).split(".", 1)[0])
+    return out
+
+
+def _ordered_clips(doc: EditorDocument) -> list[ClipBrick]:
+    """Topo-order les `ClipBrick` pour qu'un clip référencé (p. ex. la photo
+    d'environnement d'une scène, animée par ses plans via ``{brick:<env>.image}``)
+    soit généré AVANT ses référents. Retombe sur l'ordre du document en cas de
+    cycle/dépendance absente (best-effort ; ne lève jamais). Rend la résolution des
+    refs inter-briques robuste à un réordonnancement front / doc édité."""
+    clips = [b for b in doc.bricks if isinstance(b, ClipBrick)]
+    ids = {c.id for c in clips}
+    ordered: list[ClipBrick] = []
+    placed: set[str] = set()
+    remaining = list(clips)
+    for _ in range(len(remaining) + 1):
+        progress = False
+        still: list[ClipBrick] = []
+        for clip in remaining:
+            deps = [d for d in _clip_ref_ids(clip) if d in ids]
+            if all(d in placed for d in deps):
+                ordered.append(clip)
+                placed.add(clip.id)
+                progress = True
+            else:
+                still.append(clip)
+        remaining = still
+        if not remaining:
+            break
+        if not progress:  # cycle / missing dep — flush deterministically
+            ordered.extend(remaining)
+            break
+    return ordered
+
+
 def _resolve_media_value(value: str, token: str | None) -> str | None:
     """Résout une valeur d'input média en URL utilisable par Replicate.
 
@@ -215,7 +263,7 @@ class EditorGenerationService:
         n'est ni régénéré ni repayé (cœur du « pas cher »).
         """
         doc, out_dir = self._load(doc_id)
-        clips = [b for b in doc.bricks if isinstance(b, ClipBrick)]
+        clips = _ordered_clips(doc)
         flats = _ordered_generative_bricks(doc)
         total = sum(_clip_node_count(c) for c in clips) + len(flats)
         bus.publish(doc_id, {"type": "generation_started", "total": total})
@@ -360,16 +408,26 @@ class EditorGenerationService:
             explicit_url = (
                 self._resolve_image_input(str(explicit), refs) if explicit else None
             )
-            image_input = (
-                explicit_url
-                or img_url
-                or _url_for_local(done.get(img_beat), self.replicate_token)
-            )
             duration = _as_float(
                 field_value(motion.params, "video", "duration"),
                 clip.placement.duration or pricing.BEAT_VIDEO_SECONDS,
             )
             mot_beat = f"{cid}.motion"
+            # Ref explicite (photo d'env de la scène) demandée mais non résolue :
+            # on retombe sur la 1re frame du plan, mais on le REND VISIBLE plutôt
+            # que d'animer silencieusement la mauvaise image.
+            if explicit and explicit_url is None:
+                bus.publish(
+                    doc_id,
+                    {"type": "asset_warning", "beat": mot_beat,
+                     "reason": "ref d'environnement non résolue, fallback sur la 1re "
+                               "frame du plan", "index": index},
+                )
+            image_input = (
+                explicit_url
+                or img_url
+                or _url_for_local(done.get(img_beat), self.replicate_token)
+            )
             if not image_input:
                 self._fail_node(
                     doc_id, mot_beat, "video",
