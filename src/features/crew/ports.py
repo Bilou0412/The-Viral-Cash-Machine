@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import DistributionKit
+from .model import ArtDirection, DistributionKit, SceneRef
 
 
 class CrewAgentError(ValueError):
@@ -28,4 +28,20 @@ class DistributionAgent(Protocol):
         self, *, title: str, synopsis: str, narration: str = ""
     ) -> DistributionKit:
         """Contexte de la vidéo → `DistributionKit` (titre, description, hashtags, hook)."""
+        ...
+
+
+class ArtDirectionAgent(Protocol):
+    """Le directeur artistique : réécrit l'identité visuelle (décors + art direction)."""
+
+    def direct(
+        self,
+        *,
+        tone: str,
+        platform: str,
+        language: str,
+        art_direction: str,
+        scenes: list[SceneRef],
+    ) -> ArtDirection:
+        """Brief (ton/plateforme) + scènes → `ArtDirection` (prompts image EN réécrits)."""
         ...

@@ -735,6 +735,35 @@ def test_agent_context_assembles_per_role(client):
     assert client.get(f"/api/episodes/{ep['id']}/agent-context/nope").status_code == 404
 
 
+def test_direct_art_direction_rewrites_and_persists(client):
+    """Diriger le directeur artistique réécrit les prompts d'environnement + l'art
+    direction, persiste, et un GET du document reflète le changement (aucun re-render)."""
+    pid = client.post("/api/projects", json={"name": "ad"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "un thriller", "n_scenes": 1}
+    ).json()
+    did = doc["id"]
+
+    def env_prompts(d):
+        by_id = {b["id"]: b for b in d["doc"]["bricks"]}
+        return {
+            s["environment_photo_ref"]: by_id[s["environment_photo_ref"]]["image"]["params"].get("prompt")
+            for s in d["doc"]["scenes"]
+        }
+
+    before = env_prompts(client.get(f"/api/editor/documents/{did}").json())
+    r = client.post(f"/api/editor/documents/{did}/direct/art-direction")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "fake"
+    assert body["doc"]["global_context"]["art_direction"]  # art direction posée
+    after = env_prompts(body)
+    assert after and after != before  # prompts réécrits
+    # Persisté : un GET du document reflète les nouveaux prompts.
+    assert env_prompts(client.get(f"/api/editor/documents/{did}").json()) == after
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""

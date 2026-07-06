@@ -5,6 +5,7 @@
 import type {
   AdventureScript,
   Asset,
+  ArtDirectionResult,
   BeatEntry,
   BeatsResponse,
   Brief,
@@ -41,7 +42,7 @@ import type {
   Theme,
   UpdateAssetBody,
 } from "./types"
-import { isGenerativeBrick, isTextBrick } from "./types"
+import { isClipBrick, isGenerativeBrick, isTextBrick } from "./types"
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms))
 
@@ -663,6 +664,26 @@ export const mockApi = {
     existing.doc = structuredClone(doc)
     existing.title = doc.title
     return structuredClone(existing)
+  },
+
+  async directArtDirection(id: string): Promise<ArtDirectionResult> {
+    await delay(400)
+    const existing = editorDocuments.get(id)
+    if (!existing) throw new Error("editor document not found")
+    // Le mock n'appelle jamais OpenAI → direction de démo, mais MUTE réellement le
+    // doc (comme le backend) : suffixe de style sur chaque photo d'environnement.
+    const style = "cinematic, cohesive mood, consistent color grade, filmic texture"
+    existing.doc.global_context.art_direction = style
+    const byId = new Map(existing.doc.bricks.map((b) => [b.id, b]))
+    for (const scene of existing.doc.scenes ?? []) {
+      const env = byId.get(scene.environment_photo_ref)
+      if (env && isClipBrick(env)) {
+        const p = env.image.params.prompt
+        const cur = (typeof p === "string" ? p : "").trim()
+        env.image.params.prompt = `${cur} — art direction: ${style}`.trim()
+      }
+    }
+    return { ...structuredClone(existing), source: "fake" }
   },
 
   async listTemplates(): Promise<TemplateSummary[]> {

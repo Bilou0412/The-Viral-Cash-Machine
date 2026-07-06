@@ -9,8 +9,9 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
-import { Clapperboard, Film, Image as ImageIcon, Mic, RefreshCw, Video } from "lucide-react"
+import { Clapperboard, Film, Image as ImageIcon, Mic, Palette, RefreshCw, Video } from "lucide-react"
 import {
+  useDirectArtDirection,
   useEditorDocument,
   useGenerateEditorDocument,
   useRegenerateBrick,
@@ -22,6 +23,7 @@ import { FormFieldInput } from "@/components/editor/FormFieldInput"
 import { PhaseRail } from "@/components/studio/phase-rail"
 import { CrewPanel } from "@/components/studio/crew-panel"
 import { DistributionPanel } from "@/components/studio/distribution-panel"
+import { Spinner } from "@/components/studio/states"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -229,6 +231,20 @@ export function ClipReview() {
   const save = useSaveEditorDocument(docId)
   const regenerate = useRegenerateBrick(docId)
   const shoot = useGenerateEditorDocument(docId)
+  const directAD = useDirectArtDirection(docId)
+
+  // Diriger le directeur artistique : réécrit l'identité visuelle (aucun re-render).
+  const onDirectArtDirection = () =>
+    directAD.mutate(undefined, {
+      onSuccess: (doc) =>
+        toast.success(
+          doc.source === "fake"
+            ? "Direction artistique de démo — ajoute ta clé OpenAI pour du sur-mesure."
+            : "Identité visuelle réécrite 🎨"
+        ),
+      onError: (e) =>
+        toast.error(e instanceof Error ? e.message : "Direction artistique impossible"),
+    })
 
   // Navigation dans la colonne vertébrale du studio (les 5 phases).
   const goToPhase = (phase: PhaseKey) => {
@@ -365,7 +381,20 @@ export function ClipReview() {
         </Button>
       </div>
 
-      <CrewPanel phase="preproduction" />
+      <CrewPanel
+        phase="preproduction"
+        renderAction={(role) =>
+          role.key === "directeur_artistique" ? (
+            <Button
+              variant="outline" size="sm" className="gap-1.5"
+              onClick={onDirectArtDirection} disabled={directAD.isPending}
+            >
+              {directAD.isPending ? <Spinner /> : <Palette className="h-3.5 w-3.5" />}
+              Diriger
+            </Button>
+          ) : null
+        }
+      />
 
       {clips.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">

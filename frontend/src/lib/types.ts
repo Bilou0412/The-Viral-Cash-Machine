@@ -368,6 +368,12 @@ export interface SceneDocumentResult extends EditorDocument {
   source?: DecomposerSource
 }
 
+// Résultat de la direction artistique : le document réécrit (prompts d'environnement
+// + art direction) + quel moteur l'a produit (openai/fake).
+export interface ArtDirectionResult extends EditorDocument {
+  source?: DecomposerSource
+}
+
 // Le brief du producteur (phase développement) — le cahier des charges qui
 // oriente toute la chaîne. Proposé par l'agent producteur, éditable.
 export type Platform = "tiktok" | "reels" | "shorts" | "youtube_short"

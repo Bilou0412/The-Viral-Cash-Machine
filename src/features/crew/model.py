@@ -22,3 +22,35 @@ class DistributionKit(BaseModel):
     description: str = ""
     hashtags: list[str] = Field(default_factory=list)
     hook: str = ""
+
+
+class SceneRef(BaseModel):
+    """Ce que le directeur artistique reçoit par scène (l'entrée qu'il dirige)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = ""
+    title: str = ""
+    environment: str = ""  # le prompt image actuel de la photo d'environnement
+
+
+class SceneArt(BaseModel):
+    """La direction artistique réécrite pour UNE scène (par le DA)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    scene_id: str = ""
+    environment_prompt: str = ""  # prompt image EN réécrit de la photo d'environnement
+
+
+class ArtDirection(BaseModel):
+    """Ce que produit le directeur artistique : l'identité visuelle de la vidéo.
+
+    L'`art_direction` globale (le style commun) + le prompt image réécrit de chaque
+    photo d'environnement (la 1re frame de chaque plan). Langage EN (modèles image).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    art_direction: str = ""
+    scenes: list[SceneArt] = Field(default_factory=list)

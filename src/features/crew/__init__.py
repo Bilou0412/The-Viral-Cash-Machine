@@ -6,17 +6,21 @@ par phase (pour l'UI « salle de production ») ; le premier agent dédié est
 l'attaché de presse / Growth (`DistributionAgent` → `DistributionKit`).
 """
 
-from .model import DistributionKit
-from .ports import CrewAgentError, DistributionAgent
+from .model import ArtDirection, DistributionKit, SceneArt, SceneRef
+from .ports import ArtDirectionAgent, CrewAgentError, DistributionAgent
 from .roster import CREW, PHASES, CrewRole, role_by_key, roster
 
 __all__ = [
     "CREW",
     "PHASES",
+    "ArtDirection",
+    "ArtDirectionAgent",
     "CrewAgentError",
     "CrewRole",
     "DistributionAgent",
     "DistributionKit",
+    "SceneArt",
+    "SceneRef",
     "role_by_key",
     "roster",
 ]
