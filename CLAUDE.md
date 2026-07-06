@@ -9,27 +9,31 @@ PR depuis **`dev`** (branche de développement, on push ici). Une release = merg
 
 La **source unique de vérité** est **`ROADMAP.md`**. Pour reprendre : ouvrir `ROADMAP.md`,
 lire **§4 (état consolidé, déjà fait)** puis **§5 (étapes restantes)** — la première ligne
-⬜ = la prochaine étape (actuellement **R2 — UI de revue React**). **Une étape par session**,
-protocole de l'étape en **§7**. Direction produit tranchée : **« l'IA écrit → je révise en
-briques »**, pas un éditeur de montage vierge.
+⬜ = la prochaine étape (actuellement **S1 — fermer la boucle réelle / dogfood**). **Une étape
+par session**, protocole de l'étape en **§7**. Direction produit tranchée : **« l'IA écrit → je
+révise en briques »**, pas un éditeur de montage vierge ; happy path = **« Créer » (idée → scènes)**.
 
 ## Le produit en une phrase
 
-Générateur de **vidéos verticales 9:16** (format aventure à choix) pour TikTok/Shorts/Reels.
-L'IA écrit un script, le décompose en **briques éditables** (`ClipBrick` vidéo/photo + enfants
+**Créateur de vidéos verticales 9:16** pour TikTok/Shorts/Reels. Une vidéo = une séquence de
+**SCÈNES** (contexte concentré : photo d'environnement + plans courts qui l'animent + audio).
+L'IA découpe l'idée en scènes puis en **briques éditables** (`ClipBrick` vidéo/photo + enfants
 narration/dialogue), on **révise les briques** dans une UI React et on **ne régénère que ce
 qu'on touche** (maîtrise du coût). Dialogues en **français**, prompts visuels en **anglais**.
+Le format « aventure à choix » (CYOA) est un chemin legacy conservé, plus le happy path.
 
 ## Le rail (pipeline unique)
 
 ```
-idée/thème
-  → [IA]  openai_adventure_decomposer   → AdventureScript      src/features/scripting/
-  → [R1]  adventure_to_bricks           → arbre de ClipBrick   src/features/scripting/adventure_to_bricks.py
-  → [R2]  UI de revue React (déplier/éditer les args, régénérer ciblé)   frontend/
-  → [B1]  document_to_spec              → VideoSpec (IR)       src/editor/compile_spec.py
-  → [IR]  resolve_real + MoviePyRenderEngine → MP4 final       src/videospec/
+idée (page « Créer »)
+  → [S-IA] get_scene_decomposer (Fake / OpenAI 2 phases) → VideoPlan   src/features/scenes/
+  → [S-B]  scene_plan_to_document        → EditorDocument (briques + index scènes)  src/features/scenes/scene_plan_to_document.py
+  → [R2]   UI de revue React (timeline multipiste Vidéo/Son + bandes de scène, éditer args, régénérer ciblé)   frontend/
+  → [B1]   document_to_spec              → VideoSpec (IR)       src/editor/compile_spec.py
+  → [IR]   resolve_real + MoviePyRenderEngine → MP4 final       src/videospec/
 ```
+Rail legacy conservé (chemin aventure, plus le défaut) : `openai_adventure_decomposer →
+adventure_to_bricks → document_to_spec` (`src/features/scripting/`).
 
 ## Carte du code (le vrai index — préférer la lecture ciblée d'un module au grep large)
 
