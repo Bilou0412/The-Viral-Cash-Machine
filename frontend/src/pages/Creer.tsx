@@ -1,13 +1,15 @@
-// /creer — le happy path : décris ton idée → l'IA découpe en scènes + plans
-// courts (photo-first) → on atterrit sur la timeline de revue. (Phase 1 : Fake
-// offline sans clé ; la vraie IA arrive en Phase 3.)
+// /creer — le happy path : décris ton idée → le PRODUCTEUR cadre le brief
+// (objectif, audience, plateforme, durée, coût) → l'IA découpe en scènes + plans
+// courts (photo-first) → on atterrit sur la timeline de revue. Le brief oriente
+// toute la chaîne (plateforme/langue/durée pilotent le découpage).
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { Minus, Plus, Sparkles, Wand2 } from "lucide-react"
+import { ClipboardList, Minus, Plus, Sparkles, Wand2 } from "lucide-react"
 import { useCreateEpisode, useCreateProject, useProjects } from "@/hooks/use-studio"
 import { api } from "@/lib/api"
+import type { Brief, Platform } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +20,13 @@ import { Spinner } from "@/components/studio/states"
 const MIN_SCENES = 1
 const MAX_SCENES = 8
 
+const PLATFORMS: { value: Platform; label: string }[] = [
+  { value: "tiktok", label: "TikTok" },
+  { value: "reels", label: "Reels" },
+  { value: "shorts", label: "Shorts" },
+  { value: "youtube_short", label: "YouTube Shorts" },
+]
+
 export function Creer() {
   const navigate = useNavigate()
   const projects = useProjects()
@@ -26,7 +35,33 @@ export function Creer() {
   const [title, setTitle] = useState("")
   const [prompt, setPrompt] = useState("")
   const [nScenes, setNScenes] = useState(3)
+  const [brief, setBrief] = useState<Brief | null>(null)
+  const [proposing, setProposing] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  const setField = <K extends keyof Brief>(key: K, value: Brief[K]) =>
+    setBrief((b) => (b ? { ...b, [key]: value } : b))
+
+  async function onAskProducer() {
+    if (!prompt.trim()) {
+      toast.error("Décris ton idée de vidéo.")
+      return
+    }
+    setProposing(true)
+    try {
+      const proposed = await api.proposeBrief({ idea: prompt.trim() })
+      setBrief(proposed)
+      toast.message(
+        proposed.source === "fake"
+          ? "Brief de démo — ajoute ta clé OpenAI pour un brief sur mesure."
+          : "Le producteur a proposé un brief 🎬 — ajuste-le puis lance les scènes."
+      )
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Le producteur n'a pas répondu")
+    } finally {
+      setProposing(false)
+    }
+  }
 
   async function onCreate() {
     if (!prompt.trim()) {
@@ -43,6 +78,7 @@ export function Creer() {
         project_id: project.id,
         title: vidTitle,
         draft_mode: true,
+        ...(brief ? { brief } : {}),
       })
       const doc = await api.createSceneDocument(ep.id, {
         prompt: prompt.trim(),
@@ -69,9 +105,9 @@ export function Creer() {
           <Sparkles className="h-6 w-6 text-primary" /> Créer une vidéo
         </h1>
         <p className="text-sm text-muted-foreground">
-          Décris ton idée. L'IA la découpe en <strong>scènes</strong> puis en{" "}
-          <strong>plans courts</strong> (photo d'environnement + mouvement + son) — tu ajustes
-          ensuite sur la timeline.
+          Décris ton idée. Le <strong>producteur</strong> cadre le brief, puis l'IA découpe en{" "}
+          <strong>scènes</strong> et <strong>plans courts</strong> — tu ajustes ensuite sur la
+          timeline.
         </p>
       </div>
 
@@ -123,12 +159,85 @@ export function Creer() {
               Chaque scène = un contexte concentré (une photo d'environnement + des plans courts).
             </p>
           </div>
-
-          <Button onClick={onCreate} disabled={busy} className="w-full gap-2">
-            {busy ? <Spinner /> : <Wand2 className="h-4 w-4" />} Générer les scènes
-          </Button>
         </CardContent>
       </Card>
+
+      {/* Phase développement : le producteur cadre le brief (l'humain édite). */}
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-semibold">Producteur — le brief</h2>
+            </div>
+            <Button
+              type="button" variant="outline" size="sm" className="gap-1.5"
+              onClick={onAskProducer} disabled={proposing || !prompt.trim()}
+            >
+              {proposing ? <Spinner /> : <ClipboardList className="h-3.5 w-3.5" />}
+              {brief ? "Re-proposer" : "Demander au producteur"}
+            </Button>
+          </div>
+
+          {!brief ? (
+            <p className="text-sm text-muted-foreground">
+              Le producteur propose objectif, audience, plateforme, durée et ton à partir de
+              ton idée — tu ajustes avant de lancer les scènes. (Optionnel : tu peux générer
+              sans brief.)
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <BriefField label="Objectif">
+                <Input value={brief.objectif} onChange={(e) => setField("objectif", e.target.value)} />
+              </BriefField>
+              <BriefField label="Audience">
+                <Input value={brief.audience} onChange={(e) => setField("audience", e.target.value)} />
+              </BriefField>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <BriefField label="Plateforme">
+                  <select
+                    value={brief.plateforme}
+                    onChange={(e) => setField("plateforme", e.target.value as Platform)}
+                    className="h-9 w-full rounded-md border border-input bg-background/60 px-2 text-sm"
+                  >
+                    {PLATFORMS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </BriefField>
+                <BriefField label="Durée (s)">
+                  <Input
+                    type="number" min={5} value={brief.duree_s}
+                    onChange={(e) => setField("duree_s", Number(e.target.value) || 0)}
+                  />
+                </BriefField>
+                <BriefField label="Budget ($)">
+                  <Input
+                    type="number" min={0} value={brief.budget_usd}
+                    onChange={(e) => setField("budget_usd", Number(e.target.value) || 0)}
+                  />
+                </BriefField>
+              </div>
+              <BriefField label="Ton">
+                <Input value={brief.ton} onChange={(e) => setField("ton", e.target.value)} />
+              </BriefField>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Button onClick={onCreate} disabled={busy} className="w-full gap-2">
+        {busy ? <Spinner /> : <Wand2 className="h-4 w-4" />} Générer les scènes
+      </Button>
+    </div>
+  )
+}
+
+function BriefField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      {children}
     </div>
   )
 }

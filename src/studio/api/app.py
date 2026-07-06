@@ -48,6 +48,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from ...features import storage
 from ...features.assets.ports import AssetProvider
+from ...features.brief import Brief
 from ...features.crew import CrewAgentError, DistributionKit
 from ...features.scenes import SceneDecompositionError
 from ..db.engine import get_engine, init_db
@@ -74,6 +75,7 @@ from .services.editor_generation import (
 from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
+from .services.producer import producer_source, propose_brief
 from .services.scenes import decomposer_source, generate_video_plan
 from .services.scripting import generate_script
 
@@ -295,6 +297,14 @@ class EpisodeIn(BaseModel):
     title: str
     draft_mode: bool = True
     theme: str = "horror"             # DA / thème de l'épisode
+    brief: dict[str, Any] | None = None  # brief du producteur (optionnel)
+
+
+class BriefProposeIn(BaseModel):
+    """Demander au producteur de proposer un brief à partir d'une idée."""
+
+    idea: str
+    partial: dict[str, Any] | None = None  # champs déjà décidés (l'humain prime)
 
 
 class ScriptGenIn(BaseModel):
@@ -508,9 +518,15 @@ def create_episode(
     user: User = Depends(require_user)
 ) -> Episode:
     _require_owned_project(session, user, body.project_id)
-    return EpisodeRepo(session).create(
+    repo = EpisodeRepo(session)
+    episode = repo.create(
         body.project_id, body.title, draft_mode=body.draft_mode, theme=body.theme
     )
+    if body.brief is not None and episode.id is not None:
+        # Le brief du producteur, validé/normalisé avant persistance.
+        brief = Brief.model_validate(body.brief)
+        episode = repo.set_brief(episode.id, brief.model_dump_json()) or episode
+    return episode
 
 
 @app.get("/api/episodes/{episode_id}")
@@ -1015,11 +1031,26 @@ def create_scene_document(
     """
     episode = _require_owned_episode(session, user, episode_id)
     keys = secrets.get_user_keys(engine, _uid(user))
+    # Le brief du producteur pilote plateforme/langue/durée + oriente le style.
+    # Sans brief : défauts = comportement historique (pas de budget-temps imposé).
+    brief = Brief.model_validate_json(episode.brief_json) if episode.brief_json else None
+    style_identity = body.style_identity
+    platform, language, target_duration_s = "tiktok", "fr", 0.0
+    if brief is not None:
+        platform, language, target_duration_s = (
+            brief.plateforme, brief.langue, brief.duree_s
+        )
+        orientation = brief.orientation()
+        if orientation:
+            style_identity = f"{style_identity} {orientation}".strip()
     try:
         plan = generate_video_plan(
             body.prompt,
-            style_identity=body.style_identity,
+            style_identity=style_identity,
             n_scenes=body.n_scenes,
+            platform=platform,
+            language=language,
+            target_duration_s=target_duration_s,
             openai_key=keys.openai,
         )
     except SceneDecompositionError as exc:
@@ -1376,6 +1407,47 @@ def editor_document_video(
     if not os.path.exists(path):
         raise HTTPException(404, "final video not available")
     return FileResponse(path)
+
+
+# --- Brief : le producteur (phase développement) ----------------------------
+
+
+@app.post("/api/brief/propose")
+def propose_brief_route(
+    body: BriefProposeIn, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Le producteur propose un brief complet à partir d'une idée (l'humain édite)."""
+    keys = secrets.get_user_keys(engine, _uid(user))
+    partial = Brief.model_validate(body.partial) if body.partial else None
+    try:
+        brief = propose_brief(body.idea, partial=partial, openai_key=keys.openai)
+    except CrewAgentError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return {"source": producer_source(keys.openai), **brief.model_dump()}
+
+
+@app.get("/api/episodes/{episode_id}/brief")
+def get_brief(
+    episode_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Brief stocké de l'épisode (404 si le producteur n'a pas encore cadré)."""
+    episode = _require_owned_episode(session, user, episode_id)
+    if not episode.brief_json:
+        raise HTTPException(404, "aucun brief pour cet épisode")
+    return {"episode_id": episode_id, **json.loads(episode.brief_json)}
+
+
+@app.put("/api/episodes/{episode_id}/brief")
+def save_brief(
+    episode_id: int, body: Brief, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Sauver les éditions du producteur sur le brief de l'épisode."""
+    _require_owned_episode(session, user, episode_id)
+    EpisodeRepo(session).set_brief(episode_id, body.model_dump_json())
+    return {"episode_id": episode_id, **body.model_dump()}
 
 
 # --- Distribution : l'attaché de presse / Growth (phase distribution) -------

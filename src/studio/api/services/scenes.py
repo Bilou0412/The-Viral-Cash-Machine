@@ -44,9 +44,23 @@ def generate_video_plan(
     *,
     style_identity: str = "",
     n_scenes: int = DEFAULT_SCENES,
+    platform: str = "tiktok",
+    language: str = "fr",
+    target_duration_s: float = 0.0,
     decomposer: SceneVideoDecomposer | None = None,
     openai_key: str | None = None,
 ) -> VideoPlan:
-    """Idée → `VideoPlan` (scènes + plans courts) via le décrypteur choisi."""
+    """Idée → `VideoPlan` (scènes + plans courts) via le décrypteur choisi.
+
+    Les paramètres `platform`/`language`/`target_duration_s` viennent du Brief du
+    producteur (défauts = comportement historique). Le ton/notes du Brief sont
+    repliés dans `style_identity` par l'appelant (seam existant)."""
     dec = decomposer or get_scene_decomposer(openai_key)
-    return dec.decompose_video(prompt, style_identity=style_identity, n_scenes=n_scenes)
+    return dec.decompose_video(
+        prompt,
+        style_identity=style_identity,
+        n_scenes=n_scenes,
+        platform=platform,
+        language=language,
+        target_duration_s=target_duration_s,
+    )

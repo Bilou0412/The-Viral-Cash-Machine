@@ -26,7 +26,18 @@ class SceneVideoDecomposer(Protocol):
     """Décrit une vidéo en scènes puis chaque scène en plans courts."""
 
     def decompose_video(
-        self, prompt: str, *, style_identity: str = "", n_scenes: int = DEFAULT_SCENES
+        self,
+        prompt: str,
+        *,
+        style_identity: str = "",
+        n_scenes: int = DEFAULT_SCENES,
+        platform: str = "tiktok",
+        language: str = "fr",
+        target_duration_s: float = 0.0,
     ) -> VideoPlan:
-        """Idée → `VideoPlan` (scènes + plans courts), respect strict de N scènes."""
+        """Idée → `VideoPlan` (scènes + plans courts), respect strict de N scènes.
+
+        `platform`/`language`/`target_duration_s` viennent du Brief du producteur
+        (défauts = comportement historique). `style_identity` porte le ton/notes.
+        """
         ...

@@ -49,6 +49,8 @@ class Episode(SQLModel, table=True):
     draft_mode: bool = Field(default=True)
     duration_s: float | None = Field(default=None)
     final_path: str | None = Field(default=None)
+    # Brief du producteur (objectif/audience/plateforme/durée/coût), JSON sérialisé.
+    brief_json: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
 
 

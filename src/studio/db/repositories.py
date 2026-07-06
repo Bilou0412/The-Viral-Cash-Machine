@@ -255,6 +255,17 @@ class EpisodeRepo:
         self.session.refresh(episode)
         return episode
 
+    def set_brief(self, episode_id: int, brief_json: str) -> Episode | None:
+        """Persiste le brief du producteur (JSON `Brief`) sur l'épisode."""
+        episode = self.get(episode_id)
+        if episode is None:
+            return None
+        episode.brief_json = brief_json
+        self.session.add(episode)
+        self.session.commit()
+        self.session.refresh(episode)
+        return episode
+
     def delete(self, episode_id: int) -> bool:
         episode = self.get(episode_id)
         if episode is None:

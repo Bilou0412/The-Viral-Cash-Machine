@@ -3,6 +3,7 @@
 // production (PhaseRail + CrewPanel). Vocabulaire hybride : titre ciné + sous-titre créateur.
 
 import {
+  ClipboardList,
   PenLine,
   Palette,
   Clapperboard,
@@ -45,6 +46,7 @@ export interface CrewRole {
 }
 
 export const CREW: CrewRole[] = [
+  { key: "producteur", phase: "developpement", title: "Producteur", subtitle: "cadre le brief : objectif, audience, plateforme, durée, coût", produces: "le brief", icon: ClipboardList },
   { key: "scenariste", phase: "developpement", title: "Scénariste", subtitle: "transforme l'idée en découpage de scènes", produces: "le découpage", icon: PenLine },
   { key: "directeur_artistique", phase: "preproduction", title: "Directeur artistique", subtitle: "pose l'identité visuelle et les décors", produces: "le storyboard", icon: Palette },
   { key: "chef_operateur", phase: "preproduction", title: "Chef opérateur", subtitle: "découpe chaque scène en plans", produces: "les plans", icon: Clapperboard },

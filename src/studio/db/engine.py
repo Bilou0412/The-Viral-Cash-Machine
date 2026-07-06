@@ -87,6 +87,7 @@ _ADDED_COLUMNS = [
     ("cost_entry", "predict_time_s", "FLOAT", "NULL"),
     ("project", "owner_id", "INTEGER", "NULL"),  # B.2 multi-tenant
     ("editor_document", "distribution_json", "VARCHAR", "NULL"),  # fiche de sortie
+    ("episode", "brief_json", "VARCHAR", "NULL"),  # brief du producteur
 ]
 
 

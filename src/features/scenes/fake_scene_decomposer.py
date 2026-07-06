@@ -15,8 +15,17 @@ class FakeSceneDecomposer:
     """Implémente `SceneVideoDecomposer` sans appel réseau."""
 
     def decompose_video(
-        self, prompt: str, *, style_identity: str = "", n_scenes: int = DEFAULT_SCENES
+        self,
+        prompt: str,
+        *,
+        style_identity: str = "",
+        n_scenes: int = DEFAULT_SCENES,
+        platform: str = "tiktok",
+        language: str = "fr",
+        target_duration_s: float = 0.0,
     ) -> VideoPlan:
+        # Déterministe/offline : les paramètres du Brief sont acceptés puis ignorés
+        # (la sortie reste le golden du chemin scènes).
         scenes: list[ScenePlan] = []
         for i in range(max(1, n_scenes)):
             n = i + 1
