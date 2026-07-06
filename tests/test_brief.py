@@ -137,3 +137,65 @@ def test_fake_decomposer_ignores_brief_params():
     a = dec.decompose_video("x", n_scenes=2)
     b = dec.decompose_video("x", n_scenes=2, platform="reels", language="en", target_duration_s=99)
     assert a.model_dump() == b.model_dump()
+
+
+# -- assembleur de contexte : le dossier de briefing par métier ---------------
+
+def _sample_doc():
+    from src.features.scenes import scene_plan_to_document
+
+    plan = FakeSceneDecomposer().decompose_video("un métro hanté", n_scenes=2)
+    return scene_plan_to_document(plan, title="Ma vidéo")
+
+
+def test_assemble_context_always_carries_brief_and_refs():
+    from src.studio.api.services.context import assemble_context
+
+    brief = Brief(objectif="faire peur", plateforme="reels")
+    ctx = assemble_context("scenariste", brief=brief, doc=None)
+    assert ctx.brief.objectif == "faire peur"
+    assert ctx.refs["title"] and ctx.refs["phase"] == "developpement"
+    assert ctx.dossier == {}  # pas de document en amont
+
+
+def test_assemble_context_unknown_role_raises():
+    from src.studio.api.services.context import assemble_context
+
+    with pytest.raises(KeyError):
+        assemble_context("réalisateur_fantôme", brief=Brief())
+
+
+def test_assemble_context_tools_by_role():
+    """Chaque métier reçoit le manifeste des seuls kinds d'outils qu'il touche."""
+    from src.studio.api.services.context import assemble_context
+
+    doc = _sample_doc()
+    expected = {
+        "producteur": set(),
+        "scenariste": set(),
+        "directeur_artistique": {"image"},
+        "chef_operateur": {"video"},
+        "dialoguiste": set(),
+        "tournage": {"image", "video", "voice"},
+        "monteur": set(),
+        "inge_son": {"voice"},
+        "attache_presse": set(),
+    }
+    for role, kinds in expected.items():
+        ctx = assemble_context(role, brief=Brief(), doc=doc)
+        assert {t.kind for t in ctx.tools} == kinds, role
+        # Le manifeste porte les modèles préférés quand il y a des outils.
+        for tool in ctx.tools:
+            assert tool.preferred_models and tool.fields
+
+
+def test_assemble_context_dossier_slices():
+    from src.studio.api.services.context import assemble_context
+
+    doc = _sample_doc()
+    da = assemble_context("directeur_artistique", brief=Brief(), doc=doc).dossier
+    assert da["scenes"] and all("environment" in s for s in da["scenes"])
+    son = assemble_context("inge_son", brief=Brief(), doc=doc).dossier
+    assert son["narration"]  # les répliques du Fake décrypteur
+    presse = assemble_context("attache_presse", brief=Brief(), doc=doc).dossier
+    assert presse["title"] == "Ma vidéo" and "hook" in presse

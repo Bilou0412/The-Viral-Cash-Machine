@@ -712,6 +712,29 @@ def test_brief_absent_returns_404(client):
     assert client.get(f"/api/episodes/{ep['id']}/brief").status_code == 404
 
 
+def test_agent_context_assembles_per_role(client):
+    """Le dossier de briefing d'un agent : brief + tranche du dossier + outils."""
+    pid = client.post("/api/projects", json={"name": "c"}).json()["id"]
+    brief = {"objectif": "faire peur", "plateforme": "reels", "langue": "fr",
+             "audience": "ados", "duree_s": 20, "budget_usd": 0, "ton": "sombre", "notes": ""}
+    ep = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "V", "brief": brief}
+    ).json()
+    client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    )
+    # Le chef opérateur reçoit le brief + le manifeste vidéo + la tranche scènes.
+    r = client.get(f"/api/episodes/{ep['id']}/agent-context/chef_operateur")
+    assert r.status_code == 200, r.text
+    ctx = r.json()
+    assert ctx["brief"]["objectif"] == "faire peur"
+    assert [t["kind"] for t in ctx["tools"]] == ["video"]
+    assert ctx["dossier"]["scenes"]
+    assert ctx["refs"]["phase"] == "preproduction"
+    # Rôle inconnu → 404.
+    assert client.get(f"/api/episodes/{ep['id']}/agent-context/nope").status_code == 404
+
+
 def test_scene_env_photo_resolves_as_shot_first_frame(client):
     """Phase 2 : la photo d'environnement d'une scène alimente la 1re frame i2v des
     plans (la ref inter-brique est RÉSOLUE en URL, pas transmise brute)."""

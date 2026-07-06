@@ -122,6 +122,11 @@ CREW: tuple[CrewRole, ...] = (
 )
 
 
+def role_by_key(key: str) -> CrewRole | None:
+    """Le métier d'une clé (pour l'assembleur de contexte), ou None si inconnue."""
+    return next((r for r in CREW if r.key == key), None)
+
+
 def roster() -> list[dict[str, str]]:
     """Le casting sérialisable (pour l'API / l'UI)."""
     return [

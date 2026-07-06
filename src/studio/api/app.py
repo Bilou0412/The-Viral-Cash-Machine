@@ -67,6 +67,7 @@ from ..db.repositories import (
 from . import settings
 from .events import bus
 from .services import auth, secrets
+from .services.context import assemble_context
 from .services.crew import agent_source, generate_distribution_kit
 from .services.editor_generation import (
     EditorGenerationService,
@@ -1448,6 +1449,26 @@ def save_brief(
     _require_owned_episode(session, user, episode_id)
     EpisodeRepo(session).set_brief(episode_id, body.model_dump_json())
     return {"episode_id": episode_id, **body.model_dump()}
+
+
+@app.get("/api/episodes/{episode_id}/agent-context/{role}")
+def get_agent_context(
+    episode_id: int, role: str, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Le dossier de briefing d'un agent-métier : brief + tranche du dossier +
+    manifeste d'outils + ses références. Le seam du pipeline d'agents."""
+    episode = _require_owned_episode(session, user, episode_id)
+    brief = (
+        Brief.model_validate_json(episode.brief_json) if episode.brief_json else Brief()
+    )
+    row = EditorDocRepo(session).by_episode(episode_id)
+    doc = _doc_of_row(row) if row is not None else None
+    try:
+        ctx = assemble_context(role, brief=brief, doc=doc)
+    except KeyError as exc:
+        raise HTTPException(404, f"rôle inconnu: {role}") from exc
+    return ctx.model_dump()
 
 
 # --- Distribution : l'attaché de presse / Growth (phase distribution) -------
