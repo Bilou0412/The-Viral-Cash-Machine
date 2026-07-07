@@ -58,7 +58,7 @@ from ...features.formats import (
     list_formats,
 )
 from ...features.scenes import SceneDecompositionError
-from ...features.virality import ViralityError
+from ...features.virality import HookVariant, ViralityError, apply_hook_to_document
 from ..db.engine import get_engine, init_db
 from ..db.models import Asset, Episode, Project, PromptTemplate, Template, User
 from ..db.repositories import (
@@ -1350,6 +1350,33 @@ def get_editor_document(
         "project_id": row.project_id,
         "title": row.title,
         "doc": json.loads(doc.model_dump_json()),
+    }
+
+
+@app.post("/api/editor/documents/{doc_id}/hook")
+def apply_document_hook(
+    doc_id: int, body: HookVariant, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    """Applique une variante d'ouverture GAGNANTE au document (1re brique) et persiste.
+
+    Le classement `/hooks` propose ; l'humain approuve une variante ; on l'injecte ici.
+    La 1re brique (établissement, `shot=None`) n'est pas écrasée par le resync."""
+    row = _require_owned_doc(session, user, doc_id)
+    from ...editor import upgrade_document
+    from ...editor.compile_shot import recompile_document
+
+    doc = upgrade_document(json.loads(row.doc_json))
+    applied = apply_hook_to_document(doc, body)
+    recompile_document(doc)  # resync des briques `shot` (n'écrase pas la 1re, shot=None)
+    saved = EditorDocRepo(session).save(doc_id, doc.model_dump_json())
+    assert saved is not None
+    return {
+        "id": saved.id,
+        "project_id": saved.project_id,
+        "title": saved.title,
+        "applied": applied,
+        "doc": json.loads(saved.doc_json),
     }
 
 

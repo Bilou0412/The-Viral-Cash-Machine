@@ -279,6 +279,29 @@ def test_hooks_route_ranks_variants(client):
     assert body["source"] == "fake"                       # pas de clé → Fake
 
 
+def test_apply_hook_to_document_route(client):
+    """La variante gagnante approuvée est injectée dans la 1re image du document."""
+    pid = client.post("/api/projects", json={"name": "phk"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e", "format": "scenes"}
+    ).json()["id"]
+    doc = client.post(
+        f"/api/episodes/{eid}/format-document",
+        json={"prompt": "un métro hanté", "options": {"n_scenes": 1}},
+    ).json()
+    doc_id = doc["id"]
+    first_id = doc["doc"]["bricks"][0]["id"]
+
+    r = client.post(
+        f"/api/editor/documents/{doc_id}/hook",
+        json={"id": "h1", "angle": "promesse choc", "hook_text": "Regarde bien.",
+              "first_shot_prompt": "vertical 9:16 hook frame"},
+    )
+    assert r.status_code == 200 and r.json()["applied"] is True
+    first = next(b for b in r.json()["doc"]["bricks"] if b["id"] == first_id)
+    assert first["image"]["params"]["prompt"] == "vertical 9:16 hook frame"
+
+
 def test_generate_editor_document_clips_idempotent(client):
     """R1b : le document de briques se génère (image→motion→narration), idempotent."""
     from sqlmodel import Session as _S

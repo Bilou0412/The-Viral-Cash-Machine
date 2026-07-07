@@ -39,3 +39,31 @@ def test_propose_hooks_offline_returns_ranked_winner():
     assert ranked.winner is ranked.variants[0]           # gagnante = tête de classement
     # la gagnante a la meilleure note globale
     assert all(ranked.winner.score.overall >= s.score.overall for s in ranked.variants)
+
+
+def test_apply_hook_sets_opening_frame_and_narration():
+    from src.editor.document import (
+        AudioChild,
+        ClipBrick,
+        EditorDocument,
+        GenNode,
+        TimelinePlacement,
+    )
+    from src.features.virality import apply_hook_to_document
+
+    opening = ClipBrick(
+        id="env", kind="photo",
+        image=GenNode(model_ref="m", params={"prompt": "ancienne ouverture"}),
+        shot=None,
+        children=[AudioChild(id="env__narr", role="narration", model_ref="v",
+                             params={"text": "ancien texte"})],
+        placement=TimelinePlacement(track=0, start=0.0, duration=3.0),
+    )
+    doc = EditorDocument(bricks=[opening])
+    variant = HookVariant(id="h1", angle="promesse choc", hook_text="Regarde jusqu'au bout.",
+                          first_shot_prompt="vertical 9:16 shocking opening frame")
+    assert apply_hook_to_document(doc, variant) is True
+    brick = doc.bricks[0]
+    assert isinstance(brick, ClipBrick)
+    assert brick.image.params["prompt"] == "vertical 9:16 shocking opening frame"
+    assert brick.children[0].params["text"] == "Regarde jusqu'au bout."
