@@ -10,9 +10,11 @@ from __future__ import annotations
 import os
 from typing import Literal
 
+from ....features.assets.models import VIDEO_MODEL, max_coherent_duration_s
 from ....features.scenes.fake_scene_decomposer import FakeSceneDecomposer
 from ....features.scenes.model import ScenePlan, VideoPlan
 from ....features.scenes.ports import DEFAULT_SCENES, SceneVideoDecomposer
+from ....features.scenes.split import split_overlong_shots
 
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
 
@@ -74,7 +76,7 @@ def generate_video_plan(
     producteur (défauts = comportement historique). Le ton/notes du Brief sont
     repliés dans `style_identity` par l'appelant (seam existant)."""
     dec = decomposer or get_scene_decomposer(openai_key)
-    return dec.decompose_video(
+    plan = dec.decompose_video(
         prompt,
         style_identity=style_identity,
         n_scenes=n_scenes,
@@ -82,3 +84,6 @@ def generate_video_plan(
         language=language,
         target_duration_s=target_duration_s,
     )
+    # Filet de sécurité : aucun plan ne dépasse l'horizon de cohérence du modèle vidéo
+    # (on scinde, on ne rabote pas — le prompt beat steere déjà, ceci garantit).
+    return split_overlong_shots(plan, max_coherent_s=max_coherent_duration_s(VIDEO_MODEL))
