@@ -209,6 +209,58 @@ def test_editor_document_requires_script(client):
     assert r.status_code == 404  # pas de script encore
 
 
+# --- Couche FORMAT (moules) : catalogue + persistance + point d'entrée unifié ----
+
+def test_formats_catalog_route(client):
+    formats = client.get("/api/formats").json()
+    ids = [f["id"] for f in formats]
+    assert ids[0] == "aventure" and "scenes" in ids
+    assert all({"id", "label", "tagline", "description"} <= set(f) for f in formats)
+
+
+def test_episode_persists_format_and_rejects_unknown(client):
+    pid = client.post("/api/projects", json={"name": "pf"}).json()["id"]
+    ep = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e", "format": "scenes"}
+    ).json()
+    assert ep["format"] == "scenes"                       # le choix est persisté
+    bad = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e", "format": "amour"}
+    )
+    assert bad.status_code == 400                         # moule hors catalogue
+
+
+def test_format_document_dispatches_on_episode_format(client):
+    """Point d'entrée unifié : le doc est construit selon Episode.format (offline → Fake)."""
+    pid = client.post("/api/projects", json={"name": "pfd"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e", "format": "scenes"}
+    ).json()["id"]
+
+    r = client.post(
+        f"/api/episodes/{eid}/format-document",
+        json={"prompt": "un métro hanté", "options": {"n_scenes": 1}},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["format"] == "scenes" and body["episode_id"] == eid
+    assert body["doc"]["bricks"]                          # document non vide
+    assert body["doc"]["schema_version"] == 5             # rail v5
+
+    # override du moule vers aventure sur le même épisode
+    r2 = client.post(
+        f"/api/episodes/{eid}/format-document",
+        json={"prompt": "cave", "format": "aventure",
+              "options": {"char_left_name": "Léa", "char_right_name": "Tom", "n_rounds": 1}},
+    )
+    assert r2.status_code == 200 and r2.json()["format"] == "aventure"
+
+    bad = client.post(
+        f"/api/episodes/{eid}/format-document", json={"prompt": "x", "format": "amour"}
+    )
+    assert bad.status_code == 400
+
+
 def test_generate_editor_document_clips_idempotent(client):
     """R1b : le document de briques se génère (image→motion→narration), idempotent."""
     from sqlmodel import Session as _S
