@@ -43,6 +43,24 @@ def _draft_summary(d: Draft) -> str:
     return d.department
 
 
+def contract_turn(contract: SceneContract) -> Turn:
+    """Le tour « réalisateur » : la scène à trous (les plans + leurs beats)."""
+    beats = ", ".join(f"{cs.id}: {cs.beat}" for cs in contract.shots)
+    return Turn(role="realisateur", message=f"Contrat de scène — {len(contract.shots)} plans ({beats}).")
+
+
+def draft_turns(drafts: list[Draft], *, label: str = "") -> list[Turn]:
+    """Un tour par département (dans l'ordre `DEPARTMENTS`), résumé de son brouillon.
+    `label` (« brouillon » / « révision ») préfixe le message pour distinguer les passes."""
+    by_dept = {d.department: d for d in drafts}
+    prefix = f"{label.capitalize()} · " if label else ""
+    return [
+        Turn(role=dept, message=f"{prefix}{_draft_summary(d)}")
+        for dept in DEPARTMENTS
+        if (d := by_dept.get(dept)) is not None
+    ]
+
+
 def merge_drafts(
     scene_brief: SceneBrief, contract: SceneContract, drafts: list[Draft]
 ) -> RoomResult:
@@ -79,13 +97,5 @@ def merge_drafts(
         shots=shots,
     )
 
-    beats = ", ".join(f"{cs.id}: {cs.beat}" for cs in contract.shots)
-    transcript = [
-        Turn(role="realisateur", message=f"Contrat de scène — {len(contract.shots)} plans ({beats})."),
-    ]
-    transcript += [
-        Turn(role=d.department, message=_draft_summary(d))
-        for dept in DEPARTMENTS
-        if (d := by_dept.get(dept)) is not None
-    ]
+    transcript = [contract_turn(contract), *draft_turns(drafts)]
     return RoomResult(scene=scene, new_characters=casting.new_characters, transcript=transcript)

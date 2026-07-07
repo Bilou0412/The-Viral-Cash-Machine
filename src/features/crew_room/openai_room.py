@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ..scenes.model import CharacterPlan, ShotCharacterPlan
+from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan
 from .model import ContractShot, Draft, RoomMemory, SceneBrief, SceneContract
 from .ports import CrewAgentError
 
@@ -63,6 +63,18 @@ def _context_blob(brief: Brief, scene_brief: SceneBrief, memory: RoomMemory) -> 
 
 def _shot_list(contract: SceneContract) -> str:
     return "; ".join(f"{s.id} ({s.beat})" for s in contract.shots) or "(aucun)"
+
+
+def _scene_blob(scene: ScenePlan) -> str:
+    """Sérialise la scène ASSEMBLÉE (tous les champs) pour la passe de révision."""
+    lines = []
+    for sh in scene.shots:
+        who = ", ".join(c.name for c in sh.characters) or "(aucun)"
+        lines.append(
+            f"- {sh.id}: décor='{sh.decor}' lumière='{sh.lighting}' cadrage='{sh.framing}' "
+            f"durée={sh.duration_s}s narration='{sh.narration_fr}' persos={who}"
+        )
+    return f"Scène « {scene.title} » assemblée :\n" + "\n".join(lines)
 
 
 class _ContractOut(BaseModel):
@@ -157,9 +169,31 @@ class OpenAIDrafter:
             f"Contrat — plans: {_shot_list(contract)}.\n\n"
             f"Remplis TON brouillon ({department}) en JSON."
         )
+        return self._draft(department, system, user)
+
+    def revise(
+        self,
+        *,
+        department: str,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> Draft:
+        system = _DEPT_SYSTEM.get(department, "Fill your fields. JSON only.")
+        user = (
+            f"{_context_blob(brief, scene_brief, memory)}\n"
+            f"{_scene_blob(scene)}\n\n"
+            f"Voici la scène ASSEMBLÉE. Ajuste UNIQUEMENT tes champs ({department}) pour la "
+            f"cohérence avec l'ensemble, puis renvoie le MÊME format JSON."
+        )
+        return self._draft(department, system, user, what=f"Revision '{department}'")
+
+    def _draft(self, department: str, system: str, user: str, *, what: str = "") -> Draft:
         try:
             out = _DraftOut.model_validate_json(
-                self._chat.json(system, user, what=f"Draft '{department}'")
+                self._chat.json(system, user, what=what or f"Draft '{department}'")
             )
         except ValidationError as e:
             raise CrewAgentError(f"Le brouillon '{department}' est illisible. Réessaie.") from e
