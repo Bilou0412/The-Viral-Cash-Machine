@@ -26,7 +26,7 @@ limité à pydantic+videospec) : `from src.editor.capabilities import validate_c
 
 from __future__ import annotations
 
-from ._fields import field_present, missing_required
+from ._fields import field_present, field_value, missing_required
 from .document import ClipBrick, GenNode
 
 # Quel contrat de capacité s'applique à chaque type de nœud d'un clip.
@@ -78,6 +78,62 @@ def validate_clip(clip: ClipBrick) -> dict[str, list[str]]:
     if clip.kind == "photo" and clip.zoom is not None and not clip.children:
         issues["zoom"] = ["narration"]
 
+    return issues
+
+
+def _effective_video_duration(clip: ClipBrick) -> float | None:
+    """La durée effective d'un clip VIDÉO — MÊME précédence que `compile_spec._video_asset`
+    (`compile_spec.py:85-87`) : `motion.params['duration']>0` → `placement.duration>0`,
+    sinon None (manquante). On NE lit PAS le span de la timeline ici, exprès : le
+    compilateur ne le lit pas → le validateur et le compilateur ne doivent jamais
+    diverger sur ce qu'est « la durée » (sinon un plan valide pour l'un est corrompu
+    pour l'autre)."""
+    motion = clip.motion or GenNode()
+    dur = field_value(motion.params, "video", "duration")
+    if not isinstance(dur, bool) and isinstance(dur, (int, float)) and dur > 0:
+        return float(dur)
+    if clip.placement.duration > 0:
+        return float(clip.placement.duration)
+    return None
+
+
+def _beat_count(clip: ClipBrick) -> int:
+    """Nombre de beats d'ACTION distincts dans la timeline du plan.
+
+    Un beat = un mouvement propre. Plusieurs `Segment` qui **phrasent le même geste**
+    (accel→tenue→décel, même `action_sujet`) = 1 beat ; des `action_sujet` DIFFÉRENTS =
+    une suite d'actions = plusieurs beats (le plan devrait être scindé).
+
+    ATTENTION — heuristique de SURFACE (compte les `action_sujet` distincts après
+    normalisation basse-casse) : « elle avance » vs « elle s'avance » comptent pour 2.
+    Elle est calibrée pour de l'**ADVISORY** (un warning non bloquant, coût d'un faux
+    positif ~nul), PAS pour du CONTRÔLE. Un futur lot d'auto-split NE DOIT PAS s'y
+    appuyer sans la durcir d'abord (sinon un faux positif scinde un plan à tort)."""
+    if clip.shot is None:
+        return 0
+    actions = {a.strip().lower() for seg in clip.shot.timeline if (a := seg.action_sujet.strip())}
+    return len(actions)
+
+
+def validate_shot_duration(clip: ClipBrick, *, max_coherent_s: float) -> dict[str, list[str]]:
+    """Signale un plan à SCINDER (durée > horizon modèle, ou densité de beats > 1)
+    ou CORROMPU (durée vidéo manquante). Frère de `validate_clip` : même convention
+    ``dict[str, list[str]]`` (``{}`` = OK).
+
+    NB : c'est un **signal de scission**, PAS un clamp — le dépassement d'horizon
+    n'est jamais raboté en silence ici ; il est rendu visible pour piloter un split.
+    Clip sans `shot` (blob legacy) → ``{}`` (rien à juger)."""
+    if clip.shot is None:
+        return {}
+    issues: dict[str, list[str]] = {}
+    if clip.kind == "video":
+        dur = _effective_video_duration(clip)
+        if dur is None:
+            issues["motion"] = ["missing"]        # durée trouée = donnée corrompue
+        elif dur > max_coherent_s:
+            issues["motion"] = ["over_horizon"]   # trop long → scinder, pas raboter
+    if _beat_count(clip) > 1:
+        issues["beats"] = ["multi_beat"]          # suite d'actions → scinder
     return issues
 
 

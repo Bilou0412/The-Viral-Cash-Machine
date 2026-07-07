@@ -27,6 +27,7 @@ from ...editor.document import (
     RenderMeta,
     Son,
 )
+from ..assets.models import VIDEO_MODEL, max_coherent_duration_s
 from .model import CharacterPlan, ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
 from .ports import DEFAULT_SCENES, SceneDecompositionError
 
@@ -34,6 +35,17 @@ if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
     from openai import OpenAI
 
 _MAX_SHOTS = 4
+# Borne de PARAMÈTRE de l'API vidéo (p-video : 1..20 s) — garde-fou anti valeur
+# absurde, PAS l'horizon de cohérence. Un plan > horizon PASSE ici (il sera flaggé
+# `over_horizon` par `validate_shot_duration` → signal de split) ; il n'est JAMAIS
+# raboté en silence à l'horizon (ça réintroduirait la dilution par l'autre bout).
+_PARAM_MIN_S = 1.0
+_PARAM_MAX_S = 20.0
+
+
+def _sane_duration(v: float) -> float:
+    """Borne une durée LLM aux limites du CHAMP API (anti-absurde), pas à l'horizon."""
+    return min(_PARAM_MAX_S, max(_PARAM_MIN_S, v))
 
 
 def _to_str(v: object) -> object:
@@ -201,7 +213,7 @@ def _shot_of(s: _ShotOut, fallback_id: str) -> ShotPlan:
     prof = s.profondeur or {}
     return ShotPlan(
         id=s.id or fallback_id, kind=_kind_of(s.kind),
-        duree_s=max(2.0, min(6.0, s.duration_s or 4.0)),
+        duree_s=_sane_duration(s.duration_s or 4.0),   # borne API only ; horizon → validate_shot_duration
         narration_fr=s.narration_fr or s.son.dialogue_voix,
         start_image=s.start_image,
         cadre=Cadre(taille_plan=s.cadre.taille_plan, focale=s.cadre.focale,
@@ -322,13 +334,18 @@ class OpenAISceneDecomposer:
     ) -> list[ShotPlan]:
         """MICRO : la scène → plans COURTS (1 prise i2v = état début → état fin)."""
         lang = _lang_label(language)
+        h = int(max_coherent_duration_s(VIDEO_MODEL))   # horizon de cohérence du modèle i2v
         system = (
-            "You are a director breaking ONE scene into SHORT shots (3 to 5 s). Each shot is "
-            "ONE continuous i2v take: a start frame that INTERPOLATES to an end state, INSIDE "
-            "the scene's location (never cut to a new place). Don't re-describe the location or "
+            "You are a director breaking ONE scene into SHORT shots. Each shot is ONE BEAT = "
+            "one continuous i2v take (a start frame that INTERPOLATES to an end state), INSIDE "
+            "the scene's location (never cut to a new place). ONE beat = ONE movement (a single "
+            "legible X→Y). Several timeline moments that phrase the SAME gesture "
+            "(accel→hold→decel of one action) are fine and do NOT mean two shots; but if an "
+            f"action needs more than {h}s, OR contains a SECOND distinct action, SPLIT it into "
+            f"another shot. Keep every shot <= {h}s. Don't re-describe the location or "
             "characters' appearance (inherited) — describe only what is PROPER to this take.\n"
             f'Return JSON {{"shots":[...]}} with 2 to {_MAX_SHOTS} shots (ENGLISH visuals), each:\n'
-            '- "id","kind":"video"|"photo","duration_s":3-5;\n'
+            f'- "id","kind":"video"|"photo","duration_s":2-{h} (ONE beat);\n'
             '- "start_image": the composed starting frame (subject placement within the location);\n'
             '- "cadre":{"taille_plan"(wide…extreme close),"focale"(24/50/85mm),'
             '"angle_hauteur"(eye/high/low),"mise_au_point"};\n'

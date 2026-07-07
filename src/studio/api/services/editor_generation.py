@@ -19,6 +19,7 @@ Provider + downloader are injected so tests run fully offline.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Any
@@ -27,6 +28,7 @@ from sqlalchemy.engine import Engine
 from sqlmodel import Session
 
 from ....editor._fields import field_value
+from ....editor.capabilities import validate_shot_duration
 from ....editor.context import compile_prompt
 from ....editor.document import (
     ClipBrick,
@@ -35,6 +37,7 @@ from ....editor.document import (
     GenNode,
 )
 from ....features import storage
+from ....features.assets.models import max_coherent_duration_s
 from ....features.assets.ports import AssetProvider
 from ....features.assets.replicate_provider import ReplicateAssetProvider
 from ....features.compositing.registry import validate_params
@@ -50,6 +53,8 @@ from . import cost_actual, pricing
 from .generation import Downloader, _default_downloader, _upload_to_replicate
 from .paths import editor_dir
 
+logger = logging.getLogger(__name__)
+
 # A param value like "{brick:hero_image}" pulls the output of brick "hero_image".
 _BRICK_REF = re.compile(r"^\{brick:([^}]+)\}$")
 
@@ -58,6 +63,13 @@ _PROMPT_KEY = {"image": "prompt", "video": "prompt", "voice": "text"}
 # Brick kind -> the Asset.kind to persist.
 _ASSET_KIND = {"image": "image", "video": "video", "voice": "audio"}
 _EXT = {"image": "png", "video": "mp4", "voice": "mp3"}
+
+# Motifs des warnings de discipline de durée (préflight non bloquant) → signal de split.
+_DURATION_WARN = {
+    "over_horizon": "plan plus long que l'horizon de cohérence du modèle — à scinder en deux plans",
+    "multi_beat": "plusieurs actions distinctes dans un plan — à scinder (1 plan = 1 beat)",
+    "missing": "durée vidéo manquante (donnée corrompue)",
+}
 
 
 def _ordered_generative_bricks(doc: EditorDocument) -> list[GenerativeBrick]:
@@ -388,6 +400,20 @@ class EditorGenerationService:
         les nœuds exécutés.
         """
         cid = clip.id
+        # Préflight « discipline de durée » (NON bloquant) : rend visible un plan à
+        # SCINDER (durée > horizon modèle, ou densité de beats > 1) ou corrompu (durée
+        # manquante). Signal de split — jamais un clamp. Co-défense indépendante des
+        # fallbacks « qui crient » au rendu/coût.
+        slug = clip.motion.model_ref if clip.motion else ""
+        for node, tags in validate_shot_duration(
+            clip, max_coherent_s=max_coherent_duration_s(slug)
+        ).items():
+            for tag in tags:
+                bus.publish(
+                    doc_id,
+                    {"type": "asset_warning", "beat": f"{cid}.{node}",
+                     "reason": _DURATION_WARN.get(tag, tag), "index": index},
+                )
         refs = {**done, **outputs}  # résolution des refs inter-briques (scène)
         img_beat = f"{cid}.image"
         img_params, img_prompt = self._node_params(
@@ -412,10 +438,16 @@ class EditorGenerationService:
             explicit_url = (
                 self._resolve_image_input(str(explicit), refs) if explicit else None
             )
-            duration = _as_float(
-                field_value(motion.params, "video", "duration"),
-                clip.placement.duration or pricing.BEAT_VIDEO_SECONDS,
-            )
+            duration = _as_float(field_value(motion.params, "video", "duration"), 0.0)
+            if duration <= 0:
+                duration = clip.placement.duration
+            if duration <= 0:
+                logger.warning(
+                    "clip '%s' : durée vidéo manquante (motion+placement) → fallback "
+                    "%.1fs. Donnée corrompue : validate_shot_duration aurait dû la signaler.",
+                    cid, pricing.BEAT_VIDEO_SECONDS,
+                )
+                duration = pricing.BEAT_VIDEO_SECONDS
             mot_beat = f"{cid}.motion"
             # Ref explicite (photo d'env de la scène) demandée mais non résolue :
             # on retombe sur la 1re frame du plan, mais on le REND VISIBLE plutôt
@@ -705,7 +737,17 @@ def _best_effort_cost(
     if kind == "image":
         return pricing.image_cost(1)
     if kind == "video":
-        duration = _as_float(params.get("duration"), pricing.BEAT_VIDEO_SECONDS)
+        # Co-défense INDÉPENDANTE du préflight : ce chemin coût peut être atteint
+        # directement (retry, régénération, import) sans repasser par le préflight.
+        # Une durée manquante = donnée corrompue → on CRIE (jamais silencieux).
+        duration = _as_float(params.get("duration"), 0.0)
+        if duration <= 0:
+            logger.warning(
+                "coût vidéo : durée manquante dans les params → fallback %.1fs "
+                "(donnée corrompue ; facturée à une valeur > horizon de cohérence).",
+                pricing.BEAT_VIDEO_SECONDS,
+            )
+            duration = pricing.BEAT_VIDEO_SECONDS
         return pricing.video_cost(duration, draft=draft)
     if kind == "voice":
         text = str(params.get("text", "") or "")
