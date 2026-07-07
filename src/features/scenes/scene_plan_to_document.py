@@ -28,11 +28,11 @@ from ...editor.document import (
     ShotCharacter,
     TimelinePlacement,
 )
+from ..assets.models import IMAGE_MODEL as _IMAGE_MODEL
+from ..assets.models import VIDEO_MODEL as _VIDEO_MODEL
+from ..assets.models import VOICE_MODEL as _VOICE_MODEL
 from .model import CharacterPlan, ScenePlan, ShotPlan, VideoPlan
 
-_IMAGE_MODEL = "bytedance/seedream-4.5"
-_VIDEO_MODEL = "prunaai/p-video"
-_VOICE_MODEL = "minimax/speech-2.8-turbo"
 _DEFAULT_NARRATOR_VOICE = "Deep_Voice_Man"
 _ENV_PHOTO_DUR = 3.0
 

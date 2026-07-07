@@ -91,6 +91,31 @@ def test_scene_without_shots_gets_a_minimal_plan():
     assert shots[0].visual_desc == "a dark room"  # anime la photo d'environnement
 
 
+class _RaisingCompletions:
+    def create(self, **_kw: object) -> Any:
+        raise RuntimeError("401 invalid api key")
+
+
+class _RaisingChat:
+    def __init__(self) -> None:
+        self.completions = _RaisingCompletions()
+
+
+class _RaisingClient:
+    """Client OpenAI qui lève à l'appel (clé invalide / modèle inconnu / quotas)."""
+
+    def __init__(self) -> None:
+        self.chat = _RaisingChat()
+
+
+def test_openai_api_error_raises_scene_decomposition_error():
+    """C-2 : une erreur API (clé/modèle/quotas) → `SceneDecompositionError` (→ 502
+    lisible côté route), PAS un `ValueError` non mappé (→ 500 générique)."""
+    dec = OpenAISceneDecomposer(_RaisingClient(), "gpt-x")
+    with pytest.raises(SceneDecompositionError):
+        dec.decompose_video("une idée", n_scenes=1)
+
+
 # -- génération réelle : provider à URLs UNIQUES pour discriminer les frames --
 
 class _UniqueProvider(FakeAssetProvider):
@@ -191,3 +216,81 @@ def test_env_ref_resolves_regardless_of_brick_order(tmp_path):
     assert videos
     for params in videos:
         assert params["image"] == env_url
+
+
+# -- C-3 : propagation du mode draft (coût) sur le rail éditeur ----------------
+
+def test_draft_mode_propagates_to_video_nodes(tmp_path):
+    """`draft=True` → chaque nœud vidéo reçoit `draft=True` (qualité/coût brouillon)."""
+    engine = _engine(tmp_path)
+    doc_id = _persist_scene_doc(engine)
+    provider = _UniqueProvider()
+    svc = EditorGenerationService(
+        engine, provider=provider, downloader=_fake_downloader, draft=True
+    )
+    svc.generate_document(doc_id)
+    videos = _video_calls(provider)
+    assert videos
+    assert all(params.get("draft") is True for params in videos)
+
+
+def test_default_is_not_draft(tmp_path):
+    """Défaut (pas de draft) → `draft=False` sur les nœuds vidéo (pleine qualité)."""
+    engine = _engine(tmp_path)
+    doc_id = _persist_scene_doc(engine)
+    provider = _UniqueProvider()
+    svc = EditorGenerationService(engine, provider=provider, downloader=_fake_downloader)
+    svc.generate_document(doc_id)
+    assert all(params.get("draft") is False for params in _video_calls(provider))
+
+
+# -- C-4 : garde-fou d'une ref {brick:} non résolue ---------------------------
+
+def _persist_doc_with_dangling(engine: Any) -> int:
+    """Doc dont la photo d'env porte une ref `{brick:ghost}` non résoluble."""
+    from src.editor.document import EditorDocument
+
+    plan = FakeSceneDecomposer().decompose_video("x", n_scenes=1)
+    data = scene_plan_to_document(plan).model_dump()
+    for b in data["bricks"]:
+        if b.get("image"):
+            b["image"]["params"]["ghost"] = "{brick:ghost}"
+            break
+    doc = EditorDocument.model_validate(data)
+    with Session(engine) as s:
+        row = EditorDocRepo(s).create(
+            1, doc.title, doc.model_dump_json(), schema_version=doc.schema_version
+        )
+        assert row.id is not None
+        return row.id
+
+
+def test_unresolved_brick_ref_fails_without_calling_provider(tmp_path):
+    """Une ref `{brick:…}` restée littérale → asset en échec, JAMAIS envoyée au provider."""
+    engine = _engine(tmp_path)
+    doc_id = _persist_doc_with_dangling(engine)
+    provider = _UniqueProvider()
+    svc = EditorGenerationService(engine, provider=provider, downloader=_fake_downloader)
+    svc.generate_document(doc_id)
+
+    # La valeur pendouillante n'a jamais atteint Replicate.
+    assert not any("ghost" in str(params) for _model, params in provider.run_calls)
+    with Session(engine) as s:
+        assets = AssetRepo(s).assets_by_document(doc_id)
+    assert any(a.status == "failed" for a in assets)
+
+
+# -- préflight du harnais dogfood (C-1 : vérif des slugs, stub) ----------------
+
+def test_preflight_check_models_flags_bad_slug():
+    """`--check` : un slug absent (models.get lève) → ligne rouge ; bon slug → verte."""
+    from scripts.dogfood_editor import check_models
+
+    def models_get(slug: str) -> object:
+        if slug == "bad/model":
+            raise RuntimeError("404 Not Found")
+        return {"slug": slug}
+
+    rows = check_models(models_get, ("good/one", "bad/model"))
+    assert rows[0].ok and rows[0].label.endswith("good/one")
+    assert not rows[1].ok and "introuvable" in rows[1].detail

@@ -103,8 +103,12 @@ class OpenAISceneDecomposer:
                     {"role": "user", "content": user},
                 ],
             )
-        except Exception as e:  # erreur réseau / API
-            raise ValueError(f"Scene decomposition request failed: {e}") from e
+        except Exception as e:  # erreur réseau / API (clé invalide, modèle inconnu, quotas…)
+            raise SceneDecompositionError(
+                "L'appel au décrypteur OpenAI a échoué "
+                "(vérifie ta clé, le modèle OPENAI_MODEL et tes quotas). "
+                f"Détail : {e}"
+            ) from e
         content: str = resp.choices[0].message.content or ""
         return content
 

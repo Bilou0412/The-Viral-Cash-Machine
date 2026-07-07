@@ -212,11 +212,15 @@ class EditorGenerationService:
         provider: AssetProvider | None = None,
         downloader: Downloader | None = None,
         replicate_token: str | None = None,
+        draft: bool = False,
     ) -> None:
         self.engine = engine
         self.provider = provider or ReplicateAssetProvider(api_token=replicate_token)
         self.downloader = downloader or _default_downloader
         self.replicate_token = replicate_token
+        # Qualité/coût brouillon (mode `episode.draft_mode`) : posé sur le nœud motion
+        # (Pruna p-video attend `draft`) et sur le coût vidéo (multiplicateur draft).
+        self.draft = draft
 
     # -- helpers ----------------------------------------------------------
 
@@ -436,7 +440,7 @@ class EditorGenerationService:
             else:
                 mot_params, mot_prompt = self._node_params(
                     doc, clip, motion, "video", refs,
-                    {"image": image_input, "duration": duration},
+                    {"image": image_input, "duration": duration, "draft": self.draft},
                     prompt_fallback=img_prompt,
                 )
                 mot_url = self._run_or_skip(
@@ -572,6 +576,26 @@ class EditorGenerationService:
                 job = job_repo.create(asset_id, model_ref, status="running")
                 assert job.id is not None
                 job_repo.mark_failed(job.id, error)
+                asset_repo.mark_failed(asset_id)
+                bus.publish(
+                    doc_id,
+                    {"type": "asset_failed", "asset_id": asset_id, "error": error},
+                )
+                return None, None
+
+            # Garde-fou : un « {brick:…} » resté littéral (source non produite) passe
+            # `validate_params` (présence seule) mais casserait à coup sûr côté Replicate.
+            # On échoue proprement plutôt que d'envoyer une valeur invalide (et de payer).
+            dangling = _unresolved_ref(params)
+            if dangling:
+                error = (
+                    f"référence non résolue pour {beat!r} : le champ {dangling!r} "
+                    "contient encore un « {brick:…} » (l'asset source a-t-il échoué ?)"
+                )
+                job = job_repo.create(asset_id, model_ref, status="running")
+                assert job.id is not None
+                job_repo.mark_failed(job.id, error)
+                asset_repo.mark_failed(asset_id)
                 bus.publish(
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": error},
@@ -587,6 +611,7 @@ class EditorGenerationService:
                 url = outs[0] if outs else ""
             except Exception as exc:  # provider failure -> mark failed
                 job_repo.mark_failed(job_id, str(exc))
+                asset_repo.mark_failed(asset_id)
                 bus.publish(
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": str(exc)},
@@ -598,6 +623,7 @@ class EditorGenerationService:
                 local = self.downloader(url, out_dir, filename) if url else None
             except Exception as exc:
                 job_repo.mark_failed(job_id, str(exc))
+                asset_repo.mark_failed(asset_id)
                 bus.publish(
                     doc_id,
                     {"type": "asset_failed", "asset_id": asset_id, "error": str(exc)},
@@ -609,7 +635,7 @@ class EditorGenerationService:
 
             ac = cost_actual.actual_cost(
                 model_ref,
-                _best_effort_cost(model_ref, contract_kind, params),
+                _best_effort_cost(model_ref, contract_kind, params, draft=self.draft),
                 self.provider.last_run,
             )
             cost_repo.create(
@@ -631,6 +657,14 @@ def _safe(brick_id: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", brick_id)
 
 
+def _unresolved_ref(params: dict[str, Any]) -> str | None:
+    """Le 1er champ dont la valeur est encore un « {brick:…} » littéral (non résolu)."""
+    for key, value in params.items():
+        if isinstance(value, str) and _BRICK_REF.match(value):
+            return key
+    return None
+
+
 def _clip_node_count(clip: ClipBrick) -> int:
     """Nombre de nœuds génératifs d'un clip : image (+ motion si vidéo) + enfants."""
     return 1 + (1 if clip.kind == "video" else 0) + len(clip.children)
@@ -644,18 +678,19 @@ def _url_for_local(path: str | None, token: str | None = None) -> str | None:
 
 
 def _best_effort_cost(
-    model_ref: str, kind: str, params: dict[str, Any]
+    model_ref: str, kind: str, params: dict[str, Any], draft: bool = False
 ) -> pricing.CostLine:
     """Best-effort cost line for an editor brick — never blocks.
 
     Uses the rate card by brick kind; an unknown kind records a zero-amount line
     with unit_kind "unknown" so the ledger stays consistent (never blocks).
+    ``draft`` applique le multiplicateur brouillon au coût vidéo (mode `draft_mode`).
     """
     if kind == "image":
         return pricing.image_cost(1)
     if kind == "video":
         duration = _as_float(params.get("duration"), pricing.BEAT_VIDEO_SECONDS)
-        return pricing.video_cost(duration)
+        return pricing.video_cost(duration, draft=draft)
     if kind == "voice":
         text = str(params.get("text", "") or "")
         return pricing.voice_cost(len(text))

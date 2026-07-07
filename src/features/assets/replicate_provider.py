@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from .models import IMAGE_MODEL, VIDEO_MODEL, VOICE_MODEL
 from .ports import AssetProvider, RunResult
 
 
@@ -95,13 +96,13 @@ class ReplicateAssetProvider(AssetProvider):
         """Synthesize voice using a Minimax Speech model.
 
         `model` lets a cloned voice use the model it was cloned with
-        (e.g. "minimax/speech-02-hd"). Default = "minimax/speech-2.8-turbo".
+        (e.g. "minimax/speech-02-hd"). Default = `VOICE_MODEL`.
         """
         input: dict[str, Any] = {
             "text": text,
             "voice_id": voice_id,
         }
-        return self.run_model(model or "minimax/speech-2.8-turbo", input)[0]
+        return self.run_model(model or VOICE_MODEL, input)[0]
 
     def generate_image(
         self,
@@ -122,7 +123,7 @@ class ReplicateAssetProvider(AssetProvider):
         }
         if image_input:
             input["image_input"] = image_input
-        return self.run_model("bytedance/seedream-4.5", input)[0]
+        return self.run_model(IMAGE_MODEL, input)[0]
 
     def animate_video(
         self,
@@ -146,4 +147,4 @@ class ReplicateAssetProvider(AssetProvider):
         }
         if audio_url:
             input["audio"] = audio_url
-        return self.run_model("prunaai/p-video", input)[0]
+        return self.run_model(VIDEO_MODEL, input)[0]
