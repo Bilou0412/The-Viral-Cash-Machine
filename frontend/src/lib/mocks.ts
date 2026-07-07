@@ -337,23 +337,30 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
     push(
       {
         id: envId, type: "clip", kind: "photo",
-        image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `wide establishing shot of location ${i}, cold tones` } },
+        image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `location ${i} exterior, cold ambient light` } },
+        shot: { decor: `location ${i} exterior`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
         children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
       },
       3
     )
     const shotIds = [envId]
-    const shots: [string, number, string, string][] = [
-      ["sh1", 3, "slow push in, static camera", "La tension monte."],
-      ["sh2", 4, "handheld, static framing", "Un choix s'impose."],
+    const shots: [string, number, string, string, string, string][] = [
+      ["sh1", 3, "slow push in, static camera", "La tension monte.", "close-up", "tense, looking around"],
+      ["sh2", 4, "handheld, static framing", "Un choix s'impose.", "medium POV shot", "resolute, deciding"],
     ]
-    for (const [k, dur, motion, narr] of shots) {
+    for (const [k, dur, motion, narr, framing, play] of shots) {
       const sid = `s${i}_${k}`
+      const [expr, act] = play.split(", ")
+      const compiled = `${framing} of Léa (young woman, short dark hair), wearing worn grey coat, ${play}, in location ${i} interior, cold ambient light`
       push(
         {
           id: sid, type: "clip", kind: "video",
-          image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `shot inside location ${i}` } },
+          image: { model_ref: "bytedance/seedream-4.5", params: { prompt: compiled } },
           motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur, image: `{brick:${envId}.image}` } },
+          shot: {
+            decor: `location ${i} interior`, lumiere: "cold ambient light", cadrage: framing, extra: "",
+            characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr ?? "", action: act ?? "" }],
+          },
           children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
           layers: [], placement: { track: 0, start: cursor, duration: dur },
         },
@@ -368,10 +375,11 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
     })
   }
   return {
-    schema_version: 3, title,
+    schema_version: 4, title,
     canvas: { width: 1080, height: 1920, fps: 30 },
     global_context: { text: title, characters: {}, art_direction: "cold tones", extra: {} },
     tracks: [{ index: 0, role: "main" }], bricks, scenes,
+    bible: [{ id: "lea", name: "Léa", appearance: "young woman, short dark hair", wardrobe: "worn grey coat", voice_id: "male-conteur", traits: "determined" }],
   }
 }
 

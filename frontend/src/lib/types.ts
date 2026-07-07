@@ -316,12 +316,41 @@ export interface AudioChild {
   params: Record<string, unknown>
 }
 
+// v4 — champs métier d'un plan (décor/lumière/cadrage/personnages), regroupés
+// côté backend en le prompt final. `shot` absent → prompt-blob legacy.
+export interface ShotCharacter {
+  ref: string          // id d'une CharacterEntry ("" = hors bible)
+  name: string
+  wardrobe: string
+  expression: string
+  action: string
+}
+
+export interface ShotBrief {
+  decor: string
+  lumiere: string
+  cadrage: string
+  characters: ShotCharacter[]
+  extra: string
+}
+
+// Fiche de la BIBLE (identité récurrente d'un personnage).
+export interface CharacterEntry {
+  id: string
+  name: string
+  appearance: string
+  wardrobe: string
+  voice_id: string
+  traits: string
+}
+
 export interface ClipBrick {
   id: string
   type: "clip"
   kind: "video" | "photo"
   image: GenNode
   motion?: GenNode | null
+  shot?: ShotBrief | null
   children: AudioChild[]
   context_overrides?: Partial<GlobalContext> | null
   preset_id?: number | null
@@ -351,6 +380,7 @@ export interface EditorDoc {
   tracks: TrackDef[]
   bricks: Brick[]
   scenes?: Scene[]
+  bible?: CharacterEntry[]
 }
 
 export interface EditorDocument {

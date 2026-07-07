@@ -764,6 +764,25 @@ def test_direct_art_direction_rewrites_and_persists(client):
     assert env_prompts(client.get(f"/api/editor/documents/{did}").json()) == after
 
 
+def test_save_recompiles_shot_prompt(client):
+    """PUT d'un doc : éditer un champ métier (`shot.decor`) recompile le prompt visuel."""
+    pid = client.post("/api/projects", json={"name": "f1"}).json()["id"]
+    ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
+    doc = client.post(
+        f"/api/episodes/{ep['id']}/scene-document", json={"prompt": "x", "n_scenes": 1}
+    ).json()
+    did = doc["id"]
+    full = client.get(f"/api/editor/documents/{did}").json()["doc"]
+    # Trouve une brique portant des champs métier (shot) et édite son décor.
+    clip = next(b for b in full["bricks"] if b.get("type") == "clip" and b.get("shot"))
+    clip["shot"]["decor"] = "a neon-lit rooftop"
+    r = client.put(f"/api/editor/documents/{did}", json={"doc": full})
+    assert r.status_code == 200, r.text
+    saved = next(b for b in r.json()["doc"]["bricks"] if b["id"] == clip["id"])
+    # Le prompt visuel compilé reflète le nouveau décor (recompilé côté serveur).
+    assert "neon-lit rooftop" in saved["image"]["params"]["prompt"]
+
+
 def test_direct_dialogue_rewrites_and_persists(client):
     """Diriger le dialoguiste réécrit le texte parlé, persiste, et un GET le reflète."""
     pid = client.post("/api/projects", json={"name": "dlg"}).json()["id"]

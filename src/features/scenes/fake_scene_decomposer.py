@@ -7,12 +7,25 @@ de défaut offline et de golden du chemin scènes (mirror `FakeAdventureDecompos
 
 from __future__ import annotations
 
-from .model import ScenePlan, ShotPlan, VideoPlan
+from .model import CharacterPlan, ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
 from .ports import DEFAULT_SCENES
+
+# Un personnage récurrent de démo (la bible) — déterministe.
+_HERO = CharacterPlan(
+    name="Léa",
+    appearance="young woman, short dark hair",
+    wardrobe="worn grey coat",
+    voice_id="Deep_Voice_Man",
+    traits="determined, wary",
+)
 
 
 class FakeSceneDecomposer:
-    """Implémente `SceneVideoDecomposer` sans appel réseau."""
+    """Implémente `SceneVideoDecomposer` sans appel réseau.
+
+    v4 : émet des CHAMPS MÉTIER structurés (décor / cadrage / personnages) — pas
+    seulement un blob — pour que la démo offline montre la décomposition.
+    """
 
     def decompose_video(
         self,
@@ -24,8 +37,7 @@ class FakeSceneDecomposer:
         language: str = "fr",
         target_duration_s: float = 0.0,
     ) -> VideoPlan:
-        # Déterministe/offline : les paramètres du Brief sont acceptés puis ignorés
-        # (la sortie reste le golden du chemin scènes).
+        # Déterministe/offline : les paramètres du Brief sont acceptés puis ignorés.
         scenes: list[ScenePlan] = []
         for i in range(max(1, n_scenes)):
             n = i + 1
@@ -33,9 +45,8 @@ class FakeSceneDecomposer:
                 ScenePlan(
                     id=f"s{n}",
                     title=f"Scène {n}",
-                    environment_desc=(
-                        f"wide establishing shot of location {n}, cinematic, cold tones"
-                    ),
+                    environment_desc=f"wide establishing shot of location {n}, cinematic",
+                    lighting="cold ambient light",
                     context_text=f"Le contexte concentré de la scène {n}.",
                     art_direction="cold tones, film grain",
                     shots=[
@@ -46,6 +57,12 @@ class FakeSceneDecomposer:
                             motion_desc="slow push in, static camera",
                             narration_fr="La tension monte.",
                             duration_s=3.0,
+                            decor=f"location {n} interior",
+                            lighting="cold ambient light",
+                            framing="close-up",
+                            characters=[
+                                ShotCharacterPlan(name="Léa", expression="tense", action="looking around")
+                            ],
                         ),
                         ShotPlan(
                             id=f"s{n}_sh2",
@@ -54,6 +71,12 @@ class FakeSceneDecomposer:
                             motion_desc="handheld, static framing",
                             narration_fr="Un choix s'impose.",
                             duration_s=4.0,
+                            decor=f"location {n} interior",
+                            lighting="cold ambient light",
+                            framing="medium POV shot",
+                            characters=[
+                                ShotCharacterPlan(name="Léa", expression="resolute", action="deciding")
+                            ],
                         ),
                     ],
                 )
@@ -61,6 +84,7 @@ class FakeSceneDecomposer:
         return VideoPlan(
             title="Vidéo générée",
             global_context=prompt or "une courte vidéo verticale",
+            cast=[_HERO],
             art_direction="cold tones",
             scenes=scenes,
         )

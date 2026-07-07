@@ -53,10 +53,15 @@ def test_scene_ids_must_be_unique():
         )
 
 
-def test_v2_doc_upgrades_to_v3_with_empty_scenes():
-    """Un document persisté en v2 (sans `scenes`) se charge en v3 avec scenes=[]."""
+def test_old_doc_upgrades_additively():
+    """Un vieux document (v2, sans `scenes`/`shot`/`bible`) se charge au schéma
+    courant : additif (scenes/bible=[] par défaut, briques `shot=None` → blob legacy)."""
     raw = {"schema_version": 2, "title": "vieux", "bricks": [_clip("a", 0.0)]}
     doc = upgrade_document(raw)
-    assert doc.schema_version == SCHEMA_VERSION == 3
+    assert doc.schema_version == SCHEMA_VERSION == 4
     assert doc.scenes == []
+    assert doc.bible == []
     assert len(doc.bricks) == 1
+    from src.editor.document import ClipBrick
+
+    assert all(b.shot is None for b in doc.bricks if isinstance(b, ClipBrick))

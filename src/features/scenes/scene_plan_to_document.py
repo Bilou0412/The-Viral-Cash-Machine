@@ -10,25 +10,98 @@ Durées/modèles paramétrés (défauts = ceux du rail). Aucune I/O, aucun rése
 
 from __future__ import annotations
 
+import re
 from typing import cast
 
+from ...editor.compile_shot import recompile_document
 from ...editor.document import (
     AudioChild,
     Brick,
+    CharacterEntry,
     ClipBrick,
     EditorDocument,
     GenNode,
     NarrativeContext,
     Scene,
+    ShotBrief,
+    ShotCharacter,
     TimelinePlacement,
 )
-from .model import VideoPlan
+from .model import ScenePlan, ShotPlan, VideoPlan
 
 _IMAGE_MODEL = "bytedance/seedream-4.5"
 _VIDEO_MODEL = "prunaai/p-video"
 _VOICE_MODEL = "minimax/speech-2.8-turbo"
 _DEFAULT_NARRATOR_VOICE = "Deep_Voice_Man"
 _ENV_PHOTO_DUR = 3.0
+
+
+def _slug(name: str) -> str:
+    """Nom de personnage → id de bible stable (déterministe)."""
+    s = re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
+    return s or "char"
+
+
+def _build_bible(plan: VideoPlan) -> tuple[list[CharacterEntry], dict[str, str]]:
+    """La bible (v4) depuis `plan.cast` + les persos cités dans les plans.
+
+    Retourne (bible, name→id). Dédup par nom ; ids uniques. Si aucun cast/perso,
+    bible vide (les plans resteront sans références → juste des blobs de décor).
+    """
+    name_to_id: dict[str, str] = {}
+    entries: list[CharacterEntry] = []
+    used: set[str] = set()
+
+    def add(name: str, appearance: str, wardrobe: str, voice_id: str, traits: str) -> None:
+        key = name.strip()
+        if not key or key in name_to_id:
+            return
+        cid = _slug(key)
+        while cid in used:
+            cid += "_"
+        used.add(cid)
+        name_to_id[key] = cid
+        entries.append(
+            CharacterEntry(
+                id=cid, name=key, appearance=appearance,
+                wardrobe=wardrobe, voice_id=voice_id, traits=traits,
+            )
+        )
+
+    for c in plan.cast:
+        add(c.name, c.appearance, c.wardrobe, c.voice_id, c.traits)
+    # Personnages cités dans les plans mais absents du cast → fiche minimale.
+    for sp in plan.scenes:
+        for shot in sp.shots:
+            for sc in shot.characters:
+                add(sc.name, sc.appearance, sc.wardrobe, "", "")
+    return entries, name_to_id
+
+
+def _shot_brief(shot: ShotPlan, name_to_id: dict[str, str]) -> ShotBrief | None:
+    """Champs métier d'un plan, ou None si l'IA n'a rien émis de structuré (→ blob)."""
+    people = [
+        ShotCharacter(
+            ref=name_to_id.get(sc.name.strip(), ""),
+            name=sc.name,
+            wardrobe=sc.wardrobe,
+            expression=sc.expression,
+            action=sc.action,
+        )
+        for sc in shot.characters
+    ]
+    if not (shot.decor or shot.lighting or shot.framing or people):
+        return None
+    return ShotBrief(
+        decor=shot.decor, lumiere=shot.lighting, cadrage=shot.framing, characters=people
+    )
+
+
+def _env_brief(sp: ScenePlan) -> ShotBrief | None:
+    """Le décor de la photo d'environnement (décor-led, sans sujet)."""
+    if not (sp.environment_desc or sp.lighting):
+        return None
+    return ShotBrief(decor=sp.environment_desc, lumiere=sp.lighting)
 
 
 def scene_plan_to_document(
@@ -62,6 +135,7 @@ def scene_plan_to_document(
             )
         ]
 
+    bible, name_to_id = _build_bible(plan)
     bricks: list[ClipBrick] = []
     scenes: list[Scene] = []
 
@@ -73,6 +147,7 @@ def scene_plan_to_document(
                 id=env_id,
                 kind="photo",
                 image=GenNode(model_ref=image_model, params={"prompt": sp.environment_desc}),
+                shot=_env_brief(sp),
                 children=[],
                 placement=place(env_photo_dur),
             )
@@ -86,6 +161,7 @@ def scene_plan_to_document(
         # 2) Plans courts qui animent la photo (contexte en mouvement).
         for shot in sp.shots:
             children = narr_child(shot.id, shot.narration_fr)
+            brief = _shot_brief(shot, name_to_id)
             if shot.kind == "video":
                 brick = ClipBrick(
                     id=shot.id,
@@ -99,6 +175,7 @@ def scene_plan_to_document(
                             "image": env_ref,
                         },
                     ),
+                    shot=brief,
                     children=children,
                     placement=place(shot.duration_s),
                 )
@@ -107,6 +184,7 @@ def scene_plan_to_document(
                     id=shot.id,
                     kind="photo",
                     image=GenNode(model_ref=image_model, params={"prompt": shot.visual_desc}),
+                    shot=brief,
                     children=children,
                     placement=place(shot.duration_s),
                 )
@@ -128,9 +206,13 @@ def scene_plan_to_document(
         characters=plan.characters,
         art_direction=plan.art_direction,
     )
-    return EditorDocument(
+    doc = EditorDocument(
         title=title or plan.title,
         global_context=context,
         bricks=cast("list[Brick]", bricks),
         scenes=scenes,
+        bible=bible,
     )
+    # Champs métier = source de vérité → compile le prompt des briques `shot`.
+    recompile_document(doc)
+    return doc

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from .model import ScenePlan, ShotPlan, VideoPlan
+from .model import ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
 from .ports import DEFAULT_SCENES, SceneDecompositionError
 
 if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
@@ -53,6 +53,15 @@ class _ScenesOut(BaseModel):
     scenes: list[_SceneSk] = []
 
 
+class _ShotCharOut(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    name: str = ""
+    appearance: str = ""
+    wardrobe: str = ""
+    expression: str = ""
+    action: str = ""
+
+
 class _ShotOut(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = ""
@@ -61,6 +70,11 @@ class _ShotOut(BaseModel):
     motion_desc: str = ""
     narration_fr: str = ""
     duration_s: float = 4.0
+    # v4 — champs métier séparés (regroupés par `compile_shot_prompt`) :
+    decor: str = ""
+    lighting: str = ""
+    framing: str = ""
+    characters: list[_ShotCharOut] = []
 
 
 class _ShotsOut(BaseModel):
@@ -155,6 +169,14 @@ class OpenAISceneDecomposer:
             "narration language. What we see in THIS shot within the environment — "
             "concrete subject, framing, detail; consistent with the environment; "
             "NO on-screen text;\n"
+            "Also SPLIT the shot into BUSINESS fields (like a real production crew), all "
+            "ENGLISH:\n"
+            '- "decor": the set/location within the environment (place, props, atmosphere);\n'
+            '- "lighting": the light (quality, direction, mood);\n'
+            '- "framing": shot size + angle (e.g. "close-up, low angle");\n'
+            '- "characters": array of people PRESENT, each {"name" (a FRENCH first name), '
+            '"appearance" (physical, EN), "wardrobe" (outfit, EN), "expression", "action"} '
+            "(same person keeps the SAME name/appearance across shots);\n"
             '- "motion_desc": ENGLISH. STRICTLY STATIC CAMERA (locked-off tripod). Describe '
             "the SUBJECT'S action, never a camera move (no pan/zoom/dolly/handheld) — the "
             "model drifts otherwise;\n"
@@ -189,6 +211,16 @@ class OpenAISceneDecomposer:
                     motion_desc=s.motion_desc,
                     narration_fr=s.narration_fr,
                     duration_s=max(2.0, min(6.0, s.duration_s or 4.0)),
+                    decor=s.decor,
+                    lighting=s.lighting,
+                    framing=s.framing,
+                    characters=[
+                        ShotCharacterPlan(
+                            name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
+                            expression=c.expression, action=c.action,
+                        )
+                        for c in s.characters
+                    ],
                 )
             )
         return shots

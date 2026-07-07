@@ -1123,12 +1123,15 @@ def save_editor_document(
     user: User = Depends(require_user)
 ) -> dict[str, Any]:
     _require_owned_doc(session, user, doc_id)
+    from ...editor.compile_shot import recompile_document
     from ...editor.document import EditorDocument
 
     try:
         doc = EditorDocument.model_validate(body.doc)
     except Exception as exc:
         raise HTTPException(422, f"invalid EditorDocument: {exc}") from exc
+    # Champs métier = source de vérité : resync le prompt compilé des briques `shot`.
+    recompile_document(doc)
     row = EditorDocRepo(session).save(
         doc_id, doc.model_dump_json(), title=body.title
     )
