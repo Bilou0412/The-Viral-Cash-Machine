@@ -91,6 +91,40 @@ def test_scene_without_shots_gets_a_minimal_plan():
     assert shots[0].start_image == "a dark room"  # anime la photo d'environnement
 
 
+def test_openai_emits_full_three_level_descriptor():
+    """MACRO (décor+variation+bible) + MICRO (plan riche) → VideoPlan 3-niveaux mappé.
+    Robuste : `traits`/`matieres` renvoyés en LISTE par le LLM sont joints (LooseStr)."""
+    macro = (
+        '{"genre":"thriller","ton":"tendu","musique_score":"nappe sombre",'
+        '"characters":[{"name":"Léa","appearance":"red-haired","traits":["wary","bold"]}],'
+        '"scenes":[{"id":"s1","title":"Quai","environment_desc":"empty platform",'
+        '"intention":"malaise","saison":"hiver","moment_jour":"2am","meteo":"dry","mood":"tense",'
+        '"ambiance_sonore":"neon hum",'
+        '"location":{"lieu":"subway platform","palette":"cold","matieres":["tiles","metal"],'
+        '"props_fixes":["benches"],"lumiere_base":{"sources":"neon"}},'
+        '"lumiere_ambiante":{"sources":"flickering neon"}}]}'
+    )
+    micro = (
+        '{"shots":[{"id":"s1_a","kind":"video","duration_s":4,"start_image":"Léa alone",'
+        '"intention_plan":"solitude","narration_fr":"La tension monte.",'
+        '"cadre":{"taille_plan":"wide","focale":"35mm"},"camera":{"type":"slow push"},'
+        '"personnages":[{"name":"Léa","action":"scans","etat_debut":"still","etat_fin":"turns"}],'
+        '"physique_environnement":[{"element":"neon","comportement":"flickers"}],'
+        '"son":{"dialogue_voix":"La tension monte."}}]}'
+    )
+    plan = OpenAISceneDecomposer(_StubClient([macro, micro]), "gpt-x").decompose_video("x", n_scenes=1)
+    assert plan.intention_globale.genre == "thriller" and plan.musique_score == "nappe sombre"
+    assert plan.cast[0].name == "Léa" and plan.cast[0].traits == "wary, bold"      # liste jointe
+    loc = plan.location_bible[0]
+    assert loc.lieu == "subway platform" and loc.matieres == "tiles, metal"        # liste jointe
+    sc = plan.scenes[0]
+    assert sc.location_ref == loc.ref and sc.moment_jour == "2am" and sc.mood == "tense"
+    sh = sc.shots[0]
+    assert sh.cadre.taille_plan == "wide" and sh.camera.type == "slow push"
+    assert sh.personnages[0].etat_debut == "still" and sh.personnages[0].etat_fin == "turns"
+    assert sh.physique_environnement[0].element == "neon"
+
+
 class _RaisingCompletions:
     def create(self, **_kw: object) -> Any:
         raise RuntimeError("401 invalid api key")
