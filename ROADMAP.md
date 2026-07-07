@@ -25,11 +25,16 @@ montage vierge. La brique est l'**unité de REVUE d'une génération** — on aj
 produit, on régénère ciblé pour maîtriser le coût. Dialogues/narration en **français**,
 prompts visuels en **anglais**.
 
-> Note pivot (2026-07) : le produit est passé du format « aventure à choix / horreur » (CYOA)
-> à un **créateur de scènes neutre et générique**. Le rail bas (`ClipBrick` → `VideoSpec` →
-> MP4) est **inchangé et réutilisé** ; seul le décrypteur du haut a changé (aventure → scènes).
-> Le rail aventure (`openai_adventure_decomposer` → `adventure_to_bricks`) **survit** comme
-> chemin alternatif, mais le **happy path** est désormais « Créer » (idée → scènes).
+> Note pivot (2026-07) : PAS un « créateur générique ». Une **usine à moules viraux** — chaque
+> FORMAT reste ultra-niche (« Aventure à choix », « Scènes libres »…), **même forme, fond
+> variable**. On vend une collection de **machines-à-viral**, pas une toile blanche. Le rail bas
+> (`ClipBrick` → `VideoSpec` → MP4) est **inchangé et réutilisé** ; la couche **Format** au-dessus
+> (`src/features/formats/`) nomme et unifie les moules (aventure #1, scènes #2). Le rail aventure
+> **survit** comme format #1 ; le **happy path** reste « Créer » (idée → scènes, format #2).
+>
+> **Endgame visé** : `idée → moule → 3 variantes → prédiction → publication`. L'humain n'approuve
+> que le **gagnant** ; découpe, cohérence et choix du hook sont **portés par les agents** et, à
+> terme, **calibrés par les perfs réelles** (la boucle fermée = le moat).
 
 ---
 
@@ -104,21 +109,48 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 | **Page « Créer »** (idée + nb de scènes → épisode → revue) + **bandes de scène** | ✅ | `frontend/src/pages/Creer.tsx` (#17) |
 | **Nav resserrée** (7 → 4 + groupe « Avancé ») | ✅ | `frontend/src/components/studio/layout.tsx` (#18) |
 | **Rigueur type-Rust** : mypy strict cliquet 0, ruff, TS strict, eslint typé | ✅ | `scripts/verify.sh`, `pyproject.toml` (#13) |
+| **Boucle réelle prouvée** (dogfood 7/7 assets) + harnais `--check/--text/run` | ✅ | `scripts/dogfood_editor.py` (S1) |
+| **Architecture 3 niveaux v5** (Vidéo→Scène→Plan, bibles décor+perso, héritage) | ✅ | `src/editor/document.py`, `compile_shot.py` (T-DESC) |
+| **Prompts compilés courts EN** (sujet-en-tête, dédup, ≤ 60 mots) | ✅ | `src/editor/compile_shot.py` (T-DESC-3) |
+| **Discipline de durée** (horizon modèle 5 s, split-pas-clamp, fallback-qui-crie) | ✅ | `capabilities.validate_shot_duration`, `features/assets/models.py` (T-DESC-4) |
+| **Couche Format** (moules : catalogue + dispatcher + API), aventure #1 / scènes #2 | ✅ | `src/features/formats/`, `services/formats.py` (TPL-1/2) |
+| **Boucle virale** : N hooks → prédiction → classement → appliquer la gagnante | ✅ | `src/features/virality/`, routes `/hooks`, `/documents/{id}/hook` (VIR-1/2) |
+| **Diagnose de découpe** (shot-audit au niveau document) | ✅ | `capabilities.audit_shot_durations`, route `/shot-audit` (DIR-1) |
 
 ---
 
 ## 5. Étapes restantes (ordonnées — 1 étape / session)
 
-> Le rail tourne de bout en bout **en backend et en mock**. Les étapes historiques R1–R4
-> sont livrées (voir §4). Restent la **boucle réelle** (dogfood), le **flux Créer complet**,
-> les **garde-fous coût** et le **socle monétisation**.
+> Le rail tourne **en réel** (dogfood 7/7) et la couche **Format** + la **boucle virale** sont
+> posées (§4). La spine restante est **l'endgame** (E1–E4) : `idée → moule → 3 variantes →
+> prédiction → publication`, agents + perfs réelles. Les concerns produit historiques (flux
+> Créer, coût, monétisation, legacy) restent en support (S2–S5).
 
-### S1 — Fermer la boucle réelle (dogfood)  ⬜  ← PROCHAINE ÉTAPE
-Générer une **vraie vidéo** depuis « Créer » avec de **vraies clés** (OpenAI + Replicate) :
-idée → scènes (OpenAI 2 phases) → photo d'environnement + plans (image-first) → MP4. Objectif :
-**trouver et corriger ce qui casse hors mock** (schéma OpenAI réel, mapping des modèles
-Replicate, i2v env→plan, coûts). C'est le prérequis pour dogfooder. Vérifier d'abord sur un
-épisode court (1 scène, 2 plans) pour limiter le coût.
+### S1 — Fermer la boucle réelle (dogfood)  ✅
+Fait : vraie vidéo idée → scènes → assets Replicate prouvée (7/7), breakers hors-mock corrigés,
+harnais `scripts/dogfood_editor.py`. Voir §4.
+
+### E1 — Réalisateur autonome : AUTO-SPLIT (le FIX)  ⬜  ← PROCHAINE ÉTAPE
+La diagnose existe (`shot-audit`, DIR-1). Le fix : un **`ShotSplitter`** (port + Fake + OpenAI)
+qui **re-découpe** un plan `over_horizon`/`multi_beat` en **beats distincts** (pas un split
+mécanique qui duplique). **Ne PAS** s'appuyer sur l'heuristique `multi_beat` pour piloter sans
+la durcir (note dans `_beat_count`). Câblé dans le pipeline scènes → aucun doc généré ne dépasse
+l'horizon.
+
+### E2 — Cohérence i2v (start_image par plan)  ⬜
+Chaque plan génère **sa** `start_image` depuis la `LocationEntry` + l'établissement de scène en
+**image de référence** (`image_input` seedream), + la dernière frame du plan précédent → cohérence
+visuelle auto entre plans (perso/décor stables). Touche `editor_generation` (chaînage des refs).
+
+### E3 — Sélecteur de format + publication  ⬜
+Front « Créer » : **sélecteur de moule** (route `GET /api/formats` déjà là) — variante (a)
+légère d'abord (fixe `Episode.format`, happy path scènes intact). Puis **publication** : export
+MP4 → post plateforme (needs creds plateforme).
+
+### E4 — Boucle de perfs réelles (le MOAT)  ⬜
+Les perfs des vidéos publiées (rétention/complétion/hook) **re-nourrissent** le prédicteur de
+viralité et la structure des formats — le prédicteur `ViralityPredictor` (port déjà posé, VIR-1)
+passe de LLM-juge (proxy) à **signal réel**. Le template n'est plus deviné, il est **appris**.
 
 ### S2 — Flux « Créer » complet  ⬜
 Étape **photo-first explicite par scène** (générer/uploader l'environnement AVANT les plans,
