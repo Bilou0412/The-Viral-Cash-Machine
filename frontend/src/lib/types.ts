@@ -409,6 +409,37 @@ export interface DialogueResult extends EditorDocument {
   source?: DecomposerSource
 }
 
+// Table ronde — création scène par scène (les agents discutent).
+export interface Turn {
+  role: string      // clé du métier qui parle (cf. crew.ts)
+  message: string
+}
+export interface ArcScene {
+  id: string
+  title: string
+}
+export interface ScenePlanResult {
+  id: string        // id du document créé
+  title: string
+  doc: EditorDoc
+  arc: ArcScene[]
+  source?: DecomposerSource
+}
+export interface BuildSceneResult {
+  id: string
+  scene_id: string
+  title: string
+  transcript: Turn[]
+  remaining: string[]
+  doc: EditorDoc
+  source?: DecomposerSource
+}
+export interface ScenesState {
+  arc: ArcScene[]
+  built: string[]
+  remaining: string[]
+}
+
 // Le brief du producteur (phase développement) — le cahier des charges qui
 // oriente toute la chaîne. Proposé par l'agent producteur, éditable.
 export type Platform = "tiktok" | "reels" | "shorts" | "youtube_short"

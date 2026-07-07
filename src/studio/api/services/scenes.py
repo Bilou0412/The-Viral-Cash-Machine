@@ -11,7 +11,7 @@ import os
 from typing import Literal
 
 from ....features.scenes.fake_scene_decomposer import FakeSceneDecomposer
-from ....features.scenes.model import VideoPlan
+from ....features.scenes.model import ScenePlan, VideoPlan
 from ....features.scenes.ports import DEFAULT_SCENES, SceneVideoDecomposer
 
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
@@ -37,6 +37,24 @@ def get_scene_decomposer(openai_key: str | None = None) -> SceneVideoDecomposer:
 
     model = os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
     return OpenAISceneDecomposer(OpenAI(api_key=openai_key), model)
+
+
+def generate_arc(
+    prompt: str,
+    *,
+    style_identity: str = "",
+    n_scenes: int = DEFAULT_SCENES,
+    platform: str = "tiktok",
+    language: str = "fr",
+    decomposer: SceneVideoDecomposer | None = None,
+    openai_key: str | None = None,
+) -> list[ScenePlan]:
+    """Idée → l'ARC (squelettes de scènes ordonnés, sans plans) via le décrypteur."""
+    dec = decomposer or get_scene_decomposer(openai_key)
+    return dec.plan_arc(
+        prompt, style_identity=style_identity, n_scenes=n_scenes,
+        platform=platform, language=language,
+    )
 
 
 def generate_video_plan(

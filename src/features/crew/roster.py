@@ -21,9 +21,12 @@ Phase = Literal[
     "distribution",
 ]
 
-# Ce qui exécute le métier : le producteur (brief), le décrypteur existant, la
-# génération d'assets, le rendu, ou un agent dédié (aujourd'hui : distribution).
-AgentKind = Literal["brief", "decomposer", "generation", "render", "distribution"]
+# Ce qui exécute le métier : le producteur (brief), le décrypteur existant, une
+# VOIX de la table ronde (room), la génération d'assets, le rendu, ou un agent
+# dédié (distribution).
+AgentKind = Literal[
+    "brief", "decomposer", "room", "generation", "render", "distribution"
+]
 
 
 @dataclass(frozen=True)
@@ -64,12 +67,20 @@ CREW: tuple[CrewRole, ...] = (
         kind="decomposer",
     ),
     CrewRole(
+        key="realisateur",
+        phase="preproduction",
+        title="Réalisateur",
+        subtitle="mène la table ronde et tranche la vision de la scène",
+        produces="la direction de scène",
+        kind="room",
+    ),
+    CrewRole(
         key="directeur_artistique",
         phase="preproduction",
         title="Directeur artistique",
         subtitle="pose l'identité visuelle et la photo d'environnement",
         produces="le storyboard (décors)",
-        kind="decomposer",
+        kind="room",
     ),
     CrewRole(
         key="chef_operateur",
@@ -77,7 +88,15 @@ CREW: tuple[CrewRole, ...] = (
         title="Chef opérateur",
         subtitle="découpe chaque scène en plans (cadrage, mouvement)",
         produces="les plans",
-        kind="decomposer",
+        kind="room",
+    ),
+    CrewRole(
+        key="casting",
+        phase="preproduction",
+        title="Casting & costume",
+        subtitle="tient la bible : apparence, tenue et jeu des personnages",
+        produces="les personnages",
+        kind="room",
     ),
     CrewRole(
         key="dialoguiste",
@@ -85,7 +104,7 @@ CREW: tuple[CrewRole, ...] = (
         title="Dialoguiste",
         subtitle="écrit la narration et les dialogues",
         produces="la narration",
-        kind="decomposer",
+        kind="room",
     ),
     CrewRole(
         key="tournage",

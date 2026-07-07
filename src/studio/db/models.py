@@ -146,6 +146,8 @@ class EditorDocumentRow(SQLModel, table=True):
     doc_json: str
     # Fiche de sortie (attaché de presse / Growth), JSON `DistributionKit` ou None.
     distribution_json: str | None = Field(default=None)
+    # État de la table ronde (arc + mémoire + transcrits + scènes faites), JSON `RoomState`.
+    memory_json: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 

@@ -88,3 +88,24 @@ class FakeSceneDecomposer:
             art_direction="cold tones",
             scenes=scenes,
         )
+
+    def plan_arc(
+        self,
+        prompt: str,
+        *,
+        style_identity: str = "",
+        n_scenes: int = DEFAULT_SCENES,
+        platform: str = "tiktok",
+        language: str = "fr",
+    ) -> list[ScenePlan]:
+        # Squelettes déterministes (sans plans) — la table ronde les remplira.
+        beats = ["Accroche", "Montée", "Chute"]
+        return [
+            ScenePlan(
+                id=f"s{i + 1}",
+                title=f"Scène {i + 1} — {beats[i] if i < len(beats) else 'Suite'}",
+                environment_desc=f"establishing shot of location {i + 1}, cinematic",
+                context_text=f"Le contexte concentré de la scène {i + 1}.",
+            )
+            for i in range(max(1, n_scenes))
+        ]

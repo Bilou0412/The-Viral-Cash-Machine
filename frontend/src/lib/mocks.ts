@@ -5,12 +5,17 @@
 import type {
   AdventureScript,
   Asset,
+  ArcScene,
   ArtDirectionResult,
   BeatEntry,
   BeatsResponse,
   Brief,
   BriefResult,
   BrickSpec,
+  BuildSceneResult,
+  ScenePlanResult,
+  ScenesState,
+  Turn,
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
@@ -388,6 +393,62 @@ const editorDocuments = new Map<string, EditorDocument>()
 const episodeToDoc = new Map<number, string>()  // épisode → dernier doc de scènes
 const distributionByDoc = new Map<string, DistributionKit>()  // doc → fiche de sortie
 const briefByEpisode = new Map<number, Brief>()  // épisode → brief du producteur
+// Table ronde (mock) : état de production par document (arc + scènes faites + débats).
+const roomStateByDoc = new Map<
+  string,
+  { arc: ArcScene[]; built: string[]; transcripts: Record<string, Turn[]> }
+>()
+
+function cannedTurns(title: string, isNew: boolean): Turn[] {
+  return [
+    { role: "realisateur", message: `On ouvre sur « ${title} ». On garde le rythme et le ton.` },
+    { role: "directeur_artistique", message: "Décor froid, lumière dure, textures marquées." },
+    { role: "chef_operateur", message: "Un large d'accroche puis un plan serré. Caméra fixe." },
+    { role: "casting", message: isNew ? "On introduit Léa : jeune femme, cheveux courts, manteau gris." : "Léa est présente, on garde sa continuité." },
+    { role: "dialoguiste", message: "Narration courte, en français, une phrase qui installe." },
+    { role: "realisateur", message: `OK, on verrouille « ${title} ».` },
+    { role: "directeur_artistique", message: "On reste dans l'identité visuelle établie." },
+    { role: "chef_operateur", message: "Deux plans d'environ 4 secondes." },
+    { role: "casting", message: "Tenue par défaut, expression tendue." },
+    { role: "dialoguiste", message: "« La tension monte. »" },
+  ]
+}
+
+function appendMockScene(doc: EditorDoc, sceneId: string, title: string, isNew: boolean): void {
+  if (isNew && !(doc.bible ?? []).some((c) => c.id === "lea")) {
+    doc.bible = [
+      ...(doc.bible ?? []),
+      { id: "lea", name: "Léa", appearance: "young woman, short dark hair", wardrobe: "worn grey coat", voice_id: "male-conteur", traits: "déterminée" },
+    ]
+  }
+  let cursor = doc.bricks.reduce((m, b) => Math.max(m, (b.placement?.start ?? 0) + (b.placement?.duration ?? 0)), 0)
+  const envId = `${sceneId}_env`
+  doc.bricks.push({
+    id: envId, type: "clip", kind: "photo",
+    image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `establishing shot of ${title}, cold ambient light` } },
+    shot: { decor: `establishing shot of ${title}`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
+    children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
+  })
+  cursor += 3
+  const shotIds = [envId]
+  for (const [k, framing, expr] of [["sh1", "wide shot", "tense"], ["sh2", "close-up", "resolute"]] as const) {
+    const sid = `${sceneId}_${k}`
+    doc.bricks.push({
+      id: sid, type: "clip", kind: "video",
+      image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `${framing} of Léa (young woman, short dark hair), wearing worn grey coat, ${expr}, in ${title}` } },
+      motion: { model_ref: "prunaai/p-video", params: { prompt: "static camera", duration: 4, image: `{brick:${envId}.image}` } },
+      shot: { decor: title, lumiere: "cold ambient light", cadrage: framing, extra: "", characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr, action: "in scene" }] },
+      children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: "La tension monte.", voice_id: "male-conteur" } }],
+      layers: [], placement: { track: 0, start: cursor, duration: 4 },
+    })
+    cursor += 4
+    shotIds.push(sid)
+  }
+  doc.scenes = [
+    ...(doc.scenes ?? []),
+    { id: sceneId, title, context: { text: title, characters: {}, art_direction: "cold tones", extra: {} }, environment_photo_ref: envId, shot_ids: shotIds },
+  ]
+}
 
 function seedEditorDocs() {
   if (editorDocuments.size) return
@@ -520,6 +581,67 @@ export const mockApi = {
     await delay()
     return { episode_id: episodeId, assets: buildBeatEntries() }
   },
+  async planScenes(
+    episodeId: number,
+    body: { prompt: string; n_scenes?: number; title?: string }
+  ): Promise<ScenePlanResult> {
+    await delay(400)
+    const id = `doc-${nextDocId++}`
+    const beats = ["Accroche", "Montée", "Chute"]
+    const n = body.n_scenes ?? 3
+    const arc: ArcScene[] = Array.from({ length: Math.max(1, n) }, (_, i) => ({
+      id: `s${i + 1}`,
+      title: `Scène ${i + 1} — ${beats[i] ?? "Suite"}`,
+    }))
+    const doc: EditorDoc = {
+      schema_version: 4, title: body.title || "Nouvelle vidéo",
+      canvas: { width: 1080, height: 1920, fps: 30 },
+      global_context: { text: body.prompt, characters: {}, art_direction: "cold tones", extra: {} },
+      tracks: [{ index: 0, role: "main" }], bricks: [], scenes: [], bible: [],
+    }
+    editorDocuments.set(id, { id, project_id: 1, title: doc.title, doc })
+    episodeToDoc.set(episodeId, id)
+    roomStateByDoc.set(id, { arc, built: [], transcripts: {} })
+    return { id, title: doc.title, doc: structuredClone(doc), arc, source: "fake" }
+  },
+
+  async buildNextScene(docId: string): Promise<BuildSceneResult> {
+    await delay(600)
+    const st = roomStateByDoc.get(docId)
+    const docu = editorDocuments.get(docId)
+    if (!st || !docu) throw new Error("aucune table ronde ouverte")
+    const next = st.arc.find((s) => !st.built.includes(s.id))
+    if (!next) throw new Error("toutes les scènes sont construites")
+    const isNew = st.built.length === 0
+    appendMockScene(docu.doc, next.id, next.title, isNew)
+    const transcript = cannedTurns(next.title, isNew)
+    st.built.push(next.id)
+    st.transcripts[next.id] = transcript
+    const remaining = st.arc.filter((s) => !st.built.includes(s.id)).map((s) => s.id)
+    return {
+      id: docId, scene_id: next.id, title: next.title, transcript, remaining,
+      doc: structuredClone(docu.doc), source: "fake",
+    }
+  },
+
+  async scenesState(docId: string): Promise<ScenesState> {
+    await delay()
+    const st = roomStateByDoc.get(docId)
+    if (!st) return { arc: [], built: [], remaining: [] }
+    return {
+      arc: structuredClone(st.arc), built: [...st.built],
+      remaining: st.arc.filter((s) => !st.built.includes(s.id)).map((s) => s.id),
+    }
+  },
+
+  async sceneTranscript(docId: string, sceneId: string): Promise<{ scene_id: string; transcript: Turn[] }> {
+    await delay()
+    const st = roomStateByDoc.get(docId)
+    const turns = st?.transcripts[sceneId]
+    if (!turns) throw new Error("aucun débat pour cette scène")
+    return { scene_id: sceneId, transcript: structuredClone(turns) }
+  },
+
   async createSceneDocument(
     episodeId: number,
     body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }

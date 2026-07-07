@@ -225,6 +225,35 @@ class OpenAISceneDecomposer:
             )
         return shots
 
+    def plan_arc(
+        self,
+        prompt: str,
+        *,
+        style_identity: str = "",
+        n_scenes: int = DEFAULT_SCENES,
+        platform: str = "tiktok",
+        language: str = "fr",
+    ) -> list[ScenePlan]:
+        n = max(1, n_scenes)
+        skeletons = self._plan_scenes(
+            prompt, style_identity, n, platform=platform, language=language
+        )
+        if not skeletons:
+            raise SceneDecompositionError(
+                "L'IA n'a pas pu découper cette idée en scènes. Reformule ton idée "
+                "ou réessaie."
+            )
+        return [
+            ScenePlan(
+                id=sk.id or f"s{i + 1}",
+                title=sk.title or f"Scène {i + 1}",
+                environment_desc=sk.environment_desc,
+                context_text=sk.intention,
+                art_direction=style_identity,
+            )
+            for i, sk in enumerate(skeletons[:n])
+        ]
+
     def decompose_video(
         self,
         prompt: str,

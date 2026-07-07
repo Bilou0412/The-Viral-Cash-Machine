@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import VideoPlan
+from .model import ScenePlan, VideoPlan
 
 DEFAULT_SCENES = 3
 
@@ -39,5 +39,21 @@ class SceneVideoDecomposer(Protocol):
 
         `platform`/`language`/`target_duration_s` viennent du Brief du producteur
         (défauts = comportement historique). `style_identity` porte le ton/notes.
+        """
+        ...
+
+    def plan_arc(
+        self,
+        prompt: str,
+        *,
+        style_identity: str = "",
+        n_scenes: int = DEFAULT_SCENES,
+        platform: str = "tiktok",
+        language: str = "fr",
+    ) -> list[ScenePlan]:
+        """MACRO seul : l'ARC = les squelettes de scènes ordonnés (sans plans).
+
+        Chaque `ScenePlan` porte id/title/environment_desc/context_text ; les
+        plans (`shots`) sont laissés vides — c'est la table ronde qui les crée.
         """
         ...

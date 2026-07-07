@@ -13,7 +13,11 @@ import type {
   Brief,
   BriefResult,
   BrickSpec,
+  BuildSceneResult,
   DialogueResult,
+  ScenePlanResult,
+  ScenesState,
+  Turn,
   CostEstimate,
   CreateEditorDocumentBody,
   CreateEpisodeBody,
@@ -161,6 +165,24 @@ const realApi = {
       method: "PUT",
       body: JSON.stringify(brief),
     }),
+
+  // Table ronde — création scène par scène (les agents discutent).
+  planScenes: (
+    episodeId: number,
+    body: { prompt: string; style_identity?: string; n_scenes?: number; title?: string }
+  ) =>
+    request<ScenePlanResult>(`/episodes/${episodeId}/scenes/plan`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  buildNextScene: (docId: string) =>
+    request<BuildSceneResult>(`/editor/documents/${docId}/scenes/next`, { method: "POST" }),
+  scenesState: (docId: string) =>
+    request<ScenesState>(`/editor/documents/${docId}/scenes/state`),
+  sceneTranscript: (docId: string, sceneId: string) =>
+    request<{ scene_id: string; transcript: Turn[] }>(
+      `/editor/documents/${docId}/scenes/${sceneId}/transcript`
+    ),
 
   // Créateur de scènes : idée → l'IA découpe en scènes + plans → document éditable.
   createSceneDocument: (
