@@ -1,9 +1,29 @@
 """Replicate-based asset generation."""
 
+import re
+import time
 from typing import Any
 
 from .models import IMAGE_MODEL, VIDEO_MODEL, VOICE_MODEL
 from .ports import AssetProvider, RunResult
+
+# Replicate throttle les comptes à faible crédit (6 req/min) et tout pic de charge
+# en prod. On patiente et on réessaie sur un 429 plutôt que d'échouer le nœud.
+_RATE_LIMIT_RETRIES = 5
+
+
+def _is_rate_limited(exc: Exception) -> bool:
+    """Vrai si l'erreur est un throttle Replicate (429), quelle que soit sa forme."""
+    if getattr(exc, "status", None) == 429:
+        return True
+    text = str(exc).lower()
+    return "throttled" in text or "429" in text
+
+
+def _retry_after_seconds(exc: Exception, default: float) -> float:
+    """Délai avant retry : « resets in ~Xs » du message (+1 s de marge), sinon `default`."""
+    m = re.search(r"resets in ~?(\d+)\s*s", str(exc))
+    return float(m.group(1)) + 1.0 if m else default
 
 
 def _normalize_outputs(result: Any) -> list[str]:
@@ -67,22 +87,32 @@ class ReplicateAssetProvider(AssetProvider):
         """
         client = self._client()
         result: RunResult
-        try:
-            pred = client.models.predictions.create(model_ref, input=params)
-            pred.wait()
-            metrics: dict[str, Any] = dict(pred.metrics or {})
-            predict_time = metrics.get("predict_time")
-            cost = getattr(pred, "cost", None)
-            result = RunResult(
-                urls=_normalize_outputs(pred.output),
-                cost_usd=float(cost) if cost is not None else None,
-                predict_time=(
-                    float(predict_time) if predict_time is not None else None
-                ),
-                metrics=metrics,
-            )
-        except Exception:
-            result = RunResult(urls=_normalize_outputs(client.run(model_ref, input=params)))
+        for attempt in range(_RATE_LIMIT_RETRIES + 1):
+            try:
+                pred = client.models.predictions.create(model_ref, input=params)
+                pred.wait()
+                metrics: dict[str, Any] = dict(pred.metrics or {})
+                predict_time = metrics.get("predict_time")
+                cost = getattr(pred, "cost", None)
+                result = RunResult(
+                    urls=_normalize_outputs(pred.output),
+                    cost_usd=float(cost) if cost is not None else None,
+                    predict_time=(
+                        float(predict_time) if predict_time is not None else None
+                    ),
+                    metrics=metrics,
+                )
+                break
+            except Exception as exc:
+                # Throttle (429) : on patiente et on réessaie ; épuisé → on relève.
+                if _is_rate_limited(exc):
+                    if attempt < _RATE_LIMIT_RETRIES:
+                        time.sleep(min(_retry_after_seconds(exc, 10.0 * (attempt + 1)), 60.0))
+                        continue
+                    raise
+                # Autre erreur : repli sur ``client.run`` (sorties seules, sans métriques).
+                result = RunResult(urls=_normalize_outputs(client.run(model_ref, input=params)))
+                break
         self.last_run = result
         return result
 
