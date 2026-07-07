@@ -195,3 +195,16 @@ def test_fake_decomposer_builds_three_levels():
     assert "subway" in people_shot.image.params["prompt"]     # décor hérité de la scène
     for c in clips:
         assert validate_clip(c) == {}
+
+
+def test_scene_plan_wires_per_plan_start_image_for_coherence():
+    """E2 : chaque plan vidéo anime SA frame (ancrée à l'établissement), pas la photo partagée."""
+    plan = FakeSceneDecomposer().decompose_video("un métro hanté", n_scenes=1)
+    doc = scene_plan_to_document(plan)
+    videos = [b for b in doc.bricks if isinstance(b, ClipBrick) and b.kind == "video"]
+    assert videos
+    for v in videos:
+        assert v.motion is not None
+        assert v.motion.params["image"] == f"{{brick:{v.id}.image}}"   # anime SA frame
+        ref = v.image.params["image_input"]                            # ancrée à l'établissement
+        assert ref.startswith("{brick:") and ref.endswith(".image}")

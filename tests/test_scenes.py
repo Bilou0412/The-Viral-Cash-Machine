@@ -42,7 +42,7 @@ def test_built_document_compiles_to_valid_videospec():
 
 
 def test_video_shots_seed_from_scene_env_photo():
-    """Chaque plan vidéo anime la photo d'ENVIRONNEMENT de sa scène (ref i2v)."""
+    """E2 : chaque plan anime SA frame, composée avec la photo d'ENV en référence."""
     plan = FakeSceneDecomposer().decompose_video("x", n_scenes=1)
     doc = scene_plan_to_document(plan)
     scene = doc.scenes[0]
@@ -51,7 +51,8 @@ def test_video_shots_seed_from_scene_env_photo():
     assert videos, "au moins un plan vidéo"
     for v in videos:
         assert v.motion is not None
-        assert v.motion.params.get("image") == env_ref
+        assert v.motion.params.get("image") == f"{{brick:{v.id}.image}}"  # anime SA frame
+        assert v.image.params.get("image_input") == env_ref              # ancrée à l'établissement
 
 
 # -- Décrypteur OpenAI (Phase 3) — testé avec un CLIENT STUB (aucun réseau) -----
