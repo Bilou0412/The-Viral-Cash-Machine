@@ -6,7 +6,11 @@ module, pour que la collecte pytest fonctionne hors conteneur. Les services
 réseau vivent dans `src/studio/api/services/`.
 """
 
-from .compile_shot import compile_shot_prompt, recompile_document
+from .compile_shot import (
+    compile_image_prompt,
+    compile_motion_prompt,
+    recompile_document,
+)
 from .compile_spec import document_to_spec
 from .document import (
     SCHEMA_VERSION,
@@ -18,11 +22,12 @@ from .document import (
     GenerativeBrick,
     GenNode,
     Layer,
+    LocationEntry,
     MediaBrick,
     NarrativeContext,
+    PersonnagePresent,
     Scene,
     ShotBrief,
-    ShotCharacter,
     TextBrick,
     TimelinePlacement,
     Track,
@@ -40,16 +45,18 @@ __all__ = [
     "GenNode",
     "GenerativeBrick",
     "Layer",
+    "LocationEntry",
     "MediaBrick",
     "NarrativeContext",
+    "PersonnagePresent",
     "Scene",
     "ShotBrief",
-    "ShotCharacter",
     "TextBrick",
     "TimelinePlacement",
     "Track",
     "ZoomSpec",
-    "compile_shot_prompt",
+    "compile_image_prompt",
+    "compile_motion_prompt",
     "document_to_spec",
     "recompile_document",
     "upgrade_document",

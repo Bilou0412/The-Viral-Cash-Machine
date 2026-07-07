@@ -88,7 +88,7 @@ def build_next_scene(
 
     scene_brief = SceneBrief(
         id=skeleton.id, title=skeleton.title,
-        intention=skeleton.context_text, environment=skeleton.environment_desc,
+        intention=skeleton.intention_scene, environment=skeleton.environment_desc,
     )
     result = run_scene_room(
         brief, scene_brief, state.memory, director=director, drafters=drafters
@@ -97,7 +97,7 @@ def build_next_scene(
 
     # La mémoire AVANCE : bible cumulée + synopsis + transcript conservé.
     state.memory.bible.extend(result.new_characters)
-    summary = f"{skeleton.title}: {skeleton.context_text}".strip().rstrip(":")
+    summary = f"{skeleton.title}: {skeleton.intention_scene}".strip().rstrip(":")
     state.memory.synopsis_so_far = (
         f"{state.memory.synopsis_so_far} {summary}".strip()
     )

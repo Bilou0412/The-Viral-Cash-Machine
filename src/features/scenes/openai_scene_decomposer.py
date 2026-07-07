@@ -14,6 +14,13 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from ...editor.document import (
+    Cadre,
+    Camera,
+    IntentionGlobale,
+    LocationEntry,
+    Lumiere,
+)
 from .model import ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
 from .ports import DEFAULT_SCENES, SceneDecompositionError
 
@@ -211,17 +218,14 @@ class OpenAISceneDecomposer:
                 ShotPlan(
                     id=s.id or f"{sk.id or 'sc'}_sh{i + 1}",
                     kind=_kind_of(s.kind),
-                    visual_desc=s.visual_desc,
-                    motion_desc=s.motion_desc,
+                    duree_s=max(2.0, min(6.0, s.duration_s or 4.0)),
                     narration_fr=s.narration_fr,
-                    duration_s=max(2.0, min(6.0, s.duration_s or 4.0)),
-                    decor=s.decor,
-                    lighting=s.lighting,
-                    framing=s.framing,
-                    characters=[
+                    start_image=s.visual_desc,
+                    cadre=Cadre(taille_plan=s.framing),
+                    camera=Camera(depart_arrivee=s.motion_desc),
+                    personnages=[
                         ShotCharacterPlan(
-                            name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                            expression=c.expression, action=c.action,
+                            name=c.name, action=c.action, expression=c.expression,
                         )
                         for c in s.characters
                     ],
@@ -252,8 +256,7 @@ class OpenAISceneDecomposer:
                 id=sk.id or f"s{i + 1}",
                 title=sk.title or f"Scène {i + 1}",
                 environment_desc=sk.environment_desc,
-                context_text=sk.intention,
-                art_direction=style_identity,
+                intention_scene=sk.intention,
             )
             for i, sk in enumerate(skeletons[:n])
         ]
@@ -280,6 +283,7 @@ class OpenAISceneDecomposer:
         # Budget-temps par scène (réparti) quand une durée cible est fournie.
         scene_budget = target_duration_s / n if target_duration_s > 0 else 0.0
         scenes: list[ScenePlan] = []
+        locations: list[LocationEntry] = []
         summary_parts: list[str] = []
         for i, sk in enumerate(skeletons[:n]):
             sid = sk.id or f"s{i + 1}"
@@ -295,21 +299,23 @@ class OpenAISceneDecomposer:
                 # qui anime sa photo d'environnement (plutôt qu'une scène morte).
                 shots = [
                     ShotPlan(
-                        id=f"{sid}_sh1",
-                        kind="video",
-                        visual_desc=sk.environment_desc,
-                        motion_desc="slow push in, static camera",
-                        narration_fr="",
-                        duration_s=4.0,
+                        id=f"{sid}_sh1", kind="video", duree_s=4.0,
+                        start_image=sk.environment_desc,
+                        camera=Camera(depart_arrivee="slow push in, static camera"),
                     )
                 ]
+            loc_ref = f"{sid}_loc"
+            locations.append(LocationEntry(
+                ref=loc_ref, lieu=sk.environment_desc,
+                lumiere_base=Lumiere(sources=style_identity),
+            ))
             scenes.append(
                 ScenePlan(
                     id=sid,
                     title=sk.title or f"Scène {i + 1}",
                     environment_desc=sk.environment_desc,
-                    context_text=sk.intention,
-                    art_direction=style_identity,
+                    location_ref=loc_ref,
+                    intention_scene=sk.intention,
                     shots=shots,
                 )
             )
@@ -317,7 +323,7 @@ class OpenAISceneDecomposer:
                 summary_parts.append(sk.intention)
         return VideoPlan(
             title=prompt[:60] or "Nouvelle vidéo",
-            global_context=prompt,
-            art_direction=style_identity,
+            intention_globale=IntentionGlobale(arc_narratif=prompt),
+            location_bible=locations,
             scenes=scenes,
         )

@@ -45,9 +45,28 @@ import type {
   CreatePromptTemplateBody,
   Scene,
   SceneDocumentResult,
+  ShotBrief,
   Theme,
   UpdateAssetBody,
 } from "./types"
+
+// Descripteur de PLAN (v5) par défaut — les mocks n'en remplissent qu'un sous-ensemble.
+const mkShot = (over: Partial<ShotBrief> = {}): ShotBrief => ({
+  start_image: "",
+  cadre: { taille_plan: "", focale: "", angle_hauteur: "", mise_au_point: "" },
+  profondeur: { avant_plan: "", plan_moyen: "", arriere_plan: "" },
+  camera: { type: "", vitesse: "", depart_arrivee: "" },
+  personnages_presents: [],
+  elements_secondaires: [],
+  physique_environnement: [],
+  lumiere_override: null,
+  lumiere_temps: { ce_qui_change: "", depart_arrivee: "" },
+  son: { dialogue_voix: "", bruitage_sfx: "", perspective_mixage: "", dynamique_silence: "", ambiance_override: "", transition_audio: "" },
+  timeline: [],
+  intention_plan: "",
+  continuite: { lien_precedent: "", lien_suivant: "" },
+  ...over,
+})
 import { isClipBrick, isGenerativeBrick, isTextBrick } from "./types"
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms))
@@ -343,7 +362,7 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
       {
         id: envId, type: "clip", kind: "photo",
         image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `location ${i} exterior, cold ambient light` } },
-        shot: { decor: `location ${i} exterior`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
+        shot: null,
         children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
       },
       3
@@ -362,10 +381,11 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
           id: sid, type: "clip", kind: "video",
           image: { model_ref: "bytedance/seedream-4.5", params: { prompt: compiled } },
           motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur, image: `{brick:${envId}.image}` } },
-          shot: {
-            decor: `location ${i} interior`, lumiere: "cold ambient light", cadrage: framing, extra: "",
-            characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr ?? "", action: act ?? "" }],
-          },
+          shot: mkShot({
+            start_image: `location ${i} interior`,
+            cadre: { taille_plan: framing, focale: "", angle_hauteur: "", mise_au_point: "" },
+            personnages_presents: [{ ref: "lea", action: act ?? "", trajectoire: "", vitesse: "", expression: expr ?? "", etat_debut: "", etat_fin: "" }],
+          }),
           children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
           layers: [], placement: { track: 0, start: cursor, duration: dur },
         },
@@ -428,7 +448,7 @@ function appendMockScene(doc: EditorDoc, sceneId: string, title: string, isNew: 
   doc.bricks.push({
     id: envId, type: "clip", kind: "photo",
     image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `establishing shot of ${title}, cold ambient light` } },
-    shot: { decor: `establishing shot of ${title}`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
+    shot: null,
     children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
   })
   cursor += 3
@@ -443,7 +463,11 @@ function appendMockScene(doc: EditorDoc, sceneId: string, title: string, isNew: 
       id: sid, type: "clip", kind: "video",
       image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `${framing} of Léa (young woman, short dark hair), wearing worn grey coat, ${expr}, in ${title}` } },
       motion: { model_ref: "prunaai/p-video", params: { prompt: "static camera", duration: 4, image: `{brick:${envId}.image}` } },
-      shot: { decor: title, lumiere: "cold ambient light", cadrage: framing, extra: "", characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr, action: "in scene" }] },
+      shot: mkShot({
+        start_image: title,
+        cadre: { taille_plan: framing, focale: "", angle_hauteur: "", mise_au_point: "" },
+        personnages_presents: [{ ref: "lea", action: "in scene", trajectoire: "", vitesse: "", expression: expr, etat_debut: "", etat_fin: "" }],
+      }),
       children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
       layers: [], placement: { track: 0, start: cursor, duration: 4 },
     })

@@ -8,6 +8,7 @@ transcript lisible (le contrat, puis chaque brouillon).
 
 from __future__ import annotations
 
+from ...editor.document import Cadre, Camera, Lumiere
 from ..scenes.model import ScenePlan, ShotPlan
 from .model import Draft, RoomResult, SceneBrief, SceneContract, Turn
 from .ports import DEPARTMENTS, field_owner
@@ -77,14 +78,12 @@ def merge_drafts(
             ShotPlan(
                 id=cs.id,
                 kind="photo" if cs.kind.strip().lower() == "photo" else "video",
-                visual_desc=decor,
-                motion_desc="static camera",
+                duree_s=_clamp_duration(_field(by_dept, cs.id, "duration")),
                 narration_fr=_field(by_dept, cs.id, "narration"),
-                duration_s=_clamp_duration(_field(by_dept, cs.id, "duration")),
-                decor=decor,
-                lighting=_field(by_dept, cs.id, "lighting"),
-                framing=_field(by_dept, cs.id, "framing"),
-                characters=casting.shot_characters.get(cs.id, []),
+                start_image=decor,
+                cadre=Cadre(taille_plan=_field(by_dept, cs.id, "framing")),
+                camera=Camera(type="static"),
+                personnages=casting.shot_characters.get(cs.id, []),
             )
         )
 
@@ -92,8 +91,9 @@ def merge_drafts(
         id=sid,
         title=scene_brief.title,
         environment_desc=da.env.get("decor", "") or scene_brief.environment,
-        lighting=da.env.get("lighting", ""),
-        context_text=scene_brief.intention,
+        location_ref=f"{sid}_loc",
+        lumiere_ambiante=Lumiere(sources=da.env.get("lighting", "")),
+        intention_scene=scene_brief.intention,
         shots=shots,
     )
 

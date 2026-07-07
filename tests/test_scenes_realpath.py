@@ -88,7 +88,7 @@ def test_scene_without_shots_gets_a_minimal_plan():
     shots = plan.scenes[0].shots
     assert len(shots) == 1
     assert shots[0].kind == "video"
-    assert shots[0].visual_desc == "a dark room"  # anime la photo d'environnement
+    assert shots[0].start_image == "a dark room"  # anime la photo d'environnement
 
 
 class _RaisingCompletions:

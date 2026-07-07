@@ -69,10 +69,10 @@ def _scene_blob(scene: ScenePlan) -> str:
     """Sérialise la scène ASSEMBLÉE (tous les champs) pour la passe de révision."""
     lines = []
     for sh in scene.shots:
-        who = ", ".join(c.name for c in sh.characters) or "(aucun)"
+        who = ", ".join(c.name for c in sh.personnages) or "(aucun)"
         lines.append(
-            f"- {sh.id}: décor='{sh.decor}' lumière='{sh.lighting}' cadrage='{sh.framing}' "
-            f"durée={sh.duration_s}s narration='{sh.narration_fr}' persos={who}"
+            f"- {sh.id}: cadrage='{sh.cadre.taille_plan}' caméra='{sh.camera.type}' "
+            f"durée={sh.duree_s}s narration='{sh.narration_fr}' persos={who}"
         )
     return f"Scène « {scene.title} » assemblée :\n" + "\n".join(lines)
 
@@ -208,8 +208,7 @@ class OpenAIDrafter:
             ],
             shot_characters={
                 sid: [
-                    ShotCharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                                      expression=c.expression, action=c.action)
+                    ShotCharacterPlan(name=c.name, expression=c.expression, action=c.action)
                     for c in chars
                 ]
                 for sid, chars in out.shot_characters.items()

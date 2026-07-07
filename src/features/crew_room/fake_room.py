@@ -79,7 +79,7 @@ class FakeDrafter:
                 new_characters=[hero] if is_new else [],
                 shot_characters={
                     i: [ShotCharacterPlan(
-                        name=hero.name, appearance=hero.appearance, wardrobe=hero.wardrobe,
+                        name=hero.name,
                         expression=plays[k % len(plays)][0], action=plays[k % len(plays)][1],
                     )]
                     for k, i in enumerate(ids)
@@ -115,6 +115,6 @@ class FakeDrafter:
         shots: dict[str, dict[str, str]] = {}
         for sh in scene.shots:
             line = base.shots.get(sh.id, {}).get("narration", "") or sh.narration_fr
-            who = sh.characters[0].name if sh.characters else ""
+            who = sh.personnages[0].name if sh.personnages else ""
             shots[sh.id] = {"narration": f"{who} — {line}" if who else line}
         return Draft(department=department, shots=shots)

@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..videospec.models import Canvas
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 class _Doc(BaseModel):
@@ -119,12 +119,51 @@ class TextBrick(_Doc):
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
-class CharacterEntry(_Doc):
-    """Fiche d'un personnage dans la BIBLE — l'identité RÉCURRENTE (v4).
+# -- Architecture 3 niveaux (v5) : Vidéo → Scène → Plan -----------------------
+# Sous-modèles PARTAGÉS par les niveaux (str défaut "" ; listes défaut []).
+# Le compilateur fusionne PLAN > SCÈNE > VIDÉO (cf. `compile_shot`).
 
-    Ce que fixe le casting/costume d'une prod : apparence physique, tenue par
-    défaut, voix, traits. Les plans la RÉFÉRENCENT (par `id`) et surchargent
-    localement. C'est le support des « trous » d'un futur template de série.
+
+class Lumiere(_Doc):
+    """Un état d'éclairage (base décor, ambiance scène, ou override plan)."""
+
+    sources: str = ""
+    direction: str = ""
+    qualite: str = ""       # douce / dure
+    temperature: str = ""   # chaude / froide / K
+    contraste: str = ""
+
+
+class Cadre(_Doc):
+    """Le cadrage d'une prise (niveau PLAN)."""
+
+    taille_plan: str = ""   # très large … très gros plan
+    focale: str = ""        # 24mm … 85mm+
+    angle_hauteur: str = ""  # hauteur d'œil / plongée / contre-plongée
+    mise_au_point: str = ""  # fixe / rack focus
+
+
+class Profondeur(_Doc):
+    """Les 3 plans de profondeur, tels que cadrés (niveau PLAN)."""
+
+    avant_plan: str = ""
+    plan_moyen: str = ""
+    arriere_plan: str = ""
+
+
+class Camera(_Doc):
+    """Le mouvement caméra d'une prise (niveau PLAN)."""
+
+    type: str = ""          # fixe / pano / travelling / orbite / zoom…
+    vitesse: str = ""
+    depart_arrivee: str = ""  # d'où part le cadre → où il finit
+
+
+class CharacterEntry(_Doc):
+    """Fiche d'un personnage dans la BIBLE (niveau VIDÉO) — identité RÉCURRENTE.
+
+    Définie UNE fois ; les plans la RÉFÉRENCENT (par `id`) et ne décrivent que
+    l'ACTION (jamais l'apparence). Support des « trous » d'un template de série.
     """
 
     id: Annotated[str, Field(min_length=1)]
@@ -135,29 +174,129 @@ class CharacterEntry(_Doc):
     traits: str = ""       # caractère / attitude
 
 
-class ShotCharacter(_Doc):
-    """Un personnage PRÉSENT dans un plan : référence bible + surcharges locales."""
+class LocationEntry(_Doc):
+    """Fiche d'un DÉCOR dans la BIBLE (niveau VIDÉO) — le lieu défini UNE fois.
 
-    ref: str = ""          # id d'une CharacterEntry ("" = perso ad hoc, hors bible)
-    name: str = ""         # nom d'affichage / si hors bible
-    wardrobe: str = ""     # surcharge de tenue pour CE plan
-    expression: str = ""   # expression / émotion dans le plan
-    action: str = ""       # ce que fait le personnage dans le plan
+    Une Scène ne CONTIENT pas un décor : elle le RÉFÉRENCE (`location_ref`) et le
+    fait varier (moment, météo…). Réutilisable d'une scène à l'autre → cohérence.
+    """
+
+    ref: Annotated[str, Field(min_length=1)]
+    lieu: str = ""
+    echelle: str = ""       # exigu / vaste
+    int_ext: str = ""       # int / ext
+    layout_spatial: str = ""  # ce qui est où (indépendant du cadrage)
+    palette: str = ""
+    matieres: str = ""
+    props_fixes: list[str] = Field(default_factory=list)
+    lumiere_base: Lumiere = Field(default_factory=Lumiere)
+
+
+class PersonnagePresent(_Doc):
+    """Un personnage PRÉSENT dans un plan : `ref` bible + son ACTION (jamais l'apparence)."""
+
+    ref: str = ""          # id d'une CharacterEntry ("" = ad hoc)
+    action: str = ""
+    trajectoire: str = ""
+    vitesse: str = ""
+    expression: str = ""
+    etat_debut: str = ""   # interpolation i2v : état initial…
+    etat_fin: str = ""     # …→ état final
+
+
+class ElementSecondaire(_Doc):
+    """Un élément animé secondaire (cheveux, enseigne, drapeau…)."""
+
+    quoi: str = ""
+    mouvement: str = ""
+    etat_debut: str = ""
+    etat_fin: str = ""
+
+
+class Physique(_Doc):
+    """Un phénomène physique/environnemental animé (vent, eau, feu, neige…)."""
+
+    element: str = ""
+    comportement: str = ""
+    intensite_direction: str = ""
+
+
+class LumiereTemps(_Doc):
+    """Un changement d'éclairage DANS la prise (ombre qui bouge, néon, jour→nuit)."""
+
+    ce_qui_change: str = ""
+    depart_arrivee: str = ""
+
+
+class Son(_Doc):
+    """Le son propre à la prise (niveau PLAN). `ambiance_override` "" = hérite du room tone scène."""
+
+    dialogue_voix: str = ""
+    bruitage_sfx: str = ""       # synchro aux actions du plan
+    perspective_mixage: str = ""
+    dynamique_silence: str = ""
+    ambiance_override: str = ""
+    transition_audio: str = ""
+
+
+class Segment(_Doc):
+    """Un beat de la mini-timeline interne d'une prise."""
+
+    debut_s: float = 0.0
+    fin_s: float = 0.0
+    image_camera: str = ""
+    action_sujet: str = ""
+    son: str = ""
+
+
+class Continuite(_Doc):
+    """Liaisons ACTIVES avec les plans voisins (l'arbre garantit le reste)."""
+
+    lien_precedent: str = ""
+    lien_suivant: str = ""
+
+
+class IntentionGlobale(_Doc):
+    """L'intention au niveau VIDÉO."""
+
+    genre: str = ""
+    ton: str = ""
+    arc_narratif: str = ""
+
+
+class RenderMeta(_Doc):
+    """Le « contenant » (niveau VIDÉO) — format/rendu, hérité par tout."""
+
+    ratio: str = "9:16"
+    fps: int = 0
+    resolution: str = ""
+    style_rendu: str = ""
+    grain_etalonnage: str = ""
+    epoque_defaut: str = ""
 
 
 class ShotBrief(_Doc):
-    """Les CHAMPS MÉTIER d'un plan visuel (v4), regroupés par le compilateur.
+    """Le PLAN (v5) : tout ce qui est PROPRE à la prise i2v — jamais hérité.
 
-    Remplace le prompt-blob : chaque département a son champ (déco, lumière,
-    cadrage, personnages). `compile_shot.compile_shot_prompt` les réunit en LE
-    prompt EN envoyé au modèle. `shot=None` sur une brique → chemin blob legacy.
+    Le décor, la lumière ambiante et le room tone viennent de la Scène (résolus au
+    build par `compile_shot`). Ici : la frame de départ, le cadre, la caméra,
+    l'action des persos présents (par `ref`), la physique, le son synchro, le rythme.
+    `shot=None` sur une brique → chemin blob legacy inchangé.
     """
 
-    decor: str = ""        # lieu, moment, ambiance, accessoires (EN)
-    lumiere: str = ""      # lumière (EN)
-    cadrage: str = ""      # taille de plan + angle (EN)
-    characters: list[ShotCharacter] = Field(default_factory=list)
-    extra: str = ""        # complément libre (EN)
+    start_image: str = ""   # note de composition de la frame de départ
+    cadre: Cadre = Field(default_factory=Cadre)
+    profondeur: Profondeur = Field(default_factory=Profondeur)
+    camera: Camera = Field(default_factory=Camera)
+    personnages_presents: list[PersonnagePresent] = Field(default_factory=list)
+    elements_secondaires: list[ElementSecondaire] = Field(default_factory=list)
+    physique_environnement: list[Physique] = Field(default_factory=list)
+    lumiere_override: Lumiere | None = None  # None = hérite de la scène
+    lumiere_temps: LumiereTemps = Field(default_factory=LumiereTemps)
+    son: Son = Field(default_factory=Son)
+    timeline: list[Segment] = Field(default_factory=list)
+    intention_plan: str = ""
+    continuite: Continuite = Field(default_factory=Continuite)
 
 
 class ClipBrick(_Doc):
@@ -226,6 +365,18 @@ class Scene(_Doc):
     context: NarrativeContext = Field(default_factory=NarrativeContext)
     environment_photo_ref: str = ""              # id de la brique PHOTO figée
     shot_ids: list[str] = Field(default_factory=list)  # refs ordonnées vers bricks
+    # v5 — la scène RÉFÉRENCE un décor (bible) et le fait VARIER. Ces champs sont
+    # HÉRITÉS par tous ses plans (le plan peut surcharger la lumière / le room tone).
+    location_ref: str = ""                       # → EditorDocument.location_bible
+    epoque_override: str = ""                     # "" = hérite de meta.epoque_defaut
+    saison: str = ""
+    moment_jour: str = ""
+    meteo: str = ""
+    lumiere_ambiante: Lumiere = Field(default_factory=Lumiere)
+    mood: str = ""
+    ambiance_sonore: str = ""                     # room tone continu (hérité)
+    musique_override: str = ""                    # "" = hérite de musique_score
+    intention_scene: str = ""
 
 
 class EditorDocument(_Doc):
@@ -239,6 +390,11 @@ class EditorDocument(_Doc):
     bricks: list[Brick] = Field(default_factory=list)
     scenes: list[Scene] = Field(default_factory=list)
     bible: list[CharacterEntry] = Field(default_factory=list)  # v4 : personnages récurrents
+    # v5 — niveau VIDÉO : le contenant + l'intention + les bibles réutilisables.
+    meta: RenderMeta = Field(default_factory=RenderMeta)
+    intention_globale: IntentionGlobale = Field(default_factory=IntentionGlobale)
+    musique_score: str = ""
+    location_bible: list[LocationEntry] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check(self) -> EditorDocument:
@@ -248,6 +404,9 @@ class EditorDocument(_Doc):
         bible_ids = [c.id for c in self.bible]
         if len(bible_ids) != len(set(bible_ids)):
             raise ValueError("ids de personnages dupliqués dans la bible")
+        loc_ids = [locn.ref for locn in self.location_bible]
+        if len(loc_ids) != len(set(loc_ids)):
+            raise ValueError("refs de décors dupliqués dans la location_bible")
         known = set(ids)
         for b in self.bricks:
             for layer in getattr(b, "layers", []):

@@ -66,10 +66,10 @@ def test_merge_pulls_each_field_from_its_owner():
                      scene_brief=_sb(), memory=RoomMemory()) for dept in DEPARTMENTS]
     res = merge_drafts(_sb(), contract, drafts)
     shot = res.scene.shots[0]
-    assert shot.framing == "wide shot"          # du chef op
-    assert "subway platform" in shot.decor      # du DA
-    assert shot.narration_fr                    # du dialoguiste
-    assert shot.characters[0].name == "Léa"     # du casting
+    assert shot.cadre.taille_plan == "wide shot"   # du chef op → cadre
+    assert "subway platform" in shot.start_image   # du DA → décor de la frame
+    assert shot.narration_fr                       # du dialoguiste
+    assert shot.personnages[0].name == "Léa"       # du casting
 
 
 # -- moteur : fan-out → merge, déterministe + scène prête ---------------------
@@ -119,7 +119,7 @@ def test_sequential_memory_accumulates_bible_once():
     from src.features.scenes.model import ScenePlan
 
     arc = [ScenePlan(id=f"s{i}", title=f"Scène {i}", environment_desc=f"lieu {i}",
-                     context_text=f"beat {i}") for i in (1, 2, 3)]
+                     intention_scene=f"beat {i}") for i in (1, 2, 3)]
     state = plan_room_state(arc)
     doc = EditorDocument(title="V")
     for _ in range(3):
