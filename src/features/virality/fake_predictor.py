@@ -23,10 +23,16 @@ _IDEAL_WORDS = 8   # longueur d'accroche « idéale » (au-delà, on perd du pun
 
 
 class FakeViralityPredictor:
-    """Implémente `ViralityPredictor` sans réseau (heuristique déterministe)."""
+    """Implémente `ViralityPredictor` sans réseau (heuristique déterministe).
+
+    `angle_weights` optionnel : les poids d'angle APPRIS des perfs réelles (le moat,
+    cf. `features/performance`) remplacent les défauts. Sans eux → défauts codés."""
+
+    def __init__(self, angle_weights: dict[str, float] | None = None) -> None:
+        self._weights = angle_weights if angle_weights else _ANGLE_WEIGHT
 
     def score(self, variant: HookVariant) -> ViralityScore:
-        base = _ANGLE_WEIGHT.get(variant.angle, 60.0)
+        base = self._weights.get(variant.angle, 60.0)
         words = len(variant.hook_text.split())
         concision = max(0.0, 10.0 - float(max(0, words - _IDEAL_WORDS)))
         hook_strength = min(100.0, base + concision)

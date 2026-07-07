@@ -57,6 +57,7 @@ from ...features.formats import (
     get_format,
     list_formats,
 )
+from ...features.publish import PublishError
 from ...features.scenes import SceneDecompositionError
 from ...features.virality import HookVariant, ViralityError, apply_hook_to_document
 from ..db.engine import get_engine, init_db
@@ -88,6 +89,7 @@ from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
 from .services.producer import producer_source, propose_brief
+from .services.publish import publish_video
 from .services.room import RoomState, build_next_scene, plan_room_state
 from .services.scenes import decomposer_source, generate_arc, generate_video_plan
 from .services.scripting import generate_script
@@ -383,6 +385,14 @@ class HookProposeIn(BaseModel):
     pitch: str
     n_variants: int = 3
     format: str | None = None         # override du format de l'épisode (optionnel)
+
+
+class PublishIn(BaseModel):
+    """Publier une vidéo rendue sur une plateforme (dernier maillon)."""
+
+    video_ref: str                    # chemin/URL du MP4 rendu
+    platform: str = "tiktok"
+    caption: str = ""
 
 
 class TemplateSlotIn(BaseModel):
@@ -1200,6 +1210,23 @@ def propose_episode_hooks(
         "variants": [s.model_dump() for s in ranked.variants],
         "source": virality_source(keys.openai),
     }
+
+
+@app.post("/api/episodes/{episode_id}/publish")
+def publish_episode_video(
+    episode_id: int, body: PublishIn,
+    session: Session = Depends(_session), user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Dernier maillon : poster le MP4 rendu sur la plateforme. Fake tant que l'API
+    plateforme n'a pas de credentials — l'impl réelle est un swap au bord."""
+    _require_owned_episode(session, user, episode_id)
+    try:
+        result = publish_video(
+            body.video_ref, platform=body.platform, caption=body.caption
+        )
+    except PublishError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return result.model_dump()
 
 
 # --- Table ronde : créer la vidéo SCÈNE PAR SCÈNE (agents en discussion) ------

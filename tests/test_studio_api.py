@@ -319,6 +319,22 @@ def test_shot_audit_route(client):
     assert body["n_flagged"] == 0 and body["issues"] == {}   # plans Fake ≤ 5 s
 
 
+def test_publish_route(client):
+    """Dernier maillon : publier le MP4 rendu (Fake, offline)."""
+    pid = client.post("/api/projects", json={"name": "pp"}).json()["id"]
+    eid = client.post("/api/episodes", json={"project_id": pid, "title": "e"}).json()["id"]
+    r = client.post(
+        f"/api/episodes/{eid}/publish",
+        json={"video_ref": "/exports/x.mp4", "platform": "reels", "caption": "hi"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["platform"] == "reels" and body["status"] == "published"
+    assert body["published_id"] and body["url"]
+    bad = client.post(f"/api/episodes/{eid}/publish", json={"video_ref": "  "})
+    assert bad.status_code == 400                  # rien à publier
+
+
 def test_generate_editor_document_clips_idempotent(client):
     """R1b : le document de briques se génère (image→motion→narration), idempotent."""
     from sqlmodel import Session as _S
