@@ -23,16 +23,16 @@ from ...editor.document import (
     EditorDocument,
     GenNode,
     NarrativeContext,
+    PersonnagePresent,
     Scene,
     ShotBrief,
-    ShotCharacter,
     TimelinePlacement,
 )
+from ..assets.models import IMAGE_MODEL as _IMAGE_MODEL
+from ..assets.models import VIDEO_MODEL as _VIDEO_MODEL
+from ..assets.models import VOICE_MODEL as _VOICE_MODEL
 from .model import CharacterPlan, ScenePlan, ShotPlan, VideoPlan
 
-_IMAGE_MODEL = "bytedance/seedream-4.5"
-_VIDEO_MODEL = "prunaai/p-video"
-_VOICE_MODEL = "minimax/speech-2.8-turbo"
 _DEFAULT_NARRATOR_VOICE = "Deep_Voice_Man"
 _ENV_PHOTO_DUR = 3.0
 
@@ -71,38 +71,33 @@ def _build_bible(plan: VideoPlan) -> tuple[list[CharacterEntry], dict[str, str]]
 
     for c in plan.cast:
         add(c.name, c.appearance, c.wardrobe, c.voice_id, c.traits)
-    # Personnages cités dans les plans mais absents du cast → fiche minimale.
+    # Personnages cités dans les plans mais absents du cast → fiche minimale (par nom).
     for sp in plan.scenes:
         for shot in sp.shots:
-            for sc in shot.characters:
-                add(sc.name, sc.appearance, sc.wardrobe, "", "")
+            for sc in shot.personnages:
+                add(sc.name, "", "", "", "")
     return entries, name_to_id
 
 
-def _shot_brief(shot: ShotPlan, name_to_id: dict[str, str]) -> ShotBrief | None:
-    """Champs métier d'un plan, ou None si l'IA n'a rien émis de structuré (→ blob)."""
+def _shot_brief(shot: ShotPlan, name_to_id: dict[str, str]) -> ShotBrief:
+    """Le PLAN v5 : copie les sous-blocs + résout les persos (name → ref bible)."""
     people = [
-        ShotCharacter(
+        PersonnagePresent(
             ref=name_to_id.get(sc.name.strip(), ""),
-            name=sc.name,
-            wardrobe=sc.wardrobe,
-            expression=sc.expression,
-            action=sc.action,
+            action=sc.action, trajectoire=sc.trajectoire, vitesse=sc.vitesse,
+            expression=sc.expression, etat_debut=sc.etat_debut, etat_fin=sc.etat_fin,
         )
-        for sc in shot.characters
+        for sc in shot.personnages
     ]
-    if not (shot.decor or shot.lighting or shot.framing or people):
-        return None
     return ShotBrief(
-        decor=shot.decor, lumiere=shot.lighting, cadrage=shot.framing, characters=people
+        start_image=shot.start_image, cadre=shot.cadre, profondeur=shot.profondeur,
+        camera=shot.camera, personnages_presents=people,
+        elements_secondaires=shot.elements_secondaires,
+        physique_environnement=shot.physique_environnement,
+        lumiere_override=shot.lumiere_override, lumiere_temps=shot.lumiere_temps,
+        son=shot.son, timeline=shot.timeline, intention_plan=shot.intention_plan,
+        continuite=shot.continuite,
     )
-
-
-def _env_brief(sp: ScenePlan) -> ShotBrief | None:
-    """Le décor de la photo d'environnement (décor-led, sans sujet)."""
-    if not (sp.environment_desc or sp.lighting):
-        return None
-    return ShotBrief(decor=sp.environment_desc, lumiere=sp.lighting)
 
 
 def _scene_bricks(
@@ -119,40 +114,44 @@ def _scene_bricks(
     builder complet ET l'ajout incrémental (table ronde)."""
     out: list[ClipBrick] = []
     env_id = f"{sp.id}_env"
+    # Photo d'établissement de la scène (blob : prompt = environment_desc, shot=None).
     out.append(
         ClipBrick(
             id=env_id, kind="photo",
             image=GenNode(model_ref=image_model, params={"prompt": sp.environment_desc}),
-            shot=_env_brief(sp), children=[], placement=place(env_photo_dur),
+            shot=None, children=[], placement=place(env_photo_dur),
         )
     )
     shot_ids = [env_id]
     env_ref = f"{{brick:{env_id}.image}}"
     for shot in sp.shots:
         children = narr_child(shot.id, shot.narration_fr)
-        brief = _shot_brief(shot, name_to_id)
+        brief = _shot_brief(shot, name_to_id)  # prompts image/motion compilés par recompile
         if shot.kind == "video":
             brick = ClipBrick(
                 id=shot.id, kind="video",
-                image=GenNode(model_ref=image_model, params={"prompt": shot.visual_desc}),
+                image=GenNode(model_ref=image_model, params={"prompt": ""}),
                 motion=GenNode(
                     model_ref=video_model,
-                    params={"prompt": shot.motion_desc, "duration": shot.duration_s, "image": env_ref},
+                    params={"prompt": "", "duration": shot.duree_s, "image": env_ref},
                 ),
-                shot=brief, children=children, placement=place(shot.duration_s),
+                shot=brief, children=children, placement=place(shot.duree_s),
             )
         else:
             brick = ClipBrick(
                 id=shot.id, kind="photo",
-                image=GenNode(model_ref=image_model, params={"prompt": shot.visual_desc}),
-                shot=brief, children=children, placement=place(shot.duration_s),
+                image=GenNode(model_ref=image_model, params={"prompt": ""}),
+                shot=brief, children=children, placement=place(shot.duree_s),
             )
         out.append(brick)
         shot_ids.append(shot.id)
     scene = Scene(
         id=sp.id, title=sp.title,
-        context=NarrativeContext(text=sp.context_text, art_direction=sp.art_direction),
+        context=NarrativeContext(text=sp.intention_scene),
         environment_photo_ref=env_id, shot_ids=shot_ids,
+        location_ref=sp.location_ref, saison=sp.saison, moment_jour=sp.moment_jour,
+        meteo=sp.meteo, lumiere_ambiante=sp.lumiere_ambiante, mood=sp.mood,
+        ambiance_sonore=sp.ambiance_sonore, intention_scene=sp.intention_scene,
     )
     return out, scene
 
@@ -200,17 +199,16 @@ def scene_plan_to_document(
         bricks.extend(clips)
         scenes.append(scene)
 
-    context = NarrativeContext(
-        text=plan.global_context,
-        characters=plan.characters,
-        art_direction=plan.art_direction,
-    )
     doc = EditorDocument(
         title=title or plan.title,
-        global_context=context,
+        global_context=NarrativeContext(text=plan.intention_globale.arc_narratif),
         bricks=cast("list[Brick]", bricks),
         scenes=scenes,
         bible=bible,
+        meta=plan.meta,
+        intention_globale=plan.intention_globale,
+        musique_score=plan.musique_score,
+        location_bible=plan.location_bible,
     )
     # Champs métier = source de vérité → compile le prompt des briques `shot`.
     recompile_document(doc)
@@ -252,9 +250,9 @@ def append_scene(
 
     for c in new_characters:
         _ensure(c.name, c.appearance, c.wardrobe, c.voice_id, c.traits)
-    for shot in sp.shots:  # persos cités dans les plans mais absents de la bible
-        for scp in shot.characters:
-            _ensure(scp.name, scp.appearance, scp.wardrobe, "", "")
+    for shot in sp.shots:  # persos cités dans les plans mais absents de la bible (par nom)
+        for scp in shot.personnages:
+            _ensure(scp.name, "", "", "", "")
 
     cursor = max(
         (b.placement.start + b.placement.duration

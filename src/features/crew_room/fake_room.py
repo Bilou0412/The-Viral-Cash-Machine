@@ -7,7 +7,7 @@ remplit SES trous). Déterministe → golden offline, sans réseau.
 from __future__ import annotations
 
 from ..brief.model import Brief
-from ..scenes.model import CharacterPlan, ShotCharacterPlan
+from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan
 from .model import ContractShot, Draft, RoomMemory, SceneBrief, SceneContract
 
 _HERO = CharacterPlan(
@@ -79,7 +79,7 @@ class FakeDrafter:
                 new_characters=[hero] if is_new else [],
                 shot_characters={
                     i: [ShotCharacterPlan(
-                        name=hero.name, appearance=hero.appearance, wardrobe=hero.wardrobe,
+                        name=hero.name,
                         expression=plays[k % len(plays)][0], action=plays[k % len(plays)][1],
                     )]
                     for k, i in enumerate(ids)
@@ -92,3 +92,29 @@ class FakeDrafter:
                 shots={i: {"narration": lines[k % len(lines)]} for k, i in enumerate(ids)},
             )
         return Draft(department=department)
+
+    def revise(
+        self,
+        *,
+        department: str,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> Draft:
+        """2e passe informée. Par défaut, le brouillon est inchangé (idempotent).
+        Exemple de cohérence croisée : le DIALOGUISTE voit qui le casting a placé
+        sur chaque plan et **nomme le personnage** dans la narration."""
+        base = self.fill(
+            department=department, contract=contract,
+            brief=brief, scene_brief=scene_brief, memory=memory,
+        )
+        if department != "dialoguiste":
+            return base
+        shots: dict[str, dict[str, str]] = {}
+        for sh in scene.shots:
+            line = base.shots.get(sh.id, {}).get("narration", "") or sh.narration_fr
+            who = sh.personnages[0].name if sh.personnages else ""
+            shots[sh.id] = {"narration": f"{who} — {line}" if who else line}
+        return Draft(department=department, shots=shots)

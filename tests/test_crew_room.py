@@ -1,4 +1,4 @@
-"""Lot G2 — l'atelier : contrat → brouillons parallèles → mise en commun (offline)."""
+"""L'atelier : contrat → brouillons parallèles → mise en commun → révision (offline)."""
 
 import pytest
 
@@ -66,10 +66,10 @@ def test_merge_pulls_each_field_from_its_owner():
                      scene_brief=_sb(), memory=RoomMemory()) for dept in DEPARTMENTS]
     res = merge_drafts(_sb(), contract, drafts)
     shot = res.scene.shots[0]
-    assert shot.framing == "wide shot"          # du chef op
-    assert "subway platform" in shot.decor      # du DA
-    assert shot.narration_fr                    # du dialoguiste
-    assert shot.characters[0].name == "Léa"     # du casting
+    assert shot.cadre.taille_plan == "wide shot"   # du chef op → cadre
+    assert "subway platform" in shot.start_image   # du DA → décor de la frame
+    assert shot.narration_fr                       # du dialoguiste
+    assert shot.personnages[0].name == "Léa"       # du casting
 
 
 # -- moteur : fan-out → merge, déterministe + scène prête ---------------------
@@ -81,20 +81,45 @@ def test_run_scene_room_deterministic_and_ready():
     r1 = run_scene_room(_brief(), _sb(), RoomMemory(), director=FakeContractAgent(), drafters=FakeDrafter())
     r2 = run_scene_room(_brief(), _sb(), RoomMemory(), director=FakeContractAgent(), drafters=FakeDrafter())
     assert r1.model_dump() == r2.model_dump()
-    # transcript = contrat (réalisateur) + 1 brouillon par département.
+    # transcript = contrat (réalisateur) + brouillon + révision, un tour/département.
     assert r1.transcript[0].role == "realisateur"
-    assert [t.role for t in r1.transcript[1:]] == list(DEPARTMENTS)
+    assert [t.role for t in r1.transcript[1:]] == list(DEPARTMENTS) * 2
     doc = scene_plan_to_document(VideoPlan(scenes=[r1.scene], cast=r1.new_characters))
     for b in doc.bricks:
         if isinstance(b, ClipBrick):
             assert validate_clip(b) == {}
 
 
+# -- tour de révision (2e passe informée) -------------------------------------
+
+def test_revision_names_character_in_narration():
+    kw = {"director": FakeContractAgent(), "drafters": FakeDrafter()}
+    blind = run_scene_room(_brief(), _sb(), RoomMemory(), revision_rounds=0, **kw)
+    revised = run_scene_room(_brief(), _sb(), RoomMemory(), **kw)  # défaut : 1 tour
+    # Sans révision, le dialoguiste écrit à l'aveugle (pas de perso nommé).
+    assert "Léa" not in blind.scene.shots[0].narration_fr
+    # Avec révision, il VOIT le perso placé par le casting et le nomme.
+    assert "Léa" in revised.scene.shots[0].narration_fr
+    # revision_rounds=0 ⇒ transcript passe unique (rétro-compat).
+    assert [t.role for t in blind.transcript[1:]] == list(DEPARTMENTS)
+
+
+def test_revise_only_touches_owned_fields():
+    contract = FakeContractAgent().define(brief=_brief(), scene_brief=_sb(), memory=RoomMemory())
+    first = [FakeDrafter().fill(department=d, contract=contract, brief=_brief(),
+                                scene_brief=_sb(), memory=RoomMemory()) for d in DEPARTMENTS]
+    scene = merge_drafts(_sb(), contract, first).scene
+    dia = FakeDrafter().revise(department="dialoguiste", scene=scene, contract=contract,
+                               brief=_brief(), scene_brief=_sb(), memory=RoomMemory())
+    assert all(set(v) == {"narration"} for v in dia.shots.values())  # narration seule
+    assert dia.env == {}
+
+
 def test_sequential_memory_accumulates_bible_once():
     from src.features.scenes.model import ScenePlan
 
     arc = [ScenePlan(id=f"s{i}", title=f"Scène {i}", environment_desc=f"lieu {i}",
-                     context_text=f"beat {i}") for i in (1, 2, 3)]
+                     intention_scene=f"beat {i}") for i in (1, 2, 3)]
     state = plan_room_state(arc)
     doc = EditorDocument(title="V")
     for _ in range(3):
@@ -145,3 +170,16 @@ def test_openai_drafter_parses_owned_fields():
         brief=_brief(), scene_brief=_sb(), memory=RoomMemory())
     assert d.env["decor"] == "platform"
     assert d.shots["s1_sh1"]["lighting"] == "cold"
+
+
+def test_openai_drafter_revise_parses_owned_fields():
+    from src.features.crew_room.model import ContractShot, SceneContract
+    from src.features.scenes.model import ScenePlan, ShotPlan
+
+    payload = '{"shots":{"s1_sh1":{"narration":"Léa hésite."}}}'
+    contract = SceneContract(shots=[ContractShot(id="s1_sh1", beat="hook")])
+    scene = ScenePlan(id="s1", title="T", shots=[ShotPlan(id="s1_sh1")])
+    d: Draft = OpenAIDrafter(_Stub(payload), "gpt-x").revise(
+        department="dialoguiste", scene=scene, contract=contract,
+        brief=_brief(), scene_brief=_sb(), memory=RoomMemory())
+    assert d.shots["s1_sh1"]["narration"] == "Léa hésite."

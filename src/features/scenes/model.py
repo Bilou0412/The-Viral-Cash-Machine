@@ -1,9 +1,10 @@
-"""Modèles de CONTENU du décrypteur de scènes (le plan de vidéo).
+"""Modèles de CONTENU du décrypteur de scènes (v5 — architecture 3 niveaux).
 
-Neutres (aucun CYOA/horreur) et distincts de l'index `editor.document.Scene` :
-ici c'est la sortie de l'IA (le contenu à générer), là-bas c'est le regroupement
-de briques. Convention langue : ``*_desc`` = anglais (prompt visuel),
-``*_fr`` = français (parlé).
+Sortie de l'IA, alignée sur les 3 conteneurs de l'éditeur (`VideoPlan → ScenePlan
+→ ShotPlan` ≙ `EditorDocument → Scene → ClipBrick`). On **réutilise les sous-modèles**
+de `editor.document` (Cadre, Camera, Lumiere…) ; seule différence : au niveau plan les
+personnages sont **par nom** (`ShotCharacterPlan`) — `scene_plan_to_document` résout
+name→ref bible en `PersonnagePresent`. Convention : ``*_desc`` EN, narration FR.
 """
 
 from __future__ import annotations
@@ -12,55 +13,81 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...editor.document import (
+    Cadre,
+    Camera,
+    Continuite,
+    ElementSecondaire,
+    IntentionGlobale,
+    LocationEntry,
+    Lumiere,
+    LumiereTemps,
+    Physique,
+    Profondeur,
+    RenderMeta,
+    Segment,
+    Son,
+)
+
 
 class _M(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
 class ShotCharacterPlan(_M):
-    """Un personnage présent dans un plan (v4) : identité + jeu du plan (EN)."""
+    """Un personnage présent dans un plan, PAR NOM (résolu en `ref` bible ensuite).
+    Ne porte que le JEU du plan — jamais l'apparence (héritée de la bible)."""
 
     name: str = ""
-    appearance: str = ""   # physique (repli si hors bible)
-    wardrobe: str = ""     # tenue pour CE plan
-    expression: str = ""
     action: str = ""
+    trajectoire: str = ""
+    vitesse: str = ""
+    expression: str = ""
+    etat_debut: str = ""
+    etat_fin: str = ""
 
 
 class ShotPlan(_M):
-    """Un plan court d'une scène (brique vidéo/photo).
-
-    v4 : champs métier séparés (`decor`/`lighting`/`framing`/`characters`).
-    `visual_desc` reste un repli (si l'IA n'émet pas les champs → prompt-blob).
-    """
+    """Un PLAN (1 prise i2v) : le brief v5 en version décomposeur (persos par nom)."""
 
     id: str
     kind: Literal["video", "photo"] = "video"
-    visual_desc: str = ""     # EN — repli : ce qu'on voit (prompt image / 1re frame)
-    motion_desc: str = ""     # EN — le mouvement (vidéo)
-    narration_fr: str = ""    # FR — narration du plan
-    duration_s: float = 4.0   # court (contexte concentré)
-    # v4 — champs métier (regroupés par `compile_shot_prompt`) :
-    decor: str = ""           # EN — lieu/moment/ambiance/accessoires
-    lighting: str = ""        # EN — lumière
-    framing: str = ""         # EN — taille de plan + angle
-    characters: list[ShotCharacterPlan] = Field(default_factory=list)
+    duree_s: float = 4.0
+    narration_fr: str = ""            # FR — → son.dialogue_voix + enfant audio
+    start_image: str = ""
+    cadre: Cadre = Field(default_factory=Cadre)
+    profondeur: Profondeur = Field(default_factory=Profondeur)
+    camera: Camera = Field(default_factory=Camera)
+    personnages: list[ShotCharacterPlan] = Field(default_factory=list)
+    elements_secondaires: list[ElementSecondaire] = Field(default_factory=list)
+    physique_environnement: list[Physique] = Field(default_factory=list)
+    lumiere_override: Lumiere | None = None
+    lumiere_temps: LumiereTemps = Field(default_factory=LumiereTemps)
+    son: Son = Field(default_factory=Son)
+    timeline: list[Segment] = Field(default_factory=list)
+    intention_plan: str = ""
+    continuite: Continuite = Field(default_factory=Continuite)
 
 
 class ScenePlan(_M):
-    """Une scène : contexte figé (photo d'environnement) + plans courts."""
+    """Une SCÈNE : référence un décor (`location_ref`) + variation + plans."""
 
     id: str
     title: str = ""
-    environment_desc: str = ""  # EN — la photo d'environnement (contexte figé)
-    lighting: str = ""          # EN — lumière de la scène (v4)
-    context_text: str = ""      # récit concentré de la scène (FR)
-    art_direction: str = ""
+    environment_desc: str = ""        # EN — prompt de la photo d'établissement
+    location_ref: str = ""
+    saison: str = ""
+    moment_jour: str = ""
+    meteo: str = ""
+    lumiere_ambiante: Lumiere = Field(default_factory=Lumiere)
+    mood: str = ""
+    ambiance_sonore: str = ""         # room tone hérité par les plans
+    intention_scene: str = ""
     shots: list[ShotPlan] = Field(default_factory=list)
 
 
 class CharacterPlan(_M):
-    """Une fiche de la bible (v4) : identité récurrente d'un personnage."""
+    """Fiche bible perso, PAR NOM (id assigné par `scene_plan_to_document`)."""
 
     name: str = ""
     appearance: str = ""
@@ -70,11 +97,17 @@ class CharacterPlan(_M):
 
 
 class VideoPlan(_M):
-    """La vidéo entière : une séquence de scènes (l'arc)."""
+    """La VIDÉO : contenant (méta) + intention + bibles réutilisables + scènes."""
 
     title: str = "Nouvelle vidéo"
-    global_context: str = ""
-    characters: dict[str, str] = Field(default_factory=dict)
-    cast: list[CharacterPlan] = Field(default_factory=list)  # v4 — la bible structurée
-    art_direction: str = ""
+    meta: RenderMeta = Field(default_factory=RenderMeta)
+    intention_globale: IntentionGlobale = Field(default_factory=IntentionGlobale)
+    musique_score: str = ""
+    location_bible: list[LocationEntry] = Field(default_factory=list)
+    cast: list[CharacterPlan] = Field(default_factory=list)   # bible perso (par nom)
     scenes: list[ScenePlan] = Field(default_factory=list)
+
+    # Compat : certains appelants lisent `.character_bible` (alias de `cast`).
+    @property
+    def character_bible(self) -> list[CharacterPlan]:
+        return self.cast

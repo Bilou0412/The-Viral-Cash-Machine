@@ -411,6 +411,17 @@ class AssetRepo:
         self.session.refresh(asset)
         return asset
 
+    def mark_failed(self, asset_id: int) -> Asset | None:
+        """Passe l'asset en `failed` (nœud non exécutable : dépendance/ref/inputs KO)."""
+        asset = self.get(asset_id)
+        if asset is None:
+            return None
+        asset.status = "failed"
+        self.session.add(asset)
+        self.session.commit()
+        self.session.refresh(asset)
+        return asset
+
     def delete(self, asset_id: int) -> bool:
         asset = self.get(asset_id)
         if asset is None:

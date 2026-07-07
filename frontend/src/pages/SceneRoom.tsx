@@ -69,7 +69,8 @@ export function SceneRoom() {
           </h1>
           <p className="text-sm text-muted-foreground">
             Le réalisateur pose la scène « à trous », chaque métier remplit ses trous, on met en
-            commun. Tu révises, puis on enchaîne — la mémoire (bible, continuité) avance.
+            commun, puis chacun voit l'ensemble et ajuste (révision). Tu révises, puis on enchaîne —
+            la mémoire (bible, continuité) avance.
           </p>
         </div>
         <Button asChild variant="outline">
@@ -129,8 +130,8 @@ export function SceneRoom() {
 
           {!current && !build.isPending && (
             <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Lance la 1re scène : le réalisateur pose le contrat, puis le DA, le chef op, le casting
-              et le dialoguiste remplissent chacun leurs trous.
+              Lance la 1re scène : le réalisateur pose le contrat, le DA, le chef op, le casting et le
+              dialoguiste remplissent chacun leurs trous, puis révisent en voyant l'ensemble.
             </div>
           )}
 
@@ -138,7 +139,7 @@ export function SceneRoom() {
             <>
               <section className="rounded-xl border border-border bg-card/40 p-4">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                  <MessagesSquare className="h-4 w-4 text-primary" /> Le contrat & les brouillons
+                  <MessagesSquare className="h-4 w-4 text-primary" /> Le contrat, les brouillons & la révision
                 </h2>
                 {transcript.isLoading ? (
                   <LoadingState />

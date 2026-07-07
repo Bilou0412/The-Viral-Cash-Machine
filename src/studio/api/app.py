@@ -1441,13 +1441,16 @@ def generate_editor_document(
     provider: AssetProvider | None = Depends(get_asset_provider),
     downloader: Any = Depends(get_downloader),
 ) -> dict[str, Any]:
-    _require_owned_doc(session, user, doc_id)
+    row = _require_owned_doc(session, user, doc_id)
     keys = secrets.get_user_keys(engine, _uid(user))
     if provider is None and not keys.replicate:
         raise HTTPException(409, "ajoute tes clés Replicate dans Réglages pour générer")
+    # Qualité/coût brouillon = celui de l'épisode (défaut prudent : draft si non lié).
+    episode = EpisodeRepo(session).get(row.episode_id) if row.episode_id else None
+    draft = episode.draft_mode if episode is not None else True
     service = EditorGenerationService(
         engine, provider=provider, downloader=downloader,
-        replicate_token=keys.replicate,
+        replicate_token=keys.replicate, draft=draft,
     )
     background.add_task(service.generate_document, doc_id)
     return {"id": doc_id, "status": "scheduled"}

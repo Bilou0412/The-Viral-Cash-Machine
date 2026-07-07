@@ -11,12 +11,13 @@ they are NOT a contract with the provider, only a planning aid for the cost HUD.
 
 from dataclasses import dataclass
 
+from ....features.assets.models import IMAGE_MODEL, VIDEO_MODEL, VOICE_MODEL
 from . import price_table
 
-# Replicate model identifiers (kept in sync with features/assets/replicate_provider).
-MODEL_IMAGE = "bytedance/seedream-4.5"
-MODEL_VIDEO = "prunaai/p-video"
-MODEL_VOICE = "minimax/speech-2.8-turbo"
+# Slugs Replicate — source unique de vérité dans features/assets/models.py.
+MODEL_IMAGE = IMAGE_MODEL
+MODEL_VIDEO = VIDEO_MODEL
+MODEL_VOICE = VOICE_MODEL
 
 # Default motion duration per video beat (seconds). Mirrors Pipeline.generate_assets.
 BEAT_VIDEO_SECONDS = price_table.beat_video_seconds()

@@ -16,6 +16,7 @@ from typing import Protocol
 
 from ..brief.model import Brief
 from ..crew.ports import CrewAgentError
+from ..scenes.model import ScenePlan
 from .model import Draft, RoomMemory, SceneBrief, SceneContract
 
 __all__ = ["DEPARTMENTS", "ContractAgent", "CrewAgentError", "Drafter", "field_owner"]
@@ -55,7 +56,8 @@ class ContractAgent(Protocol):
 
 
 class Drafter(Protocol):
-    """Un département : remplit SON brouillon (ses champs) sur le contrat."""
+    """Un département : remplit SON brouillon (ses champs), à l'aveugle (`fill`)
+    puis, en voyant la scène assemblée, ajuste ses champs pour la cohérence (`revise`)."""
 
     def fill(
         self,
@@ -66,4 +68,18 @@ class Drafter(Protocol):
         scene_brief: SceneBrief,
         memory: RoomMemory,
     ) -> Draft:
+        ...
+
+    def revise(
+        self,
+        *,
+        department: str,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> Draft:
+        """2e passe : le département voit la scène ASSEMBLÉE (tous les champs) et
+        ré-remplit SON brouillon pour la cohérence croisée. Mêmes champs que `fill`."""
         ...

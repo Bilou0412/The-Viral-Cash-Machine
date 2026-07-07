@@ -316,25 +316,46 @@ export interface AudioChild {
   params: Record<string, unknown>
 }
 
-// v4 — champs métier d'un plan (décor/lumière/cadrage/personnages), regroupés
-// côté backend en le prompt final. `shot` absent → prompt-blob legacy.
-export interface ShotCharacter {
-  ref: string          // id d'une CharacterEntry ("" = hors bible)
-  name: string
-  wardrobe: string
-  expression: string
-  action: string
+// v5 — descripteur 3 niveaux (Vidéo → Scène → Plan). Le `shot` = le PLAN ; le
+// décor/lumière ambiante viennent de la Scène (résolus au build backend). `shot`
+// absent → prompt-blob legacy.
+export interface Lumiere {
+  sources: string; direction: string; qualite: string; temperature: string; contraste: string
 }
+export interface Cadre { taille_plan: string; focale: string; angle_hauteur: string; mise_au_point: string }
+export interface Profondeur { avant_plan: string; plan_moyen: string; arriere_plan: string }
+export interface Camera { type: string; vitesse: string; depart_arrivee: string }
+export interface PersonnagePresent {
+  ref: string; action: string; trajectoire: string; vitesse: string
+  expression: string; etat_debut: string; etat_fin: string
+}
+export interface ElementSecondaire { quoi: string; mouvement: string; etat_debut: string; etat_fin: string }
+export interface Physique { element: string; comportement: string; intensite_direction: string }
+export interface LumiereTemps { ce_qui_change: string; depart_arrivee: string }
+export interface Son {
+  dialogue_voix: string; bruitage_sfx: string; perspective_mixage: string
+  dynamique_silence: string; ambiance_override: string; transition_audio: string
+}
+export interface Segment { debut_s: number; fin_s: number; image_camera: string; action_sujet: string; son: string }
+export interface Continuite { lien_precedent: string; lien_suivant: string }
 
 export interface ShotBrief {
-  decor: string
-  lumiere: string
-  cadrage: string
-  characters: ShotCharacter[]
-  extra: string
+  start_image: string
+  cadre: Cadre
+  profondeur: Profondeur
+  camera: Camera
+  personnages_presents: PersonnagePresent[]
+  elements_secondaires: ElementSecondaire[]
+  physique_environnement: Physique[]
+  lumiere_override?: Lumiere | null
+  lumiere_temps: LumiereTemps
+  son: Son
+  timeline: Segment[]
+  intention_plan: string
+  continuite: Continuite
 }
 
-// Fiche de la BIBLE (identité récurrente d'un personnage).
+// Fiche de la BIBLE perso (identité récurrente).
 export interface CharacterEntry {
   id: string
   name: string
@@ -342,6 +363,19 @@ export interface CharacterEntry {
   wardrobe: string
   voice_id: string
   traits: string
+}
+
+// Fiche de la BIBLE décor (le lieu défini une fois, référencé par les scènes).
+export interface LocationEntry {
+  ref: string
+  lieu: string
+  echelle: string
+  int_ext: string
+  layout_spatial: string
+  palette: string
+  matieres: string
+  props_fixes: string[]
+  lumiere_base: Lumiere
 }
 
 export interface ClipBrick {
@@ -370,7 +404,24 @@ export interface Scene {
   context: GlobalContext
   environment_photo_ref: string
   shot_ids: string[]
+  // v5 — la scène référence un décor (bible) et le fait varier (hérité par ses plans).
+  location_ref?: string
+  epoque_override?: string
+  saison?: string
+  moment_jour?: string
+  meteo?: string
+  lumiere_ambiante?: Lumiere
+  mood?: string
+  ambiance_sonore?: string
+  musique_override?: string
+  intention_scene?: string
 }
+
+export interface RenderMeta {
+  ratio: string; fps: number; resolution: string
+  style_rendu: string; grain_etalonnage: string; epoque_defaut: string
+}
+export interface IntentionGlobale { genre: string; ton: string; arc_narratif: string }
 
 export interface EditorDoc {
   schema_version: number
@@ -381,6 +432,11 @@ export interface EditorDoc {
   bricks: Brick[]
   scenes?: Scene[]
   bible?: CharacterEntry[]
+  // v5 — niveau VIDÉO.
+  meta?: RenderMeta
+  intention_globale?: IntentionGlobale
+  musique_score?: string
+  location_bible?: LocationEntry[]
 }
 
 export interface EditorDocument {

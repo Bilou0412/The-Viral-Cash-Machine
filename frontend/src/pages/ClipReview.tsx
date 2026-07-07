@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { PhaseKey } from "@/lib/crew"
-import type { AudioChild, ClipBrick, EditorDoc, GenNode, ShotBrief, ShotCharacter } from "@/lib/types"
+import type { AudioChild, ClipBrick, EditorDoc, GenNode } from "@/lib/types"
 import { isClipBrick } from "@/lib/types"
 
 const SAVE_DEBOUNCE_MS = 600
@@ -377,15 +377,8 @@ export function ClipReview() {
       children: c.children.map((ch) => (ch.id === childId ? { ...ch, params } : ch)),
     }))
 
-  // v4 — édition des CHAMPS MÉTIER (le backend recompile le prompt à la sauvegarde).
-  const setShot = (patch: Partial<ShotBrief>) =>
-    selClip?.shot &&
-    updateClip(selClip.id, (c) => ({ ...c, shot: { ...(c.shot as ShotBrief), ...patch } }))
-  const setShotChar = (idx: number, patch: Partial<ShotCharacter>) =>
-    selClip?.shot &&
-    setShot({
-      characters: selClip.shot.characters.map((ch, i) => (i === idx ? { ...ch, ...patch } : ch)),
-    })
+  // v5 — le descripteur (shot) est en lecture ici ; l'édition détaillée des blocs
+  // arrive en lot suivant. Le backend recompile le prompt à la sauvegarde.
   const bibleName = (ref: string) =>
     (draft?.bible ?? []).find((c) => c.id === ref)?.name ?? ""
 
@@ -597,56 +590,26 @@ export function ClipReview() {
                     title={selClip.kind === "video" ? "Plan vidéo" : "Photo"}
                   >
                     {selClip.shot ? (
-                      <div className="space-y-3">
-                        <PromptField
-                          label="Décor (EN)"
-                          hint="Lieu, moment, ambiance, accessoires."
-                          value={selClip.shot.decor}
-                          onChange={(v) => setShot({ decor: v })}
-                          rows={2}
-                        />
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <PromptField
-                            label="Lumière (EN)"
-                            value={selClip.shot.lumiere}
-                            onChange={(v) => setShot({ lumiere: v })}
-                            rows={1}
-                          />
-                          <PromptField
-                            label="Cadrage (EN)"
-                            hint="Taille de plan + angle."
-                            value={selClip.shot.cadrage}
-                            onChange={(v) => setShot({ cadrage: v })}
-                            rows={1}
-                          />
+                      <div className="space-y-2 text-xs">
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div><span className="text-muted-foreground">Cadre : </span>{selClip.shot.cadre.taille_plan || "—"}</div>
+                          <div><span className="text-muted-foreground">Caméra : </span>{selClip.shot.camera.type || "—"}</div>
                         </div>
-                        {selClip.shot.characters.length > 0 && (
-                          <div className="space-y-2">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Personnages
-                            </label>
-                            {selClip.shot.characters.map((ch, i) => (
-                              <div key={i} className="rounded-md border border-border/60 p-2 space-y-2">
-                                <p className="text-xs font-medium">
-                                  {bibleName(ch.ref) || ch.name || "Personnage"}
-                                  {ch.ref && <span className="text-muted-foreground"> · bible</span>}
-                                </p>
-                                <div className="grid gap-2 sm:grid-cols-3">
-                                  <PromptField label="Tenue (EN)" value={ch.wardrobe} onChange={(v) => setShotChar(i, { wardrobe: v })} rows={1} />
-                                  <PromptField label="Expression (EN)" value={ch.expression} onChange={(v) => setShotChar(i, { expression: v })} rows={1} />
-                                  <PromptField label="Action (EN)" value={ch.action} onChange={(v) => setShotChar(i, { action: v })} rows={1} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                        {selClip.shot.personnages_presents.length > 0 && (
+                          <p>
+                            <span className="text-muted-foreground">Personnages : </span>
+                            {selClip.shot.personnages_presents.map((p) => bibleName(p.ref) || p.ref || "?").join(", ")}
+                          </p>
                         )}
+                        <p className="text-[11px] italic text-muted-foreground">
+                          Descripteur 3 niveaux (Vidéo → Scène → Plan) — édition détaillée des blocs à venir. Le
+                          prompt ci-dessous est compilé automatiquement (décor hérité de la scène + ce plan).
+                        </p>
                         <div className="rounded-md bg-muted/40 p-2">
                           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                            Prompt compilé (auto, mis à jour à la sauvegarde)
+                            Prompt image compilé
                           </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {promptOf(selClip.image) || "—"}
-                          </p>
+                          <p className="mt-1 text-muted-foreground">{promptOf(selClip.image) || "—"}</p>
                         </div>
                       </div>
                     ) : (

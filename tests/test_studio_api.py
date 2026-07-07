@@ -802,7 +802,7 @@ def test_scene_room_plan_then_build_sequentially(client):
 
 
 def test_save_recompiles_shot_prompt(client):
-    """PUT d'un doc : éditer un champ métier (`shot.decor`) recompile le prompt visuel."""
+    """PUT d'un doc : éditer un champ métier (`shot.cadre`) recompile le prompt visuel."""
     pid = client.post("/api/projects", json={"name": "f1"}).json()["id"]
     ep = client.post("/api/episodes", json={"project_id": pid, "title": "V"}).json()
     doc = client.post(
@@ -810,14 +810,14 @@ def test_save_recompiles_shot_prompt(client):
     ).json()
     did = doc["id"]
     full = client.get(f"/api/editor/documents/{did}").json()["doc"]
-    # Trouve une brique portant des champs métier (shot) et édite son décor.
+    # Trouve une brique portant un plan (shot) et édite son cadre.
     clip = next(b for b in full["bricks"] if b.get("type") == "clip" and b.get("shot"))
-    clip["shot"]["decor"] = "a neon-lit rooftop"
+    clip["shot"]["cadre"]["taille_plan"] = "extreme close-up"
     r = client.put(f"/api/editor/documents/{did}", json={"doc": full})
     assert r.status_code == 200, r.text
     saved = next(b for b in r.json()["doc"]["bricks"] if b["id"] == clip["id"])
-    # Le prompt visuel compilé reflète le nouveau décor (recompilé côté serveur).
-    assert "neon-lit rooftop" in saved["image"]["params"]["prompt"]
+    # Le prompt visuel compilé reflète le nouveau cadre (recompilé côté serveur).
+    assert "extreme close-up" in saved["image"]["params"]["prompt"]
 
 
 def test_direct_dialogue_rewrites_and_persists(client):

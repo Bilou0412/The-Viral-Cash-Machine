@@ -22,6 +22,7 @@ Limites B1 (explicites, levées en cas d'usage) :
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from ..videospec.models import (
@@ -40,7 +41,15 @@ from ..videospec.models import (
 from ._fields import field_value
 from .document import AudioChild, ClipBrick, EditorDocument, GenNode
 
-_DEFAULT_VIDEO_DURATION = 7.0
+logger = logging.getLogger(__name__)
+
+# Chemin d'ERREUR : atteint uniquement si un clip vidéo arrive SANS durée (ni motion
+# ni placement) = donnée corrompue. Volontairement DISTINCT de l'horizon de cohérence
+# (`assets.models.max_coherent_duration_s`) : dériver le fallback de l'horizon ferait
+# passer la corruption pour un plan valide de 5 s. Ici il doit CRIER (log), pas se
+# fondre. `validate_shot_duration` au préflight empêche normalement d'y arriver — mais
+# les deux sont des co-défenses INDÉPENDANTES (ce chemin n'est pas garanti préflighté).
+_MISSING_VIDEO_DURATION = 7.0
 
 
 def _prompt(node: GenNode, kind: str) -> str:
@@ -84,7 +93,15 @@ def _video_asset(clip: ClipBrick, image_id: str, audio_id: str | None) -> VideoA
     params = motion.params
     duration = field_value(params, "video", "duration")
     if isinstance(duration, bool) or not isinstance(duration, (int, float)) or duration <= 0:
-        duration = clip.placement.duration if clip.placement.duration > 0 else _DEFAULT_VIDEO_DURATION
+        if clip.placement.duration > 0:
+            duration = clip.placement.duration
+        else:
+            logger.warning(
+                "clip '%s' : durée vidéo MANQUANTE (motion+placement absents) → fallback "
+                "%.1fs. Donnée corrompue : validate_shot_duration aurait dû la signaler.",
+                clip.id, _MISSING_VIDEO_DURATION,
+            )
+            duration = _MISSING_VIDEO_DURATION
     kwargs: dict[str, Any] = {
         "id": f"{clip.id}__vid",
         "prompt": _prompt(motion, "video") or _prompt(clip.image, "image"),

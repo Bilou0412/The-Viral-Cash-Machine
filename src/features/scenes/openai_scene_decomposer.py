@@ -10,17 +10,53 @@ Convention langue : ``*_desc`` = anglais (prompt visuel) ; narration = français
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, BeforeValidator, ConfigDict, ValidationError
 
-from .model import ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
+from ...editor.document import (
+    Cadre,
+    Camera,
+    ElementSecondaire,
+    IntentionGlobale,
+    LocationEntry,
+    Lumiere,
+    LumiereTemps,
+    Physique,
+    Profondeur,
+    RenderMeta,
+    Son,
+)
+from ..assets.models import VIDEO_MODEL, max_coherent_duration_s
+from .model import CharacterPlan, ScenePlan, ShotCharacterPlan, ShotPlan, VideoPlan
 from .ports import DEFAULT_SCENES, SceneDecompositionError
 
 if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
     from openai import OpenAI
 
 _MAX_SHOTS = 4
+# Borne de PARAMÈTRE de l'API vidéo (p-video : 1..20 s) — garde-fou anti valeur
+# absurde, PAS l'horizon de cohérence. Un plan > horizon PASSE ici (il sera flaggé
+# `over_horizon` par `validate_shot_duration` → signal de split) ; il n'est JAMAIS
+# raboté en silence à l'horizon (ça réintroduirait la dilution par l'autre bout).
+_PARAM_MIN_S = 1.0
+_PARAM_MAX_S = 20.0
+
+
+def _sane_duration(v: float) -> float:
+    """Borne une durée LLM aux limites du CHAMP API (anti-absurde), pas à l'horizon."""
+    return min(_PARAM_MAX_S, max(_PARAM_MIN_S, v))
+
+
+def _to_str(v: object) -> object:
+    """Le LLM renvoie parfois une liste là où on attend une chaîne (traits, matières…)."""
+    if isinstance(v, (list, tuple)):
+        return ", ".join(str(x) for x in v)
+    return v
+
+
+# Chaîne tolérante : accepte aussi une liste (jointe) — robustesse au JSON du LLM.
+LooseStr = Annotated[str, BeforeValidator(_to_str)]
 
 # Libellés pilotés par le Brief (défauts = comportement historique).
 _PLATFORM_LABELS = {
@@ -40,50 +76,177 @@ def _lang_label(language: str) -> str:
     return _LANG_LABELS.get(language, language.upper() or "FRENCH")
 
 
-class _SceneSk(BaseModel):
+# -- modèles de PARSE (lenient : le LLM peut ajouter des clés) ----------------
+# Mirroir des sous-modèles v5 ; mappés vers les modèles stricts ensuite.
+
+class _Lenient(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    id: str = ""
-    title: str = ""
-    environment_desc: str = ""
-    intention: str = ""
 
 
-class _ScenesOut(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+class _LumOut(_Lenient):
+    sources: LooseStr = ""
+    direction: LooseStr = ""
+    qualite: LooseStr = ""
+    temperature: LooseStr = ""
+    contraste: LooseStr = ""
+
+
+class _LocOut(_Lenient):
+    lieu: LooseStr = ""
+    echelle: LooseStr = ""
+    int_ext: LooseStr = ""
+    layout_spatial: LooseStr = ""
+    palette: LooseStr = ""
+    matieres: LooseStr = ""
+    props_fixes: list[str] = []
+    lumiere_base: _LumOut = _LumOut()
+
+
+class _SceneSk(_Lenient):
+    id: LooseStr = ""
+    title: LooseStr = ""
+    environment_desc: LooseStr = ""       # prompt de la photo d'établissement (EN)
+    intention: LooseStr = ""
+    location: _LocOut = _LocOut()    # le décor structuré (bible)
+    saison: LooseStr = ""
+    moment_jour: LooseStr = ""
+    meteo: LooseStr = ""
+    lumiere_ambiante: _LumOut = _LumOut()
+    mood: LooseStr = ""
+    ambiance_sonore: LooseStr = ""
+
+
+class _CharBibleOut(_Lenient):
+    name: LooseStr = ""
+    appearance: LooseStr = ""
+    wardrobe: LooseStr = ""
+    voice_id: LooseStr = ""
+    traits: LooseStr = ""
+
+
+class _ScenesOut(_Lenient):
     scenes: list[_SceneSk] = []
+    characters: list[_CharBibleOut] = []   # la bible perso (identités récurrentes)
+    musique_score: LooseStr = ""
+    genre: LooseStr = ""
+    ton: LooseStr = ""
 
 
-class _ShotCharOut(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    name: str = ""
-    appearance: str = ""
-    wardrobe: str = ""
-    expression: str = ""
-    action: str = ""
+class _CadreOut(_Lenient):
+    taille_plan: LooseStr = ""
+    focale: LooseStr = ""
+    angle_hauteur: LooseStr = ""
+    mise_au_point: LooseStr = ""
 
 
-class _ShotOut(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = ""
+class _CamOut(_Lenient):
+    type: LooseStr = ""
+    vitesse: LooseStr = ""
+    depart_arrivee: LooseStr = ""
+
+
+class _PersOut(_Lenient):
+    name: LooseStr = ""
+    action: LooseStr = ""
+    trajectoire: LooseStr = ""
+    vitesse: LooseStr = ""
+    expression: LooseStr = ""
+    etat_debut: LooseStr = ""
+    etat_fin: LooseStr = ""
+
+
+class _ElemOut(_Lenient):
+    quoi: LooseStr = ""
+    mouvement: LooseStr = ""
+    etat_debut: LooseStr = ""
+    etat_fin: LooseStr = ""
+
+
+class _PhysOut(_Lenient):
+    element: LooseStr = ""
+    comportement: LooseStr = ""
+    intensite_direction: LooseStr = ""
+
+
+class _LtOut(_Lenient):
+    ce_qui_change: LooseStr = ""
+    depart_arrivee: LooseStr = ""
+
+
+class _SonOut(_Lenient):
+    dialogue_voix: LooseStr = ""
+    bruitage_sfx: LooseStr = ""
+
+
+class _ShotOut(_Lenient):
+    id: LooseStr = ""
     kind: str = "video"
-    visual_desc: str = ""
-    motion_desc: str = ""
-    narration_fr: str = ""
+    narration_fr: LooseStr = ""
     duration_s: float = 4.0
-    # v4 — champs métier séparés (regroupés par `compile_shot_prompt`) :
-    decor: str = ""
-    lighting: str = ""
-    framing: str = ""
-    characters: list[_ShotCharOut] = []
+    start_image: LooseStr = ""
+    intention_plan: LooseStr = ""
+    cadre: _CadreOut = _CadreOut()
+    profondeur: dict[str, str] = {}
+    camera: _CamOut = _CamOut()
+    personnages: list[_PersOut] = []
+    elements_secondaires: list[_ElemOut] = []
+    physique_environnement: list[_PhysOut] = []
+    lumiere_temps: _LtOut = _LtOut()
+    son: _SonOut = _SonOut()
 
 
-class _ShotsOut(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+class _ShotsOut(_Lenient):
     shots: list[_ShotOut] = []
 
 
 def _kind_of(raw: str) -> Literal["video", "photo"]:
     return "photo" if raw.strip().lower() == "photo" else "video"
+
+
+def _lum(o: _LumOut) -> Lumiere:
+    return Lumiere(sources=o.sources, direction=o.direction, qualite=o.qualite,
+                   temperature=o.temperature, contraste=o.contraste)
+
+
+def _shot_of(s: _ShotOut, fallback_id: str) -> ShotPlan:
+    """Mappe un plan parsé (lenient) → `ShotPlan` (sous-modèles v5 stricts)."""
+    prof = s.profondeur or {}
+    return ShotPlan(
+        id=s.id or fallback_id, kind=_kind_of(s.kind),
+        duree_s=_sane_duration(s.duration_s or 4.0),   # borne API only ; horizon → validate_shot_duration
+        narration_fr=s.narration_fr or s.son.dialogue_voix,
+        start_image=s.start_image,
+        cadre=Cadre(taille_plan=s.cadre.taille_plan, focale=s.cadre.focale,
+                    angle_hauteur=s.cadre.angle_hauteur, mise_au_point=s.cadre.mise_au_point),
+        profondeur=Profondeur(avant_plan=prof.get("avant_plan", ""),
+                              plan_moyen=prof.get("plan_moyen", ""),
+                              arriere_plan=prof.get("arriere_plan", "")),
+        camera=Camera(type=s.camera.type, vitesse=s.camera.vitesse,
+                      depart_arrivee=s.camera.depart_arrivee),
+        personnages=[ShotCharacterPlan(name=p.name, action=p.action, trajectoire=p.trajectoire,
+                     vitesse=p.vitesse, expression=p.expression,
+                     etat_debut=p.etat_debut, etat_fin=p.etat_fin) for p in s.personnages],
+        elements_secondaires=[ElementSecondaire(quoi=e.quoi, mouvement=e.mouvement,
+                              etat_debut=e.etat_debut, etat_fin=e.etat_fin)
+                              for e in s.elements_secondaires],
+        physique_environnement=[Physique(element=p.element, comportement=p.comportement,
+                                intensite_direction=p.intensite_direction)
+                                for p in s.physique_environnement],
+        lumiere_temps=LumiereTemps(ce_qui_change=s.lumiere_temps.ce_qui_change,
+                                   depart_arrivee=s.lumiere_temps.depart_arrivee),
+        son=Son(dialogue_voix=s.son.dialogue_voix, bruitage_sfx=s.son.bruitage_sfx),
+        intention_plan=s.intention_plan,
+    )
+
+
+def _location_of(sk: _SceneSk, ref: str) -> LocationEntry:
+    """Le décor structuré d'une scène → une fiche `LocationEntry` (bible décor)."""
+    lo = sk.location
+    return LocationEntry(
+        ref=ref, lieu=lo.lieu or sk.environment_desc, echelle=lo.echelle, int_ext=lo.int_ext,
+        layout_spatial=lo.layout_spatial, palette=lo.palette, matieres=lo.matieres,
+        props_fixes=lo.props_fixes, lumiere_base=_lum(lo.lumiere_base),
+    )
 
 
 class OpenAISceneDecomposer:
@@ -103,8 +266,12 @@ class OpenAISceneDecomposer:
                     {"role": "user", "content": user},
                 ],
             )
-        except Exception as e:  # erreur réseau / API
-            raise ValueError(f"Scene decomposition request failed: {e}") from e
+        except Exception as e:  # erreur réseau / API (clé invalide, modèle inconnu, quotas…)
+            raise SceneDecompositionError(
+                "L'appel au décrypteur OpenAI a échoué "
+                "(vérifie ta clé, le modèle OPENAI_MODEL et tes quotas). "
+                f"Détail : {e}"
+            ) from e
         content: str = resp.choices[0].message.content or ""
         return content
 
@@ -116,35 +283,45 @@ class OpenAISceneDecomposer:
         *,
         platform: str,
         language: str,
-    ) -> list[_SceneSk]:
-        """MACRO : l'arc en `n_scenes` scènes (une par contexte concentré)."""
+    ) -> _ScenesOut:
+        """MACRO : l'arc (scènes + DÉCOR structuré + variation) + la bible perso."""
         lang = _lang_label(language)
         system = (
             f"You are a short-form vertical (9:16) video director for {_platform_label(platform)}. "
-            "Plan a video as an ORDERED list of SCENES forming a tight arc: HOOK (grab in "
-            "the first seconds), BUILD (raise tension/curiosity), PAYOFF (a beat that lands). "
-            "A SCENE is ONE concentrated context — a single location and moment that must "
-            "NOT dilute: everything in it shares the same place and mood.\n"
-            f'Return JSON {{"scenes": [...]}} with EXACTLY {n_scenes} scenes, each with:\n'
-            '- "id": short slug;\n'
-            f'- "title": short {lang} label;\n'
-            '- "environment_desc": ENGLISH (image models expect English), regardless of '
-            "narration language. The establishing PHOTO of the setting — a still "
-            "image prompt. Concrete and vivid: location, time of day, lighting, mood, "
-            "textures. NO camera movement (it is a photo), NO on-screen text, NO watermark;\n"
-            '- "intention": what happens in this scene and why it matters to the arc '
-            "(distinct per scene).\n"
-            f"Name any character with a {lang} first name (never 'Character A'). "
-            "Output JSON only."
+            "Plan a video as an ORDERED list of SCENES forming a tight arc: HOOK, BUILD, PAYOFF. "
+            "A SCENE is ONE concentrated context — a single LOCATION and moment. Reusable ASSETS "
+            "(locations, characters) are defined ONCE and referenced.\n"
+            "Return JSON (ENGLISH for all visual fields, image models expect English):\n"
+            f'{{"genre","ton","musique_score",'
+            '"characters":[{"name"(FRENCH first name),"appearance"(physical, EN),"wardrobe"(EN),'
+            '"voice_id","traits"}],'
+            f'"scenes":[  // EXACTLY {n_scenes}\n'
+            '  {"id","title"(' + lang + '),'
+            '"environment_desc"(EN still-photo prompt of the empty set: place, textures, mood; NO text/watermark),'
+            '"intention"(what happens & why it matters, ' + lang + '),'
+            '"location":{"lieu","echelle","int_ext","layout_spatial"(what is where, framing-independent),'
+            '"palette","matieres","props_fixes":[...],'
+            '"lumiere_base":{"sources","direction","qualite","temperature","contraste"}},'
+            '"saison","moment_jour","meteo","mood","ambiance_sonore"(room tone),'
+            '"lumiere_ambiante":{"sources","direction","qualite","temperature","contraste"}}'
+            "]}\n"
+            "Two scenes in the SAME place must reuse the SAME location description. "
+            "A character keeps the SAME appearance across scenes.\n"
+            "LANGUAGE — every VISUAL field MUST be ENGLISH: lieu, echelle, int_ext, "
+            "layout_spatial, palette, matieres, props_fixes, saison, moment_jour, meteo, "
+            "mood, ambiance_sonore and all lumiere_* fields. Use short plain words "
+            "(int_ext=interior/exterior; moment_jour=morning/noon/afternoon/dusk/night; "
+            "meteo=clear/overcast/rain/snow…). Only `title` and `intention` may be "
+            + lang + ". Do NOT name characters inside `layout_spatial` (it is "
+            "framing-independent). Output JSON only."
         )
         if style_identity.strip():
-            system += f"\nSTYLE / IDENTITY (apply to every scene): {style_identity.strip()}"
+            system += f"\nSTYLE / IDENTITY (apply throughout): {style_identity.strip()}"
         user = f"Idea / pitch: {prompt}\nPlan EXACTLY {n_scenes} scenes now."
         try:
-            out = _ScenesOut.model_validate_json(self._chat_json(system, user))
+            return _ScenesOut.model_validate_json(self._chat_json(system, user))
         except ValidationError:
-            return []
-        return out.scenes
+            return _ScenesOut()
 
     def _expand_scene(
         self,
@@ -155,35 +332,42 @@ class OpenAISceneDecomposer:
         language: str,
         scene_budget_s: float,
     ) -> list[ShotPlan]:
-        """MICRO : la scène → plans COURTS qui animent sa photo d'environnement."""
+        """MICRO : la scène → plans COURTS (1 prise i2v = état début → état fin)."""
         lang = _lang_label(language)
+        h = int(max_coherent_duration_s(VIDEO_MODEL))   # horizon de cohérence du modèle i2v
         system = (
-            "You are a director breaking ONE scene into SHORT shots (3 to 5 seconds each) "
-            "that ANIMATE the scene's environment photo. Every shot STAYS INSIDE that same "
-            "environment (same location, same mood) — never cut to a new place. Keep the "
-            "context concentrated.\n"
-            f'Return JSON {{"shots": [...]}} with 2 to {_MAX_SHOTS} shots, each with:\n'
-            '- "id": short slug;\n'
-            '- "kind": "video" (default) or "photo";\n'
-            '- "visual_desc": ENGLISH (image models expect English), regardless of '
-            "narration language. What we see in THIS shot within the environment — "
-            "concrete subject, framing, detail; consistent with the environment; "
-            "NO on-screen text;\n"
-            "Also SPLIT the shot into BUSINESS fields (like a real production crew), all "
-            "ENGLISH:\n"
-            '- "decor": the set/location within the environment (place, props, atmosphere);\n'
-            '- "lighting": the light (quality, direction, mood);\n'
-            '- "framing": shot size + angle (e.g. "close-up, low angle");\n'
-            '- "characters": array of people PRESENT, each {"name" (a FRENCH first name), '
-            '"appearance" (physical, EN), "wardrobe" (outfit, EN), "expression", "action"} '
-            "(same person keeps the SAME name/appearance across shots);\n"
-            '- "motion_desc": ENGLISH. STRICTLY STATIC CAMERA (locked-off tripod). Describe '
-            "the SUBJECT'S action, never a camera move (no pan/zoom/dolly/handheld) — the "
-            "model drifts otherwise;\n"
-            f'- "narration_fr": {lang}. One short, natural, spoken sentence ({lang} first '
-            "names for people);\n"
-            '- "duration_s": 3 to 5.\n'
-            "The FIRST shot should hook. No on-screen text. Output JSON only."
+            "You are a director breaking ONE scene into SHORT shots. Each shot is ONE BEAT = "
+            "one continuous i2v take (a start frame that INTERPOLATES to an end state), INSIDE "
+            "the scene's location (never cut to a new place). ONE beat = ONE movement (a single "
+            "legible X→Y). Several timeline moments that phrase the SAME gesture "
+            "(accel→hold→decel of one action) are fine and do NOT mean two shots; but if an "
+            f"action needs more than {h}s, OR contains a SECOND distinct action, SPLIT it into "
+            f"another shot. Keep every shot <= {h}s. Don't re-describe the location or "
+            "characters' appearance (inherited) — describe only what is PROPER to this take.\n"
+            f'Return JSON {{"shots":[...]}} with 2 to {_MAX_SHOTS} shots (ENGLISH visuals), each:\n'
+            f'- "id","kind":"video"|"photo","duration_s":2-{h} (ONE beat);\n'
+            '- "start_image": the composed starting frame (subject placement within the location);\n'
+            '- "cadre":{"taille_plan"(wide…extreme close),"focale"(24/50/85mm),'
+            '"angle_hauteur"(eye/high/low),"mise_au_point"};\n'
+            '- "profondeur":{"avant_plan","plan_moyen","arriere_plan"};\n'
+            '- "camera":{"type"(STRICTLY STATIC unless truly needed: static/slow push),"vitesse",'
+            '"depart_arrivee"(how the frame starts→ends)};\n'
+            '- "personnages":[{"name"(EXACT bible spelling),"action","trajectoire",'
+            '"vitesse","expression"(OBSERVABLE face/posture only, e.g. "slight frown",'
+            ' "leaning forward" — never a mental state),"etat_debut","etat_fin"}] '
+            "— the interpolation début→fin;\n"
+            '- "elements_secondaires":[{"quoi","mouvement","etat_debut","etat_fin"}] (hair, cloth, sign…);\n'
+            '- "physique_environnement":[{"element","comportement","intensite_direction"}] (wind, snow…);\n'
+            '- "lumiere_temps":{"ce_qui_change","depart_arrivee"} (light change WITHIN the take);\n'
+            '- "son":{"dialogue_voix"(' + lang + ', one short spoken line),"bruitage_sfx"(synced)};\n'
+            f'- "narration_fr": {lang} (same as son.dialogue_voix if spoken);\n'
+            '- "intention_plan": what THIS take tells.\n'
+            "LANGUAGE — every VISUAL field (cadre, camera, profondeur, personnages "
+            "actions/expressions, elements_secondaires, physique_environnement, "
+            "lumiere_temps) MUST be ENGLISH; only `son.dialogue_voix` and `narration_fr` "
+            "are " + lang + ". Refer to characters by their EXACT bible name spelling "
+            "(never re-spell or anglicize). The FIRST shot hooks. No on-screen text. "
+            "Output JSON only."
         )
         if scene_budget_s > 0:
             system += (
@@ -201,44 +385,25 @@ class OpenAISceneDecomposer:
             out = _ShotsOut.model_validate_json(self._chat_json(system, user))
         except ValidationError:
             return []
-        shots: list[ShotPlan] = []
-        for i, s in enumerate(out.shots[:_MAX_SHOTS]):
-            shots.append(
-                ShotPlan(
-                    id=s.id or f"{sk.id or 'sc'}_sh{i + 1}",
-                    kind=_kind_of(s.kind),
-                    visual_desc=s.visual_desc,
-                    motion_desc=s.motion_desc,
-                    narration_fr=s.narration_fr,
-                    duration_s=max(2.0, min(6.0, s.duration_s or 4.0)),
-                    decor=s.decor,
-                    lighting=s.lighting,
-                    framing=s.framing,
-                    characters=[
-                        ShotCharacterPlan(
-                            name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                            expression=c.expression, action=c.action,
-                        )
-                        for c in s.characters
-                    ],
-                )
-            )
-        return shots
+        return [
+            _shot_of(s, f"{sk.id or 'sc'}_sh{i + 1}")
+            for i, s in enumerate(out.shots[:_MAX_SHOTS])
+        ]
 
     def plan_arc(
         self,
         prompt: str,
         *,
-        style_identity: str = "",
+        style_identity: LooseStr = "",
         n_scenes: int = DEFAULT_SCENES,
         platform: str = "tiktok",
         language: str = "fr",
     ) -> list[ScenePlan]:
         n = max(1, n_scenes)
-        skeletons = self._plan_scenes(
+        macro = self._plan_scenes(
             prompt, style_identity, n, platform=platform, language=language
         )
-        if not skeletons:
+        if not macro.scenes:
             raise SceneDecompositionError(
                 "L'IA n'a pas pu découper cette idée en scènes. Reformule ton idée "
                 "ou réessaie."
@@ -248,27 +413,29 @@ class OpenAISceneDecomposer:
                 id=sk.id or f"s{i + 1}",
                 title=sk.title or f"Scène {i + 1}",
                 environment_desc=sk.environment_desc,
-                context_text=sk.intention,
-                art_direction=style_identity,
+                location_ref=f"{sk.id or f's{i + 1}'}_loc",
+                saison=sk.saison, moment_jour=sk.moment_jour, meteo=sk.meteo,
+                lumiere_ambiante=_lum(sk.lumiere_ambiante), mood=sk.mood,
+                ambiance_sonore=sk.ambiance_sonore, intention_scene=sk.intention,
             )
-            for i, sk in enumerate(skeletons[:n])
+            for i, sk in enumerate(macro.scenes[:n])
         ]
 
     def decompose_video(
         self,
         prompt: str,
         *,
-        style_identity: str = "",
+        style_identity: LooseStr = "",
         n_scenes: int = DEFAULT_SCENES,
         platform: str = "tiktok",
         language: str = "fr",
         target_duration_s: float = 0.0,
     ) -> VideoPlan:
         n = max(1, n_scenes)
-        skeletons = self._plan_scenes(
+        macro = self._plan_scenes(
             prompt, style_identity, n, platform=platform, language=language
         )
-        if not skeletons:
+        if not macro.scenes:
             raise SceneDecompositionError(
                 "L'IA n'a pas pu découper cette idée en scènes. Reformule ton idée "
                 "ou réessaie."
@@ -276,36 +443,28 @@ class OpenAISceneDecomposer:
         # Budget-temps par scène (réparti) quand une durée cible est fournie.
         scene_budget = target_duration_s / n if target_duration_s > 0 else 0.0
         scenes: list[ScenePlan] = []
+        locations: list[LocationEntry] = []
         summary_parts: list[str] = []
-        for i, sk in enumerate(skeletons[:n]):
+        for i, sk in enumerate(macro.scenes[:n]):
             sid = sk.id or f"s{i + 1}"
             shots = self._expand_scene(
-                sk,
-                style_identity,
-                " ".join(summary_parts),
-                language=language,
-                scene_budget_s=scene_budget,
+                sk, style_identity, " ".join(summary_parts),
+                language=language, scene_budget_s=scene_budget,
             )
             if not shots:
-                # Micro illisible : garder la scène générable avec un plan minimal
-                # qui anime sa photo d'environnement (plutôt qu'une scène morte).
-                shots = [
-                    ShotPlan(
-                        id=f"{sid}_sh1",
-                        kind="video",
-                        visual_desc=sk.environment_desc,
-                        motion_desc="slow push in, static camera",
-                        narration_fr="",
-                        duration_s=4.0,
-                    )
-                ]
+                # Micro illisible : plan minimal qui anime l'établissement (scène vivante).
+                shots = [ShotPlan(id=f"{sid}_sh1", kind="video", duree_s=4.0,
+                                  start_image=sk.environment_desc,
+                                  camera=Camera(depart_arrivee="slow push in, static camera"))]
+            loc_ref = f"{sid}_loc"
+            locations.append(_location_of(sk, loc_ref))
             scenes.append(
                 ScenePlan(
-                    id=sid,
-                    title=sk.title or f"Scène {i + 1}",
-                    environment_desc=sk.environment_desc,
-                    context_text=sk.intention,
-                    art_direction=style_identity,
+                    id=sid, title=sk.title or f"Scène {i + 1}",
+                    environment_desc=sk.environment_desc, location_ref=loc_ref,
+                    saison=sk.saison, moment_jour=sk.moment_jour, meteo=sk.meteo,
+                    lumiere_ambiante=_lum(sk.lumiere_ambiante), mood=sk.mood,
+                    ambiance_sonore=sk.ambiance_sonore, intention_scene=sk.intention,
                     shots=shots,
                 )
             )
@@ -313,7 +472,13 @@ class OpenAISceneDecomposer:
                 summary_parts.append(sk.intention)
         return VideoPlan(
             title=prompt[:60] or "Nouvelle vidéo",
-            global_context=prompt,
-            art_direction=style_identity,
+            meta=RenderMeta(style_rendu=style_identity),
+            intention_globale=IntentionGlobale(
+                genre=macro.genre, ton=macro.ton, arc_narratif=prompt),
+            musique_score=macro.musique_score,
+            location_bible=locations,
+            cast=[CharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
+                                voice_id=c.voice_id, traits=c.traits)
+                  for c in macro.characters if c.name.strip()],
             scenes=scenes,
         )

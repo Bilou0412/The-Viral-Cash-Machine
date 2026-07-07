@@ -45,9 +45,28 @@ import type {
   CreatePromptTemplateBody,
   Scene,
   SceneDocumentResult,
+  ShotBrief,
   Theme,
   UpdateAssetBody,
 } from "./types"
+
+// Descripteur de PLAN (v5) par défaut — les mocks n'en remplissent qu'un sous-ensemble.
+const mkShot = (over: Partial<ShotBrief> = {}): ShotBrief => ({
+  start_image: "",
+  cadre: { taille_plan: "", focale: "", angle_hauteur: "", mise_au_point: "" },
+  profondeur: { avant_plan: "", plan_moyen: "", arriere_plan: "" },
+  camera: { type: "", vitesse: "", depart_arrivee: "" },
+  personnages_presents: [],
+  elements_secondaires: [],
+  physique_environnement: [],
+  lumiere_override: null,
+  lumiere_temps: { ce_qui_change: "", depart_arrivee: "" },
+  son: { dialogue_voix: "", bruitage_sfx: "", perspective_mixage: "", dynamique_silence: "", ambiance_override: "", transition_audio: "" },
+  timeline: [],
+  intention_plan: "",
+  continuite: { lien_precedent: "", lien_suivant: "" },
+  ...over,
+})
 import { isClipBrick, isGenerativeBrick, isTextBrick } from "./types"
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms))
@@ -343,7 +362,7 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
       {
         id: envId, type: "clip", kind: "photo",
         image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `location ${i} exterior, cold ambient light` } },
-        shot: { decor: `location ${i} exterior`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
+        shot: null,
         children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
       },
       3
@@ -362,10 +381,11 @@ function newSceneDoc(title: string, nScenes: number): EditorDoc {
           id: sid, type: "clip", kind: "video",
           image: { model_ref: "bytedance/seedream-4.5", params: { prompt: compiled } },
           motion: { model_ref: "prunaai/p-video", params: { prompt: motion, duration: dur, image: `{brick:${envId}.image}` } },
-          shot: {
-            decor: `location ${i} interior`, lumiere: "cold ambient light", cadrage: framing, extra: "",
-            characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr ?? "", action: act ?? "" }],
-          },
+          shot: mkShot({
+            start_image: `location ${i} interior`,
+            cadre: { taille_plan: framing, focale: "", angle_hauteur: "", mise_au_point: "" },
+            personnages_presents: [{ ref: "lea", action: act ?? "", trajectoire: "", vitesse: "", expression: expr ?? "", etat_debut: "", etat_fin: "" }],
+          }),
           children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
           layers: [], placement: { track: 0, start: cursor, duration: dur },
         },
@@ -400,13 +420,19 @@ const roomStateByDoc = new Map<
 >()
 
 function cannedTurns(title: string, isNew: boolean): Turn[] {
-  // Le contrat (réalisateur), puis un brouillon par métier (chacun ses trous).
+  // Le contrat (réalisateur), un brouillon par métier (aveugle), puis la révision
+  // (chaque métier voit l'ensemble et ajuste — ici le dialoguiste nomme le perso).
+  const casting = isNew ? "Personnages — nouveau : Léa." : "Personnages — Léa (bible réutilisée)."
   return [
     { role: "realisateur", message: `Contrat de « ${title} » — 2 plans (accroche, réaction).` },
-    { role: "directeur_artistique", message: "Décor & lumière — froid, textures marquées ; 2 plans habillés." },
-    { role: "chef_operateur", message: "Cadrage — wide shot; close-up." },
-    { role: "casting", message: isNew ? "Personnages — nouveau : Léa." : "Personnages — Léa (bible réutilisée)." },
-    { role: "dialoguiste", message: "Narration — « La tension monte. » / « Un choix s'impose. »" },
+    { role: "directeur_artistique", message: "Brouillon · Décor & lumière — froid, textures marquées ; 2 plans habillés." },
+    { role: "chef_operateur", message: "Brouillon · Cadrage — wide shot; close-up." },
+    { role: "casting", message: `Brouillon · ${casting}` },
+    { role: "dialoguiste", message: "Brouillon · Narration — « La tension monte. » / « Un choix s'impose. »" },
+    { role: "directeur_artistique", message: "Révision · Décor & lumière — froid, textures marquées ; 2 plans habillés." },
+    { role: "chef_operateur", message: "Révision · Cadrage — wide shot; close-up." },
+    { role: "casting", message: `Révision · ${casting}` },
+    { role: "dialoguiste", message: "Révision · Narration — « Léa — La tension monte. » / « Léa — Un choix s'impose. »" },
   ]
 }
 
@@ -422,19 +448,27 @@ function appendMockScene(doc: EditorDoc, sceneId: string, title: string, isNew: 
   doc.bricks.push({
     id: envId, type: "clip", kind: "photo",
     image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `establishing shot of ${title}, cold ambient light` } },
-    shot: { decor: `establishing shot of ${title}`, lumiere: "cold ambient light", cadrage: "", characters: [], extra: "" },
+    shot: null,
     children: [], layers: [], placement: { track: 0, start: cursor, duration: 3 },
   })
   cursor += 3
   const shotIds = [envId]
-  for (const [k, framing, expr] of [["sh1", "wide shot", "tense"], ["sh2", "close-up", "resolute"]] as const) {
+  // Narration révisée : le dialoguiste a nommé le perso (cohérence croisée).
+  for (const [k, framing, expr, narr] of [
+    ["sh1", "wide shot", "tense", "Léa — La tension monte."],
+    ["sh2", "close-up", "resolute", "Léa — Un choix s'impose."],
+  ] as const) {
     const sid = `${sceneId}_${k}`
     doc.bricks.push({
       id: sid, type: "clip", kind: "video",
       image: { model_ref: "bytedance/seedream-4.5", params: { prompt: `${framing} of Léa (young woman, short dark hair), wearing worn grey coat, ${expr}, in ${title}` } },
       motion: { model_ref: "prunaai/p-video", params: { prompt: "static camera", duration: 4, image: `{brick:${envId}.image}` } },
-      shot: { decor: title, lumiere: "cold ambient light", cadrage: framing, extra: "", characters: [{ ref: "lea", name: "Léa", wardrobe: "", expression: expr, action: "in scene" }] },
-      children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: "La tension monte.", voice_id: "male-conteur" } }],
+      shot: mkShot({
+        start_image: title,
+        cadre: { taille_plan: framing, focale: "", angle_hauteur: "", mise_au_point: "" },
+        personnages_presents: [{ ref: "lea", action: "in scene", trajectoire: "", vitesse: "", expression: expr, etat_debut: "", etat_fin: "" }],
+      }),
+      children: [{ id: `${sid}__narr`, role: "narration", model_ref: "minimax/speech-2.8-turbo", params: { text: narr, voice_id: "male-conteur" } }],
       layers: [], placement: { track: 0, start: cursor, duration: 4 },
     })
     cursor += 4

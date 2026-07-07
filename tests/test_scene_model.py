@@ -58,7 +58,7 @@ def test_old_doc_upgrades_additively():
     courant : additif (scenes/bible=[] par défaut, briques `shot=None` → blob legacy)."""
     raw = {"schema_version": 2, "title": "vieux", "bricks": [_clip("a", 0.0)]}
     doc = upgrade_document(raw)
-    assert doc.schema_version == SCHEMA_VERSION == 4
+    assert doc.schema_version == SCHEMA_VERSION == 5
     assert doc.scenes == []
     assert doc.bible == []
     assert len(doc.bricks) == 1
