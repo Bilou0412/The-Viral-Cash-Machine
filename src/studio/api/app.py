@@ -58,6 +58,7 @@ from ...features.formats import (
     list_formats,
 )
 from ...features.scenes import SceneDecompositionError
+from ...features.virality import ViralityError
 from ..db.engine import get_engine, init_db
 from ..db.models import Asset, Episode, Project, PromptTemplate, Template, User
 from ..db.repositories import (
@@ -90,6 +91,7 @@ from .services.producer import producer_source, propose_brief
 from .services.room import RoomState, build_next_scene, plan_room_state
 from .services.scenes import decomposer_source, generate_arc, generate_video_plan
 from .services.scripting import generate_script
+from .services.virality import propose_hooks, virality_source
 
 if TYPE_CHECKING:
     from ...editor.document import EditorDocument
@@ -373,6 +375,14 @@ class FormatGenIn(BaseModel):
     title: str = "Nouvelle vidéo"
     format: str | None = None
     options: dict[str, Any] = {}
+
+
+class HookProposeIn(BaseModel):
+    """Demander N variantes d'ouverture, notées et classées par viralité prédite."""
+
+    pitch: str
+    n_variants: int = 3
+    format: str | None = None         # override du format de l'épisode (optionnel)
 
 
 class TemplateSlotIn(BaseModel):
@@ -1158,6 +1168,37 @@ def create_format_document(
         "doc": json.loads(row.doc_json),
         "format": fmt_id,
         "source": decomposer_source(keys.openai),
+    }
+
+
+@app.post("/api/episodes/{episode_id}/hooks")
+def propose_episode_hooks(
+    episode_id: int, body: HookProposeIn,
+    session: Session = Depends(_session), user: User = Depends(require_user),
+    engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Idée → N variantes d'ouverture, notées et CLASSÉES par viralité prédite.
+
+    L'humain n'approuve que la gagnante (1re du classement). Le format vient du body
+    (override) ou d'`Episode.format`. Sans clé OpenAI → Fake déterministe (offline)."""
+    episode = _require_owned_episode(session, user, episode_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    fmt_id = body.format or episode.format
+    language = "fr"
+    if episode.brief_json:
+        language = Brief.model_validate_json(episode.brief_json).langue
+    try:
+        ranked = propose_hooks(
+            body.pitch, n_variants=body.n_variants, format_id=fmt_id,
+            language=language, openai_key=keys.openai,
+        )
+    except ViralityError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return {
+        "format": fmt_id,
+        "winner": ranked.winner.model_dump() if ranked.winner else None,
+        "variants": [s.model_dump() for s in ranked.variants],
+        "source": virality_source(keys.openai),
     }
 
 

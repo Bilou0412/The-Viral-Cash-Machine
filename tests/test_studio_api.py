@@ -261,6 +261,24 @@ def test_format_document_dispatches_on_episode_format(client):
     assert bad.status_code == 400
 
 
+def test_hooks_route_ranks_variants(client):
+    """Idée → N variantes d'ouverture notées + classées ; la gagnante est en tête (offline)."""
+    pid = client.post("/api/projects", json={"name": "ph"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e"}
+    ).json()["id"]
+    r = client.post(
+        f"/api/episodes/{eid}/hooks", json={"pitch": "un chat dans la neige", "n_variants": 3}
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["variants"]) == 3
+    assert body["winner"]["variant"]["id"] == body["variants"][0]["variant"]["id"]
+    overalls = [v["score"]["overall"] for v in body["variants"]]
+    assert overalls == sorted(overalls, reverse=True)     # classé décroissant
+    assert body["source"] == "fake"                       # pas de clé → Fake
+
+
 def test_generate_editor_document_clips_idempotent(client):
     """R1b : le document de briques se génère (image→motion→narration), idempotent."""
     from sqlmodel import Session as _S
