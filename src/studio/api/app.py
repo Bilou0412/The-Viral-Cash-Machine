@@ -1353,6 +1353,30 @@ def get_editor_document(
     }
 
 
+@app.get("/api/editor/documents/{doc_id}/shot-audit")
+def audit_document_shots(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user)
+) -> dict[str, Any]:
+    """Diagnose de découpe : les plans à SCINDER (durée > horizon, multi-beat) ou
+    corrompus (durée manquante), pour la revue AVANT génération. Non bloquant."""
+    row = _require_owned_doc(session, user, doc_id)
+    from ...editor import upgrade_document
+    from ...editor.capabilities import audit_shot_durations
+    from ...editor.document import ClipBrick
+    from ...features.assets.models import VIDEO_MODEL, max_coherent_duration_s
+
+    doc = upgrade_document(json.loads(row.doc_json))
+    slug = VIDEO_MODEL
+    for b in doc.bricks:
+        if isinstance(b, ClipBrick) and b.kind == "video" and b.motion is not None:
+            slug = b.motion.model_ref or VIDEO_MODEL
+            break
+    horizon = max_coherent_duration_s(slug)
+    issues = audit_shot_durations(doc, max_coherent_s=horizon)
+    return {"id": row.id, "max_coherent_s": horizon, "n_flagged": len(issues), "issues": issues}
+
+
 @app.post("/api/editor/documents/{doc_id}/hook")
 def apply_document_hook(
     doc_id: int, body: HookVariant, session: Session = Depends(_session),

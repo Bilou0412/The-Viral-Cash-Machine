@@ -38,12 +38,12 @@ def test_horizon_is_a_model_capability():
     assert effective_video_slug("") == VIDEO_MODEL
 
 
-def _video_clip(*, duration=None, placement_s=4.0, timeline=None, shot=True):
+def _video_clip(*, duration=None, placement_s=4.0, timeline=None, shot=True, bid="v1"):
     motion_params = {"image": "x", "prompt": "p"}
     if duration is not None:
         motion_params["duration"] = duration
     return ClipBrick(
-        id="v1", kind="video",
+        id=bid, kind="video",
         image=GenNode(model_ref="img", params={"prompt": "p"}),
         motion=GenNode(model_ref=VIDEO_MODEL, params=motion_params),
         shot=ShotBrief(timeline=timeline or []) if shot else None,
@@ -82,6 +82,20 @@ def test_single_gesture_phrasing_is_ok():
 
 def test_shot_none_is_never_judged():
     assert validate_shot_duration(_video_clip(duration=99.0, shot=False), max_coherent_s=5.0) == {}
+
+
+def test_audit_flags_only_problem_clips():
+    """La diagnose de doc ne retient que les briques à problème (par id)."""
+    from src.editor.capabilities import audit_shot_durations
+    from src.editor.document import EditorDocument
+
+    doc = EditorDocument(bricks=[
+        _video_clip(duration=4.0, bid="ok"),        # dans l'horizon
+        _video_clip(duration=8.0, bid="toolong"),   # > horizon 5
+    ])
+    audit = audit_shot_durations(doc, max_coherent_s=5.0)
+    assert set(audit) == {"toolong"}
+    assert audit["toolong"] == {"motion": ["over_horizon"]}
 
 
 # -- décomposeur : borne API, PAS clamp d'horizon -----------------------------

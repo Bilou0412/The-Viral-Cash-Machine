@@ -27,7 +27,7 @@ limité à pydantic+videospec) : `from src.editor.capabilities import validate_c
 from __future__ import annotations
 
 from ._fields import field_present, field_value, missing_required
-from .document import ClipBrick, GenNode
+from .document import ClipBrick, EditorDocument, GenNode
 
 # Quel contrat de capacité s'applique à chaque type de nœud d'un clip.
 _NODE_KIND = {"image": "image", "motion": "video", "audio": "voice"}
@@ -135,6 +135,24 @@ def validate_shot_duration(clip: ClipBrick, *, max_coherent_s: float) -> dict[st
     if _beat_count(clip) > 1:
         issues["beats"] = ["multi_beat"]          # suite d'actions → scinder
     return issues
+
+
+def audit_shot_durations(
+    doc: EditorDocument, *, max_coherent_s: float
+) -> dict[str, dict[str, list[str]]]:
+    """Diagnose de découpe sur TOUT le document : `{brick_id: issues}` (non vides).
+
+    Passe `validate_shot_duration` sur chaque `ClipBrick` et ne garde que les briques
+    à problème (durée > horizon, densité de beats > 1, durée manquante). C'est la
+    DIAGNOSE du réalisateur, surfaçable à la revue AVANT génération — le précurseur
+    (déterministe, non bloquant) d'un futur auto-split."""
+    out: dict[str, dict[str, list[str]]] = {}
+    for brick in doc.bricks:
+        if isinstance(brick, ClipBrick):
+            issues = validate_shot_duration(brick, max_coherent_s=max_coherent_s)
+            if issues:
+                out[brick.id] = issues
+    return out
 
 
 def clip_is_ready(clip: ClipBrick) -> bool:

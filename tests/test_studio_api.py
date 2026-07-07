@@ -302,6 +302,23 @@ def test_apply_hook_to_document_route(client):
     assert first["image"]["params"]["prompt"] == "vertical 9:16 hook frame"
 
 
+def test_shot_audit_route(client):
+    """La diagnose de découpe tourne sur un doc bien formé (durées ≤ horizon → 0 flag)."""
+    pid = client.post("/api/projects", json={"name": "psa"}).json()["id"]
+    eid = client.post(
+        "/api/episodes", json={"project_id": pid, "title": "e", "format": "scenes"}
+    ).json()["id"]
+    doc_id = client.post(
+        f"/api/episodes/{eid}/format-document",
+        json={"prompt": "un métro", "options": {"n_scenes": 1}},
+    ).json()["id"]
+    r = client.get(f"/api/editor/documents/{doc_id}/shot-audit")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["max_coherent_s"] == 5.0           # horizon p-video
+    assert body["n_flagged"] == 0 and body["issues"] == {}   # plans Fake ≤ 5 s
+
+
 def test_generate_editor_document_clips_idempotent(client):
     """R1b : le document de briques se génère (image→motion→narration), idempotent."""
     from sqlmodel import Session as _S
