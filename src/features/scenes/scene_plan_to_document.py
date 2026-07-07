@@ -128,12 +128,18 @@ def _scene_bricks(
         children = narr_child(shot.id, shot.narration_fr)
         brief = _shot_brief(shot, name_to_id)  # prompts image/motion compilés par recompile
         if shot.kind == "video":
+            # E2 — cohérence i2v : la frame de départ du plan est composée AVEC la photo
+            # d'établissement en RÉFÉRENCE (`image_input`), puis le motion anime CETTE frame
+            # propre au plan (pas la photo d'établissement partagée) → cadrage spécifique au
+            # plan, décor/perso stables d'un plan à l'autre (ancrés au même établissement).
             brick = ClipBrick(
                 id=shot.id, kind="video",
-                image=GenNode(model_ref=image_model, params={"prompt": ""}),
+                image=GenNode(model_ref=image_model,
+                              params={"prompt": "", "image_input": env_ref}),
                 motion=GenNode(
                     model_ref=video_model,
-                    params={"prompt": "", "duration": shot.duree_s, "image": env_ref},
+                    params={"prompt": "", "duration": shot.duree_s,
+                            "image": f"{{brick:{shot.id}.image}}"},
                 ),
                 shot=brief, children=children, placement=place(shot.duree_s),
             )

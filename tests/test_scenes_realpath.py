@@ -204,20 +204,29 @@ def _video_calls(provider: _UniqueProvider) -> list[dict[str, Any]]:
     return [params for model, params in provider.run_calls if model == "prunaai/p-video"]
 
 
-def test_video_shots_animate_scene_env_photo(tmp_path):
-    """Chaque plan vidéo reçoit comme `image` l'URL de la photo d'env (pas la sienne)."""
+def _image_calls(provider: _UniqueProvider) -> list[dict[str, Any]]:
+    return [params for model, params in provider.run_calls if model == "bytedance/seedream-4.5"]
+
+
+def test_video_shots_animate_own_frame_referencing_env(tmp_path):
+    """E2 : chaque plan anime SA frame (≠ photo d'env partagée), composée AVEC l'env en réf."""
     engine = _engine(tmp_path)
     doc_id = _persist_scene_doc(engine)
     provider = _UniqueProvider()
     svc = EditorGenerationService(engine, provider=provider, downloader=_fake_downloader)
     svc.generate_document(doc_id)
 
-    # 1re image générée = la photo d'ENV (clip photo, en tête après tri) → run/1.
-    env_url = "https://fake.local/run/1.out"
+    env_url = "https://fake.local/run/1.out"   # photo d'ENV générée en 1er (clip photo en tête)
     videos = _video_calls(provider)
     assert videos, "au moins un plan vidéo généré"
     for params in videos:
-        assert params["image"] == env_url
+        assert params["image"] != env_url                      # anime SA frame, pas la partagée
+        assert params["image"].startswith("https://fake.local/run/")
+    # les plans composent leur frame AVEC la photo d'établissement en RÉFÉRENCE
+    referenced = [p for p in _image_calls(provider) if p.get("image_input")]
+    assert referenced, "au moins une image de plan composée avec référence"
+    for p in referenced:
+        assert p["image_input"] == env_url
 
 
 def test_generation_is_idempotent(tmp_path):
@@ -246,10 +255,10 @@ def test_env_ref_resolves_regardless_of_brick_order(tmp_path):
     svc.generate_document(doc_id)
 
     env_url = "https://fake.local/run/1.out"  # env toujours généré en premier
-    videos = _video_calls(provider)
-    assert videos
-    for params in videos:
-        assert params["image"] == env_url
+    referenced = [p for p in _image_calls(provider) if p.get("image_input")]
+    assert referenced
+    for p in referenced:
+        assert p["image_input"] == env_url    # la réf d'env résout malgré l'ordre inversé
 
 
 # -- C-3 : propagation du mode draft (coût) sur le rail éditeur ----------------
