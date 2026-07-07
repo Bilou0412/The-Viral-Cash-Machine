@@ -400,17 +400,13 @@ const roomStateByDoc = new Map<
 >()
 
 function cannedTurns(title: string, isNew: boolean): Turn[] {
+  // Le contrat (réalisateur), puis un brouillon par métier (chacun ses trous).
   return [
-    { role: "realisateur", message: `On ouvre sur « ${title} ». On garde le rythme et le ton.` },
-    { role: "directeur_artistique", message: "Décor froid, lumière dure, textures marquées." },
-    { role: "chef_operateur", message: "Un large d'accroche puis un plan serré. Caméra fixe." },
-    { role: "casting", message: isNew ? "On introduit Léa : jeune femme, cheveux courts, manteau gris." : "Léa est présente, on garde sa continuité." },
-    { role: "dialoguiste", message: "Narration courte, en français, une phrase qui installe." },
-    { role: "realisateur", message: `OK, on verrouille « ${title} ».` },
-    { role: "directeur_artistique", message: "On reste dans l'identité visuelle établie." },
-    { role: "chef_operateur", message: "Deux plans d'environ 4 secondes." },
-    { role: "casting", message: "Tenue par défaut, expression tendue." },
-    { role: "dialoguiste", message: "« La tension monte. »" },
+    { role: "realisateur", message: `Contrat de « ${title} » — 2 plans (accroche, réaction).` },
+    { role: "directeur_artistique", message: "Décor & lumière — froid, textures marquées ; 2 plans habillés." },
+    { role: "chef_operateur", message: "Cadrage — wide shot; close-up." },
+    { role: "casting", message: isNew ? "Personnages — nouveau : Léa." : "Personnages — Léa (bible réutilisée)." },
+    { role: "dialoguiste", message: "Narration — « La tension monte. » / « Un choix s'impose. »" },
   ]
 }
 

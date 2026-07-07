@@ -1,26 +1,39 @@
-"""Feature « crew_room » : la table ronde qui crée une scène par la discussion.
+"""Feature « crew_room » : l'atelier qui crée une scène.
 
-L'unité de création est la SCÈNE (créées en séquence, mémoire qui avance). Les
-métiers-voix débattent en plusieurs tours, puis on synthétise la scène
-structurée (format v4). Réutilise `features.scenes` (format) et `features.crew`
-(erreurs) ; feature pure (aucune dépendance réseau au niveau module).
+Méthode *contrat → brouillons parallèles → mise en commun* (inspirée d'un harnais
+d'agents) : le réalisateur pose la scène À TROUS, chaque département remplit SES
+trous indépendamment, on assemble (champs disjoints → merge mécanique). Réutilise
+`features.scenes` (format v4) et `features.crew` (erreurs) ; feature pure.
 """
 
 from .engine import run_scene_room
-from .fake_room import FakeRoomVoice, FakeSceneSynthesizer
-from .model import RoomMemory, RoomResult, SceneBrief, Turn
-from .ports import ROOM_VOICES, CrewAgentError, RoomVoice, SceneSynthesizer
+from .fake_room import FakeContractAgent, FakeDrafter
+from .merge import merge_drafts
+from .model import (
+    ContractShot,
+    Draft,
+    RoomMemory,
+    RoomResult,
+    SceneBrief,
+    SceneContract,
+    Turn,
+)
+from .ports import DEPARTMENTS, ContractAgent, CrewAgentError, Drafter
 
 __all__ = [
-    "ROOM_VOICES",
+    "DEPARTMENTS",
+    "ContractAgent",
+    "ContractShot",
     "CrewAgentError",
-    "FakeRoomVoice",
-    "FakeSceneSynthesizer",
+    "Draft",
+    "Drafter",
+    "FakeContractAgent",
+    "FakeDrafter",
     "RoomMemory",
     "RoomResult",
-    "RoomVoice",
     "SceneBrief",
-    "SceneSynthesizer",
+    "SceneContract",
     "Turn",
+    "merge_drafts",
     "run_scene_room",
 ]

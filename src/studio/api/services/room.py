@@ -18,12 +18,12 @@ from pydantic import BaseModel, Field
 from ....editor.document import EditorDocument
 from ....features.brief.model import Brief
 from ....features.crew_room import (
-    FakeRoomVoice,
-    FakeSceneSynthesizer,
+    ContractAgent,
+    Drafter,
+    FakeContractAgent,
+    FakeDrafter,
     RoomMemory,
-    RoomVoice,
     SceneBrief,
-    SceneSynthesizer,
     Turn,
     run_scene_room,
 )
@@ -52,20 +52,17 @@ class RoomState(BaseModel):
         return [s for s in self.arc if s.id not in self.built]
 
 
-def get_room(openai_key: str | None = None) -> tuple[RoomVoice, SceneSynthesizer]:
-    """Les voix + le synthétiseur : OpenAI si clé, sinon le Fake déterministe."""
+def get_room(openai_key: str | None = None) -> tuple[ContractAgent, Drafter]:
+    """Le réalisateur (contrat) + les remplisseurs : OpenAI si clé, sinon le Fake."""
     if not openai_key:
-        return FakeRoomVoice(), FakeSceneSynthesizer()
+        return FakeContractAgent(), FakeDrafter()
     from openai import OpenAI
 
-    from ....features.crew_room.openai_room import (
-        OpenAIRoomVoice,
-        OpenAISceneSynthesizer,
-    )
+    from ....features.crew_room.openai_room import OpenAIContractAgent, OpenAIDrafter
 
     model = os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
     client = OpenAI(api_key=openai_key)
-    return OpenAIRoomVoice(client, model), OpenAISceneSynthesizer(client, model)
+    return OpenAIContractAgent(client, model), OpenAIDrafter(client, model)
 
 
 def plan_room_state(arc: list[ScenePlan]) -> RoomState:
@@ -78,26 +75,23 @@ def build_next_scene(
     state: RoomState,
     brief: Brief,
     *,
-    rounds: int = 2,
-    voices: RoomVoice | None = None,
-    synthesizer: SceneSynthesizer | None = None,
+    director: ContractAgent | None = None,
+    drafters: Drafter | None = None,
     openai_key: str | None = None,
 ) -> tuple[ScenePlan, list[Turn]]:
-    """Crée LA prochaine scène non construite via la table ronde, l'ajoute au doc,
-    fait avancer la mémoire, et met à jour l'état. Renvoie (scène, transcript).
-
-    Lève ``StopIteration`` si toutes les scènes sont déjà construites (le caller
-    traduit en 409/terminé)."""
+    """Crée LA prochaine scène non construite via l'atelier (contrat → brouillons →
+    mise en commun), l'ajoute au doc, fait avancer la mémoire, met à jour l'état.
+    Renvoie (scène, transcript). ``StopIteration`` si tout est déjà construit."""
     skeleton = next(s for s in state.arc if s.id not in state.built)
-    v = voices or get_room(openai_key)[0]
-    synth = synthesizer or get_room(openai_key)[1]
+    if director is None or drafters is None:
+        director, drafters = get_room(openai_key)
 
     scene_brief = SceneBrief(
         id=skeleton.id, title=skeleton.title,
         intention=skeleton.context_text, environment=skeleton.environment_desc,
     )
     result = run_scene_room(
-        brief, scene_brief, state.memory, voices=v, synthesizer=synth, rounds=rounds
+        brief, scene_brief, state.memory, director=director, drafters=drafters
     )
     append_scene(doc, result.scene, result.new_characters)
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..scenes.model import CharacterPlan, ScenePlan
+from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan
 
 
 class SceneBrief(BaseModel):
@@ -37,12 +37,48 @@ class RoomMemory(BaseModel):
     continuity: str = ""        # notes de continuité (ce qu'il faut respecter)
 
 
-class Turn(BaseModel):
-    """Un tour de parole dans la table ronde (une voix = un métier)."""
+class ContractShot(BaseModel):
+    """Un plan du CONTRAT : un trou à remplir (id + intention + type)."""
 
     model_config = ConfigDict(extra="ignore")
 
-    role: str = ""      # clé du CrewRole qui parle
+    id: str = ""
+    beat: str = ""     # à quoi sert ce plan (intention), en clair
+    kind: str = "video"
+
+
+class SceneContract(BaseModel):
+    """La scène À TROUS que le réalisateur pose : la liste des plans à remplir."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    env_intention: str = ""             # ce que doit montrer la photo d'environnement
+    shots: list[ContractShot] = Field(default_factory=list)
+
+
+class Draft(BaseModel):
+    """Le BROUILLON d'un métier : il ne remplit QUE les champs qu'il possède.
+
+    `env` = trous au niveau scène (décor/lumière de la photo d'env). `shots` =
+    trous par plan (`{shot_id: {champ: valeur}}`). `new_characters` /
+    `shot_characters` = réservés au casting.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    department: str = ""
+    env: dict[str, str] = Field(default_factory=dict)
+    shots: dict[str, dict[str, str]] = Field(default_factory=dict)
+    new_characters: list[CharacterPlan] = Field(default_factory=list)
+    shot_characters: dict[str, list[ShotCharacterPlan]] = Field(default_factory=dict)
+
+
+class Turn(BaseModel):
+    """Une contribution affichée (le contrat, ou le brouillon d'un métier)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    role: str = ""      # clé du CrewRole (ou 'realisateur' pour le contrat)
     message: str = ""
 
 

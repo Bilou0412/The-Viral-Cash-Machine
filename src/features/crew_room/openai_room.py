@@ -1,8 +1,7 @@
-"""Table ronde OpenAI — voix persona (GPT) + synthèse structurée.
+"""Atelier OpenAI — le réalisateur pose le contrat, chaque département remplit ses trous.
 
-Chaque voix = un appel GPT avec un prompt système de métier, voyant le débat en
-cours. Le synthétiseur lit tout le débat et en extrait la scène STRUCTURÉE (JSON
-strict → `ScenePlan` v4). Import paresseux du SDK (miroir des agents existants).
+`OpenAIContractAgent` : 1 appel JSON → la liste des plans (le contrat). `OpenAIDrafter` :
+1 appel JSON par département, **limité aux champs qu'il possède**. Import paresseux du SDK.
 """
 
 from __future__ import annotations
@@ -11,8 +10,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan, ShotPlan
-from .model import RoomMemory, RoomResult, SceneBrief, Turn
+from ..scenes.model import CharacterPlan, ShotCharacterPlan
+from .model import ContractShot, Draft, RoomMemory, SceneBrief, SceneContract
 from .ports import CrewAgentError
 
 if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
@@ -20,41 +19,35 @@ if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
 
     from ..brief.model import Brief
 
-# Prompt système par voix — chacun parle EN CARACTÈRE, en 1-2 phrases (français).
-_PERSONAS: dict[str, str] = {
-    "realisateur": (
-        "Tu es le RÉALISATEUR, tu modères la table ronde d'UNE scène de vidéo verticale "
-        "courte. Cadre la scène depuis le brief + la mémoire, garde le rythme, et tranche. "
-        "1-2 phrases."
-    ),
+_CONTRACT_SYSTEM = (
+    "You are the DIRECTOR. Define the CONTRACT of ONE short vertical-video scene: the "
+    "ordered list of shots to fill. Keep it tight (2 to 4 shots), static camera.\n"
+    'Return JSON {"env_intention": "what the establishing photo shows (EN)", '
+    '"shots":[{"id","beat":"what this shot is for (short)","kind":"video"|"photo"}]}. '
+    "Output JSON only."
+)
+
+# Instruction par département : il ne remplit QUE ses champs.
+_DEPT_SYSTEM: dict[str, str] = {
     "directeur_artistique": (
-        "Tu es le DIRECTEUR ARTISTIQUE. Propose le décor et la lumière (vocabulaire visuel "
-        "ANGLAIS dans tes mots-clés). 1-2 phrases."
+        "You are the ART DIRECTOR. Fill ONLY décor & lighting (ENGLISH). Return JSON "
+        '{"env":{"decor","lighting"},"shots":{"<shot_id>":{"decor","lighting"}}} for every shot id.'
     ),
     "chef_operateur": (
-        "Tu es le CHEF OPÉRATEUR. Propose les plans : taille de plan + cadrage, caméra "
-        "STATIQUE. 1-2 phrases."
+        "You are the DoP. Fill ONLY framing (shot size + angle) and duration (seconds, 3-5), "
+        'static camera. Return JSON {"shots":{"<shot_id>":{"framing","duration"}}} for every shot id.'
     ),
     "casting": (
-        "Tu es le CASTING & COSTUME. Place les personnages présents en RÉUTILISANT la bible "
-        "(continuité), ou introduis-en un neuf avec apparence + tenue. 1-2 phrases."
+        "You are CASTING & COSTUME. Reuse EXISTING bible characters for continuity, or introduce "
+        "new ones. Return JSON {\"new_characters\":[{\"name\",\"appearance\",\"wardrobe\","
+        "\"voice_id\",\"traits\"}],\"shots\":{\"<shot_id>\":[{\"name\",\"appearance\",\"wardrobe\","
+        "\"expression\",\"action\"}]}}. Appearance/wardrobe in ENGLISH; French first names."
     ),
     "dialoguiste": (
-        "Tu es le DIALOGUISTE. Propose la narration (FRANÇAIS), courte et parlée. 1-2 phrases."
+        "You are the DIALOGUE writer. Fill ONLY narration (FRENCH, one short spoken line per shot). "
+        'Return JSON {"shots":{"<shot_id>":{"narration"}}} for every shot id.'
     ),
 }
-
-_SYNTH_SYSTEM = (
-    "You are the SCRIPT SUPERVISOR. From the writers' room discussion, output the FINAL "
-    "scene as STRICT JSON. Visual fields in ENGLISH (image models expect English), "
-    "narration in FRENCH.\n"
-    'Return {"environment_desc","lighting","shots":[{"id","kind","framing","decor",'
-    '"lighting","characters":[{"name","appearance","wardrobe","expression","action"}],'
-    '"narration_fr","duration_s"}],"new_characters":[{"name","appearance","wardrobe",'
-    '"voice_id","traits"}]}.\n'
-    "2 to 4 shots, STATIC camera. Reuse EXISTING bible names for recurring characters; put "
-    "ONLY genuinely new characters in new_characters. Output JSON only."
-)
 
 
 def _context_blob(brief: Brief, scene_brief: SceneBrief, memory: RoomMemory) -> str:
@@ -68,29 +61,14 @@ def _context_blob(brief: Brief, scene_brief: SceneBrief, memory: RoomMemory) -> 
     )
 
 
-def _transcript_text(transcript: list[Turn]) -> str:
-    return "\n".join(f"{t.role}: {t.message}" for t in transcript) or "(la discussion commence)"
+def _shot_list(contract: SceneContract) -> str:
+    return "; ".join(f"{s.id} ({s.beat})" for s in contract.shots) or "(aucun)"
 
 
-class _ShotCharOut(BaseModel):
+class _ContractOut(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    name: str = ""
-    appearance: str = ""
-    wardrobe: str = ""
-    expression: str = ""
-    action: str = ""
-
-
-class _ShotOut(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = ""
-    kind: str = "video"
-    framing: str = ""
-    decor: str = ""
-    lighting: str = ""
-    narration_fr: str = ""
-    duration_s: float = 4.0
-    characters: list[_ShotCharOut] = []
+    env_intention: str = ""
+    shots: list[ContractShot] = []
 
 
 class _CharOut(BaseModel):
@@ -100,110 +78,106 @@ class _CharOut(BaseModel):
     wardrobe: str = ""
     voice_id: str = ""
     traits: str = ""
+    expression: str = ""
+    action: str = ""
 
 
-class _SceneOut(BaseModel):
+class _DraftOut(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    environment_desc: str = ""
-    lighting: str = ""
-    shots: list[_ShotOut] = []
+    env: dict[str, str] = {}
+    shots: dict[str, dict[str, str]] = {}
     new_characters: list[_CharOut] = []
+    shot_characters: dict[str, list[_CharOut]] = {}
 
 
-class OpenAIRoomVoice:
-    """Implémente `RoomVoice` via GPT (un appel par prise de parole)."""
-
+class _Chat:
     def __init__(self, client: OpenAI, model: str) -> None:
         self.client = client
         self.model = model
 
-    def speak(
-        self, *, role: str, brief: Brief, scene_brief: SceneBrief,
-        memory: RoomMemory, transcript: list[Turn],
-    ) -> str:
-        system = _PERSONAS.get(role, "Tu participes à la table ronde. 1-2 phrases (français).")
-        user = (
-            f"{_context_blob(brief, scene_brief, memory)}\n\n"
-            f"Discussion jusqu'ici :\n{_transcript_text(transcript)}\n\n"
-            f"Ta réplique ({role}) :"
-        )
-        try:
-            resp = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-            )
-        except Exception as e:  # erreur réseau / API — une voix muette ne bloque pas
-            raise CrewAgentError(f"Room voice '{role}' failed: {e}") from e
-        return resp.choices[0].message.content or ""
-
-
-class OpenAISceneSynthesizer:
-    """Implémente `SceneSynthesizer` via GPT (structured output JSON)."""
-
-    def __init__(self, client: OpenAI, model: str) -> None:
-        self.client = client
-        self.model = model
-
-    def synthesize(
-        self, *, brief: Brief, scene_brief: SceneBrief,
-        memory: RoomMemory, transcript: list[Turn],
-    ) -> RoomResult:
-        user = (
-            f"{_context_blob(brief, scene_brief, memory)}\n\n"
-            f"Discussion complète :\n{_transcript_text(transcript)}\n\n"
-            "Produis la scène finale en JSON."
-        )
+    def json(self, system: str, user: str, *, what: str) -> str:
         try:
             resp = self.client.chat.completions.create(
                 model=self.model,
                 response_format={"type": "json_object"},
                 messages=[
-                    {"role": "system", "content": _SYNTH_SYSTEM},
+                    {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
             )
-            out = _SceneOut.model_validate_json(resp.choices[0].message.content or "")
-        except ValidationError as e:
-            raise CrewAgentError("La synthèse de scène est illisible. Réessaie.") from e
-        except Exception as e:
-            raise CrewAgentError(f"Scene synthesis failed: {e}") from e
-        if not out.shots:
-            raise CrewAgentError("La table ronde n'a produit aucun plan. Réessaie.")
+        except Exception as e:  # erreur réseau / API
+            raise CrewAgentError(f"{what} failed: {e}") from e
+        return resp.choices[0].message.content or ""
 
+
+class OpenAIContractAgent:
+    """Implémente `ContractAgent` via GPT (le réalisateur pose le contrat)."""
+
+    def __init__(self, client: OpenAI, model: str) -> None:
+        self._chat = _Chat(client, model)
+
+    def define(
+        self, *, brief: Brief, scene_brief: SceneBrief, memory: RoomMemory
+    ) -> SceneContract:
+        user = f"{_context_blob(brief, scene_brief, memory)}\n\nDéfinis le contrat de la scène."
+        try:
+            out = _ContractOut.model_validate_json(
+                self._chat.json(_CONTRACT_SYSTEM, user, what="Contract")
+            )
+        except ValidationError as e:
+            raise CrewAgentError("Le contrat de scène est illisible. Réessaie.") from e
         sid = scene_brief.id or "s1"
         shots = [
-            ShotPlan(
-                id=s.id or f"{sid}_sh{i + 1}",
-                kind="photo" if s.kind.strip().lower() == "photo" else "video",
-                visual_desc=s.decor,
-                motion_desc="static camera",
-                narration_fr=s.narration_fr,
-                duration_s=max(2.0, min(6.0, s.duration_s or 4.0)),
-                decor=s.decor, lighting=s.lighting, framing=s.framing,
-                characters=[
-                    ShotCharacterPlan(
-                        name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                        expression=c.expression, action=c.action,
-                    )
-                    for c in s.characters
-                ],
-            )
+            ContractShot(id=s.id or f"{sid}_sh{i + 1}", beat=s.beat, kind=s.kind)
             for i, s in enumerate(out.shots[:4])
         ]
-        scene = ScenePlan(
-            id=sid, title=scene_brief.title,
-            environment_desc=out.environment_desc or scene_brief.environment,
-            lighting=out.lighting, context_text=scene_brief.intention,
-            shots=shots,
+        if not shots:
+            raise CrewAgentError("Le réalisateur n'a défini aucun plan. Réessaie.")
+        return SceneContract(env_intention=out.env_intention, shots=shots)
+
+
+class OpenAIDrafter:
+    """Implémente `Drafter` via GPT (un appel par département, champs possédés)."""
+
+    def __init__(self, client: OpenAI, model: str) -> None:
+        self._chat = _Chat(client, model)
+
+    def fill(
+        self,
+        *,
+        department: str,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> Draft:
+        system = _DEPT_SYSTEM.get(department, "Fill your fields. JSON only.")
+        user = (
+            f"{_context_blob(brief, scene_brief, memory)}\n"
+            f"Contrat — plans: {_shot_list(contract)}.\n\n"
+            f"Remplis TON brouillon ({department}) en JSON."
         )
-        new_chars = [
-            CharacterPlan(
-                name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                voice_id=c.voice_id, traits=c.traits,
+        try:
+            out = _DraftOut.model_validate_json(
+                self._chat.json(system, user, what=f"Draft '{department}'")
             )
-            for c in out.new_characters if c.name.strip()
-        ]
-        return RoomResult(scene=scene, new_characters=new_chars, transcript=transcript)
+        except ValidationError as e:
+            raise CrewAgentError(f"Le brouillon '{department}' est illisible. Réessaie.") from e
+        return Draft(
+            department=department,
+            env={k: v for k, v in out.env.items() if isinstance(v, str)},
+            shots=out.shots,
+            new_characters=[
+                CharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
+                              voice_id=c.voice_id, traits=c.traits)
+                for c in out.new_characters if c.name.strip()
+            ],
+            shot_characters={
+                sid: [
+                    ShotCharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
+                                      expression=c.expression, action=c.action)
+                    for c in chars
+                ]
+                for sid, chars in out.shot_characters.items()
+            },
+        )
