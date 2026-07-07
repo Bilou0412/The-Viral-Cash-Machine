@@ -116,41 +116,39 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 | **Couche Format** (moules : catalogue + dispatcher + API), aventure #1 / scènes #2 | ✅ | `src/features/formats/`, `services/formats.py` (TPL-1/2) |
 | **Boucle virale** : N hooks → prédiction → classement → appliquer la gagnante | ✅ | `src/features/virality/`, routes `/hooks`, `/documents/{id}/hook` (VIR-1/2) |
 | **Diagnose de découpe** (shot-audit au niveau document) | ✅ | `capabilities.audit_shot_durations`, route `/shot-audit` (DIR-1) |
+| **Auto-split** — aucun plan généré ne dépasse l'horizon (scinde, ne rabote pas) | ✅ | `src/features/scenes/split.py` (E1) |
+| **Cohérence i2v** — start_image par plan, ancrée à l'établissement (`image_input`) | ✅ | `scene_plan_to_document.py` (E2) |
+| **Publication** (port + Fake + route) — dernier maillon | ✅ | `src/features/publish/`, route `/publish` (E3) |
+| **Boucle de perfs réelles (moat)** — perfs → poids appris → prédicteur recalibré | ✅ | `src/features/performance/`, `services/performance.py` (E4) |
 
 ---
 
 ## 5. Étapes restantes (ordonnées — 1 étape / session)
 
-> Le rail tourne **en réel** (dogfood 7/7) et la couche **Format** + la **boucle virale** sont
-> posées (§4). La spine restante est **l'endgame** (E1–E4) : `idée → moule → 3 variantes →
-> prédiction → publication`, agents + perfs réelles. Les concerns produit historiques (flux
-> Créer, coût, monétisation, legacy) restent en support (S2–S5).
+> **Endgame câblé de bout en bout (E1–E4 + E2) — voir ci-dessous.** Chaque maillon est posé en
+> **ports + Fakes** (offline vert) ; les impls RÉELLES sont des swaps au bord. Restent : la
+> **validation réelle** (dogfood/creds/data — R1–R3 ci-dessous) et les concerns produit (S2–S5).
 
-### S1 — Fermer la boucle réelle (dogfood)  ✅
-Fait : vraie vidéo idée → scènes → assets Replicate prouvée (7/7), breakers hors-mock corrigés,
-harnais `scripts/dogfood_editor.py`. Voir §4.
+### S1 — Fermer la boucle réelle (dogfood)  ✅  ·  ### E1 auto-split ✅ · E2 cohérence i2v ✅ · E3 publication ✅ · E4 moat ✅
+- **E1** `features/scenes/split.split_overlong_shots` — aucun plan généré ne dépasse l'horizon
+  (scinde, ne rabote pas ; câblé dans `generate_video_plan`). *Note : re-décomposition LLM en
+  beats distincts = E1b futur.*
+- **E2** `scene_plan_to_document` — chaque plan compose SA `start_image` avec l'établissement en
+  `image_input`, le motion anime SA frame (≠ photo partagée). Même coût.
+- **E3** `features/publish/` + route `POST /episodes/{id}/publish` (FakePublisher ; API plateforme = swap).
+- **E4** `features/performance/` — `calibrate_angle_weights` : perfs réelles → poids appris ; le
+  prédicteur passe de LLM-juge à **signal réel** (`calibrated_predictor` injecté dans `propose_hooks`).
 
-### E1 — Réalisateur autonome : AUTO-SPLIT (le FIX)  ⬜  ← PROCHAINE ÉTAPE
-La diagnose existe (`shot-audit`, DIR-1). Le fix : un **`ShotSplitter`** (port + Fake + OpenAI)
-qui **re-découpe** un plan `over_horizon`/`multi_beat` en **beats distincts** (pas un split
-mécanique qui duplique). **Ne PAS** s'appuyer sur l'heuristique `multi_beat` pour piloter sans
-la durcir (note dans `_beat_count`). Câblé dans le pipeline scènes → aucun doc généré ne dépasse
-l'horizon.
+### R1 — Valider E2 en dogfood réel  ⬜  ← PROCHAINE ÉTAPE
+Le wiring E2 est prouvé offline ; reste à confirmer que la RÉFÉRENCE seedream (`image_input`)
+produit des frames visuellement cohérentes sur une vraie génération courte. `dogfood_editor.py`.
 
-### E2 — Cohérence i2v (start_image par plan)  ⬜
-Chaque plan génère **sa** `start_image` depuis la `LocationEntry` + l'établissement de scène en
-**image de référence** (`image_input` seedream), + la dernière frame du plan précédent → cohérence
-visuelle auto entre plans (perso/décor stables). Touche `editor_generation` (chaînage des refs).
+### R2 — Brancher la publication réelle  ⬜
+Swap `FakePublisher` → API plateforme (TikTok/Reels/Shorts) — **needs creds plateforme**.
 
-### E3 — Sélecteur de format + publication  ⬜
-Front « Créer » : **sélecteur de moule** (route `GET /api/formats` déjà là) — variante (a)
-légère d'abord (fixe `Episode.format`, happy path scènes intact). Puis **publication** : export
-MP4 → post plateforme (needs creds plateforme).
-
-### E4 — Boucle de perfs réelles (le MOAT)  ⬜
-Les perfs des vidéos publiées (rétention/complétion/hook) **re-nourrissent** le prédicteur de
-viralité et la structure des formats — le prédicteur `ViralityPredictor` (port déjà posé, VIR-1)
-passe de LLM-juge (proxy) à **signal réel**. Le template n'est plus deviné, il est **appris**.
+### R3 — Alimenter le moat en donnée réelle  ⬜
+Swap `FakePerformanceSource` → analytics plateforme + persistance de l'historique (published_id,
+angle, perfs) → recalibrer le prédicteur en continu. **needs vidéos publiées avec data.**
 
 ### S2 — Flux « Créer » complet  ⬜
 Étape **photo-first explicite par scène** (générer/uploader l'environnement AVANT les plans,
