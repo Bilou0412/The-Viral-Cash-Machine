@@ -630,7 +630,23 @@ class EditorGenerationService:
                 )
                 return None, None
 
-            asset_repo.set_local_path(asset_id, local or "")
+            # Un nœud SANS fichier téléchargé n'est PAS prêt : le downloader peut
+            # renvoyer None sans lever (URL vide, hôte de sortie bloqué type
+            # replicate.delivery…). Sinon on marquait `ready` avec un chemin vide.
+            if not local:
+                error = (
+                    f"aucun fichier téléchargé pour {beat!r} "
+                    "(URL de sortie vide ou hôte de livraison injoignable)"
+                )
+                job_repo.mark_failed(job_id, error)
+                asset_repo.mark_failed(asset_id)
+                bus.publish(
+                    doc_id,
+                    {"type": "asset_failed", "asset_id": asset_id, "error": error},
+                )
+                return None, None
+
+            asset_repo.set_local_path(asset_id, local)
             job_repo.mark_done(job_id)
 
             ac = cost_actual.actual_cost(

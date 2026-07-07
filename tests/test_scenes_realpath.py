@@ -280,6 +280,25 @@ def test_unresolved_brick_ref_fails_without_calling_provider(tmp_path):
     assert any(a.status == "failed" for a in assets)
 
 
+def test_download_failure_marks_asset_failed(tmp_path):
+    """Génération OK mais téléchargement du résultat KO (downloader renvoie None,
+    ex. hôte de livraison bloqué) → asset `failed`, jamais `ready` avec un chemin
+    vide. Régression du bug trouvé au 1er dogfood réel (replicate.delivery bloqué)."""
+    engine = _engine(tmp_path)
+    doc_id = _persist_scene_doc(engine)
+    provider = _UniqueProvider()  # la génération réussit (URLs)…
+
+    def _failing_downloader(url: str, folder: str, filename: str) -> str | None:
+        return None  # …mais le téléchargement ne ramène rien
+
+    svc = EditorGenerationService(engine, provider=provider, downloader=_failing_downloader)
+    svc.generate_document(doc_id)
+    with Session(engine) as s:
+        assets = AssetRepo(s).assets_by_document(doc_id)
+    assert assets
+    assert all(a.status == "failed" for a in assets)  # aucun faux « ready »
+
+
 # -- préflight du harnais dogfood (C-1 : vérif des slugs, stub) ----------------
 
 def test_preflight_check_models_flags_bad_slug():

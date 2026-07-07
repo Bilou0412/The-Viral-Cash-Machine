@@ -32,6 +32,36 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MAX_SHOTS = 2  # « 1 scène, 2 plans » — pour limiter le coût du 1er run.
 
 
+def _install_proxy_shim() -> None:
+    """Sandbox-only : force les SDK (httpx) à passer par le proxy d'egress.
+
+    Dans l'environnement Claude Code web, l'accès sortant passe par un proxy
+    (`HTTPS_PROXY`) mais les SDK replicate/openai tapent en DIRECT et se font
+    bloquer (403 « Host not in allowlist »). On patche `httpx.Client` pour
+    défaut-er `proxy`/`verify` vers le proxy + son CA. **No-op** hors sandbox
+    (pas de `HTTPS_PROXY`) → aucun effet en prod / sur ta machine.
+    """
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+    if not proxy:
+        return
+    ca = os.environ.get("SSL_CERT_FILE") or "/root/.ccr/ca-bundle.crt"
+    verify: object = ca if os.path.exists(ca) else True
+    try:
+        import httpx
+    except ImportError:
+        return
+    for cls in (httpx.Client, httpx.AsyncClient):
+        orig = cls.__init__
+
+        def patched(self: object, *a: object, __orig: object = orig, **kw: object) -> None:
+            kw.setdefault("proxy", proxy)
+            kw.setdefault("verify", verify)
+            kw.setdefault("trust_env", True)
+            __orig(self, *a, **kw)  # type: ignore[operator]
+
+        cls.__init__ = patched  # type: ignore[method-assign]
+
+
 # -- préflight (testable, client injecté) -------------------------------------
 
 @dataclass
@@ -103,6 +133,11 @@ def _print_rows(rows: list[CheckRow]) -> None:
 
 def run_dogfood(idea: str, *, render: bool) -> int:
     """Idée → plan (1 scène) → doc (≤2 plans) → génération réelle → assets sur disque."""
+    # Sorties/DB user-writable par défaut — AVANT les imports (paths/engine lisent
+    # ces variables à l'import). Posé au run seulement (import du module = sans effet).
+    os.environ.setdefault("VCM_OUTPUT_DIR", "./out")
+    os.environ.setdefault("VCM_STUDIO_DB", "sqlite:///dogfood.db")
+
     from sqlmodel import Session
 
     from src.features.scenes.scene_plan_to_document import scene_plan_to_document
@@ -115,11 +150,6 @@ def run_dogfood(idea: str, *, render: bool) -> int:
         EpisodeRepo,
         ProjectRepo,
     )
-
-    # Sorties/DB user-writable par défaut (surchargeables par l'env) — posé au run
-    # seulement, pour que l'IMPORT du module reste sans effet de bord (tests).
-    os.environ.setdefault("VCM_OUTPUT_DIR", "./out")
-    os.environ.setdefault("VCM_STUDIO_DB", "sqlite:///dogfood.db")
 
     openai_key = os.environ.get("OPENAI_API_KEY") or None
     replicate_token = os.environ.get("REPLICATE_API_TOKEN") or None
@@ -184,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="préflight seul (zéro dépense)")
     parser.add_argument("--render", action="store_true", help="tente aussi le MP4 Remotion")
     args = parser.parse_args(argv)
+
+    _install_proxy_shim()  # sandbox-only : SDK via proxy (no-op hors Claude Code web)
 
     if args.check:
         print("Préflight dogfood (aucune génération) :")
