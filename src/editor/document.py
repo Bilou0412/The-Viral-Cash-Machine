@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..videospec.models import Canvas
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 class _Doc(BaseModel):
@@ -119,6 +119,47 @@ class TextBrick(_Doc):
     placement: TimelinePlacement = Field(default_factory=TimelinePlacement)
 
 
+class CharacterEntry(_Doc):
+    """Fiche d'un personnage dans la BIBLE — l'identité RÉCURRENTE (v4).
+
+    Ce que fixe le casting/costume d'une prod : apparence physique, tenue par
+    défaut, voix, traits. Les plans la RÉFÉRENCENT (par `id`) et surchargent
+    localement. C'est le support des « trous » d'un futur template de série.
+    """
+
+    id: Annotated[str, Field(min_length=1)]
+    name: str = ""
+    appearance: str = ""   # physique récurrent (EN, prompt visuel)
+    wardrobe: str = ""     # tenue par défaut (EN)
+    voice_id: str = ""     # profil vocal (banque VoiceProfile)
+    traits: str = ""       # caractère / attitude
+
+
+class ShotCharacter(_Doc):
+    """Un personnage PRÉSENT dans un plan : référence bible + surcharges locales."""
+
+    ref: str = ""          # id d'une CharacterEntry ("" = perso ad hoc, hors bible)
+    name: str = ""         # nom d'affichage / si hors bible
+    wardrobe: str = ""     # surcharge de tenue pour CE plan
+    expression: str = ""   # expression / émotion dans le plan
+    action: str = ""       # ce que fait le personnage dans le plan
+
+
+class ShotBrief(_Doc):
+    """Les CHAMPS MÉTIER d'un plan visuel (v4), regroupés par le compilateur.
+
+    Remplace le prompt-blob : chaque département a son champ (déco, lumière,
+    cadrage, personnages). `compile_shot.compile_shot_prompt` les réunit en LE
+    prompt EN envoyé au modèle. `shot=None` sur une brique → chemin blob legacy.
+    """
+
+    decor: str = ""        # lieu, moment, ambiance, accessoires (EN)
+    lumiere: str = ""      # lumière (EN)
+    cadrage: str = ""      # taille de plan + angle (EN)
+    characters: list[ShotCharacter] = Field(default_factory=list)
+    extra: str = ""        # complément libre (EN)
+
+
 class ClipBrick(_Doc):
     """Brique média composite posée sur la timeline : VIDÉO ou PHOTO.
 
@@ -139,6 +180,7 @@ class ClipBrick(_Doc):
     image: GenNode = Field(default_factory=GenNode)   # toujours présent
     motion: GenNode | None = None                  # kind=video uniquement
     zoom: ZoomSpec | None = None                   # kind=photo uniquement (Ken Burns)
+    shot: ShotBrief | None = None                  # v4 : champs métier (sinon blob legacy)
     children: list[AudioChild] = Field(default_factory=list)
     context_overrides: NarrativeContext | None = None
     preset_id: int | None = None
@@ -196,12 +238,16 @@ class EditorDocument(_Doc):
     tracks: list[Track] = Field(default_factory=list)
     bricks: list[Brick] = Field(default_factory=list)
     scenes: list[Scene] = Field(default_factory=list)
+    bible: list[CharacterEntry] = Field(default_factory=list)  # v4 : personnages récurrents
 
     @model_validator(mode="after")
     def _check(self) -> EditorDocument:
         ids = [b.id for b in self.bricks]
         if len(ids) != len(set(ids)):
             raise ValueError("ids de briques dupliqués dans le document")
+        bible_ids = [c.id for c in self.bible]
+        if len(bible_ids) != len(set(bible_ids)):
+            raise ValueError("ids de personnages dupliqués dans la bible")
         known = set(ids)
         for b in self.bricks:
             for layer in getattr(b, "layers", []):

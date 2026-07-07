@@ -107,14 +107,23 @@ def _scenes_view(doc: EditorDocument) -> list[dict[str, Any]]:
 
 def _narration_lines(doc: EditorDocument) -> list[str]:
     """Toutes les répliques/narrations (le texte parlé) du document, dans l'ordre."""
-    lines: list[str] = []
+    return [u["text"] for u in _narration_units(doc)]
+
+
+def _narration_units(doc: EditorDocument) -> list[dict[str, str]]:
+    """Le texte parlé PORTEUR de l'id de son enfant audio (pour réécrire par id).
+
+    Le dialoguiste doit relocaliser chaque réplique sur le bon `AudioChild` — la
+    liste plate de textes ne suffit pas, on garde donc `{id, text}` par enfant.
+    """
+    units: list[dict[str, str]] = []
     for brick in doc.bricks:
         if isinstance(brick, ClipBrick):
             for child in brick.children:
                 text = child.params.get("text")
                 if isinstance(text, str) and text.strip():
-                    lines.append(text.strip())
-    return lines
+                    units.append({"id": child.id, "text": text.strip()})
+    return units
 
 
 def _total_duration(doc: EditorDocument) -> float:
@@ -155,7 +164,8 @@ def _dossier(role: str, doc: EditorDocument | None) -> dict[str, Any]:
             ]
         }
     if role in ("dialoguiste", "inge_son"):
-        return {"narration": _narration_lines(doc), "characters": characters}
+        # Porteur des ids d'enfants audio → le dialoguiste réécrit par id.
+        return {"narration": _narration_units(doc), "characters": characters}
     if role == "tournage":
         return {"n_scenes": len(doc.scenes), "n_bricks": len(doc.bricks)}
     if role == "monteur":

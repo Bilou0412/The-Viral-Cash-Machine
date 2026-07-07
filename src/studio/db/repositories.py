@@ -695,6 +695,18 @@ class EditorDocRepo:
         self.session.refresh(row)
         return row
 
+    def set_memory(self, doc_id: int, memory_json: str) -> EditorDocumentRow | None:
+        """Persiste l'état de la table ronde (JSON `RoomState`) sur le document."""
+        row = self.get(doc_id)
+        if row is None:
+            return None
+        row.memory_json = memory_json
+        row.updated_at = datetime.now(UTC)
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+        return row
+
 
 class UserRepo:
     """CRUD for :class:`User` (auth Phase B)."""

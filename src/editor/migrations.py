@@ -22,6 +22,10 @@ def upgrade_document(raw: dict[str, Any]) -> EditorDocument:
     #
     # v2 → v3 : introduction de `scenes` (index de regroupement narratif). Additif :
     # un doc v2 sans `scenes` se valide avec `scenes=[]` par défaut — rien à faire.
+    #
+    # v3 → v4 : champs métier structurés (`ClipBrick.shot: ShotBrief`) + `bible`
+    # (personnages récurrents). Additif : un doc v3 sans `shot`/`bible` se valide
+    # avec `shot=None` (→ chemin blob legacy) et `bible=[]` — rien à transformer.
     _ = version
 
     data["schema_version"] = SCHEMA_VERSION

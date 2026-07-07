@@ -80,17 +80,19 @@ export function Creer() {
         draft_mode: true,
         ...(brief ? { brief } : {}),
       })
-      const doc = await api.createSceneDocument(ep.id, {
+      // Table ronde : on pose l'ARC (le scénariste), puis on crée scène par scène
+      // dans l'atelier (l'équipe discute). Pas de génération d'un bloc.
+      const plan = await api.planScenes(ep.id, {
         prompt: prompt.trim(),
         n_scenes: nScenes,
         title: vidTitle,
       })
-      if (doc.source === "fake") {
-        toast.warning("Scènes de démo — ajoute ta clé OpenAI dans Réglages pour du vrai contenu.")
+      if (plan.source === "fake") {
+        toast.message("Arc de démo — ajoute ta clé OpenAI pour une vraie table ronde.")
       } else {
-        toast.success("Scènes générées 🎬")
+        toast.success("Découpage prêt 🎬 — passe à l'atelier")
       }
-      void navigate(`/editor/${doc.id}/review`)
+      void navigate(`/editor/${plan.id}/room`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Génération impossible")
     } finally {

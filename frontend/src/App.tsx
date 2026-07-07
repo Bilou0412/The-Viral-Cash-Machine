@@ -27,6 +27,7 @@ const ClipReview = lazy(() => import("@/pages/ClipReview").then((m) => ({ defaul
 const TemplatesIndex = lazy(() => import("@/pages/TemplatesIndex").then((m) => ({ default: m.TemplatesIndex })))
 const TemplateBuilder = lazy(() => import("@/pages/TemplateBuilder").then((m) => ({ default: m.TemplateBuilder })))
 const Creer = lazy(() => import("@/pages/Creer").then((m) => ({ default: m.Creer })))
+const SceneRoom = lazy(() => import("@/pages/SceneRoom").then((m) => ({ default: m.SceneRoom })))
 const PromptTemplatesIndex = lazy(() => import("@/pages/PromptTemplatesIndex").then((m) => ({ default: m.PromptTemplatesIndex })))
 const PromptTemplateBuilder = lazy(() => import("@/pages/PromptTemplateBuilder").then((m) => ({ default: m.PromptTemplateBuilder })))
 
@@ -55,6 +56,7 @@ const router = createBrowserRouter([
       { path: "settings", element: <Settings /> },
       { path: "editor", element: <EditorIndex /> },
       { path: "editor/:docId/review", element: <ClipReview /> },
+      { path: "editor/:docId/room", element: <SceneRoom /> },
       { path: "templates", element: <TemplatesIndex /> },
       { path: "templates/:id", element: <TemplateBuilder /> },
       { path: "prompt-templates", element: <PromptTemplatesIndex /> },

@@ -70,6 +70,7 @@ from .services import auth, secrets
 from .services.art_direction import direct_art_direction
 from .services.context import assemble_context
 from .services.crew import agent_source, generate_distribution_kit
+from .services.dialogue import direct_dialogue
 from .services.editor_generation import (
     EditorGenerationService,
     regenerate_brick,
@@ -78,7 +79,8 @@ from .services.generation import AssetGenerationService, regenerate_asset
 from .services.generation_plan import estimate_cost, plan_episode_assets
 from .services.montage import MontageService
 from .services.producer import producer_source, propose_brief
-from .services.scenes import decomposer_source, generate_video_plan
+from .services.room import RoomState, build_next_scene, plan_room_state
+from .services.scenes import decomposer_source, generate_arc, generate_video_plan
 from .services.scripting import generate_script
 
 if TYPE_CHECKING:
@@ -1077,6 +1079,118 @@ def create_scene_document(
     }
 
 
+# --- Table ronde : créer la vidéo SCÈNE PAR SCÈNE (agents en discussion) ------
+
+
+@app.post("/api/episodes/{episode_id}/scenes/plan")
+def plan_scenes_route(
+    episode_id: int, body: SceneGenIn, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Ouvre la production : le scénariste pose l'ARC (scènes ordonnées), on crée un
+    document vide + l'état de table ronde. On construira ensuite scène par scène."""
+    from ...editor.document import EditorDocument as _EditorDocument
+
+    episode = _require_owned_episode(session, user, episode_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    brief = Brief.model_validate_json(episode.brief_json) if episode.brief_json else None
+    style = body.style_identity
+    platform, language = "tiktok", "fr"
+    if brief is not None:
+        platform, language = brief.plateforme, brief.langue
+        if brief.orientation():
+            style = f"{style} {brief.orientation()}".strip()
+    try:
+        arc = generate_arc(
+            body.prompt, style_identity=style, n_scenes=body.n_scenes,
+            platform=platform, language=language, openai_key=keys.openai,
+        )
+    except SceneDecompositionError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    doc = _EditorDocument(title=body.title)
+    row = EditorDocRepo(session).create(
+        episode.project_id, doc.title, doc.model_dump_json(),
+        episode_id=episode_id, schema_version=doc.schema_version,
+    )
+    assert row.id is not None
+    EditorDocRepo(session).set_memory(row.id, plan_room_state(arc).model_dump_json())
+    return {
+        "id": row.id, "project_id": row.project_id, "episode_id": row.episode_id,
+        "title": row.title, "doc": json.loads(row.doc_json),
+        "arc": [{"id": s.id, "title": s.title} for s in arc],
+        "source": decomposer_source(keys.openai),
+    }
+
+
+@app.post("/api/editor/documents/{doc_id}/scenes/next")
+def build_next_scene_route(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Construit LA prochaine scène par la table ronde (débat multi-tours), l'ajoute
+    au document, fait avancer la mémoire, persiste. Renvoie la scène + le débat."""
+    row = _require_owned_doc(session, user, doc_id)
+    if not row.memory_json:
+        raise HTTPException(409, "aucune table ronde ouverte (appelle d'abord scenes/plan)")
+    state = RoomState.model_validate_json(row.memory_json)
+    if not state.remaining():
+        raise HTTPException(409, "toutes les scènes sont déjà construites")
+    keys = secrets.get_user_keys(engine, _uid(user))
+    brief = Brief()
+    if row.episode_id is not None:
+        episode = EpisodeRepo(session).get(row.episode_id)
+        if episode is not None and episode.brief_json:
+            brief = Brief.model_validate_json(episode.brief_json)
+    doc = _doc_of_row(row)
+    try:
+        scene, transcript = build_next_scene(doc, state, brief, openai_key=keys.openai)
+    except CrewAgentError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    repo = EditorDocRepo(session)
+    repo.save(doc_id, doc.model_dump_json())
+    repo.set_memory(doc_id, state.model_dump_json())
+    return {
+        "id": doc_id, "scene_id": scene.id, "title": scene.title,
+        "transcript": [t.model_dump() for t in transcript],
+        "remaining": [s.id for s in state.remaining()],
+        "doc": json.loads(doc.model_dump_json()),
+        "source": agent_source(keys.openai),
+    }
+
+
+@app.get("/api/editor/documents/{doc_id}/scenes/state")
+def scenes_state_route(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """L'état de la production : l'arc, les scènes faites, celles qui restent."""
+    row = _require_owned_doc(session, user, doc_id)
+    if not row.memory_json:
+        return {"arc": [], "built": [], "remaining": []}
+    state = RoomState.model_validate_json(row.memory_json)
+    return {
+        "arc": [{"id": s.id, "title": s.title} for s in state.arc],
+        "built": state.built,
+        "remaining": [s.id for s in state.remaining()],
+    }
+
+
+@app.get("/api/editor/documents/{doc_id}/scenes/{scene_id}/transcript")
+def scene_transcript_route(
+    doc_id: int, scene_id: str, session: Session = Depends(_session),
+    user: User = Depends(require_user),
+) -> dict[str, Any]:
+    """Relit le débat de la table ronde d'une scène (le « thinking »)."""
+    row = _require_owned_doc(session, user, doc_id)
+    if not row.memory_json:
+        raise HTTPException(404, "aucune table ronde pour ce document")
+    state = RoomState.model_validate_json(row.memory_json)
+    turns = state.transcripts.get(scene_id)
+    if turns is None:
+        raise HTTPException(404, "aucun débat pour cette scène")
+    return {"scene_id": scene_id, "transcript": [t.model_dump() for t in turns]}
+
+
 @app.get("/api/episodes/{episode_id}/editor-document")
 def get_episode_editor_document(
     episode_id: int, session: Session = Depends(_session),
@@ -1122,12 +1236,15 @@ def save_editor_document(
     user: User = Depends(require_user)
 ) -> dict[str, Any]:
     _require_owned_doc(session, user, doc_id)
+    from ...editor.compile_shot import recompile_document
     from ...editor.document import EditorDocument
 
     try:
         doc = EditorDocument.model_validate(body.doc)
     except Exception as exc:
         raise HTTPException(422, f"invalid EditorDocument: {exc}") from exc
+    # Champs métier = source de vérité : resync le prompt compilé des briques `shot`.
+    recompile_document(doc)
     row = EditorDocRepo(session).save(
         doc_id, doc.model_dump_json(), title=body.title
     )
@@ -1540,6 +1657,32 @@ def direct_art_direction_route(
             brief = Brief.model_validate_json(episode.brief_json)
     try:
         doc = direct_art_direction(_doc_of_row(row), brief, openai_key=keys.openai)
+    except CrewAgentError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    saved = EditorDocRepo(session).save(doc_id, doc.model_dump_json())
+    assert saved is not None
+    return {
+        "id": saved.id, "project_id": saved.project_id, "title": saved.title,
+        "doc": json.loads(saved.doc_json), "source": agent_source(keys.openai),
+    }
+
+
+@app.post("/api/editor/documents/{doc_id}/direct/dialogue")
+def direct_dialogue_route(
+    doc_id: int, session: Session = Depends(_session),
+    user: User = Depends(require_user), engine: Engine = Depends(get_db_engine),
+) -> dict[str, Any]:
+    """Dirige le dialoguiste : réécrit le texte parlé (narration/dialogues) du
+    document, persiste, renvoie le doc à jour. Aucun asset n'est régénéré."""
+    row = _require_owned_doc(session, user, doc_id)
+    keys = secrets.get_user_keys(engine, _uid(user))
+    brief = Brief()
+    if row.episode_id is not None:
+        episode = EpisodeRepo(session).get(row.episode_id)
+        if episode is not None and episode.brief_json:
+            brief = Brief.model_validate_json(episode.brief_json)
+    try:
+        doc = direct_dialogue(_doc_of_row(row), brief, openai_key=keys.openai)
     except CrewAgentError as exc:
         raise HTTPException(502, str(exc)) from exc
     saved = EditorDocRepo(session).save(doc_id, doc.model_dump_json())

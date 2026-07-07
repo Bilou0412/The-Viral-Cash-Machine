@@ -316,12 +316,41 @@ export interface AudioChild {
   params: Record<string, unknown>
 }
 
+// v4 — champs métier d'un plan (décor/lumière/cadrage/personnages), regroupés
+// côté backend en le prompt final. `shot` absent → prompt-blob legacy.
+export interface ShotCharacter {
+  ref: string          // id d'une CharacterEntry ("" = hors bible)
+  name: string
+  wardrobe: string
+  expression: string
+  action: string
+}
+
+export interface ShotBrief {
+  decor: string
+  lumiere: string
+  cadrage: string
+  characters: ShotCharacter[]
+  extra: string
+}
+
+// Fiche de la BIBLE (identité récurrente d'un personnage).
+export interface CharacterEntry {
+  id: string
+  name: string
+  appearance: string
+  wardrobe: string
+  voice_id: string
+  traits: string
+}
+
 export interface ClipBrick {
   id: string
   type: "clip"
   kind: "video" | "photo"
   image: GenNode
   motion?: GenNode | null
+  shot?: ShotBrief | null
   children: AudioChild[]
   context_overrides?: Partial<GlobalContext> | null
   preset_id?: number | null
@@ -351,6 +380,7 @@ export interface EditorDoc {
   tracks: TrackDef[]
   bricks: Brick[]
   scenes?: Scene[]
+  bible?: CharacterEntry[]
 }
 
 export interface EditorDocument {
@@ -372,6 +402,42 @@ export interface SceneDocumentResult extends EditorDocument {
 // + art direction) + quel moteur l'a produit (openai/fake).
 export interface ArtDirectionResult extends EditorDocument {
   source?: DecomposerSource
+}
+
+// Résultat du dialoguiste : le document réécrit (textes parlés) + le moteur.
+export interface DialogueResult extends EditorDocument {
+  source?: DecomposerSource
+}
+
+// Table ronde — création scène par scène (les agents discutent).
+export interface Turn {
+  role: string      // clé du métier qui parle (cf. crew.ts)
+  message: string
+}
+export interface ArcScene {
+  id: string
+  title: string
+}
+export interface ScenePlanResult {
+  id: string        // id du document créé
+  title: string
+  doc: EditorDoc
+  arc: ArcScene[]
+  source?: DecomposerSource
+}
+export interface BuildSceneResult {
+  id: string
+  scene_id: string
+  title: string
+  transcript: Turn[]
+  remaining: string[]
+  doc: EditorDoc
+  source?: DecomposerSource
+}
+export interface ScenesState {
+  arc: ArcScene[]
+  built: string[]
+  remaining: string[]
 }
 
 // Le brief du producteur (phase développement) — le cahier des charges qui

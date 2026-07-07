@@ -54,3 +54,29 @@ class ArtDirection(BaseModel):
 
     art_direction: str = ""
     scenes: list[SceneArt] = Field(default_factory=list)
+
+
+class NarrationRef(BaseModel):
+    """Une réplique que le dialoguiste réécrit (l'id relie au bon enfant audio)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = ""
+    text: str = ""
+
+
+class DialogueLine(BaseModel):
+    """Une réplique réécrite par le dialoguiste (rattachée par `line_id`)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    line_id: str = ""
+    text: str = ""
+
+
+class Dialogue(BaseModel):
+    """Ce que produit le dialoguiste : les répliques réécrites (français), par id."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    lines: list[DialogueLine] = Field(default_factory=list)

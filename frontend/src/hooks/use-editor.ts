@@ -133,6 +133,46 @@ export function useDirectArtDirection(id: string) {
   })
 }
 
+// Dialoguiste : réécrit le texte parlé et renvoie le doc à jour (même schéma).
+export function useDirectDialogue(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.directDialogue(id),
+    onSuccess: (saved) => {
+      qc.setQueryData(qkEditor.document(id), saved)
+      void qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
+    },
+  })
+}
+
+// Table ronde — création scène par scène.
+const qkScenesState = (id: string) => ["editor", "scenes-state", id] as const
+
+export const useScenesState = (id: string) =>
+  useQuery({
+    queryKey: qkScenesState(id),
+    queryFn: () => api.scenesState(id),
+    enabled: !!id,
+  })
+
+export function useBuildNextScene(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.buildNextScene(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qkEditor.document(id) })
+      void qc.invalidateQueries({ queryKey: qkScenesState(id) })
+    },
+  })
+}
+
+export const useSceneTranscript = (id: string, sceneId: string | null) =>
+  useQuery({
+    queryKey: ["editor", "transcript", id, sceneId],
+    queryFn: () => api.sceneTranscript(id, sceneId as string),
+    enabled: !!id && !!sceneId,
+  })
+
 // Distribution : l'attaché de presse / Growth. 404 (pas encore de fiche) = normal.
 const qkDistribution = (id: string) => ["editor", "distribution", id] as const
 
