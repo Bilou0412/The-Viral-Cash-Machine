@@ -218,6 +218,7 @@ def preview_text(idea: str) -> int:
     from src.editor.compile_shot import (
         compile_image_prompt,
         compile_motion_prompt,
+        looks_french,
         resolve_shot,
     )
     from src.editor.document import ClipBrick, Scene
@@ -230,7 +231,9 @@ def preview_text(idea: str) -> int:
     doc = scene_plan_to_document(plan)
 
     m = doc.meta
-    print(f"■ VIDÉO — {doc.title} | {m.ratio} {m.resolution} {m.fps}fps | style: {m.style_rendu}")
+    style = f" | style: {m.style_rendu}" if m.style_rendu.strip() else ""
+    reso = f" {m.resolution}" if m.resolution.strip() else ""
+    print(f"■ VIDÉO — {doc.title} | {m.ratio}{reso} {m.fps}fps{style}")
     print(f"  intention: {doc.intention_globale.genre} · {doc.intention_globale.ton}")
     print(f"  bibles: {len(doc.location_bible)} décor(s), {len(doc.bible)} perso(s)\n")
 
@@ -245,8 +248,11 @@ def preview_text(idea: str) -> int:
         r = resolve_shot(doc, scene_of.get(brick.id, Scene(id="_none")), brick.shot)
         print(f"  ▸ PLAN {brick.id} | cadre: {brick.shot.cadre.taille_plan or '—'} | "
               f"caméra: {brick.shot.camera.type or '—'}")
-        print(f"      IMAGE  : {compile_image_prompt(r) or '(vide)'}")
-        print(f"      MOTION : {compile_motion_prompt(r) or '(vide)'}")
+        img = compile_image_prompt(r)
+        mot = compile_motion_prompt(r)
+        fr = " ⚠FR" if looks_french(img) else ""
+        print(f"      IMAGE  ({len(img.split()):>2}w{fr}): {img or '(vide)'}")
+        print(f"      MOTION ({len(mot.split()):>2}w): {mot or '(vide)'}")
         narr = next((c.params.get('text', '') for c in brick.children), '')
         print(f"      VOIX   : {narr or '(aucune)'}\n")
     return 0

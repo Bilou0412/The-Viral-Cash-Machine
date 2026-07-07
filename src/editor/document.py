@@ -268,7 +268,7 @@ class RenderMeta(_Doc):
     """Le « contenant » (niveau VIDÉO) — format/rendu, hérité par tout."""
 
     ratio: str = "9:16"
-    fps: int = 0
+    fps: int = 24
     resolution: str = ""
     style_rendu: str = ""
     grain_etalonnage: str = ""

@@ -53,14 +53,44 @@ def _doc(scene: Scene, brief: ShotBrief) -> tuple[EditorDocument, Scene]:
 def test_image_prompt_resolves_location_and_character():
     scene = Scene(id="s1", location_ref="loc1", moment_jour="night",
                   lumiere_ambiante=Lumiere(sources="cold flicker"))
-    brief = ShotBrief(cadre=Cadre(taille_plan="close-up"),
+    brief = ShotBrief(cadre=Cadre(taille_plan="medium shot"),
                       personnages_presents=[PersonnagePresent(ref="lea", expression="terrified")])
     doc, scene = _doc(scene, brief)
     r = resolve_shot(doc, scene, brief)
     out = compile_image_prompt(r)
-    assert "close-up" in out and "Léa (red-haired teen)" in out
+    assert "medium shot" in out and "Léa (red-haired teen)" in out
+    assert out.index("Léa") < out.index("medium shot")   # sujet-en-tête (C6)
     assert "abandoned subway" in out and "night" in out
     assert "cold flicker" in out           # lumière héritée de la scène
+    assert len(out.split()) <= 60          # budget de mots dur (C1)
+
+
+def test_image_prompt_translates_closed_vocab_and_stays_english():
+    """Les champs à vocabulaire fermé FR sont normalisés en EN (C5)."""
+    scene = Scene(id="s1", location_ref="loc1", moment_jour="nuit", saison="hiver", meteo="neige")
+    doc, scene = _doc(scene, ShotBrief(cadre=Cadre(taille_plan="wide shot")))
+    out = compile_image_prompt(resolve_shot(doc, scene, ShotBrief(cadre=Cadre(taille_plan="wide shot"))))
+    assert "night" in out and "winter" in out and "snow" in out
+    assert "nuit" not in out and "hiver" not in out and "neige" not in out
+
+
+def test_image_prompt_drops_placeholder_wardrobe_and_tight_frame():
+    """« natural fur only » (placeholder) et garde-robe en gros plan sont omises (C3/C7)."""
+    scene = Scene(id="s1", location_ref="loc1")
+    brief = ShotBrief(cadre=Cadre(taille_plan="extreme close-up"),
+                      personnages_presents=[PersonnagePresent(ref="lea", expression="calm")])
+    doc = EditorDocument(
+        bricks=[ClipBrick(id="sh1", kind="video",
+                          image=GenNode(model_ref="m", params={"prompt": ""}),
+                          motion=GenNode(model_ref="v", params={"prompt": "", "image": "x"}),
+                          shot=brief, placement=TimelinePlacement(track=0, start=0.0, duration=4.0))],
+        scenes=[scene.model_copy(update={"shot_ids": ["sh1"]})],
+        bible=[CharacterEntry(id="lea", name="Chat", appearance="ginger cat",
+                              wardrobe="natural fur only")],
+        location_bible=[LocationEntry(ref="loc1", lieu="kitchen")],
+    )
+    out = compile_image_prompt(resolve_shot(doc, doc.scenes[0], brief))
+    assert "wearing" not in out and "natural fur" not in out
 
 
 def test_lumiere_inheritance_and_override():
@@ -83,6 +113,21 @@ def test_motion_prompt_uses_movement_and_delta():
     d, sc = _doc(scene, brief)
     out = compile_motion_prompt(resolve_shot(d, sc, brief))
     assert "camera slow push in" in out and "turns" in out and "still to running" in out
+    assert len(out.split()) <= 35              # budget de mots motion (C4)
+
+
+def test_motion_prompt_static_camera_and_null_deltas_dropped():
+    """Caméra immobile → « static camera » ; un delta X→X n'apparaît pas (C4)."""
+    scene = Scene(id="s1", location_ref="loc1")
+    brief = ShotBrief(
+        camera=Camera(type="static", vitesse="none", depart_arrivee="locked framing"),
+        personnages_presents=[PersonnagePresent(ref="lea", action="breathes",
+                                                etat_debut="upright", etat_fin="upright")],
+    )
+    d, sc = _doc(scene, brief)
+    out = compile_motion_prompt(resolve_shot(d, sc, brief))
+    assert "static camera" in out and "breathes" in out
+    assert "upright to upright" not in out and "locked framing" not in out
 
 
 # -- recompile + rétro-compat -------------------------------------------------
@@ -95,7 +140,7 @@ def test_recompile_updates_image_and_motion():
     clip = doc.bricks[0]
     assert isinstance(clip, ClipBrick)
     assert "wide shot" in clip.image.params["prompt"]
-    assert clip.motion is not None and "camera static" in clip.motion.params["prompt"]
+    assert clip.motion is not None and "static camera" in clip.motion.params["prompt"]
 
 
 def test_backward_compat_shot_none_unchanged():

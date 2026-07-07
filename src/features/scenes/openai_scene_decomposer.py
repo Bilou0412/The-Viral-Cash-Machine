@@ -294,7 +294,14 @@ class OpenAISceneDecomposer:
             '"lumiere_ambiante":{"sources","direction","qualite","temperature","contraste"}}'
             "]}\n"
             "Two scenes in the SAME place must reuse the SAME location description. "
-            "A character keeps the SAME appearance across scenes. Output JSON only."
+            "A character keeps the SAME appearance across scenes.\n"
+            "LANGUAGE — every VISUAL field MUST be ENGLISH: lieu, echelle, int_ext, "
+            "layout_spatial, palette, matieres, props_fixes, saison, moment_jour, meteo, "
+            "mood, ambiance_sonore and all lumiere_* fields. Use short plain words "
+            "(int_ext=interior/exterior; moment_jour=morning/noon/afternoon/dusk/night; "
+            "meteo=clear/overcast/rain/snow…). Only `title` and `intention` may be "
+            + lang + ". Do NOT name characters inside `layout_spatial` (it is "
+            "framing-independent). Output JSON only."
         )
         if style_identity.strip():
             system += f"\nSTYLE / IDENTITY (apply throughout): {style_identity.strip()}"
@@ -328,15 +335,22 @@ class OpenAISceneDecomposer:
             '- "profondeur":{"avant_plan","plan_moyen","arriere_plan"};\n'
             '- "camera":{"type"(STRICTLY STATIC unless truly needed: static/slow push),"vitesse",'
             '"depart_arrivee"(how the frame starts→ends)};\n'
-            '- "personnages":[{"name"(FRENCH first name, from the bible),"action","trajectoire",'
-            '"vitesse","expression","etat_debut","etat_fin"}] — the interpolation début→fin;\n'
+            '- "personnages":[{"name"(EXACT bible spelling),"action","trajectoire",'
+            '"vitesse","expression"(OBSERVABLE face/posture only, e.g. "slight frown",'
+            ' "leaning forward" — never a mental state),"etat_debut","etat_fin"}] '
+            "— the interpolation début→fin;\n"
             '- "elements_secondaires":[{"quoi","mouvement","etat_debut","etat_fin"}] (hair, cloth, sign…);\n'
             '- "physique_environnement":[{"element","comportement","intensite_direction"}] (wind, snow…);\n'
             '- "lumiere_temps":{"ce_qui_change","depart_arrivee"} (light change WITHIN the take);\n'
             '- "son":{"dialogue_voix"(' + lang + ', one short spoken line),"bruitage_sfx"(synced)};\n'
             f'- "narration_fr": {lang} (same as son.dialogue_voix if spoken);\n'
             '- "intention_plan": what THIS take tells.\n'
-            "The FIRST shot hooks. No on-screen text. Output JSON only."
+            "LANGUAGE — every VISUAL field (cadre, camera, profondeur, personnages "
+            "actions/expressions, elements_secondaires, physique_environnement, "
+            "lumiere_temps) MUST be ENGLISH; only `son.dialogue_voix` and `narration_fr` "
+            "are " + lang + ". Refer to characters by their EXACT bible name spelling "
+            "(never re-spell or anglicize). The FIRST shot hooks. No on-screen text. "
+            "Output JSON only."
         )
         if scene_budget_s > 0:
             system += (
