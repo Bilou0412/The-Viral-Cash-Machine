@@ -39,3 +39,29 @@ def test_duplicate_ids_across_scenes_are_made_unique():
     assert len(brick_ids) == len(set(brick_ids))   # briques uniques
     assert len(scene_ids) == len(set(scene_ids))   # scènes uniques
     assert len([b for b in doc.bricks if isinstance(b, ClipBrick) and b.shot]) == 3  # 3 plans
+
+
+def test_role_names_lose_their_french_article():
+    """« Le livreur » (rôle articulé du LLM) → l'article FR ne fuit pas dans le prompt EN."""
+    from src.editor.compile_shot import compile_image_prompt, resolve_shot
+    plan = VideoPlan(title="T", scenes=[ScenePlan(
+        id="s1", environment_desc="a desk", location_ref="loc",
+        shots=[ShotPlan(id="sh1", kind="video", duree_s=3.0,
+                        personnages=[ShotCharacterPlan(name="Le livreur", action="opens a box")])],
+    )])
+    doc = scene_plan_to_document(plan)
+    assert doc.bible and doc.bible[0].name == "livreur"      # article de tête retiré
+    scene_of = {sid: sc for sc in doc.scenes for sid in sc.shot_ids}
+    clip = next(b for b in doc.bricks if isinstance(b, ClipBrick) and b.shot)
+    img = compile_image_prompt(resolve_shot(doc, scene_of[clip.id], clip.shot))
+    assert "Le livreur" not in img                          # plus d'article FR
+
+
+def test_describe_shows_per_plan_intention():
+    plan = VideoPlan(title="T", scenes=[ScenePlan(
+        id="s1", environment_desc="x", location_ref="loc",
+        shots=[ShotPlan(id="sh1", kind="video", duree_s=3.0,
+                        intention_plan="montrer l'hésitation avant le geste")],
+    )])
+    doc = scene_plan_to_document(plan)
+    assert "montrer l'hésitation avant le geste" in describe_document(doc)

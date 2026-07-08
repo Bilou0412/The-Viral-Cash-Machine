@@ -37,6 +37,18 @@ _DEFAULT_NARRATOR_VOICE = "Deep_Voice_Man"
 _ENV_PHOTO_DUR = 3.0
 
 
+_LEAD_ARTICLE = re.compile(r"^\s*(le|la|les|l'|un|une|des)\s+", re.I)
+
+
+def _clean_name(name: str) -> str:
+    """Nettoie un nom de perso : retire un article de tête (« Le livreur » → « livreur »).
+
+    Garde-fou déterministe : le décrypteur DOIT donner un prénom, mais s'il rend un rôle
+    articulé, on évite au moins la fuite d'article FR dans le prompt EN (le durcissement
+    du prompt fait le reste)."""
+    return _LEAD_ARTICLE.sub("", name.strip()).strip()
+
+
 def _slug(name: str) -> str:
     """Nom de personnage → id de bible stable (déterministe)."""
     s = re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
@@ -72,7 +84,7 @@ def _build_bible(plan: VideoPlan) -> tuple[list[CharacterEntry], dict[str, str]]
     used: set[str] = set()
 
     def add(name: str, appearance: str, wardrobe: str, voice_id: str, traits: str) -> None:
-        key = name.strip()
+        key = _clean_name(name)
         if not key or key in name_to_id:
             return
         cid = _slug(key)
@@ -101,7 +113,7 @@ def _shot_brief(shot: ShotPlan, name_to_id: dict[str, str]) -> ShotBrief:
     """Le PLAN v5 : copie les sous-blocs + résout les persos (name → ref bible)."""
     people = [
         PersonnagePresent(
-            ref=name_to_id.get(sc.name.strip(), ""),
+            ref=name_to_id.get(_clean_name(sc.name), ""),
             action=sc.action, trajectoire=sc.trajectoire, vitesse=sc.vitesse,
             expression=sc.expression, etat_debut=sc.etat_debut, etat_fin=sc.etat_fin,
         )
@@ -265,7 +277,7 @@ def append_scene(
     name_to_id = {c.name: c.id for c in doc.bible if c.name}
 
     def _ensure(name: str, appearance: str, wardrobe: str, voice_id: str, traits: str) -> None:
-        key = name.strip()
+        key = _clean_name(name)
         if not key or key in name_to_id:
             return
         cid = _slug(key)
