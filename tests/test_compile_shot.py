@@ -6,6 +6,8 @@ pytest.importorskip("pydantic")
 
 from src.editor.capabilities import validate_clip
 from src.editor.compile_shot import (
+    _cap_words,
+    _short_phrase,
     compile_image_prompt,
     compile_motion_prompt,
     recompile_document,
@@ -208,3 +210,16 @@ def test_scene_plan_wires_per_plan_start_image_for_coherence():
         assert v.motion.params["image"] == f"{{brick:{v.id}.image}}"   # anime SA frame
         ref = v.image.params["image_input"]                            # ancrée à l'établissement
         assert ref.startswith("{brick:") and ref.endswith(".image}")
+
+
+def test_rich_expression_shortened_cleanly_not_truncated():
+    """TXT-2 : un champ expression riche du LLM → syntagme court propre, pas un fragment."""
+    # 1re proposition, sans mot-outil pendant
+    assert _short_phrase("small release in the face, eyes attentive", 5) == "small release in the face"
+    assert _short_phrase("relieved concentration turning into a small smile", 5) == "relieved concentration turning"
+    assert _short_phrase("", 5) == ""
+
+
+def test_cap_words_trims_dangling_function_words_only_when_truncated():
+    assert _cap_words("camera slow push in", 18) == "camera slow push in"   # non tronqué → « in » gardé
+    assert _cap_words("one two three in four five", 4) == "one two three"    # tronqué → « in » coupé
