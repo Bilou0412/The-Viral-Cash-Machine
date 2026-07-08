@@ -256,6 +256,35 @@ def test_editor_document_isolation(client):
     ).status_code == 404
 
 
+def test_assemble_part_route_appends_fragment(client):
+    """TPLM-D : POST /parts fait assembler le réalisateur (Fake, pas de clé) et
+    appende le fragment v5 au document ; les briques sont persistées."""
+    project_id = client.post("/api/projects", json={"name": "demo"}).json()["id"]
+    doc_id = client.post(
+        "/api/editor/documents", json={"project_id": project_id, "title": "co"}
+    ).json()["id"]
+
+    r = client.post(
+        f"/api/editor/documents/{doc_id}/parts",
+        json={"description": "Étienne et Marc dans le noir, chacun te parle, puis choisis.",
+              "part": "intro"},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "fake"  # pas de clé OpenAI → Fake déterministe
+    bricks = body["doc"]["bricks"]
+    assert bricks and any(b["id"].startswith("intro") for b in bricks)
+
+    # Persisté : un GET relit le fragment.
+    got = client.get(f"/api/editor/documents/{doc_id}").json()
+    assert any(b["id"].startswith("intro") for b in got["doc"]["bricks"])
+
+    # Description vide → 422 (garde-fou).
+    assert client.post(
+        f"/api/editor/documents/{doc_id}/parts", json={"description": "  "}
+    ).status_code == 422
+
+
 def _clip_doc():
     """Document composite (ClipBrick vidéo) avec des inputs de modèle SUPPLÉMENTAIRES
     sur l'image et le motion — pour vérifier qu'ils sont bien transmis (no-drop)."""
