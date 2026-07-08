@@ -47,6 +47,12 @@ format, codée en dur) et **fond** (rempli par l'IA) — cf. `src/features/forma
 - Un **deuxième** système de construction de prompts parallèle à `compile_shot`.
 - Une **deuxième** UI/atelier de création qui ne parle pas le document v5.
 - Un champ « magique » dupliqué (durée, modèle) au lieu d'une source unique.
+- Brancher la **salle multi-agent à contrat libre** (`crew_room` : le réalisateur INVENTE
+  les plans) sur un **moule à structure fixe** (CYOA) → l'agent réinvente une structure qui
+  doit être **codée en dur**. Sur un moule, les agents raffinent le **fond**, pas la forme :
+  on utilise les agents de contenu **agnostiques au format** (`direct_art_direction`,
+  `direct_dialogue`, qui réécrivent prompts d'établissement et texte parlé d'un `EditorDocument`
+  quelconque). La salle libre reste pour les formats **sans** grille de beats imposée (scènes).
 
 > Règle de trois pour l'abstraction : on n'extrait un schéma générique (ex. slots de format)
 > qu'au **3ᵉ** exemplaire — pas depuis n=1. La structure d'un format reste **codée en dur**
