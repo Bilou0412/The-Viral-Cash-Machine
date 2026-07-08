@@ -67,3 +67,21 @@ def test_end_to_end_generate_then_calibrated_rank():
     ranked = rank_hooks(variants, learned)
     assert ranked.winner is not None
     assert ranked.winner.variant.angle == "POV"            # l'angle qui a marché en vrai
+
+
+# -- démonstration bout-en-bout (offline) -------------------------------------
+
+def test_endgame_demo_script_runs_the_whole_loop(capsys):
+    """La démo `scripts/endgame_demo.py` enchaîne TOUTE la boucle (offline, 0 image)."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "scripts" / "endgame_demo.py"
+    spec = importlib.util.spec_from_file_location("endgame_demo", path)
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.demo("un chat qui joue dans la neige") == 0
+    out = capsys.readouterr().out
+    assert "GAGNANTE (a priori)" in out and "GAGNANTE (APPRISE des perfs)" in out
+    assert "POV" in out                      # la donnée réelle fait gagner « POV »
