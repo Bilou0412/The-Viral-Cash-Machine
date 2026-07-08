@@ -3,6 +3,15 @@
 Une ligne par décision transverse (la plus récente en haut). Pour le plan d'exécution, voir
 `ROADMAP.md`.
 
+- **2026-07-08** · **Template = donnée co-écrite** (la vraie feature) · le produit est *la
+  machine à co-construire des templates réutilisables avec les agents*, pas un catalogue de
+  moules codés en dur. Un **template = un `EditorDocument` v5 sauvé/paramétrable** (ou fragment
+  = une intro), co-écrit par des agents **conscients du catalogue** (`REGISTRY` effets +
+  `CONTRACTS` génératif via `AgentContext.tools`), à partir d'une **description NL** ; puis
+  ré-instanciable et améliorable. Conséquence : les **effets deviennent des données IR** (rendus
+  par `document_to_spec`, plus d'impératif hors rail) ; un décomposeur figé (`adventure_to_video_plan`)
+  n'est qu'un **seed**. `.claude/rules/architecture.md` mis à jour (§ « Le TEMPLATE = une DONNÉE »).
+
 - **2026-07-08** · **Rail unique** (fin de la bidouille) · un FORMAT = une STRUCTURE qui
   produit un `EditorDocument` v5 ; `compile_shot` compile TOUS les prompts, `describe_document`
   rend TOUT en texte, `document_to_spec` rend TOUT en `VideoSpec`. Aucun format ne construit

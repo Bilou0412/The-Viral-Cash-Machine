@@ -200,3 +200,27 @@ def test_assemble_context_dossier_slices():
     assert son["narration"] and all("id" in u and "text" in u for u in son["narration"])
     presse = assemble_context("attache_presse", brief=Brief(), doc=doc).dossier
     assert presse["title"] == "Ma vidéo" and "hook" in presse
+
+
+def test_assemble_context_effects_only_for_assembly_roles():
+    """Seuls les métiers qui ASSEMBLENT voient la palette d'effets de montage."""
+    from src.studio.api.services.context import assemble_context
+
+    # Le tournage (assemble) voit tous les effets ; un métier de contenu, aucun.
+    tournage = assemble_context("tournage", brief=Brief())
+    names = {e.name for e in tournage.effects}
+    assert {"montage.timer", "montage.choice", "montage.zoom", "montage.nameplate"} <= names
+    assert all(e.summary for e in tournage.effects)
+    assert assemble_context("directeur_artistique", brief=Brief()).effects == []
+    assert assemble_context("dialoguiste", brief=Brief()).effects == []
+
+
+def test_catalog_lists_generative_and_montage_palettes():
+    """Le catalogue = source unique de « ce qu'on peut assembler » (génératif + montage)."""
+    from src.studio.api.services.catalog import build_catalog
+
+    cat = build_catalog()
+    assert {t.kind for t in cat.generative} == {"image", "video", "voice"}
+    names = {e.name for e in cat.effects}
+    # Les effets de l'intro-exemple sont dans la palette.
+    assert {"montage.timer", "montage.choice", "montage.zoom", "montage.nameplate"} <= names
