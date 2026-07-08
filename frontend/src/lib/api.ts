@@ -27,6 +27,7 @@ import type {
   EditorDocument,
   EditorDocumentSummary,
   Episode,
+  FormatDocumentResult,
   GenerateScriptBody,
   GenerativeKind,
   KeysStatus,
@@ -44,6 +45,7 @@ import type {
   CreatePromptTemplateBody,
   Theme,
   UpdateAssetBody,
+  VideoFormat,
 } from "./types"
 import { mockApi, MOCK_PLACEHOLDER_IMG } from "./mocks"
 
@@ -164,6 +166,21 @@ const realApi = {
     request<Brief>(`/episodes/${episodeId}/brief`, {
       method: "PUT",
       body: JSON.stringify(brief),
+    }),
+
+  // Catalogue des FORMATS (moules) : id + libellé + accroche + description.
+  listFormats: () => request<VideoFormat[]>("/formats"),
+
+  // Point d'entrée UNIFIÉ : idée + FORMAT → document v5 éditable (tous formats).
+  // Pour l'aventure (CYOA horreur), le décomposeur remplit le moule ; on atterrit
+  // sur la page Réviser. `options` porte les slots du format (persos, n_rounds…).
+  formatDocument: (
+    episodeId: number,
+    body: { prompt: string; title?: string; format?: string; options?: Record<string, unknown> }
+  ) =>
+    request<FormatDocumentResult>(`/episodes/${episodeId}/format-document`, {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 
   // Table ronde — création scène par scène (les agents discutent).
