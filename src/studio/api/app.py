@@ -1054,9 +1054,14 @@ def create_editor_document_from_script(
     """
     episode = _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)
-    from ...features.scripting.adventure_to_bricks import adventure_to_document
+    # Rail UNIQUE (cf. .claude/rules/architecture.md) : le CYOA passe par v5 —
+    # AdventureScript → VideoPlan → EditorDocument (compile_shot / describe / spec).
+    from ...features.scenes import scene_plan_to_document
+    from ...features.scripting.adventure_to_video_plan import adventure_to_video_plan
 
-    doc = adventure_to_document(script, title=f"Épisode {episode_id}")
+    doc = scene_plan_to_document(
+        adventure_to_video_plan(script), title=f"Épisode {episode_id}"
+    )
     row = EditorDocRepo(session).create(
         episode.project_id,
         doc.title,

@@ -19,7 +19,7 @@ from ....features.formats import UnknownFormatError, get_format
 from ....features.scenes import scene_plan_to_document
 from ....features.scenes.ports import DEFAULT_SCENES
 from ....features.scripting.adventure import DEFAULT_ROUNDS
-from ....features.scripting.adventure_to_bricks import adventure_to_document
+from ....features.scripting.adventure_to_video_plan import adventure_to_video_plan
 from .scenes import generate_video_plan
 from .scripting import generate_script
 
@@ -51,7 +51,11 @@ def build_format_document(
             n_rounds=int(opts.get("n_rounds", DEFAULT_ROUNDS)),
             openai_key=openai_key,
         )
-        return adventure_to_document(script, title=title or "Aventure")
+        # Rail UNIQUE (cf. .claude/rules/architecture.md) : le CYOA passe par v5 —
+        # AdventureScript → VideoPlan → EditorDocument. Il hérite ainsi de compile_shot
+        # (prompts courts), describe_document (texte) et document_to_spec, comme les scènes.
+        plan = adventure_to_video_plan(script, side=str(opts.get("side", "left")))
+        return scene_plan_to_document(plan, title=title or "Aventure")
     if fmt.id == "scenes":
         plan = generate_video_plan(
             prompt,
