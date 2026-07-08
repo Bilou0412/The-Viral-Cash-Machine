@@ -42,7 +42,7 @@ Backend Python (`src/`, ~19,5k LOC, mypy strict par zones) :
   - `scenes/` — **happy path** : décomposeur de scènes neutre (Fake / OpenAI 2 phases) + `scene_plan_to_document` + `split`.
   - `scripting/` — décomposeur **aventure legacy** (`adventure_to_video_plan`, prompts/themes).
   - `formats/` — couche **« moule »** (catalogue + dispatch), tous → même `EditorDocument` v5.
-  - `crew/` — **agent réalisateur (TPLM-C)** : `DirectorAgent` → `FragmentPlan` → briques v5 (`assemble`). ⚠️ orphelin, à brancher.
+  - `crew/` — **agent réalisateur (TPLM-C)** : `DirectorAgent` → `FragmentPlan` → briques v5 (`assemble`). Branché via `services/director.py` (route `POST /documents/{id}/parts`, TPLM-D/D1) ; reste D2–D5 (stockage template v5, ré-instanciation, front).
   - `crew_room/` — atelier **scène-par-scène** (contrat → brouillons → merge → révision), câblé.
   - `brief/` — producteur (propose un brief). `virality/` — N hooks → prédiction → classement.
   - `performance/` — **moat** : perfs réelles → poids appris → recalibrage du prédicteur.

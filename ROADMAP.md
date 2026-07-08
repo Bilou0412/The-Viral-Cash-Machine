@@ -144,13 +144,14 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 - **E4** `features/performance/` — `calibrate_angle_weights` : perfs réelles → poids appris ; le
   prédicteur passe de LLM-juge à **signal réel** (`calibrated_predictor` injecté dans `propose_hooks`).
 
-### TPLM-D — Brancher le réalisateur (co-construction réelle)  ⬜  ← PROCHAINE ÉTAPE
-Le cœur de la co-construction (TPLM-C, `src/features/crew/`) est **construit + testé offline
-mais ORPHELIN** : aucune route/UI/persistance. Le rendre invocable de bout en bout —
-**description NL → template sauvé → ré-instancié** (cf. `docs/AUDIT-2026-07.md` §3) :
-- **D1** service `director` (`get_director_agent`) + route `POST /api/editor/documents/{id}/parts`
-  (`{description, part}` → `assemble_context("realisateur").effects` → agent → `fragment_to_bricks`
-  → append au `EditorDocument`). *Plus haut ROI, tout est prêt côté feature.*
+### TPLM-D — Brancher le réalisateur (co-construction réelle)  ⬜  ← EN COURS
+Le cœur de la co-construction (TPLM-C, `src/features/crew/`) était **construit + testé offline
+mais ORPHELIN**. On le rend invocable de bout en bout — **description NL → template sauvé →
+ré-instancié** (cf. `docs/AUDIT-2026-07.md` §3) :
+- **D1** ✅ service `director` (`get_director_agent` + `assemble_part`) + route
+  `POST /api/editor/documents/{id}/parts` (`{description, part}` → `assemble_context("realisateur").effects`
+  → agent → `fragment_to_bricks` → append à la suite de la timeline, revalidé + persisté).
+  `src/studio/api/services/director.py`, tests `test_director_service.py` + route dans `test_editor_api.py`.
 - **D2** refonte du stockage `Template` : `structure_json` (slots vides) → `document_json`
   (`EditorDocument` v5) + « save as template » + migration versionnée.
 - **D3** ré-instanciation déterministe (`Template` v5 + persos/idée → nouveau `EditorDocument`).
