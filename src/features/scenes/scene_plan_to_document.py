@@ -43,6 +43,24 @@ def _slug(name: str) -> str:
     return s or "char"
 
 
+def _uniq(base: str, used: set[str]) -> str:
+    """Un id UNIQUE dérivé de `base` (suffixe _2, _3… en cas de collision).
+
+    Garde-fou robuste : le décrypteur LLM renvoie parfois des ids de scène/plan qui
+    se répètent d'une scène à l'autre (« shot1 » partout) → sans ça, briques/scènes
+    dupliquées et `EditorDocument` refusé. On garantit l'unicité à la construction."""
+    candidate = base or "id"
+    if candidate not in used:
+        used.add(candidate)
+        return candidate
+    i = 2
+    while f"{candidate}_{i}" in used:
+        i += 1
+    uid = f"{candidate}_{i}"
+    used.add(uid)
+    return uid
+
+
 def _build_bible(plan: VideoPlan) -> tuple[list[CharacterEntry], dict[str, str]]:
     """La bible (v4) depuis `plan.cast` + les persos cités dans les plans.
 
@@ -109,11 +127,14 @@ def _scene_bricks(
     image_model: str,
     video_model: str,
     env_photo_dur: float,
+    used_ids: set[str],
 ) -> tuple[list[ClipBrick], Scene]:
     """Les briques + l'index d'UNE scène (photo d'env + plans). Réutilisé par le
-    builder complet ET l'ajout incrémental (table ronde)."""
+    builder complet ET l'ajout incrémental (table ronde). `used_ids` garantit des ids
+    (scène + briques) globalement uniques même si le décrypteur en renvoie de dupliqués."""
     out: list[ClipBrick] = []
-    env_id = f"{sp.id}_env"
+    scene_id = _uniq(sp.id, used_ids)
+    env_id = _uniq(f"{scene_id}_env", used_ids)
     # Photo d'établissement de la scène (blob : prompt = environment_desc, shot=None).
     out.append(
         ClipBrick(
@@ -125,7 +146,8 @@ def _scene_bricks(
     shot_ids = [env_id]
     env_ref = f"{{brick:{env_id}.image}}"
     for shot in sp.shots:
-        children = narr_child(shot.id, shot.narration_fr)
+        bid = _uniq(shot.id or f"{scene_id}_shot", used_ids)
+        children = narr_child(bid, shot.narration_fr)
         brief = _shot_brief(shot, name_to_id)  # prompts image/motion compilés par recompile
         if shot.kind == "video":
             # E2 — cohérence i2v : la frame de départ du plan est composée AVEC la photo
@@ -133,26 +155,26 @@ def _scene_bricks(
             # propre au plan (pas la photo d'établissement partagée) → cadrage spécifique au
             # plan, décor/perso stables d'un plan à l'autre (ancrés au même établissement).
             brick = ClipBrick(
-                id=shot.id, kind="video",
+                id=bid, kind="video",
                 image=GenNode(model_ref=image_model,
                               params={"prompt": "", "image_input": env_ref}),
                 motion=GenNode(
                     model_ref=video_model,
                     params={"prompt": "", "duration": shot.duree_s,
-                            "image": f"{{brick:{shot.id}.image}}"},
+                            "image": f"{{brick:{bid}.image}}"},
                 ),
                 shot=brief, children=children, placement=place(shot.duree_s),
             )
         else:
             brick = ClipBrick(
-                id=shot.id, kind="photo",
+                id=bid, kind="photo",
                 image=GenNode(model_ref=image_model, params={"prompt": ""}),
                 shot=brief, children=children, placement=place(shot.duree_s),
             )
         out.append(brick)
-        shot_ids.append(shot.id)
+        shot_ids.append(bid)
     scene = Scene(
-        id=sp.id, title=sp.title,
+        id=scene_id, title=sp.title,
         context=NarrativeContext(text=sp.intention_scene),
         environment_photo_ref=env_id, shot_ids=shot_ids,
         location_ref=sp.location_ref, saison=sp.saison, moment_jour=sp.moment_jour,
@@ -196,11 +218,13 @@ def scene_plan_to_document(
     bible, name_to_id = _build_bible(plan)
     bricks: list[ClipBrick] = []
     scenes: list[Scene] = []
+    used_ids: set[str] = set()
 
     for sp in plan.scenes:
         clips, scene = _scene_bricks(
             sp, name_to_id, place, narr_child,
             image_model=image_model, video_model=video_model, env_photo_dur=env_photo_dur,
+            used_ids=used_ids,
         )
         bricks.extend(clips)
         scenes.append(scene)
@@ -280,9 +304,12 @@ def append_scene(
                        model_ref=voice_model, params={"text": text, "voice_id": narrator_voice_id})
         ]
 
+    # Ids déjà pris dans le doc (briques + scènes) → la nouvelle scène ne collisionne pas.
+    taken_ids = {b.id for b in doc.bricks} | {s.id for s in doc.scenes}
     clips, scene = _scene_bricks(
         sp, name_to_id, place, narr_child,
         image_model=image_model, video_model=video_model, env_photo_dur=env_photo_dur,
+        used_ids=taken_ids,
     )
     doc.bricks.extend(cast("list[Brick]", clips))
     doc.scenes.append(scene)

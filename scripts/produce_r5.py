@@ -18,12 +18,14 @@ for line in open(".env"):
 
 from sqlmodel import Session  # noqa: E402
 
+from src.features.scripting.adventure import AdventureScript  # noqa: E402
+from src.studio.api.services.produce import produce_episode  # noqa: E402
 from src.studio.db.engine import get_engine, init_db  # noqa: E402
 from src.studio.db.repositories import (  # noqa: E402
-    EpisodeRepo, ProjectRepo, ScriptRepo,
+    EpisodeRepo,
+    ProjectRepo,
+    ScriptRepo,
 )
-from src.studio.api.services.produce import produce_episode  # noqa: E402
-from src.features.scripting.adventure import AdventureScript  # noqa: E402
 
 t0 = time.time()
 engine = get_engine()

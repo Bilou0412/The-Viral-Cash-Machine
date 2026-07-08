@@ -14,10 +14,10 @@ for line in open(".env"):
 
 from sqlmodel import Session  # noqa: E402
 
-from src.studio.db.engine import get_engine  # noqa: E402
-from src.studio.db.repositories import AssetRepo  # noqa: E402
 from src.studio.api.services.intro import generate_intro  # noqa: E402
 from src.studio.api.services.montage import MontageService  # noqa: E402
+from src.studio.db.engine import get_engine  # noqa: E402
+from src.studio.db.repositories import AssetRepo  # noqa: E402
 
 t0 = time.time()
 engine = get_engine()
