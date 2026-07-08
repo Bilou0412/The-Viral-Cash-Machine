@@ -293,7 +293,9 @@ class OpenAISceneDecomposer:
             "(locations, characters) are defined ONCE and referenced.\n"
             "Return JSON (ENGLISH for all visual fields, image models expect English):\n"
             f'{{"genre","ton","musique_score",'
-            '"characters":[{"name"(FRENCH first name),"appearance"(physical, EN),"wardrobe"(EN),'
+            '"characters":[{"name"(a real FRENCH FIRST NAME like Léa/Malik/Camille — NEVER a '
+            "role, job or common noun like « livreur »/« chef », NEVER an article « le/la/un »; "
+            'give an anonymous person a first name anyway),"appearance"(physical, EN),"wardrobe"(EN),'
             '"voice_id","traits"}],'
             f'"scenes":[  // EXACTLY {n_scenes}\n'
             '  {"id","title"(' + lang + '),'

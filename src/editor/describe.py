@@ -61,6 +61,7 @@ def _plan_block(doc: EditorDocument, scene: Scene, brick: ClipBrick) -> str:
     dur = brick.placement.duration
     head = f"  ▸ PLAN {brick.id}  [{brick.kind}, {dur:g}s]"
     lines = [head]
+    lines += _kv("intention", b.intention_plan)   # le POURQUOI du plan (le beat)
     lines += _kv("cadre", ", ".join(p for p in (b.cadre.taille_plan, b.cadre.angle_hauteur,
                                                  b.cadre.focale) if p.strip()))
     lines += _kv("caméra", ", ".join(p for p in (b.camera.type, b.camera.vitesse,
