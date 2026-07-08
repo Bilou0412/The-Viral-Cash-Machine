@@ -1,12 +1,14 @@
-# SPEC — Histoire à choix (Horreur)
+# SPEC — Format « Histoire à choix (Horreur) » (CYOA, flagship #1)
 
-> **Document de référence du produit. Anti-dérive.**
-> Tout ce qui n'est pas ici n'est pas dans le produit. La partie générique
-> (éditeur de briques, timeline libre, catalogue de modèles) existe dans le code
-> mais devient **infrastructure d'arrière-plan** : l'utilisateur ne la voit pas.
+> ⚠️ **Portée (mise à jour 2026-07).** Ce document spécifie **UN format** — le CYOA
+> horreur, format **flagship #1** de l'« usine à moules ». Ce n'est **plus** « le produit »
+> entier : depuis le pivot, le produit est une **collection de moules** sur le rail v5 unique
+> (`EditorDocument` → `compile_shot` → `document_to_spec`), avec **« Créer » (scènes)** comme
+> happy path. Pour la vision produit à jour : `ROADMAP.md` + `.claude/rules/architecture.md`.
+> Ce fichier reste utile comme **cahier des charges du moule CYOA**.
 
-Statut : **cible verrouillée le 2026-06-17.** La « partie finale » est en attente
-de description (section 7).
+Statut : **cible du format CYOA, verrouillée le 2026-06-17.** La « partie finale » est en
+attente de description (section 7).
 
 ---
 

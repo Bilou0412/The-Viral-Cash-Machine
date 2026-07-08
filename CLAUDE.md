@@ -9,8 +9,8 @@ PR depuis **`dev`** (branche de développement, on push ici). Une release = merg
 
 La **source unique de vérité** est **`ROADMAP.md`**. Pour reprendre : ouvrir `ROADMAP.md`,
 lire **§4 (état consolidé, déjà fait)** puis **§5 (étapes restantes)** — la première ligne
-⬜ = la prochaine étape (actuellement **S1 — fermer la boucle réelle / dogfood**). **Une étape
-par session**, protocole de l'étape en **§7**. Direction produit tranchée : **« l'IA écrit → je
+⬜ = la prochaine étape (actuellement **TPLM-D — brancher le réalisateur / co-construction
+réelle**). **Une étape par session**, protocole de l'étape en **§7**. Direction produit tranchée : **« l'IA écrit → je
 révise en briques »**, pas un éditeur de montage vierge ; happy path = **« Créer » (idée → scènes)**.
 
 ## Le produit en une phrase
@@ -57,9 +57,7 @@ Backend Python (`src/`, ~19,5k LOC, mypy strict par zones) :
 - `src/studio/api/` — backend **FastAPI** : `app.py`, `events.py` (SSE), `services/`
   (génération, `editor_generation`, montage, `model_catalog`, pricing…), `db/` (sqlmodel :
   models, repositories, migrate).
-- `src/infra/` — `download.py`, `env.py`, `logging.py`. `src/pipeline.py` — séquence pure.
-- `src/app.py` — **legacy Streamlit (562 LOC, en cours de retrait, mypy tolérant)**. Ne pas
-  étendre ; le produit vit dans `src/studio/api` + `frontend/`.
+- `src/infra/` — `download.py`, `logging.py`. `src/pipeline.py` — séquence pure.
 
 Frontend (`frontend/`, React/TS/Vite/Tailwind, ~10k LOC) — surface de **revue** de briques
 (`src/components/editor/`, `src/pages/`). Rendu vidéo Remotion : `render/`.

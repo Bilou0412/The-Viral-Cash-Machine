@@ -53,6 +53,7 @@ ignored — see `VOLATILE_META_KEYS`). Without `GOLDEN_CANDIDATE` those checks s
 
 ## Per-step workflow (steps 0 → 9)
 
-1. Do the step. 2. `streamlit run app.py`, produce a video end-to-end (Step 1 → 2).
+1. Do the step. 2. Produce a video end-to-end (studio « Créer » → rendu, or
+`python scripts/dogfood_editor.py run`).
 3. `GOLDEN_CANDIDATE=<that export> pytest tests/test_golden.py`. 4. Green → commit.
 Any drift is a regression to explain before continuing.

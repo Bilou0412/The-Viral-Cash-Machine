@@ -34,5 +34,6 @@ Quand l'auteur lance `/loop /resume`, enchaîner les étapes ROADMAP **une par t
 - Résumer à chaque jalon ce qui a avancé + l'état `verify`.
 
 ## Garde-fous
-- Ne pas étendre le legacy `src/app.py` (Streamlit, en retrait).
+- Rester sur le rail v5 : les prompts se **compilent** (`compile_shot`), pas de 2e système de
+  prompts ni d'UI hors document v5 (cf. `.claude/rules/architecture.md`).
 - En cas d'ambiguïté sur l'étape ou un choix d'archi, demander avant d'implémenter.

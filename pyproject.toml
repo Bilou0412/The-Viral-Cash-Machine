@@ -14,7 +14,6 @@ authors = [
 ]
 
 dependencies = [
-    "streamlit>=1.28.0",
     "moviepy>=1.0.3",
     "replicate>=0.15.0",
     "openai>=1.0.0",
@@ -35,8 +34,8 @@ packages = ["src", "scripts"]
 
 [tool.mypy]
 python_version = "3.11"
-# Strict GLOBAL (rigueur type-Rust) : plus de zones tolérantes, tout `src` est
-# typé strictement. Seule exception : le monolithe Streamlit legacy (src/app.py).
+# Strict GLOBAL (rigueur type-Rust) : tout `src` est typé strictement, sans
+# zone tolérante (le monolithe Streamlit legacy a été retiré).
 strict = true
 
 [[tool.mypy.overrides]]
@@ -44,18 +43,8 @@ module = ["sqlmodel.*", "sqlalchemy.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "src.app"
-# Legacy app.py: tolerant during refactor, will be --strict at step 9
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = ["streamlit.*", "replicate.*", "openai.*", "moviepy.*", "boto3.*", "botocore.*"]
+module = ["replicate.*", "openai.*", "moviepy.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true
-
-[tool.ruff]
-# Le monolithe Streamlit legacy (src/app.py) est en cours de retrait et exclu du
-# lint, comme il l'est du typage strict mypy. Le lint verrouille le code ACTIF.
-extend-exclude = ["src/app.py"]
 
 [tool.ruff.lint]
 # Jeu de règles « clippy » : bugs (B), simplifications (SIM/RET/C4/PIE/PERF),
