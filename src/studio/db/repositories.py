@@ -362,17 +362,6 @@ class AssetRepo:
             )
         ).all()
 
-    def by_document_and_beat(
-        self, editor_document_id: int, beat: str
-    ) -> Asset | None:
-        """E5 : l'asset d'une brique donnée (beat == brick id) dans un document."""
-        return self.session.exec(
-            select(Asset)
-            .where(Asset.editor_document_id == editor_document_id)
-            .where(Asset.beat == beat)
-            .order_by(Asset.id.desc())  # type: ignore[union-attr]
-        ).first()
-
     def update(
         self,
         asset_id: int,

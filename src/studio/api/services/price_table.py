@@ -23,11 +23,6 @@ def _table() -> dict[str, Any]:
     return data
 
 
-def reload_prices() -> None:
-    """Drop the cache (e.g. after editing prices.json at runtime)."""
-    _table.cache_clear()
-
-
 # -- estimate rates (pre-flight) --------------------------------------------
 
 def _estimate() -> dict[str, Any]:
@@ -61,14 +56,3 @@ def compute_usd_per_s(model_ref: str) -> float:
     """Replicate hardware $/s for a model (0 = unknown → caller uses estimate)."""
     rates = _table().get("compute_usd_per_s", {})
     return float(rates.get(model_ref, rates.get("default", 0.0)))
-
-
-def openai_per_mtoken(model: str) -> tuple[float, float]:
-    """(input, output) USD per 1M tokens for an OpenAI model."""
-    table = _table().get("openai_per_mtoken", {})
-    rule = table.get(model, table.get("default", {"in": 0.15, "out": 0.60}))
-    return float(rule.get("in", 0.0)), float(rule.get("out", 0.0))
-
-
-def whisper_usd_per_minute() -> float:
-    return float(_table().get("whisper_usd_per_minute", 0.006))

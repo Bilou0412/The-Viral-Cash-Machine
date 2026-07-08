@@ -1060,8 +1060,9 @@ def create_editor_document_from_script(
     """Matérialise le script de l'épisode en document de briques ÉDITABLE (R1).
 
     C'est le chaînon « l'IA écrit → je révise en briques » : on lit le script
-    (`AdventureScript`), on le transforme en arbre `ClipBrick` via
-    `adventure_to_document`, et on persiste le document pour la revue/édition.
+    (`AdventureScript`), on le transforme en arbre `ClipBrick` via le rail v5
+    (`adventure_to_video_plan` → `scene_plan_to_document`), et on persiste le
+    document pour la revue/édition.
     """
     episode = _require_owned_episode(session, user, episode_id)
     script = _load_script(session, episode_id)

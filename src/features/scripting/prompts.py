@@ -276,17 +276,3 @@ def motion_survival(
     )
 
 
-def narrator_audition(
-    voice_desc: str, line_fr: str, theme: Theme | None = None
-) -> str:
-    """Clip jetable d'audition narrateur (texte→vidéo, visuel minimal)."""
-    t = _theme(theme)
-    return _join(
-        "Almost black screen: faint embers drifting in darkness.",
-        f"A narrator speaks in French, off-screen, with {voice_desc}, "
-        f'and says exactly: "{line_fr}"',
-        t.voice_only_audio,
-        "Static shot.",
-        t.no_text,
-        t.vertical,
-    )

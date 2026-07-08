@@ -10,7 +10,7 @@ paths:
   `src/lib/api.ts`, hooks dans `src/hooks/`.
 - **Le front est une surface de REVUE de briques, pas un éditeur de montage vierge.** On
   déplie l'arbre de `ClipBrick` généré par l'IA, on édite ses **args** (`form_descriptor`) et
-  son agencement, on régénère **ciblé**. (Étape ROADMAP en cours : **R2**.)
+  son agencement, on régénère **ciblé**. (La revue en timeline multipiste — ex-étape R2 — est faite.)
 - **Recibler l'existant** : réutiliser `src/components/editor/` (Timeline, BrickPalette,
   Inspector) en les branchant sur les `ClipBrick` composites, plutôt que de repartir des
   briques plates legacy.

@@ -2,8 +2,7 @@
 
 Note: `OpenAIAdventureDecomposer` only references the `openai` SDK under
 TYPE_CHECKING (the SDK is absent outside the container), so importing it here is
-safe offline. The legacy `OpenAIScriptDecomposer` still imports `openai` eagerly
-and is therefore deliberately NOT re-exported — import it directly when needed.
+safe offline.
 """
 
 from .adventure import (
