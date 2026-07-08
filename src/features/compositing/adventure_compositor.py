@@ -31,7 +31,7 @@ from moviepy.video.fx import MultiplySpeed, Resize
 from PIL import Image, ImageFilter
 
 from ..transcription.ports import Transcriber
-from .overlays import GaugeOverlay, NameplateOverlay, SubtitleOverlay, TimerOverlay
+from .overlays import GaugeOverlay, SubtitleOverlay, TimerOverlay
 
 W, H, FPS = 720, 1280, 24
 TICK = os.path.join("assets", "tick.wav")
@@ -71,22 +71,6 @@ class RoundAssets:
     # NB : les *.frame des beats vidéo NE sont PAS montées ici — elles servent
     # uniquement de première image (seed i2v) à leur .motion lors de la génération.
     # Ne jamais re-monter une frame figée sous la narration (doublon banni, SPEC §3.2.1).
-
-
-def _ascii_upper(name: str) -> str:
-    """Majuscules sans accents (la police Minecraft.ttf n'a pas les accentués)."""
-    import unicodedata
-
-    folded = unicodedata.normalize("NFKD", name)
-    return "".join(c for c in folded if not unicodedata.combining(c)).upper()
-
-
-def _nameplate(name: str, dur: float) -> ImageClip:
-    """Plaque de nom du perso suivi, en haut de cadre."""
-    plate = NameplateOverlay(
-        text=_ascii_upper(name), fontsize=46, color="white", duration=dur, stroke_width=4
-    ).to_clip((W, H))
-    return plate.with_position(("center", 60))
 
 
 def _subs_cues(transcriber: Transcriber, audio_path: str) -> list[dict[str, Any]]:

@@ -37,14 +37,23 @@ adventure_to_bricks → document_to_spec` (`src/features/scripting/`).
 
 ## Carte du code (le vrai index — préférer la lecture ciblée d'un module au grep large)
 
-Backend Python (`src/`, ~10,5k LOC, mypy strict par zones) :
-- `src/features/` — features à **ports `typing.Protocol`** : `assets/` (Replicate provider),
-  `scripting/` (décomposeur LLM aventure, `adventure_to_bricks`, prompts/themes),
-  `transcription/` (Whisper), `compositing/` (overlays, heads, srt, `registry` capacités).
+Backend Python (`src/`, ~19,5k LOC, mypy strict par zones) :
+- `src/features/` — features à **ports `typing.Protocol`** (impl Fake offline + réelle injectées) :
+  - `scenes/` — **happy path** : décomposeur de scènes neutre (Fake / OpenAI 2 phases) + `scene_plan_to_document` + `split`.
+  - `scripting/` — décomposeur **aventure legacy** (`adventure_to_video_plan`, prompts/themes).
+  - `formats/` — couche **« moule »** (catalogue + dispatch), tous → même `EditorDocument` v5.
+  - `crew/` — **agent réalisateur (TPLM-C)** : `DirectorAgent` → `FragmentPlan` → briques v5 (`assemble`). ⚠️ orphelin, à brancher.
+  - `crew_room/` — atelier **scène-par-scène** (contrat → brouillons → merge → révision), câblé.
+  - `brief/` — producteur (propose un brief). `virality/` — N hooks → prédiction → classement.
+  - `performance/` — **moat** : perfs réelles → poids appris → recalibrage du prédicteur.
+  - `publish/` — publication (port + Fake + route). `storage/` — Local/R2 + factory.
+  - `assets/` (Replicate) · `transcription/` (Whisper) · `compositing/` (overlays, heads, srt, `registry` capacités + effets montage).
 - `src/videospec/` — IR déclarative **`VideoSpec`** (immuable) + ports `RenderEngine`/
   `AssetResolver`, `render_moviepy.py`, `resolve_real.py`/`resolve_fake.py`.
-- `src/editor/` — **`ClipBrick`** (`document.py`), `document_to_spec` (`compile_spec.py`),
-  `capabilities.py` (`validate_clip`), `resolve.py`, `migrations.py`.
+- `src/editor/` — **`ClipBrick`** (`document.py`, v5 Vidéo→Scène→Plan + bibles),
+  **`compile_shot.py`** (SEUL producteur de prompts image/motion), **`describe.py`** (descripteur unique),
+  `document_to_spec` (`compile_spec.py`, effets = données IR), `capabilities.py` (`validate_clip`),
+  `resolve.py`/`migrations.py` (briques plates legacy).
 - `src/studio/api/` — backend **FastAPI** : `app.py`, `events.py` (SSE), `services/`
   (génération, `editor_generation`, montage, `model_catalog`, pricing…), `db/` (sqlmodel :
   models, repositories, migrate).
@@ -52,7 +61,7 @@ Backend Python (`src/`, ~10,5k LOC, mypy strict par zones) :
 - `src/app.py` — **legacy Streamlit (562 LOC, en cours de retrait, mypy tolérant)**. Ne pas
   étendre ; le produit vit dans `src/studio/api` + `frontend/`.
 
-Frontend (`frontend/`, React/TS/Vite/Tailwind, ~6k LOC) — surface de **revue** de briques
+Frontend (`frontend/`, React/TS/Vite/Tailwind, ~10k LOC) — surface de **revue** de briques
 (`src/components/editor/`, `src/pages/`). Rendu vidéo Remotion : `render/`.
 Tests (`tests/`, ~3,9k LOC) — golden tests + split cheap/`--runheavy` (cf. `conftest.py`).
 Scripts/legacy : `scripts/` (`compiler.py`, `generate_assets.py`).
@@ -60,7 +69,7 @@ Scripts/legacy : `scripts/` (`compiler.py`, `generate_assets.py`).
 ## Commandes
 
 ```bash
-# Boucle de vérif complète (Docker dev) — mypy cliquet (baseline 40) + pytest + build front
+# Boucle de vérif complète (Docker dev) — mypy cliquet (baseline 0) + pytest + build front
 make verify
 make e2e            # tests navigateur Playwright (front en mock)
 
