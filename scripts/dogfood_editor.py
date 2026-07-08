@@ -209,24 +209,29 @@ def run_dogfood(idea: str, *, render: bool) -> int:
 
 # -- aperçu du matériel texte (dry-run, ZÉRO génération) ----------------------
 
-def preview_text(idea: str, n_scenes: int = 3) -> int:
+def preview_text(idea: str, n_scenes: int = 3, fmt: str = "scenes") -> int:
     """Idée → la VIDÉO EN ENTIER, sous forme de texte (le descripteur complet).
 
     Aucune génération (ni image ni vidéo) : uniquement du texte. C'est LE matériel
     qui décrit la vidéo et servira à la créer. Fake sans clé OpenAI (gratuit), OpenAI
     si clé (quelques centimes, texte only). Un pied de page diagnostique la qualité
     (mots par prompt image, prompts qui fuient du français).
+
+    `fmt` sélectionne le MOULE (rail unique) : « scenes » (défaut) ou « aventure »
+    (horreur à choix multiple). Les deux passent par `build_format_document` → v5.
     """
     from src.editor.compile_shot import compile_image_prompt, looks_french, resolve_shot
     from src.editor.describe import describe_document
     from src.editor.document import ClipBrick, Scene
-    from src.features.scenes import scene_plan_to_document
-    from src.studio.api.services.scenes import decomposer_source, generate_video_plan
+    from src.studio.api.services.formats import build_format_document
+    from src.studio.api.services.scenes import decomposer_source
 
     openai_key = os.environ.get("OPENAI_API_KEY") or None
-    print(f"[aperçu] décrypteur = {decomposer_source(openai_key)} · {n_scenes} scène(s) — « {idea} »\n")
-    plan = generate_video_plan(idea, n_scenes=n_scenes, openai_key=openai_key)
-    doc = scene_plan_to_document(plan)
+    # Slots propres au format : n_scenes pour « scenes », n_rounds pour « aventure ».
+    options = {"n_scenes": n_scenes} if fmt == "scenes" else {"n_rounds": n_scenes}
+    print(f"[aperçu] format = {fmt} · décrypteur = {decomposer_source(openai_key)} "
+          f"· {n_scenes} unité(s) — « {idea} »\n")
+    doc = build_format_document(fmt, idea, openai_key=openai_key, options=options)
 
     print(describe_document(doc))
 
@@ -254,7 +259,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("idea", nargs="?", default="", help="l'idée de la vidéo")
     parser.add_argument("--check", action="store_true", help="préflight seul (zéro dépense)")
     parser.add_argument("--text", action="store_true", help="la vidéo EN ENTIER en texte (zéro génération)")
-    parser.add_argument("--scenes", type=int, default=3, help="nombre de scènes (défaut 3)")
+    parser.add_argument("--scenes", type=int, default=3, help="nombre de scènes/manches (défaut 3)")
+    parser.add_argument("--format", dest="fmt", default="scenes",
+                        help="moule : « scenes » (défaut) ou « aventure » (horreur CYOA)")
     parser.add_argument("--render", action="store_true", help="tente aussi le MP4 Remotion")
     args = parser.parse_args(argv)
 
@@ -269,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.idea:
         parser.error("donne une idée, ou utilise --check")
     if args.text:
-        return preview_text(args.idea, n_scenes=args.scenes)
+        return preview_text(args.idea, n_scenes=args.scenes, fmt=args.fmt)
     return run_dogfood(args.idea, render=args.render)
 
 

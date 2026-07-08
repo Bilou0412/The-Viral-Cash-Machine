@@ -192,7 +192,11 @@ def test_editor_document_from_script(client):
     assert all(b["type"] == "clip" for b in bricks)  # arbre ClipBrick, pas de plat
     assert {b["kind"] for b in bricks} == {"video", "photo"}
     ids = [b["id"] for b in bricks]
-    assert ids[0] == "ep_intro" and ids[-1] == "ep_epilogue"
+    # Rail UNIQUE : le CYOA est un doc v5 (scènes = manches). 1re brique = photo
+    # d'établissement de l'intro, dernière = le plan d'épilogue.
+    assert ids[0] == "intro_env" and ids[-1] == "epilogue_shot"
+    # Chaque plan porte un `.shot` structuré (plus de briques blob pré-cuites).
+    assert all(b.get("shot") is not None for b in bricks if not b["id"].endswith("_env"))
 
     # persisté + relisible via la route éditeur générique
     doc_id = body["id"]
@@ -348,14 +352,16 @@ def test_generate_editor_document_clips_idempotent(client):
     client.post(f"/api/episodes/{eid}/script", json={"prompt": "cave"})
     doc_id = client.post(f"/api/episodes/{eid}/editor-document").json()["id"]
 
-    # 1re génération : un appel run_model par nœud (couverture 1:1 du plan = 56).
+    # 1re génération : un appel run_model par nœud (couverture 1:1 du plan). Rail v5
+    # (scènes = manches) : 30 briques (25 plans + 5 photos d'établissement) → 30 images
+    # + 19 motions (plans vidéo) + 22 narrations = 71 nœuds.
     assert client.post(f"/api/editor/documents/{doc_id}/generate").status_code == 200
     n_calls = len(client.fake_provider.run_calls)
-    assert n_calls == 56
+    assert n_calls == 71
 
     with _S(client.engine) as s:
         assets = AssetRepo(s).assets_by_document(doc_id)
-    assert len(assets) == 56
+    assert len(assets) == 71
     assert all(a.status == "ready" and a.local_path for a in assets)
     assert {a.kind for a in assets} == {"image", "video", "audio"}
     beats = [a.beat for a in assets]
@@ -373,7 +379,7 @@ def test_generate_editor_document_clips_idempotent(client):
     assert len(client.fake_provider.run_calls) == n_calls
 
     # Régénération ciblée d'une brique VIDÉO + narration → exactement 3 nœuds.
-    client.post(f"/api/editor/documents/{doc_id}/bricks/r0_action/regenerate")
+    client.post(f"/api/editor/documents/{doc_id}/bricks/r1_action/regenerate")
     assert len(client.fake_provider.run_calls) == n_calls + 3
 
 

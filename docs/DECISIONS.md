@@ -3,6 +3,13 @@
 Une ligne par décision transverse (la plus récente en haut). Pour le plan d'exécution, voir
 `ROADMAP.md`.
 
+- **2026-07-08** · **Rail unique** (fin de la bidouille) · un FORMAT = une STRUCTURE qui
+  produit un `EditorDocument` v5 ; `compile_shot` compile TOUS les prompts, `describe_document`
+  rend TOUT en texte, `document_to_spec` rend TOUT en `VideoSpec`. Aucun format ne construit
+  ses prompts à la main. Conséquence : le **horror-CYOA migre sur v5** (l'adaptateur émet des
+  `ShotBrief`, plus de briques blob) pour hériter qualité + descripteur + atelier agents.
+  Règle écrite : `.claude/rules/architecture.md`.
+
 - **2026-06-28** · Durcissement fait : **montage async** (BackgroundTask, plus de 502) +
   **R2 flux épisode** (storage port local/R2, serving proxifié par l'API). Reliquat : flux
   éditeur/briques sur R2 (chemins recalculés) avant scale horizontal. Cf. `docs/DEPLOY.md`.

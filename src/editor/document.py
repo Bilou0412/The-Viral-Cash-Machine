@@ -285,6 +285,8 @@ class ShotBrief(_Doc):
     """
 
     start_image: str = ""   # note de composition de la frame de départ
+    sujet: str = ""         # sujet LIBRE EN quand le plan n'est pas « perso-dans-décor »
+    #                         (illustration d'un choix, plan symbolique, produit…). Sinon "".
     cadre: Cadre = Field(default_factory=Cadre)
     profondeur: Profondeur = Field(default_factory=Profondeur)
     camera: Camera = Field(default_factory=Camera)

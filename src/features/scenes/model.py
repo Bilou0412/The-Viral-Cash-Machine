@@ -55,6 +55,7 @@ class ShotPlan(_M):
     duree_s: float = 4.0
     narration_fr: str = ""            # FR — → son.dialogue_voix + enfant audio
     start_image: str = ""
+    sujet: str = ""                   # sujet LIBRE EN (plan non « perso-dans-décor »)
     cadre: Cadre = Field(default_factory=Cadre)
     profondeur: Profondeur = Field(default_factory=Profondeur)
     camera: Camera = Field(default_factory=Camera)

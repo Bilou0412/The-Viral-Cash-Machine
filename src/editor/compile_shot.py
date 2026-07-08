@@ -303,9 +303,12 @@ def compile_image_prompt(r: ResolvedShot) -> str:
     b, loc, sc = r.brief, r.location, r.scene
     tight = _is_tight_frame(b.cadre)
 
-    # Un bloc PAR personnage (l'assembleur tronque proprement les scènes d'ensemble).
-    people = [s for pp in b.personnages_presents
-              if (s := _character_still(pp, r.bible, tight))]
+    # Sujet LIBRE (plan non « perso-dans-décor » : illustration de choix, plan symbolique…),
+    # puis un bloc PAR personnage. Le sujet libre est en tête (l'assembleur le garde).
+    subjects = [_cap_words(_clean(b.sujet), 22)] if _clean(b.sujet) else []
+    subjects += [s for pp in b.personnages_presents
+                 if (s := _character_still(pp, r.bible, tight))]
+    people = subjects
     framing = _framing(b.cadre)
 
     place = _join([_clean(loc.lieu), _en(loc.int_ext), _en(sc.moment_jour),

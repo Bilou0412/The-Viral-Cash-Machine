@@ -120,7 +120,8 @@ def _shot_brief(shot: ShotPlan, name_to_id: dict[str, str]) -> ShotBrief:
         for sc in shot.personnages
     ]
     return ShotBrief(
-        start_image=shot.start_image, cadre=shot.cadre, profondeur=shot.profondeur,
+        start_image=shot.start_image, sujet=shot.sujet,
+        cadre=shot.cadre, profondeur=shot.profondeur,
         camera=shot.camera, personnages_presents=people,
         elements_secondaires=shot.elements_secondaires,
         physique_environnement=shot.physique_environnement,
