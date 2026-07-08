@@ -72,6 +72,29 @@ class ZoomSpec(_Doc):
     focus_y: Annotated[float, Field(ge=0, le=1)] = 0.5
 
 
+class CountdownSpec(_Doc):
+    """Écran compte à rebours d'une brique PHOTO : fond flouté + décompte + jauge.
+
+    Agencement de rendu déclaratif (comme `ZoomSpec`) : compilé en `CountdownSegment`
+    de `VideoSpec`, rendu par `render_moviepy`. Aucun appel API — c'est un EFFET, pas
+    un asset. Un des effets de l'intro CYOA (« choisis ton compagnon : 3-2-1 »)."""
+
+    blur_radius: Annotated[float, Field(ge=0, allow_inf_nan=False)] = 25.0
+    steps: list[str] = Field(default_factory=lambda: ["3", "2", "1"])
+    step_duration: Annotated[float, Field(gt=0, allow_inf_nan=False)] = 0.7
+
+
+class NameplateBrief(_Doc):
+    """Une plaque de nom posée sur une brique, ancrée sur une tête détectée.
+
+    Déclaratif : compilé en `NameplateSpec` (placement `HeadAnchor`) et rendu par
+    `render_moviepy` (position résolue par la détection de têtes au rendu)."""
+
+    text: str
+    side: Literal["left", "right"] = "left"
+    v_offset: int = 60
+
+
 class AudioChild(_Doc):
     """Enfant audio d'une brique (narration off / dialogue perso) = un appel TTS."""
 
@@ -321,6 +344,9 @@ class ClipBrick(_Doc):
     image: GenNode = Field(default_factory=GenNode)   # toujours présent
     motion: GenNode | None = None                  # kind=video uniquement
     zoom: ZoomSpec | None = None                   # kind=photo uniquement (Ken Burns)
+    countdown: CountdownSpec | None = None         # kind=photo uniquement (écran timer)
+    intro_eye_open: bool = False                   # kind=photo sans audio (transition eye-open)
+    nameplates: list[NameplateBrief] = Field(default_factory=list)  # plaques de nom (effet)
     shot: ShotBrief | None = None                  # v4 : champs métier (sinon blob legacy)
     children: list[AudioChild] = Field(default_factory=list)
     context_overrides: NarrativeContext | None = None
@@ -334,6 +360,10 @@ class ClipBrick(_Doc):
             raise ValueError("une brique PHOTO ne peut pas porter de 'motion' (image→video)")
         if self.kind == "video" and self.zoom is not None:
             raise ValueError("'zoom' (Ken Burns) est réservé aux briques PHOTO")
+        if self.kind == "video" and self.countdown is not None:
+            raise ValueError("'countdown' (écran timer) est réservé aux briques PHOTO")
+        if self.countdown is not None and self.children:
+            raise ValueError("un écran 'countdown' ne porte pas de narration (pas d'enfant audio)")
         child_ids = [c.id for c in self.children]
         if len(child_ids) != len(set(child_ids)):
             raise ValueError("ids d'enfants dupliqués dans la brique")

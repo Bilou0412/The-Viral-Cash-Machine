@@ -6,9 +6,15 @@ sur l'hôte. Il ne traite que les **`ClipBrick`** (le format composite de B0) :
 - chaque clip dérive ses **assets** (`ImageAsset` pour la photo / first-frame,
   `VideoAsset` pour le motion, `VoiceAsset` pour l'enfant audio) ;
 - et son **segment** dans la timeline :
+    * `countdown` (photo)       → `CountdownSegment` (fond flouté + décompte + jauge) ;
     * `kind="video"`            → `FootageSegment` (vidéo + sous-titres) ;
     * `kind="photo"` + audio    → `NarrationSegment` (image zoomée + voix off) ;
-    * `kind="photo"` sans audio → `IntroSegment` (image fixe).
+    * `kind="photo"` sans audio → `IntroSegment` (image fixe, eye-open optionnel).
+
+Les EFFETS sont des DONNÉES IR posées sur le clip (comme `zoom`) : `countdown`
+(→ `CountdownSegment`), `nameplates` (→ `NameplateSpec` ancrés tête), `intro_eye_open`
+(→ `EyeOpenTransition`). Aucun effet impératif ici — tout passe par le spec, rendu par
+`render_moviepy`. Un effet non représentable en IR n'est pas sur le rail.
 
 Les briques LEGACY plates (`GenerativeBrick`/`MediaBrick`/`TextBrick`) ne font PAS
 partie du chemin VideoSpec : elles restent servies par `resolve.py` (preview Node)
@@ -27,9 +33,13 @@ from typing import Any
 
 from ..videospec.models import (
     Asset,
+    CountdownSegment,
+    EyeOpenTransition,
     FootageSegment,
+    HeadAnchor,
     ImageAsset,
     IntroSegment,
+    NameplateSpec,
     NarrationSegment,
     Segment,
     SubtitleTrack,
@@ -124,6 +134,14 @@ def _zoom(clip: ClipBrick) -> ZoomEffect:
     return ZoomEffect(scale_from=z.from_scale, scale_to=z.to_scale)
 
 
+def _nameplates(clip: ClipBrick) -> tuple[NameplateSpec, ...]:
+    """Les plaques de nom déclarées sur le clip → specs ancrées sur une tête détectée."""
+    return tuple(
+        NameplateSpec(text=n.text, placement=HeadAnchor(side=n.side, v_offset=n.v_offset))
+        for n in clip.nameplates
+    )
+
+
 def _compile_clip(clip: ClipBrick) -> tuple[list[Asset], Segment]:
     """Un clip → (ses assets, son segment)."""
     assets: list[Asset] = []
@@ -138,11 +156,21 @@ def _compile_clip(clip: ClipBrick) -> tuple[list[Asset], Segment]:
         assets.append(voice)
         voice_id = voice.id
 
+    nameplates = _nameplates(clip)
+
+    # Écran COUNTDOWN (photo, sans narration) : fond flouté + décompte + jauge.
+    if clip.countdown is not None:
+        c = clip.countdown
+        return assets, CountdownSegment(
+            background=image.id, blur_radius=c.blur_radius,
+            steps=tuple(c.steps), step_duration=c.step_duration, nameplates=nameplates,
+        )
+
     if clip.kind == "video":
         video = _video_asset(clip, image.id, voice_id)
         assets.append(video)
         subtitles = SubtitleTrack(source=voice_id) if voice_id else None
-        return assets, FootageSegment(video=video.id, subtitles=subtitles)
+        return assets, FootageSegment(video=video.id, subtitles=subtitles, nameplates=nameplates)
 
     # kind == "photo"
     if voice_id is not None:
@@ -151,6 +179,7 @@ def _compile_clip(clip: ClipBrick) -> tuple[list[Asset], Segment]:
             audio=voice_id,
             zoom=_zoom(clip),
             subtitles=SubtitleTrack(source=voice_id),
+            nameplates=nameplates,
         )
 
     if clip.zoom is not None:
@@ -160,7 +189,10 @@ def _compile_clip(clip: ClipBrick) -> tuple[list[Asset], Segment]:
         )
 
     duration = clip.placement.duration if clip.placement.duration > 0 else None
-    kwargs: dict[str, Any] = {"background": image.id, "transition": None}
+    transition = EyeOpenTransition() if clip.intro_eye_open else None
+    kwargs: dict[str, Any] = {
+        "background": image.id, "transition": transition, "nameplates": nameplates,
+    }
     if duration is not None:
         kwargs["duration"] = duration
     return assets, IntroSegment(**kwargs)
