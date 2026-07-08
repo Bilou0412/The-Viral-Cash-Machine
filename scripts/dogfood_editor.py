@@ -209,52 +209,41 @@ def run_dogfood(idea: str, *, render: bool) -> int:
 
 # -- aperçu du matériel texte (dry-run, ZÉRO génération) ----------------------
 
-def preview_text(idea: str) -> int:
-    """Idée → descripteur 3 niveaux RÉSOLU + les 3 prompts compilés, par plan.
+def preview_text(idea: str, n_scenes: int = 3) -> int:
+    """Idée → la VIDÉO EN ENTIER, sous forme de texte (le descripteur complet).
 
-    Aucune génération (ni image ni vidéo) : la boucle pour tester/enrichir le
-    matériel texte. Fake sans clé OpenAI (gratuit), OpenAI si clé (quelques centimes).
+    Aucune génération (ni image ni vidéo) : uniquement du texte. C'est LE matériel
+    qui décrit la vidéo et servira à la créer. Fake sans clé OpenAI (gratuit), OpenAI
+    si clé (quelques centimes, texte only). Un pied de page diagnostique la qualité
+    (mots par prompt image, prompts qui fuient du français).
     """
-    from src.editor.compile_shot import (
-        compile_image_prompt,
-        compile_motion_prompt,
-        looks_french,
-        resolve_shot,
-    )
+    from src.editor.compile_shot import compile_image_prompt, looks_french, resolve_shot
+    from src.editor.describe import describe_document
     from src.editor.document import ClipBrick, Scene
     from src.features.scenes import scene_plan_to_document
     from src.studio.api.services.scenes import decomposer_source, generate_video_plan
 
     openai_key = os.environ.get("OPENAI_API_KEY") or None
-    print(f"[aperçu] décrypteur = {decomposer_source(openai_key)} — « {idea} »\n")
-    plan = generate_video_plan(idea, n_scenes=1, openai_key=openai_key)
+    print(f"[aperçu] décrypteur = {decomposer_source(openai_key)} · {n_scenes} scène(s) — « {idea} »\n")
+    plan = generate_video_plan(idea, n_scenes=n_scenes, openai_key=openai_key)
     doc = scene_plan_to_document(plan)
 
-    m = doc.meta
-    style = f" | style: {m.style_rendu}" if m.style_rendu.strip() else ""
-    reso = f" {m.resolution}" if m.resolution.strip() else ""
-    print(f"■ VIDÉO — {doc.title} | {m.ratio}{reso} {m.fps}fps{style}")
-    print(f"  intention: {doc.intention_globale.genre} · {doc.intention_globale.ton}")
-    print(f"  bibles: {len(doc.location_bible)} décor(s), {len(doc.bible)} perso(s)\n")
+    print(describe_document(doc))
 
+    # Diagnostic qualité du matériel texte (non bloquant).
     scene_of = {sid: sc for sc in doc.scenes for sid in (*sc.shot_ids, sc.environment_photo_ref)}
-    for sc in doc.scenes:
-        loc = next((locn.lieu for locn in doc.location_bible if locn.ref == sc.location_ref), "?")
-        print(f"● SCÈNE {sc.id} — {sc.title} | décor: {loc} | {sc.moment_jour} {sc.meteo} | mood: {sc.mood}")
-    print()
+    lens: list[int] = []
+    fr_flagged = 0
     for brick in doc.bricks:
-        if not (isinstance(brick, ClipBrick) and brick.shot is not None):
-            continue
-        r = resolve_shot(doc, scene_of.get(brick.id, Scene(id="_none")), brick.shot)
-        print(f"  ▸ PLAN {brick.id} | cadre: {brick.shot.cadre.taille_plan or '—'} | "
-              f"caméra: {brick.shot.camera.type or '—'}")
-        img = compile_image_prompt(r)
-        mot = compile_motion_prompt(r)
-        fr = " ⚠FR" if looks_french(img) else ""
-        print(f"      IMAGE  ({len(img.split()):>2}w{fr}): {img or '(vide)'}")
-        print(f"      MOTION ({len(mot.split()):>2}w): {mot or '(vide)'}")
-        narr = next((c.params.get('text', '') for c in brick.children), '')
-        print(f"      VOIX   : {narr or '(aucune)'}\n")
+        if isinstance(brick, ClipBrick) and brick.shot is not None:
+            img = compile_image_prompt(resolve_shot(doc, scene_of.get(brick.id, Scene(id="_none")),
+                                                    brick.shot))
+            lens.append(len(img.split()))
+            fr_flagged += 1 if looks_french(img) else 0
+    if lens:
+        avg = sum(lens) / len(lens)
+        print(f"— diagnostic : {len(lens)} plans · prompt image {min(lens)}–{max(lens)} mots "
+              f"(moy. {avg:.0f}) · {fr_flagged} prompt(s) ⚠FR")
     return 0
 
 
@@ -264,7 +253,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Dogfood du rail éditeur (assets réels).")
     parser.add_argument("idea", nargs="?", default="", help="l'idée de la vidéo")
     parser.add_argument("--check", action="store_true", help="préflight seul (zéro dépense)")
-    parser.add_argument("--text", action="store_true", help="aperçu du matériel texte (zéro génération)")
+    parser.add_argument("--text", action="store_true", help="la vidéo EN ENTIER en texte (zéro génération)")
+    parser.add_argument("--scenes", type=int, default=3, help="nombre de scènes (défaut 3)")
     parser.add_argument("--render", action="store_true", help="tente aussi le MP4 Remotion")
     args = parser.parse_args(argv)
 
@@ -279,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.idea:
         parser.error("donne une idée, ou utilise --check")
     if args.text:
-        return preview_text(args.idea)
+        return preview_text(args.idea, n_scenes=args.scenes)
     return run_dogfood(args.idea, render=args.render)
 
 

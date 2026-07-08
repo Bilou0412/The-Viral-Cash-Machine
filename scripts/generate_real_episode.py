@@ -6,7 +6,6 @@ Sortie : studio_output/.../final_video.mp4
 """
 
 import os
-import sys
 import time
 
 # Sortie user-writable + DB locale.
@@ -22,17 +21,17 @@ for line in open(".env"):
 
 from sqlmodel import Session  # noqa: E402
 
+from src.features.scripting.fake_adventure_decomposer import (  # noqa: E402
+    FakeAdventureDecomposer,
+)
+from src.studio.api.events import bus  # noqa: E402
+from src.studio.api.services.generation import AssetGenerationService  # noqa: E402
+from src.studio.api.services.montage import MontageService  # noqa: E402
 from src.studio.db.engine import get_engine, init_db  # noqa: E402
 from src.studio.db.repositories import (  # noqa: E402
     EpisodeRepo,
     ProjectRepo,
     ScriptRepo,
-)
-from src.studio.api.services.generation import AssetGenerationService  # noqa: E402
-from src.studio.api.services.montage import MontageService  # noqa: E402
-from src.studio.api.events import bus  # noqa: E402
-from src.features.scripting.fake_adventure_decomposer import (  # noqa: E402
-    FakeAdventureDecomposer,
 )
 
 t0 = time.time()
@@ -69,6 +68,6 @@ print(f"[generate] OK en {int(time.time()-t0)}s", flush=True)
 
 print("[montage] assemblage MoviePy (timers + noms + sous-titres)...", flush=True)
 out = MontageService(engine).assemble_rich(eid)
-print(f"[montage] OK", flush=True)
+print("[montage] OK", flush=True)
 print(f"FINAL_VIDEO={out}", flush=True)
 print(f"[done] total {int(time.time()-t0)}s", flush=True)

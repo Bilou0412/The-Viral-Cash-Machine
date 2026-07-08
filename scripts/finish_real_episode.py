@@ -18,6 +18,10 @@ for line in open(".env"):
 
 from sqlmodel import Session  # noqa: E402
 
+from src.features.scripting.adventure import AdventureScript  # noqa: E402
+from src.studio.api.services.generation import AssetGenerationService  # noqa: E402
+from src.studio.api.services.generation_plan import plan_episode_assets  # noqa: E402
+from src.studio.api.services.montage import MontageService  # noqa: E402
 from src.studio.db.engine import get_engine  # noqa: E402
 from src.studio.db.repositories import (  # noqa: E402
     AssetRepo,
@@ -25,10 +29,6 @@ from src.studio.db.repositories import (  # noqa: E402
     ProjectRepo,
     ScriptRepo,
 )
-from src.studio.api.services.generation import AssetGenerationService  # noqa: E402
-from src.studio.api.services.generation_plan import plan_episode_assets  # noqa: E402
-from src.studio.api.services.montage import MontageService  # noqa: E402
-from src.features.scripting.adventure import AdventureScript  # noqa: E402
 
 t0 = time.time()
 engine = get_engine()

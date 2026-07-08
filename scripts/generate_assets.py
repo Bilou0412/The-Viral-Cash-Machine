@@ -1,6 +1,8 @@
+import os
+
 import numpy as np
 from scipy.io import wavfile
-import os
+
 
 def generate_beep(filename, frequency, duration, sample_rate=44100):
     t = np.linspace(0, duration, int(sample_rate * duration), False)
@@ -10,7 +12,7 @@ def generate_beep(filename, frequency, duration, sample_rate=44100):
     fade_duration = int(sample_rate * 0.05)
     fade_out = np.linspace(1, 0, fade_duration)
     tone[-fade_duration:] *= fade_out
-    
+
     # 16-bit PCM
     audio = (tone * (2**15 - 1)).astype(np.int16)
     wavfile.write(filename, sample_rate, audio)
