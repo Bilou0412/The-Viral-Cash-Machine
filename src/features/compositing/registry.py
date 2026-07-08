@@ -81,7 +81,7 @@ REGISTRY: dict[str, Brick] = {
         name="montage.timer",
         kind="montage",
         summary="Écran compte à rebours 3-2-1 sur fond flouté + jauge + ticks/beep.",
-        ref="features.compositing.adventure_compositor._timer_screen",
+        ref="videospec.models.CountdownSegment",  # IR : ClipBrick.countdown → document_to_spec
     ),
     "montage.choice": Brick(
         name="montage.choice",
@@ -99,13 +99,13 @@ REGISTRY: dict[str, Brick] = {
         name="montage.nameplate",
         kind="montage",
         summary="Plaque de nom du perso suivi, positionnée via la détection de têtes.",
-        ref="features.compositing.overlays.NameplateOverlay",
+        ref="videospec.models.NameplateSpec",  # IR : ClipBrick.nameplates → document_to_spec
     ),
     "montage.zoom": Brick(
         name="montage.zoom",
         kind="montage",
         summary="Zoom Ken Burns sur une image fixe sur la durée du segment.",
-        ref="features.compositing.adventure_compositor._ken_burns",
+        ref="videospec.models.ZoomEffect",  # IR : ClipBrick.zoom → document_to_spec
     ),
     "montage.facecam": Brick(
         name="montage.facecam",
