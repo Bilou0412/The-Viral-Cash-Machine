@@ -1,1 +1,1 @@
-"""Infrastructure utilities: logging, download, environment."""
+"""Infrastructure utilities: logging, download."""

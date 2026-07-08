@@ -1,7 +1,5 @@
-streamlit
 replicate
 pydantic>=2.0
-python-dotenv
 requests
 openai
 moviepy>=2.0.0

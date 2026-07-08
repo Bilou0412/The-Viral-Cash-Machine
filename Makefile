@@ -6,9 +6,9 @@ DC := docker compose -f docker-compose.dev.yml
 EXEC := $(DC) exec -T dev
 # mypy : base de modules = /app uniquement (sinon src/ résolu sous deux noms).
 MYPY := $(DC) exec -T -e PYTHONPATH=/app dev sh -c "cd /app && python -m mypy src"
-# Baseline d'erreurs mypy (dette legacy : compositor/generation/overlays…).
-# `verify` échoue si on DÉPASSE ce nombre (cliquet : à faire baisser, jamais monter).
-MYPY_BASELINE := 40
+# Baseline d'erreurs mypy = 0 (dette legacy résorbée, strict global).
+# `verify` échoue si on DÉPASSE ce nombre (cliquet : toute nouvelle erreur casse le build).
+MYPY_BASELINE := 0
 
 .PHONY: help dev-up dev-down sh test typecheck lint build-front verify verify-native e2e
 
