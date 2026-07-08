@@ -10,7 +10,14 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import ArtDirection, Dialogue, DistributionKit, NarrationRef, SceneRef
+from .model import (
+    ArtDirection,
+    Dialogue,
+    DistributionKit,
+    FragmentPlan,
+    NarrationRef,
+    SceneRef,
+)
 
 
 class CrewAgentError(ValueError):
@@ -60,4 +67,19 @@ class DialogueAgent(Protocol):
         lines: list[NarrationRef],
     ) -> Dialogue:
         """Brief (ton/audience/langue) + répliques → `Dialogue` (textes réécrits, par id)."""
+        ...
+
+
+class DirectorAgent(Protocol):
+    """Le réalisateur : assemble UNE PARTIE (fragment v5) depuis une description NL.
+
+    Il VOIT le catalogue d'effets (`effects` = noms du catalogue, cf. `AgentContext`)
+    et n'en pose que ceux qu'on lui montre. C'est le cœur de la co-construction :
+    ta description → un fragment concret à effets, qu'on sauve ensuite comme template."""
+
+    def assemble(
+        self, *, description: str, part: str = "intro",
+        effects: list[str], language: str = "fr",
+    ) -> FragmentPlan:
+        """Description NL d'une partie + palette d'effets → `FragmentPlan` (beats à effets)."""
         ...

@@ -7,6 +7,8 @@ ne dépend pas de `studio`/`editor`).
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -80,3 +82,44 @@ class Dialogue(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     lines: list[DialogueLine] = Field(default_factory=list)
+
+
+# -- Réalisateur : assemble une PARTIE (fragment v5) depuis une description NL ----
+
+
+class NameplatePlan(BaseModel):
+    """Une plaque de nom posée par le réalisateur (effet du catalogue)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    text: str = ""
+    side: Literal["left", "right"] = "left"
+
+
+class BeatPlan(BaseModel):
+    """Un beat d'une PARTIE, tel que le réalisateur le pose — AVEC ses effets.
+
+    Les effets sont CHOISIS dans le catalogue que l'agent voit (`AgentContext.effects`) :
+    `eye_open` (transition d'établissement), `countdown` (écran timer flou), `nameplates`.
+    Convention : `sujet` en anglais (prompt visuel), `narration_fr` en français (parlé)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = ""
+    kind: Literal["video", "photo"] = "photo"
+    sujet: str = ""              # EN — sujet/prompt visuel du plan
+    narration_fr: str = ""       # FR — texte parlé (voix off / réplique)
+    duree_s: float = 3.0
+    eye_open: bool = False        # effet : transition eye-open (établissement)
+    countdown: bool = False       # effet : écran timer sur fond flouté (pas de narration)
+    nameplates: list[NameplatePlan] = Field(default_factory=list)
+
+
+class FragmentPlan(BaseModel):
+    """Ce que produit le RÉALISATEUR : une PARTIE de vidéo (intro, aventure…) = une
+    séquence de beats à effets, prête à devenir un fragment v5 (`fragment_to_bricks`)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    part: str = ""
+    beats: list[BeatPlan] = Field(default_factory=list)
