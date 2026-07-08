@@ -7,9 +7,9 @@ ne dépend pas de `studio`/`editor`).
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class DistributionKit(BaseModel):
@@ -113,6 +113,12 @@ class BeatPlan(BaseModel):
     eye_open: bool = False        # effet : transition eye-open (établissement)
     countdown: bool = False       # effet : écran timer sur fond flouté (pas de narration)
     nameplates: list[NameplatePlan] = Field(default_factory=list)
+
+    # Robustesse LLM : GPT renvoie parfois l'id en entier (1, 2, 3…) → on coerce en str.
+    @field_validator("id", mode="before")
+    @classmethod
+    def _coerce_id(cls, v: Any) -> str:
+        return "" if v is None else str(v)
 
 
 class FragmentPlan(BaseModel):
