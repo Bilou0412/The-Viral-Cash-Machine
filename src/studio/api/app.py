@@ -626,6 +626,17 @@ def list_bricks_route() -> list[dict[str, Any]]:
     ]
 
 
+@app.get("/api/catalog")
+def catalog_route(user: User = Depends(require_user)) -> dict[str, Any]:
+    """Le CATALOGUE complet : briques génératives + effets de montage.
+
+    La palette que les agents (et l'UI d'atelier) voient pour co-construire un
+    template — génératif (`CONTRACTS`) + montage (`REGISTRY` : timer/choix/zoom/…)."""
+    from .services.catalog import build_catalog
+
+    return build_catalog().model_dump()
+
+
 @app.get("/api/models/search")
 def model_search_route(
     kind: str, q: str = "", client: Any = Depends(get_catalog_client)

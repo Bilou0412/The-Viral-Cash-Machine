@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 
 from ....editor.document import ClipBrick
 from ....features.brief.model import Brief
-from ....features.compositing.registry import CONTRACTS
+from ....features.compositing.registry import CONTRACTS, bricks_by_kind
 from ....features.crew import role_by_key
 
 if TYPE_CHECKING:
@@ -39,6 +39,17 @@ class ToolCard(BaseModel):
     preferred_models: list[str] = Field(default_factory=list)
 
 
+class EffectCard(BaseModel):
+    """Un EFFET de montage du catalogue, tel qu'un agent le voit (nom + résumé).
+
+    C'est la palette de MONTAGE (`registry.REGISTRY`, kind ``montage`` : timer,
+    choix, zoom, nameplate…) rendue lisible pour l'agent qui ASSEMBLE une partie —
+    sans quoi il ne peut ni choisir ni poser un effet."""
+
+    name: str
+    summary: str
+
+
 class AgentContext(BaseModel):
     """Le paquet de contexte d'un agent-métier (son dossier de briefing)."""
 
@@ -46,16 +57,22 @@ class AgentContext(BaseModel):
     brief: Brief
     dossier: dict[str, Any] = Field(default_factory=dict)
     tools: list[ToolCard] = Field(default_factory=list)
+    effects: list[EffectCard] = Field(default_factory=list)
     refs: dict[str, str] = Field(default_factory=dict)
 
 
-# Quels kinds d'outils chaque métier manipule (les autres n'en ont pas besoin).
+# Quels kinds d'outils GÉNÉRATIFS chaque métier manipule (les autres n'en ont pas besoin).
 _ROLE_TOOLS: dict[str, tuple[str, ...]] = {
     "directeur_artistique": ("image",),
     "chef_operateur": ("video",),
     "inge_son": ("voice",),
     "tournage": ("image", "video", "voice"),
+    "realisateur": ("image", "video", "voice"),
 }
+
+# Quels métiers ASSEMBLENT une partie et ont donc besoin de VOIR les effets de montage
+# (timer/choix/zoom/nameplate…). Un agent hors de cet ensemble ne voit pas la palette.
+_ROLE_EFFECTS: frozenset[str] = frozenset({"tournage", "realisateur", "monteur"})
 
 
 def _tool_card(kind: str) -> ToolCard:
@@ -68,6 +85,11 @@ def _tool_card(kind: str) -> ToolCard:
         ],
         preferred_models=list(contract.preferred_models),
     )
+
+
+def effect_cards() -> list[EffectCard]:
+    """La palette de MONTAGE (kind ``montage``) en cartes lisibles pour un agent."""
+    return [EffectCard(name=b.name, summary=b.summary) for b in bricks_by_kind("montage")]
 
 
 # ── Extracteurs de tranches du dossier ──────────────────────────────────────
@@ -192,6 +214,7 @@ def assemble_context(
     if crew_role is None:
         raise KeyError(role)
     tools = [_tool_card(k) for k in _ROLE_TOOLS.get(role, ())]
+    effects = effect_cards() if role in _ROLE_EFFECTS else []
     refs = {
         "title": crew_role.title,
         "subtitle": crew_role.subtitle,
@@ -200,5 +223,6 @@ def assemble_context(
         "kind": crew_role.kind,
     }
     return AgentContext(
-        role=role, brief=brief, dossier=_dossier(role, doc), tools=tools, refs=refs
+        role=role, brief=brief, dossier=_dossier(role, doc), tools=tools,
+        effects=effects, refs=refs,
     )
