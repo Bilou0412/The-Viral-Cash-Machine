@@ -117,10 +117,32 @@ def _join(parts: list[str], sep: str = ", ") -> str:
     return sep.join(p for p in (p.strip() for p in parts) if p)
 
 
+# Mots-outils sur lesquels un prompt tronqué ne doit pas se terminer (« … small release in »).
+_TRAIL_WORDS = {"in", "the", "a", "an", "of", "to", "and", "with", "into", "at", "on",
+                "then", "as", "for", "her", "his", "their", "its", "from"}
+
+
+def _trim_trailing(words: list[str]) -> list[str]:
+    while words and words[-1].lower().strip(",;") in _TRAIL_WORDS:
+        words.pop()
+    return words
+
+
 def _cap_words(text: str, n: int) -> str:
     words = text.split()
-    capped = " ".join(words[:n]) if len(words) > n else text
-    return capped.rstrip(" ,;")   # jamais de virgule pendante après troncature
+    if len(words) <= n:
+        return text.rstrip(" ,;")
+    # Tronqué : couper les mots-outils pendants (« … in », « … the ») en fin.
+    return " ".join(_trim_trailing(words[:n])).rstrip(" ,;")
+
+
+def _short_phrase(text: str, n: int) -> str:
+    """La 1re proposition d'un champ (avant la virgule), capée à n mots, fin propre.
+
+    Les champs `expression`/état riches du LLM (« small release in the face, eyes
+    attentive ») doivent devenir un syntagme court et observable, pas un fragment tronqué."""
+    first = _clean(text).split(",")[0]
+    return " ".join(_trim_trailing(first.split()[:n]))
 
 
 def _assemble(blocks: list[str], max_words: int) -> str:
@@ -248,12 +270,13 @@ def _character_still(pp: PersonnagePresent, bible: dict[str, CharacterEntry],
     """
     entry = bible.get(pp.ref)
     name = entry.name if entry else ""
-    appearance = _cap_words(_clean(entry.appearance) if entry else "", 12)
+    appearance = _cap_words(_clean(entry.appearance) if entry else "", 10)
     wardrobe = "" if (tight_frame or entry is None) else _clean(entry.wardrobe)
     if wardrobe and _WARDROBE_SKIP.match(wardrobe):
         wardrobe = ""
     head = _join([name, f"({appearance})" if appearance else ""], sep=" ")
-    still = _join([head, f"wearing {wardrobe}" if wardrobe else "", _clean(pp.expression)])
+    # Expression = 1 syntagme court et observable (pas un fragment tronqué).
+    still = _join([head, f"wearing {wardrobe}" if wardrobe else "", _short_phrase(pp.expression, 5)])
     return _cap_words(still, _MAX_CHAR_STILL_WORDS)
 
 
