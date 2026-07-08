@@ -64,3 +64,12 @@ def test_intro_segment_carries_eye_open_and_nameplates():
     assert isinstance(intro, IntroSegment)
     assert intro.transition is not None
     assert [n.text for n in intro.nameplates] == ["Étienne", "Marc"]
+
+
+def test_beat_id_coerced_from_int():
+    """Robustesse LLM (trouvée en test réel) : GPT renvoie l'id en entier → coerce en str."""
+    from src.features.crew.model import BeatPlan, FragmentPlan
+
+    plan = FragmentPlan.model_validate({"part": "intro", "beats": [{"id": 1, "kind": "photo"}]})
+    assert plan.beats[0].id == "1"
+    assert BeatPlan.model_validate({"id": 3}).id == "3"
