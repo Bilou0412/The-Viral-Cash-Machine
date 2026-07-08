@@ -454,6 +454,21 @@ export interface SceneDocumentResult extends EditorDocument {
   source?: DecomposerSource
 }
 
+// Un FORMAT (moule) du catalogue : id + libellé + accroche + description.
+export interface VideoFormat {
+  id: string
+  label: string
+  tagline: string
+  description: string
+}
+
+// Résultat du point d'entrée unifié « format-document » : le doc v5 créé pour le
+// moule choisi + quel format + quel décrypteur (openai/fake).
+export interface FormatDocumentResult extends EditorDocument {
+  format: string
+  source?: DecomposerSource
+}
+
 // Résultat de la direction artistique : le document réécrit (prompts d'environnement
 // + art direction) + quel moteur l'a produit (openai/fake).
 export interface ArtDirectionResult extends EditorDocument {

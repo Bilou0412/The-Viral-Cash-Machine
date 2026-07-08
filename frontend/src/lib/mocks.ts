@@ -26,6 +26,7 @@ import type {
   EditorDocument,
   EditorDocumentSummary,
   Episode,
+  FormatDocumentResult,
   FormField,
   GenerateScriptBody,
   GenerativeKind,
@@ -48,6 +49,7 @@ import type {
   ShotBrief,
   Theme,
   UpdateAssetBody,
+  VideoFormat,
 } from "./types"
 
 // Descripteur de PLAN (v5) par défaut — les mocks n'en remplissent qu'un sous-ensemble.
@@ -703,6 +705,40 @@ export const mockApi = {
     }
     editorDocuments.set(id, docu)
     return structuredClone(docu)
+  },
+
+  async listFormats(): Promise<VideoFormat[]> {
+    await delay()
+    return [
+      {
+        id: "aventure",
+        label: "Horreur — à choix multiple",
+        tagline: "Un compagnon, des manches, des choix qui peuvent tuer.",
+        description: "POV immersif : le spectateur suit un compagnon de manche en manche ; chaque choix peut être fatal.",
+      },
+      {
+        id: "scenes",
+        label: "Scènes",
+        tagline: "Une idée découpée en scènes et plans courts.",
+        description: "Format libre : l'IA découpe l'idée en scènes (photo d'environnement + plans courts).",
+      },
+    ]
+  },
+
+  async formatDocument(
+    episodeId: number,
+    body: { prompt: string; title?: string; format?: string; options?: Record<string, unknown> }
+  ): Promise<FormatDocumentResult> {
+    await delay(400)
+    const id = `doc-${nextDocId++}`
+    const fmt = body.format ?? "aventure"
+    const title = body.title || "Nouvelle vidéo"
+    const nRounds = Number(body.options?.n_rounds ?? 3)
+    const doc = fmt === "scenes" ? newSceneDoc(title, nRounds) : newAdventureDoc(title)
+    const docu: EditorDocument = { id, project_id: 1, title, doc }
+    editorDocuments.set(id, docu)
+    episodeToDoc.set(episodeId, id)
+    return { ...structuredClone(docu), format: fmt, source: "fake" }
   },
   async getAssets(episodeId: number) {
     await delay()
