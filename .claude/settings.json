@@ -12,6 +12,21 @@
             "type": "command",
             "async": true,
             "command": "( cd frontend && npm ci ) >/dev/null 2>&1; ( cd e2e && npm install ) >/dev/null 2>&1; echo '[env] deps Node (front+e2e) prêtes'"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject_context.py\"",
+            "timeout": 90
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject_context.py\"",
+            "timeout": 90
           }
         ]
       }

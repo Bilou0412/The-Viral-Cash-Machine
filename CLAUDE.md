@@ -69,7 +69,16 @@ pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest -q            # tests rapides (~6 s) ; --runheavy pour tout
 python -m mypy src             # type-check
 # Front : cd frontend && npm install && npm run build
+
+# Repo-context-kit (natif, hors Docker) — contexte auto-mis-à-jour + hygiène :
+make state                     # régénère .claude/state/STATE.md + MAP.md (santé mécanique)
+make dead                      # code mort (vulture, indicatif ; le hook Stop le signale)
+make plan name="ma tache"      # plan testable + stub de test (docs/plans/, tests/)
 ```
+
+> **État vivant** : `.claude/state/STATE.md` (généré, santé mécanique du repo) est injecté au
+> démarrage de session par le hook `inject_context.py`. La **direction** reste dans `ROADMAP.md`
+> (source unique) — STATE.md ne la duplique pas.
 
 ## Conventions (non déductibles du code)
 

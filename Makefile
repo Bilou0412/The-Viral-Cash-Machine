@@ -21,11 +21,25 @@ help:
 	@echo "make verify        # dev-up + mypy(cliquet) + pytest + build-front (Docker)"
 	@echo "make verify-native # même boucle SANS Docker (scripts/verify.sh) — web/CI"
 	@echo "make e2e           # tests navigateur Playwright (front mock, sur l'hôte)"
+	@echo "make state         # régénère .claude/state/STATE.md + MAP.md (santé repo)"
+	@echo "make dead          # détecte le code mort (vulture, indicatif)"
+	@echo 'make plan          # nouveau plan testable :  make plan name="ma tache"'
 
 # Boucle de vérif NATIVE (zéro Docker) — réutilise le script unique partagé avec la CI
 # et le hook de session. Passer des options : make verify-native ARGS="--heavy --e2e".
 verify-native:
 	MYPY_BASELINE=$(MYPY_BASELINE) bash scripts/verify.sh $(ARGS)
+
+# repo-context-kit (natif, hors Docker) — contexte auto-mis-à-jour + hygiène.
+.PHONY: state dead plan
+state:
+	python3 scripts/refresh_state.py
+
+dead:
+	python3 scripts/check_dead_code.py
+
+plan:
+	@python3 scripts/new_plan.py "$(name)"
 
 dev-up:
 	$(DC) up -d --build
