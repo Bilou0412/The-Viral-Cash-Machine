@@ -15,3 +15,7 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
+
+# repo-context-kit : état GÉNÉRÉ (santé du repo, régénéré par scripts/refresh_state.py)
+.claude/state/STATE.md
+.claude/state/MAP.md
