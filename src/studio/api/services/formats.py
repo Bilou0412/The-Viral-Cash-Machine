@@ -20,8 +20,10 @@ from ....features.scenes import scene_plan_to_document
 from ....features.scenes.ports import DEFAULT_SCENES
 from ....features.scripting.adventure import DEFAULT_ROUNDS
 from ....features.scripting.adventure_to_video_plan import adventure_to_video_plan
+from ....features.systems.ports import DEFAULT_STEPS
 from .scenes import generate_video_plan
 from .scripting import generate_script
+from .systems import generate_system_plan
 
 
 def build_format_document(
@@ -64,6 +66,23 @@ def build_format_document(
             platform=str(opts.get("platform", "tiktok")),
             language=str(opts.get("language", "fr")),
             target_duration_s=float(opts.get("target_duration_s", 0.0)),
+            openai_key=openai_key,
+        )
+        return scene_plan_to_document(plan, title=title)
+    if fmt.id == "systeme":
+        # 1er argument = une IMAGE (dans les options) ; `prompt` sert d'indice texte.
+        image = str(opts.get("image", ""))
+        if not image:
+            raise ValueError(
+                "le format 'systeme' exige une image en entrée (options['image'] : "
+                "URL, data-URI ou chemin)"
+            )
+        plan = generate_system_plan(
+            image,
+            hint=prompt,
+            n_steps=int(opts.get("n_steps", DEFAULT_STEPS)),
+            language=str(opts.get("language", "fr")),
+            platform=str(opts.get("platform", "tiktok")),
             openai_key=openai_key,
         )
         return scene_plan_to_document(plan, title=title)

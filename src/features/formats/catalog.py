@@ -55,6 +55,17 @@ _FORMATS: tuple[VideoFormat, ...] = (
             "décomposeur 3 niveaux."
         ),
     ),
+    VideoFormat(
+        id="systeme",
+        label="Système expliqué",
+        tagline="Une image d'un système → on explique comment il marche, en plans de 5 s.",
+        description=(
+            "FORME : image d'un système (bâtiment, composant, foule, chantier…) → N étapes "
+            "expliquées, chacune un plan court (≤ 5 s) avec narration FR + visuel EN. "
+            "FOND VARIABLE : le système identifié et le déroulé, remplis par le décomposeur "
+            "à VISION (Fake offline / OpenAI)."
+        ),
+    ),
 )
 
 _BY_ID = {f.id: f for f in _FORMATS}
