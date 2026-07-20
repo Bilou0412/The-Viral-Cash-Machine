@@ -69,9 +69,11 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 
 ## 3. Ce qu'on ABANDONNE / absorbe (pour lever le flou)
 
-- **Format CYOA / horreur** (2 choix/1 fatal, 2 persos scalaires, beats fatal/survie,
-  `_GOLDEN_RULES`) — abandonné comme cadre produit. Le décrypteur de scènes est **neutre**
-  (`src/features/scenes/`). Le décrypteur aventure reste dispo mais n'est plus le défaut.
+- **Format CYOA / horreur comme CADRE PRODUIT UNIQUE et rigide** (le produit = *une seule*
+  histoire à choix) — abandonné au profit de l'**usine à moules**. ⚠️ **Le CYOA lui-même n'est
+  PAS abandonné** : il est le **format flagship #1** (cf. `docs/GTM.md`, commits CYOA-1/2/3,
+  `features/formats/catalog.py`), désormais unifié sur le rail v5 comme les autres moules. Le
+  décrypteur de scènes neutre (`src/features/scenes/`) reste le **happy path** (« Créer »).
 - **Éditeur timeline vierge (composer de zéro)** — abandonné. Le front est une **surface de
   revue** de l'arbre de briques généré (timeline multipiste Vidéo/Son + bandes de scène).
 - **Briques PLATES (`GenerativeBrick` image/video/voice) comme modèle d'autoring** — legacy.
@@ -120,6 +122,9 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 | **Cohérence i2v** — start_image par plan, ancrée à l'établissement (`image_input`) | ✅ | `scene_plan_to_document.py` (E2) |
 | **Publication** (port + Fake + route) — dernier maillon | ✅ | `src/features/publish/`, route `/publish` (E3) |
 | **Boucle de perfs réelles (moat)** — perfs → poids appris → prédicteur recalibré | ✅ | `src/features/performance/`, `services/performance.py` (E4) |
+| **CYOA unifié sur le rail v5** (flagship #1 ; agents-métiers raffinent le fond ; flux « Créer ») | ✅ | `src/features/formats/`, `services/formats.py` (CYOA-1/2/3) |
+| **Template = donnée co-écrite (TPLM)** : reframe + catalogue vu par les agents + effets = données IR | ✅ | `compositing/registry.py`, `services/context.py`, `compile_spec.py` (TPLM-0/A/B) |
+| **Réalisateur assemble une partie depuis une description NL** → `FragmentPlan` → briques v5 | ✅ *(feature+tests offline ; **orphelin, à brancher** cf. §5)* | `src/features/crew/` (TPLM-C) |
 
 ---
 
@@ -139,7 +144,23 @@ Principe directeur : **la brique = revue de la génération**. Tout le rail bas
 - **E4** `features/performance/` — `calibrate_angle_weights` : perfs réelles → poids appris ; le
   prédicteur passe de LLM-juge à **signal réel** (`calibrated_predictor` injecté dans `propose_hooks`).
 
-### R1 — Valider E2 en dogfood réel  ⬜  ← PROCHAINE ÉTAPE
+### TPLM-D — Brancher le réalisateur (co-construction réelle)  ⬜  ← EN COURS
+Le cœur de la co-construction (TPLM-C, `src/features/crew/`) était **construit + testé offline
+mais ORPHELIN**. On le rend invocable de bout en bout — **description NL → template sauvé →
+ré-instancié** (cf. `docs/AUDIT-2026-07.md` §3) :
+- **D1** ✅ service `director` (`get_director_agent` + `assemble_part`) + route
+  `POST /api/editor/documents/{id}/parts` (`{description, part}` → `assemble_context("realisateur").effects`
+  → agent → `fragment_to_bricks` → append à la suite de la timeline, revalidé + persisté).
+  `src/studio/api/services/director.py`, tests `test_director_service.py` + route dans `test_editor_api.py`.
+- **D2** refonte du stockage `Template` : `structure_json` (slots vides) → `document_json`
+  (`EditorDocument` v5) + « save as template » + migration versionnée.
+- **D3** ré-instanciation déterministe (`Template` v5 + persos/idée → nouveau `EditorDocument`).
+- **D4** front : remplacer `TemplateBuilder` (slots) par une surface de co-construction (NL →
+  revue briques v5 → save), câbler `/api/catalog` ; retirer le stub `toast`.
+- **D5** fermer l'écart palette/IR (effets `montage.choice/facecam/narrate/subtitles` non-IR) +
+  converger `services/intro.py` sur `compile_shot`.
+
+### R1 — Valider E2 en dogfood réel  ⬜
 Le wiring E2 est prouvé offline ; reste à confirmer que la RÉFÉRENCE seedream (`image_input`)
 produit des frames visuellement cohérentes sur une vraie génération courte. `dogfood_editor.py`.
 

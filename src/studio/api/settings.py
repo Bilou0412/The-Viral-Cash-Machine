@@ -22,11 +22,3 @@ def cors_origins() -> list[str]:
     if not raw:
         return list(_DEFAULT_CORS)
     return [o.strip() for o in raw.split(",") if o.strip()]
-
-
-def render_base() -> str:
-    """Base URL the Remotion render process uses to fetch assets over HTTP.
-
-    Must be the externally reachable app URL in prod (e.g. https://<app>.fly.dev).
-    """
-    return os.environ.get("VCM_RENDER_BASE", "http://localhost:8000")

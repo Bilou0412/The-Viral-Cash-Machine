@@ -1,7 +1,5 @@
-streamlit
 replicate
 pydantic>=2.0
-python-dotenv
 requests
 openai
 moviepy>=2.0.0
@@ -13,6 +11,7 @@ pillow
 sqlmodel
 psycopg[binary]>=3.2   # driver Postgres v3 (prod) ; SQLite reste le défaut local/CI
 fastapi
+python-multipart  # requis par l'endpoint d'upload FastAPI (Form/File — /api/uploads)
 uvicorn[standard]
 httpx
 boto3   # backend object storage R2/S3 (import paresseux ; actif si STORAGE_BACKEND=r2)
