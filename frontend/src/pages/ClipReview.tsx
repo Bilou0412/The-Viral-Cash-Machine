@@ -9,7 +9,18 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
-import { Clapperboard, Film, Image as ImageIcon, Mic, Palette, RefreshCw, Video } from "lucide-react"
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clapperboard,
+  Film,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Palette,
+  RefreshCw,
+  Video,
+} from "lucide-react"
 import {
   useDirectArtDirection,
   useDirectDialogue,
@@ -20,6 +31,7 @@ import {
   useSaveEditorDocument,
   useModelForm,
 } from "@/hooks/use-editor"
+import { useEditorEvents, type BrickStatus } from "@/hooks/use-editor-events"
 import { FormFieldInput } from "@/components/editor/FormFieldInput"
 import { PhaseRail } from "@/components/studio/phase-rail"
 import { CrewPanel } from "@/components/studio/crew-panel"
@@ -159,6 +171,24 @@ function Section({
   )
 }
 
+/** Pastille de statut de génération d'un plan (coin haut-droit du bloc). */
+function StatusDot({ status }: { status?: BrickStatus }) {
+  if (!status) return null
+  const map = {
+    generating: { Icon: Loader2, cls: "text-amber-500 animate-spin", title: "génération en cours" },
+    ready: { Icon: CheckCircle2, cls: "text-emerald-500", title: "généré ✅" },
+    failed: { Icon: AlertTriangle, cls: "text-destructive", title: "échec — régénère ce plan" },
+  }[status]
+  return (
+    <span
+      title={map.title}
+      className="absolute right-1 top-1 rounded-full bg-background/85 p-0.5 shadow-sm"
+    >
+      <map.Icon className={cn("h-3.5 w-3.5", map.cls)} />
+    </span>
+  )
+}
+
 /** Un bloc de piste (vidéo ou son), positionné par le temps. */
 function TrackBlock({
   left,
@@ -170,6 +200,7 @@ function TrackBlock({
   icon: Icon,
   badge,
   label,
+  status,
 }: {
   left: number
   width: number
@@ -180,6 +211,7 @@ function TrackBlock({
   icon: typeof ImageIcon
   badge?: string
   label: string
+  status?: BrickStatus
 }) {
   return (
     <button
@@ -203,9 +235,10 @@ function TrackBlock({
         <img
           src={thumb}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
         />
       )}
+      <StatusDot status={status} />
       <div className="relative flex items-center gap-1.5">
         {badge && (
           <span className="flex h-4 min-w-4 items-center justify-center rounded bg-background/80 px-1 text-[10px] font-bold">
@@ -224,6 +257,61 @@ function TrackBlock({
   )
 }
 
+/** Aperçu RÉEL du plan sélectionné : l'asset généré (vidéo/photo), ou l'état de
+ *  génération (en cours / échec / pas encore) — en cadre vertical 9:16. */
+function BrickPreview({
+  media,
+  status,
+  active,
+}: {
+  media: { src: string; media: "video" | "image" } | null
+  status?: BrickStatus
+  active: boolean
+}) {
+  const box =
+    "relative mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-lg border border-border bg-black/40"
+  if (media) {
+    return (
+      <div className={box}>
+        {media.media === "video" ? (
+          <video
+            src={media.src}
+            className="h-full w-full object-contain"
+            controls
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img src={media.src} alt="" className="h-full w-full object-contain" />
+        )}
+      </div>
+    )
+  }
+  return (
+    <div className={cn(box, "flex flex-col items-center justify-center gap-2 text-center")}>
+      {status === "failed" ? (
+        <>
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+          <p className="px-3 text-xs text-destructive">Échec — régénère ce plan.</p>
+        </>
+      ) : status === "generating" || active ? (
+        <>
+          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+          <p className="px-3 text-xs text-muted-foreground">Génération en cours…</p>
+        </>
+      ) : (
+        <>
+          <Film className="h-6 w-6 text-muted-foreground/50" />
+          <p className="px-3 text-xs text-muted-foreground">
+            Pas encore généré — lance le tournage.
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
 export function ClipReview() {
   const { docId = "" } = useParams()
   const navigate = useNavigate()
@@ -234,6 +322,19 @@ export function ClipReview() {
   const shoot = useGenerateEditorDocument(docId)
   const directAD = useDirectArtDirection(docId)
   const directDlg = useDirectDialogue(docId)
+
+  // Tournage : on lance la génération PUIS on écoute le flux SSE (statut par
+  // brique + progression) pour que la page vive au lieu de rester figée.
+  const [jobActive, setJobActive] = useState(false)
+  const events = useEditorEvents(docId, jobActive, () => setJobActive(false))
+  const launchShoot = () =>
+    shoot.mutate(undefined, {
+      onSuccess: () => {
+        setJobActive(true)
+        toast.success("Tournage lancé — les plans se génèrent 🎥")
+      },
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Tournage impossible"),
+    })
 
   // Diriger le directeur artistique : réécrit l'identité visuelle (aucun re-render).
   const onDirectArtDirection = () =>
@@ -266,10 +367,7 @@ export function ClipReview() {
     if (phase === "developpement") return void navigate("/creer")
     if (phase === "postproduction") return void navigate(`/editor/${docId}`)
     if (phase === "tournage") {
-      shoot.mutate(undefined, {
-        onSuccess: () => toast.success("Tournage lancé — les plans se génèrent 🎥"),
-        onError: (e) => toast.error(e instanceof Error ? e.message : "Tournage impossible"),
-      })
+      launchShoot()
       return
     }
     const el = window.document.getElementById(`phase-${phase}`)
@@ -315,15 +413,26 @@ export function ClipReview() {
     [draft]
   )
 
-  const thumbById = useMemo(() => {
-    const m = new Map<string, string>()
+  // Média généré (prêt) par brique : sa source + son type (video/image) pour un
+  // VRAI aperçu, pas seulement une vignette de fond. La 1re source non nulle gagne.
+  const mediaById = useMemo(() => {
+    const m = new Map<string, { src: string; media: "video" | "image" }>()
     for (const c of renderModel?.clips ?? []) {
       if (!c.src) continue
       const brickId = c.id.split(":")[0] ?? c.id
-      if (!m.has(brickId)) m.set(brickId, c.src)
+      if (m.has(brickId)) continue
+      m.set(brickId, { src: c.src, media: c.media === "video" ? "video" : "image" })
     }
     return m
   }, [renderModel])
+
+  // Statut de génération d'une brique : le SSE fait foi pendant le tournage,
+  // sinon « prêt » dès qu'un asset est disponible dans le render-model.
+  const statusOf = useCallback(
+    (brickId: string): BrickStatus | undefined =>
+      events.statusByBrick[brickId] ?? (mediaById.has(brickId) ? "ready" : undefined),
+    [events.statusByBrick, mediaById]
+  )
 
   // Bandes de scène (v3) : span temporel de chaque scène, dérivé de ses briques.
   const sceneBands = useMemo(() => {
@@ -396,10 +505,57 @@ export function ClipReview() {
             mouvement, narration), puis régénère-la. Sauvegarde automatique.
           </p>
         </div>
-        <Button onClick={() => goToPhase("tournage")} disabled={shoot.isPending} className="gap-1.5">
-          <Video className="h-4 w-4" /> Lancer le tournage
+        <Button
+          onClick={launchShoot}
+          disabled={shoot.isPending || events.active}
+          className="gap-1.5"
+        >
+          {events.active ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Tournage en cours…
+            </>
+          ) : (
+            <>
+              <Video className="h-4 w-4" /> Lancer le tournage
+            </>
+          )}
         </Button>
       </div>
+
+      {/* Progression du tournage (SSE) — la page vit : X/Y plans générés. */}
+      {(events.active || (events.total > 0 && events.done >= events.total)) && (
+        <div className="rounded-lg border border-border bg-card/40 p-3">
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="flex items-center gap-1.5 font-medium">
+              {events.active ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />
+                  Génération des plans…
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Tournage terminé
+                </>
+              )}
+            </span>
+            <span className="tabular-nums text-muted-foreground">
+              {events.done}/{events.total || "?"}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                events.active ? "bg-amber-500" : "bg-emerald-500"
+              )}
+              style={{
+                width: events.total > 0 ? `${Math.min(100, (events.done / events.total) * 100)}%` : "10%",
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <CrewPanel
         phase="preproduction"
@@ -506,10 +662,11 @@ export function ClipReview() {
                         width={Math.max(MIN_BLOCK_PX, clip.placement.duration * PX_PER_SEC - 4)}
                         selected={selClip?.id === clip.id && !selChild}
                         onSelect={() => setSel({ clipId: clip.id, childId: null })}
-                        thumb={thumbById.get(clip.id) ?? null}
+                        thumb={mediaById.get(clip.id)?.src ?? null}
                         icon={clip.kind === "video" ? Film : ImageIcon}
                         badge={String(i + 1)}
                         label={short(promptOf(clip.image) || promptOf(clip.motion)) || `Plan ${i + 1}`}
+                        status={statusOf(clip.id)}
                       />
                     ))}
                   </div>
@@ -565,6 +722,16 @@ export function ClipReview() {
                   <RefreshCw className="h-3.5 w-3.5" /> Régénérer ce plan
                 </Button>
               </div>
+
+              {!selChild && (
+                <div className="mb-4">
+                  <BrickPreview
+                    media={mediaById.get(selClip.id) ?? null}
+                    status={statusOf(selClip.id)}
+                    active={events.active}
+                  />
+                </div>
+              )}
 
               {selChild ? (
                 <Section icon={Mic} title={`Narration · ${selChild.role}`}>

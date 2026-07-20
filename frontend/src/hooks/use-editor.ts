@@ -103,7 +103,11 @@ export function useGenerateEditorDocument(id: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => api.generateEditorDocument(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qkEditor.document(id) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qkEditor.document(id) })
+      // Les vignettes/aperçus dérivent du render-model — le rafraîchir aussi.
+      void qc.invalidateQueries({ queryKey: qkEditor.renderModel(id) })
+    },
   })
 }
 
