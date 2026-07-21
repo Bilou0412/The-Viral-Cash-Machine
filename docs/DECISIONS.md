@@ -3,6 +3,16 @@
 Une ligne par décision transverse (la plus récente en haut). Pour le plan d'exécution, voir
 `ROADMAP.md`.
 
+- **2026-07-21** · **Orchestration d'agents pour la table ronde (crew_room) — PROPOSITION** ·
+  le but produit devient *une boîte de prod virtuelle qui débat* : réalisateur → départements
+  (DA/chef op/casting/dialoguiste) **en parallèle** → **superviseur** qui renvoie corriger en
+  **boucle**. L'orchestrateur maison (`engine.run_scene_room`, séquentiel, révision fixe) a
+  atteint sa limite (à l'origine du 502 sur `scenes/next`). Direction proposée : **LangGraph**
+  comme moteur de graphe, **derrière les ports existants** (`ContractAgent`/`Drafter` + nouveau
+  `Reviewer`), **Fake offline préservé**, rail v5/rendu **inchangé**. Amende la règle « zéro
+  framework » (→ « sauf orchestration d'agents, derrière les ports »). Design complet + phases +
+  questions ouvertes : `docs/CREW_ROOM_ORCHESTRATION.md`. **À valider avant tout code.**
+
 - **2026-07-08** · **Template = donnée co-écrite** (la vraie feature) · le produit est *la
   machine à co-construire des templates réutilisables avec les agents*, pas un catalogue de
   moules codés en dur. Un **template = un `EditorDocument` v5 sauvé/paramétrable** (ou fragment
