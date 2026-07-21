@@ -82,6 +82,20 @@ class Turn(BaseModel):
     message: str = ""
 
 
+class ReviewVerdict(BaseModel):
+    """Le verdict du SUPERVISEUR sur la scène assemblée : valider, ou renvoyer corriger.
+
+    `redo` = {département -> consigne} : les SEULS départements à refaire (révision
+    ciblée), avec la note du superviseur. `ok=True` et `redo` vide ⇒ la scène est
+    validée, on clôt la boucle. C'est ce verdict qui « orchestre les protagonistes »."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    ok: bool = True
+    redo: dict[str, str] = Field(default_factory=dict)
+    note: str = ""   # commentaire global (affiché dans le transcript)
+
+
 class RoomResult(BaseModel):
     """Le fruit de la table ronde : la scène structurée + persos neufs + le débat."""
 

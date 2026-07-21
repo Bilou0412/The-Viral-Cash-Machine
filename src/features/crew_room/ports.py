@@ -17,9 +17,16 @@ from typing import Protocol
 from ..brief.model import Brief
 from ..crew.ports import CrewAgentError
 from ..scenes.model import ScenePlan
-from .model import Draft, RoomMemory, SceneBrief, SceneContract
+from .model import Draft, ReviewVerdict, RoomMemory, SceneBrief, SceneContract
 
-__all__ = ["DEPARTMENTS", "ContractAgent", "CrewAgentError", "Drafter", "field_owner"]
+__all__ = [
+    "DEPARTMENTS",
+    "ContractAgent",
+    "CrewAgentError",
+    "Drafter",
+    "Reviewer",
+    "field_owner",
+]
 
 # Les départements qui remplissent la scène (dans l'ordre d'affichage). Le
 # réalisateur, lui, POSE le contrat (il n'est pas un remplisseur).
@@ -79,7 +86,26 @@ class Drafter(Protocol):
         brief: Brief,
         scene_brief: SceneBrief,
         memory: RoomMemory,
+        note: str = "",
     ) -> Draft:
         """2e passe : le département voit la scène ASSEMBLÉE (tous les champs) et
-        ré-remplit SON brouillon pour la cohérence croisée. Mêmes champs que `fill`."""
+        ré-remplit SON brouillon pour la cohérence croisée. Mêmes champs que `fill`.
+        `note` = la consigne ciblée du superviseur (vide en révision libre)."""
+        ...
+
+
+class Reviewer(Protocol):
+    """Le SUPERVISEUR (le réalisateur en 2ᵉ casquette) : relit la scène ASSEMBLÉE et
+    décide de la VALIDER ou de RENVOYER corriger des départements ciblés (avec consigne).
+    C'est lui qui pilote le débat : quoi refaire, et quand clore."""
+
+    def review(
+        self,
+        *,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> ReviewVerdict:
         ...

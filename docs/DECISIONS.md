@@ -3,15 +3,17 @@
 Une ligne par décision transverse (la plus récente en haut). Pour le plan d'exécution, voir
 `ROADMAP.md`.
 
-- **2026-07-21** · **Orchestration d'agents pour la table ronde (crew_room) — PROPOSITION** ·
-  le but produit devient *une boîte de prod virtuelle qui débat* : réalisateur → départements
-  (DA/chef op/casting/dialoguiste) **en parallèle** → **superviseur** qui renvoie corriger en
-  **boucle**. L'orchestrateur maison (`engine.run_scene_room`, séquentiel, révision fixe) a
-  atteint sa limite (à l'origine du 502 sur `scenes/next`). Direction proposée : **LangGraph**
-  comme moteur de graphe, **derrière les ports existants** (`ContractAgent`/`Drafter` + nouveau
-  `Reviewer`), **Fake offline préservé**, rail v5/rendu **inchangé**. Amende la règle « zéro
-  framework » (→ « sauf orchestration d'agents, derrière les ports »). Design complet + phases +
-  questions ouvertes : `docs/CREW_ROOM_ORCHESTRATION.md`. **À valider avant tout code.**
+- **2026-07-21** · **Boîte de prod : la table ronde débat (crew_room) — Phase 1+2 FAITES,
+  in-house** · réalisateur → départements (DA/chef op/casting/dialoguiste) **en parallèle**
+  (`ThreadPoolExecutor`) → **superviseur** (`Reviewer`, réalisateur en 2ᵉ casquette) qui **renvoie
+  corriger les départements ciblés en boucle** (`redo` + consigne, `max_rounds`=2). Plans **bornés
+  à 5 s** aussi sur ce chemin (`split_overlong_shots` dans `build_next_scene`). **Décision éco :**
+  réalisé **en Python pur, sans LangGraph** — le graphe est linéaire-avec-une-boucle, un framework
+  lourd ne se justifie pas encore ; **LangGraph reste la cible** pour la Phase 3 (graphe dynamique
+  + checkpointing + human-in-the-loop). Ports + Fake offline préservés, rail v5/rendu inchangés.
+  Amende « zéro framework » → « on orchestrera derrière les ports (in-house tant que ça suffit,
+  LangGraph au besoin) ». **Reste (Phase 3) : chaînage dernière-frame→init i2v** (absent du rail
+  canonique, couche rendu). Détails : `docs/CREW_ROOM_ORCHESTRATION.md`.
 
 - **2026-07-08** · **Template = donnée co-écrite** (la vraie feature) · le produit est *la
   machine à co-construire des templates réutilisables avec les agents*, pas un catalogue de

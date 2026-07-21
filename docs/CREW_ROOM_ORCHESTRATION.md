@@ -1,8 +1,15 @@
-# Design — Ré-orchestrer la table ronde (crew_room) en graphe d'agents
+# Design — Ré-orchestrer la table ronde (crew_room) en boîte de prod qui débat
 
-> **Statut : PROPOSITION à valider (aucun code applicatif écrit).** Ce document pose la
-> cible avant toute ligne. Périmètre volontairement **restreint au `crew_room`** (le débat
-> d'UNE scène), pas à toute la boîte de prod. Décision associée : `docs/DECISIONS.md`.
+> **Statut : Phase 1 + 2 IMPLÉMENTÉES (in-house, éco).** Périmètre restreint au `crew_room`
+> (le débat d'UNE scène). Décision associée : `docs/DECISIONS.md`.
+>
+> **Décision d'ingénierie (éco et efficace) :** on réalise l'architecture ci-dessous **en
+> Python pur** (fan-out par threads + boucle de superviseur), **sans la dépendance LangGraph**.
+> Le graphe actuel est linéaire-avec-une-boucle : un moteur de graphe tiers (deps lourdes,
+> friction mypy-strict, courbe) ne se justifie pas encore. **LangGraph reste la cible** dès que
+> le graphe deviendra vraiment dynamique (branches conditionnelles multiples, checkpointing,
+> human-in-the-loop) — cf. Phase 3. Le contrat de code (ports + Fake offline) est identique, donc
+> **basculer vers LangGraph plus tard ne touchera que l'intérieur de `engine.run_scene_room`**.
 
 ## 1. But
 
@@ -121,17 +128,24 @@ C'est **lui** qui « orchestre les protagonistes » : il décide *quoi* renvoyer
 
 ## 4. Plan par phases (chaque phase = 1 PR vérifiable, rail intact)
 
-- **Phase 1 — Graphe iso-comportement + parallélisme + retries.**
-  Réimplémenter `run_scene_room` en graphe LangGraph appelant les ports existants ; départements
-  **en parallèle** ; retry par nœud. **Aucun** changement de résultat attendu (mêmes champs),
-  seulement plus rapide et robuste. Les tests Fake existants restent verts. → *tue le 502, pose l'ossature.*
-- **Phase 2 — Le superviseur (le vrai débat).**
-  Port `Reviewer` (Fake + OpenAI) + nœud superviseur + arête conditionnelle de révision ciblée
-  (`redo` par département, `max_rounds`). Le `transcript` gagne les tours de débat.
-- **Phase 3 — Exploitation (plus tard).**
-  Débat **visible en direct** dans la SceneRoom (on a déjà le `transcript` + le SSE) ;
-  *checkpointing* pour reprendre une prod longue ; *human-in-the-loop* (approuver le gagnant) au
-  niveau **production**, pas scène ; observabilité (LangSmith, optionnel).
+- **Phase 1 — Parallélisme (in-house). ✅ FAIT.**
+  `engine.run_scene_room` : les 4 départements remplissent **en parallèle** (`ThreadPoolExecutor`,
+  appels LLM I/O-bound). Mêmes champs qu'avant (déterministe côté Fake) → tests existants verts.
+  Réduit la latence (~÷4) et la surface d'échec séquentiel (le 502). *Retry par appel : cf. PR #53,
+  complémentaire.*
+- **Phase 2 — Le superviseur (le vrai débat). ✅ FAIT.**
+  Nouveau port `Reviewer` (Fake + OpenAI) + boucle : le réalisateur relit la scène assemblée et
+  **renvoie corriger les départements ciblés** (`redo` par département + consigne), en révision
+  **parallèle**, jusqu'à validation ou `max_rounds` (=2). Le `transcript` gagne les tours de débat.
+  **Bonus livré** : les plans de la table ronde sont désormais **bornés à 5 s** (`split_overlong_shots`
+  dans `build_next_scene`) — la hiérarchie « bouts de 5 s » vaut aussi pour ce chemin.
+- **Phase 3 — À venir.**
+  (a) **Chaînage dernière-frame → init du plan suivant** (continuité i2v) — *absent du rail
+  canonique VideoSpec* (n'existe qu'en legacy adventure), à câbler dans `resolve_real.py` /
+  `compile_spec.py` ; c'est une feature **couche rendu**, indépendante de l'orchestration.
+  (b) Débat **visible en direct** dans la SceneRoom (`transcript` + SSE déjà là).
+  (c) *checkpointing* + *human-in-the-loop* (approuver le gagnant) au niveau **production** →
+  c'est là que **LangGraph** deviendra pertinent (graphe dynamique + reprise + interrupt).
 
 ## 5. Coûts / risques (les yeux ouverts)
 
