@@ -8,17 +8,25 @@ import { eventsUrlFor, usingMocks } from "@/lib/api"
 import { qkEditor } from "./use-editor"
 import type { JobEvent } from "@/lib/types"
 
+export type BrickStatus = "generating" | "ready" | "failed"
+
 export interface EditorJobProgress {
   active: boolean
   done: number
   total: number
   lastBeat: string | null
   finalPath: string | null
+  /** Statut de génération par brique (clé = id de brique, dérivé du `beat`). */
+  statusByBrick: Record<string, BrickStatus>
 }
 
 const EMPTY: EditorJobProgress = {
-  active: false, done: 0, total: 0, lastBeat: null, finalPath: null,
+  active: false, done: 0, total: 0, lastBeat: null, finalPath: null, statusByBrick: {},
 }
+
+/** `beat` = `{brickId}.image|{brickId}.motion|{childId}` → id de brique. */
+const brickOfBeat = (beat: string | undefined): string | null =>
+  beat ? (beat.split(/[.:]/)[0] ?? null) : null
 
 export function useEditorEvents(
   docId: string,
@@ -48,19 +56,34 @@ export function useEditorEvents(
       }
       setProgress((prev) => {
         let { done, total, active: isActive, lastBeat, finalPath } = prev
+        const statusByBrick = { ...prev.statusByBrick }
+        const markBrick = (status: BrickStatus) => {
+          const id = brickOfBeat(data.beat)
+          if (id) statusByBrick[id] = status
+        }
         switch (data.type) {
           case "generation_started":
             isActive = true
             total = data.total ?? prev.total
             done = 0
+            // Nouveau tournage : on repart d'une ardoise propre.
+            for (const k of Object.keys(statusByBrick)) delete statusByBrick[k]
             break
           case "asset_started":
             lastBeat = data.beat ?? prev.lastBeat
+            markBrick("generating")
             break
           case "asset_ready":
+            done += 1
+            lastBeat = data.beat ?? prev.lastBeat
+            markBrick("ready")
+            void qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
+            void qc.invalidateQueries({ queryKey: qkEditor.renderModel(docId) })
+            break
           case "asset_failed":
             done += 1
             lastBeat = data.beat ?? prev.lastBeat
+            markBrick("failed")
             void qc.invalidateQueries({ queryKey: qkEditor.document(docId) })
             break
           case "generation_done":
@@ -72,7 +95,7 @@ export function useEditorEvents(
             onDoneRef.current?.()
             break
         }
-        return { active: isActive, done, total, lastBeat, finalPath }
+        return { active: isActive, done, total, lastBeat, finalPath, statusByBrick }
       })
     }
     es.onerror = () => {
