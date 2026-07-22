@@ -7,18 +7,19 @@ trous indépendamment, on assemble (champs disjoints → merge mécanique). Réu
 """
 
 from .engine import run_scene_room
-from .fake_room import FakeContractAgent, FakeDrafter
+from .fake_room import FakeContractAgent, FakeDrafter, FakeReviewer
 from .merge import merge_drafts
 from .model import (
     ContractShot,
     Draft,
+    ReviewVerdict,
     RoomMemory,
     RoomResult,
     SceneBrief,
     SceneContract,
     Turn,
 )
-from .ports import DEPARTMENTS, ContractAgent, CrewAgentError, Drafter
+from .ports import DEPARTMENTS, ContractAgent, CrewAgentError, Drafter, Reviewer
 
 __all__ = [
     "DEPARTMENTS",
@@ -29,6 +30,9 @@ __all__ = [
     "Drafter",
     "FakeContractAgent",
     "FakeDrafter",
+    "FakeReviewer",
+    "ReviewVerdict",
+    "Reviewer",
     "RoomMemory",
     "RoomResult",
     "SceneBrief",

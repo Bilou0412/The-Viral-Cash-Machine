@@ -8,7 +8,14 @@ from __future__ import annotations
 
 from ..brief.model import Brief
 from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan
-from .model import ContractShot, Draft, RoomMemory, SceneBrief, SceneContract
+from .model import (
+    ContractShot,
+    Draft,
+    ReviewVerdict,
+    RoomMemory,
+    SceneBrief,
+    SceneContract,
+)
 
 _HERO = CharacterPlan(
     name="Léa",
@@ -102,10 +109,12 @@ class FakeDrafter:
         brief: Brief,
         scene_brief: SceneBrief,
         memory: RoomMemory,
+        note: str = "",
     ) -> Draft:
         """2e passe informée. Par défaut, le brouillon est inchangé (idempotent).
         Exemple de cohérence croisée : le DIALOGUISTE voit qui le casting a placé
-        sur chaque plan et **nomme le personnage** dans la narration."""
+        sur chaque plan et **nomme le personnage** dans la narration. `note` (consigne
+        du superviseur) est acceptée puis ignorée par le Fake (déterministe)."""
         base = self.fill(
             department=department, contract=contract,
             brief=brief, scene_brief=scene_brief, memory=memory,
@@ -118,3 +127,29 @@ class FakeDrafter:
             who = sh.personnages[0].name if sh.personnages else ""
             shots[sh.id] = {"narration": f"{who} — {line}" if who else line}
         return Draft(department=department, shots=shots)
+
+
+class FakeReviewer:
+    """Implémente `Reviewer` sans réseau. Déterministe et TERMINANT (par le contenu) :
+    tant que le dialoguiste n'a pas nommé le personnage placé par le casting sur le 1er
+    plan, le superviseur le renvoie corriger ; sinon il valide. Illustre la boucle réelle
+    (le débat) tout en garantissant la convergence offline."""
+
+    def review(
+        self,
+        *,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> ReviewVerdict:
+        first = scene.shots[0] if scene.shots else None
+        who = first.personnages[0].name if first and first.personnages else ""
+        if who and first is not None and who not in first.narration_fr:
+            return ReviewVerdict(
+                ok=False,
+                redo={"dialoguiste": "Nomme le personnage présent dans la narration."},
+                note="Incohérence dialogue/casting : le perso placé n'est pas nommé.",
+            )
+        return ReviewVerdict(ok=True, note="Scène cohérente, validée.")

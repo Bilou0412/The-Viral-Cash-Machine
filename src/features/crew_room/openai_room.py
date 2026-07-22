@@ -13,8 +13,15 @@ from typing import TYPE_CHECKING, TypeVar
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ..scenes.model import CharacterPlan, ScenePlan, ShotCharacterPlan
-from .model import ContractShot, Draft, RoomMemory, SceneBrief, SceneContract
-from .ports import CrewAgentError
+from .model import (
+    ContractShot,
+    Draft,
+    ReviewVerdict,
+    RoomMemory,
+    SceneBrief,
+    SceneContract,
+)
+from .ports import DEPARTMENTS, CrewAgentError
 
 if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
     from openai import OpenAI
@@ -208,11 +215,13 @@ class OpenAIDrafter:
         brief: Brief,
         scene_brief: SceneBrief,
         memory: RoomMemory,
+        note: str = "",
     ) -> Draft:
         system = _DEPT_SYSTEM.get(department, "Fill your fields. JSON only.")
+        directive = f"\nConsigne du superviseur : {note}" if note.strip() else ""
         user = (
             f"{_context_blob(brief, scene_brief, memory)}\n"
-            f"{_scene_blob(scene)}\n\n"
+            f"{_scene_blob(scene)}{directive}\n\n"
             f"Voici la scène ASSEMBLÉE. Ajuste UNIQUEMENT tes champs ({department}) pour la "
             f"cohérence avec l'ensemble, puis renvoie le MÊME format JSON."
         )
@@ -247,3 +256,51 @@ class OpenAIDrafter:
             )
 
         return _retry(_once)
+
+
+_REVIEW_SYSTEM = (
+    "You are the DIRECTOR reviewing an ASSEMBLED short-vertical-video scene before shooting. "
+    "Check coherence across departments: décor/lighting (art), framing/duration (DoP, 3-5s "
+    "static camera), characters (casting), narration (French, one short line per shot, must "
+    "name the character present). If everything is coherent, APPROVE. Otherwise, send back "
+    "ONLY the departments that must fix something, with a short instruction each. "
+    "Departments: directeur_artistique, chef_operateur, casting, dialoguiste.\n"
+    'Return JSON {"ok": true|false, "redo": {"<department>": "instruction"}, "note": "one line"}. '
+    "JSON only."
+)
+
+
+class _ReviewOut(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    ok: bool = True
+    redo: dict[str, str] = {}
+    note: str = ""
+
+
+class OpenAIReviewer:
+    """Implémente `Reviewer` via GPT (le réalisateur relit et renvoie corriger, ciblé)."""
+
+    def __init__(self, client: OpenAI, model: str) -> None:
+        self._chat = _Chat(client, model)
+
+    def review(
+        self,
+        *,
+        scene: ScenePlan,
+        contract: SceneContract,
+        brief: Brief,
+        scene_brief: SceneBrief,
+        memory: RoomMemory,
+    ) -> ReviewVerdict:
+        user = (
+            f"{_context_blob(brief, scene_brief, memory)}\n"
+            f"{_scene_blob(scene)}\n\n"
+            "Relis la scène assemblée : valide, ou renvoie corriger des départements ciblés."
+        )
+        try:
+            out = _ReviewOut.model_validate_json(self._chat.json(_REVIEW_SYSTEM, user, what="Review"))
+        except ValidationError as e:
+            raise CrewAgentError("La revue du superviseur est illisible. Réessaie.") from e
+        # On ne garde que des départements CONNUS (le LLM peut halluciner une clé).
+        redo = {d: note for d, note in out.redo.items() if d in DEPARTMENTS and note.strip()}
+        return ReviewVerdict(ok=out.ok and not redo, redo=redo, note=out.note)
