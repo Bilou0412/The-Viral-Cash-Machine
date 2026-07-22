@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import time
+from collections.abc import Callable
+from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -18,6 +20,28 @@ if TYPE_CHECKING:  # `openai` absent hors conteneur — import paresseux.
     from openai import OpenAI
 
     from ..brief.model import Brief
+
+_T = TypeVar("_T")
+
+# Une scène = 9 appels OpenAI séquentiels (1 contrat + 4 départements + 4 révisions).
+# La probabilité qu'UN échoue (JSON légèrement malformé, reset réseau, 5xx) n'est pas
+# négligeable, et un seul échec faisait planter toute la scène (502). On retente donc
+# chaque appel d'agent quelques fois ; une 2ᵉ tentative suffit presque toujours.
+_MAX_ATTEMPTS = 3
+
+
+def _retry(fn: Callable[[], _T]) -> _T:
+    """Retente `fn` sur `CrewAgentError` (appel LLM ou parse), backoff court, puis relaie."""
+    last: CrewAgentError | None = None
+    for i in range(_MAX_ATTEMPTS):
+        try:
+            return fn()
+        except CrewAgentError as e:
+            last = e
+            if i < _MAX_ATTEMPTS - 1:
+                time.sleep(0.4 * (i + 1))
+    assert last is not None  # au moins une tentative a eu lieu
+    raise last
 
 _CONTRACT_SYSTEM = (
     "You are the DIRECTOR. Define the CONTRACT of ONE short vertical-video scene: the "
@@ -132,20 +156,24 @@ class OpenAIContractAgent:
         self, *, brief: Brief, scene_brief: SceneBrief, memory: RoomMemory
     ) -> SceneContract:
         user = f"{_context_blob(brief, scene_brief, memory)}\n\nDéfinis le contrat de la scène."
-        try:
-            out = _ContractOut.model_validate_json(
-                self._chat.json(_CONTRACT_SYSTEM, user, what="Contract")
-            )
-        except ValidationError as e:
-            raise CrewAgentError("Le contrat de scène est illisible. Réessaie.") from e
-        sid = scene_brief.id or "s1"
-        shots = [
-            ContractShot(id=s.id or f"{sid}_sh{i + 1}", beat=s.beat, kind=s.kind)
-            for i, s in enumerate(out.shots[:4])
-        ]
-        if not shots:
-            raise CrewAgentError("Le réalisateur n'a défini aucun plan. Réessaie.")
-        return SceneContract(env_intention=out.env_intention, shots=shots)
+
+        def _once() -> SceneContract:
+            try:
+                out = _ContractOut.model_validate_json(
+                    self._chat.json(_CONTRACT_SYSTEM, user, what="Contract")
+                )
+            except ValidationError as e:
+                raise CrewAgentError("Le contrat de scène est illisible. Réessaie.") from e
+            sid = scene_brief.id or "s1"
+            shots = [
+                ContractShot(id=s.id or f"{sid}_sh{i + 1}", beat=s.beat, kind=s.kind)
+                for i, s in enumerate(out.shots[:4])
+            ]
+            if not shots:
+                raise CrewAgentError("Le réalisateur n'a défini aucun plan. Réessaie.")
+            return SceneContract(env_intention=out.env_intention, shots=shots)
+
+        return _retry(_once)
 
 
 class OpenAIDrafter:
@@ -191,26 +219,31 @@ class OpenAIDrafter:
         return self._draft(department, system, user, what=f"Revision '{department}'")
 
     def _draft(self, department: str, system: str, user: str, *, what: str = "") -> Draft:
-        try:
-            out = _DraftOut.model_validate_json(
-                self._chat.json(system, user, what=what or f"Draft '{department}'")
+        def _once() -> Draft:
+            try:
+                out = _DraftOut.model_validate_json(
+                    self._chat.json(system, user, what=what or f"Draft '{department}'")
+                )
+            except ValidationError as e:
+                raise CrewAgentError(
+                    f"Le brouillon '{department}' est illisible. Réessaie."
+                ) from e
+            return Draft(
+                department=department,
+                env={k: v for k, v in out.env.items() if isinstance(v, str)},
+                shots=out.shots,
+                new_characters=[
+                    CharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
+                                  voice_id=c.voice_id, traits=c.traits)
+                    for c in out.new_characters if c.name.strip()
+                ],
+                shot_characters={
+                    sid: [
+                        ShotCharacterPlan(name=c.name, expression=c.expression, action=c.action)
+                        for c in chars
+                    ]
+                    for sid, chars in out.shot_characters.items()
+                },
             )
-        except ValidationError as e:
-            raise CrewAgentError(f"Le brouillon '{department}' est illisible. Réessaie.") from e
-        return Draft(
-            department=department,
-            env={k: v for k, v in out.env.items() if isinstance(v, str)},
-            shots=out.shots,
-            new_characters=[
-                CharacterPlan(name=c.name, appearance=c.appearance, wardrobe=c.wardrobe,
-                              voice_id=c.voice_id, traits=c.traits)
-                for c in out.new_characters if c.name.strip()
-            ],
-            shot_characters={
-                sid: [
-                    ShotCharacterPlan(name=c.name, expression=c.expression, action=c.action)
-                    for c in chars
-                ]
-                for sid, chars in out.shot_characters.items()
-            },
-        )
+
+        return _retry(_once)
